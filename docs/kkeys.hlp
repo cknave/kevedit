@@ -7,6 +7,7 @@ $Keystroke Quick Reference
 !color;Color
 !draw;Drawing
 !patbuf;Pattern Buffer
+!select;Tile Selection
 !menu;Tile Menus
 
 :general;General
@@ -84,8 +85,20 @@ DELETE
  < - Reduces size of backbuffer
  > - Increases size of backbuffer
  / - Locks backbuffer
- 0 - Selects solid wall pattern
+ 0 - Selects empty pattern
  1-9 - Selects backbuffer position
+
+:select;Tile Selection
+
+ESCAPE
+  Clears selected area
+SHIFT+CURSOR KEYS
+  Select a block of tiles
+ x - Flood select
+ X - Select all similar tiles
+ f - Fill
+ F - Random Fill
+ g - Gradient
 
 :menu;Tile Menus
 
