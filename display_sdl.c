@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.14 2002/09/22 00:10:14 bitman Exp $
+ * $Id: display_sdl.c,v 1.15 2002/09/29 18:47:13 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -928,6 +928,7 @@ void display_fullscreen()
 		SDL_ShowCursor(SDL_ENABLE);
 }
 
+#if 0
 int display_sdl_getch()
 {
 	SDL_Event event;
@@ -1186,7 +1187,285 @@ int display_sdl_getch()
 	/* Return the key */
 	return event.key.keysym.sym;
 }
+#endif
 
+int display_sdl_getkey()
+{
+	SDL_Event event;
+
+	/* Draw the cursor if necessary */
+	if(timer)
+		display_update(&info, info.write_x, info.write_y, 1, 1);
+	else
+		display_curse(info.write_x, info.write_y);
+
+	/* Check for a KEYDOWN event */
+	if (SDL_PollEvent(&event) == 0)
+	return DKEY_NONE;
+
+	/* Preemptive stuff */
+	if(event.type == SDL_KEYDOWN) {
+		switch(event.key.keysym.sym) {
+			case SDLK_RSHIFT:
+			case SDLK_LSHIFT:
+			case SDLK_RCTRL:
+			case SDLK_LCTRL:
+			case SDLK_RALT:
+			case SDLK_LALT:
+				/* Shift, ctrl, and alt don't count */
+				event.type = SDL_KEYUP;
+				break;
+			case SDLK_RETURN:
+				/* Fullscreen toggle */
+				if(event.key.keysym.mod & KMOD_ALT) {
+					event.type = SDL_KEYUP;
+					display_fullscreen();
+				}
+				break;
+			default:
+				break;
+		}
+	/* UserEvent means it's time to update the cursor */
+	} else if(event.type == SDL_USEREVENT && timer != csoc) {
+		if(timer)
+			display_update(&info, info.write_x, info.write_y, 1, 1);
+		else
+			display_curse(info.write_x, info.write_y);
+		csoc = timer;
+	/* Focus change? */
+	} else if(event.type == SDL_ACTIVEEVENT) {
+		if(event.active.state & SDL_APPINPUTFOCUS) {
+			if(event.active.gain && timer == 2) {
+				/* Make cursor normal */
+				csoc = timer = 1;
+				timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
+				display_curse(info.write_x, info.write_y);
+			} else {
+				/* Inactive cursor */
+				SDL_RemoveTimer(timerId);
+				timer = 2;
+				display_update(&info, info.write_x, info.write_y, 1, 1);
+				display_curse_inactive(info.write_x, info.write_y);
+			}
+		}
+	}
+
+	/* Hide the cursor in case it moves */
+	display_update(&info, info.write_x, info.write_y, 1, 1);
+
+	if (event.type != SDL_KEYDOWN)
+		return DKEY_NONE;
+
+	/* Map the weirder keysyms to KevEdit form */
+	switch(event.key.keysym.sym) {
+		case SDLK_UP:
+			event.key.keysym.sym = DKEY_UP;
+			break;
+		case SDLK_DOWN:
+			event.key.keysym.sym = DKEY_DOWN;
+			break;
+		case SDLK_LEFT:
+			event.key.keysym.sym = DKEY_LEFT;
+			break;
+		case SDLK_RIGHT:
+			event.key.keysym.sym = DKEY_RIGHT;
+			break;
+		case SDLK_INSERT:
+			event.key.keysym.sym = DKEY_INSERT;
+			break;
+		case SDLK_DELETE:
+			event.key.keysym.sym = DKEY_DELETE;
+			break;
+		case SDLK_HOME:
+			event.key.keysym.sym = DKEY_HOME;
+			break;
+		case SDLK_END:
+			event.key.keysym.sym = DKEY_END;
+			break;
+		case SDLK_PAGEUP:
+			event.key.keysym.sym = DKEY_PAGEUP;
+			break;
+		case SDLK_PAGEDOWN:
+			event.key.keysym.sym = DKEY_PAGEDOWN;
+			break;
+		case SDLK_F1:
+			event.key.keysym.sym = DKEY_F1;
+			break;
+		case SDLK_F2:
+			event.key.keysym.sym = DKEY_F2;
+			break;
+		case SDLK_F3:
+			event.key.keysym.sym = DKEY_F3;
+			break;
+		case SDLK_F4:
+			event.key.keysym.sym = DKEY_F4;
+			break;
+		case SDLK_F5:
+			event.key.keysym.sym = DKEY_F5;
+			break;
+		case SDLK_F6:
+			event.key.keysym.sym = DKEY_F6;
+			break;
+		case SDLK_F7:
+			event.key.keysym.sym = DKEY_F7;
+			break;
+		case SDLK_F8:
+			event.key.keysym.sym = DKEY_F8;
+			break;
+		case SDLK_F9:
+			event.key.keysym.sym = DKEY_F9;
+			break;
+		case SDLK_F10:
+			event.key.keysym.sym = DKEY_F10;
+			break;
+		default:
+			break;
+	}
+
+	/* Ctrl is down */
+	if(event.key.keysym.mod & KMOD_CTRL) {
+		/* If alpha key, return special ctrl+alpha */
+		if(event.key.keysym.sym >= SDLK_a && event.key.keysym.sym <= SDLK_z) {
+			event.key.keysym.sym -= 0x60;
+		}
+	}
+	/* Alt is down */
+	else if(event.key.keysym.mod & KMOD_ALT) {
+		switch(event.key.keysym.sym) {
+			case DKEY_LEFT:
+				event.key.keysym.sym = DKEY_ALT_LEFT;
+				break;
+			case DKEY_RIGHT:
+				event.key.keysym.sym = DKEY_ALT_RIGHT;
+				break;
+			case DKEY_UP:
+				event.key.keysym.sym = DKEY_ALT_UP;
+				break;
+			case DKEY_DOWN:
+				event.key.keysym.sym = DKEY_ALT_DOWN;
+				break;
+			case 'i':
+				event.key.keysym.sym = DKEY_ALT_I;
+				break;
+			case 'm':
+				event.key.keysym.sym = DKEY_ALT_M;
+				break;
+			case 'o':
+				event.key.keysym.sym = DKEY_ALT_O;
+				break;
+			case 's':
+				event.key.keysym.sym = DKEY_ALT_S;
+				break;
+			case 't':
+				event.key.keysym.sym = DKEY_ALT_T;
+				break;
+			case 'z':
+				event.key.keysym.sym = DKEY_ALT_Z;
+				break;
+			/* Add other letters of the alphabet as necessary */
+			default:
+				break;
+		}
+	}
+	/* Shift is down */
+	if(event.key.keysym.mod & KMOD_SHIFT) {
+		/* If alpha key, shift means make capital */
+		if(event.key.keysym.sym >= SDLK_a && event.key.keysym.sym <= SDLK_z) {
+			event.key.keysym.sym ^= ' ';
+		} else {
+			/* Other shift conversions */
+			switch(event.key.keysym.sym) {
+				case SDLK_TAB:
+					event.key.keysym.sym = DKEY_SHIFT_TAB;
+					break;
+				case '`':
+					event.key.keysym.sym = '~';
+					break;
+				case '1':
+					event.key.keysym.sym = '!';
+					break;
+				case '2':
+					event.key.keysym.sym = '@';
+					break;
+				case '3':
+					event.key.keysym.sym = '#';
+					break;
+				case '4':
+					event.key.keysym.sym = '$';
+					break;
+				case '5':
+					event.key.keysym.sym = '%';
+					break;
+				case '6':
+					event.key.keysym.sym = '^';
+					break;
+				case '7':
+					event.key.keysym.sym = '&';
+					break;
+				case '8':
+					event.key.keysym.sym = '*';
+					break;
+				case '9':
+					event.key.keysym.sym = '(';
+					break;
+				case '0':
+					event.key.keysym.sym = ')';
+					break;
+				case '-':
+					event.key.keysym.sym = '_';
+					break;
+				case '=':
+					event.key.keysym.sym = '+';
+					break;
+				case '[':
+					event.key.keysym.sym = '{';
+					break;
+				case ']':
+					event.key.keysym.sym = '}';
+					break;
+				case '\\':
+					event.key.keysym.sym = '|';
+					break;
+				case ',':
+					event.key.keysym.sym = '<';
+					break;
+				case '.':
+					event.key.keysym.sym = '>';
+					break;
+				case '/':
+					event.key.keysym.sym = '?';
+					break;
+				case ';':
+					event.key.keysym.sym = ':';
+					break;
+				case '\'':
+					event.key.keysym.sym = '"';
+					break;
+				default:
+					break;
+			}
+		}
+		shift = 1;
+	} else {
+		shift = 0;
+	}
+
+	/* Return the key */
+	return event.key.keysym.sym;
+}
+
+int display_sdl_getch()
+{
+	int key;
+
+	do {
+		key = display_sdl_getkey();
+	} while (key == DKEY_NONE);
+
+	return key;
+}
+
+/* This function is obsoleted by getkey(). It never really worked to begin with, anyway. */
 int display_sdl_kbhit()
 {
 	SDL_Event event;
@@ -1261,7 +1540,7 @@ displaymethod display_sdl =
 	display_sdl_end,
 	display_sdl_putch,
 	display_sdl_getch,
-	display_sdl_kbhit,
+	display_sdl_getkey,
 	display_sdl_gotoxy,
 	display_sdl_print,
 	display_sdl_titlebar,

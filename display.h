@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.14 2002/03/24 08:39:54 bitman Exp $
+ * $Id: display.h,v 1.15 2002/09/29 18:47:13 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ typedef struct displaymethod {
 
 	int (*getch) (void);	/* DOS style getch */
 
-	int (*kbhit) (void);  /* TRUE when key waits in buffer */
+	int (*getkey) (void); /* Non-blocking getch (returns DKEY_NONE on empty buffer) */
 
 	void (*cursorgo) (int x, int y);	/* Move the cursor */
 

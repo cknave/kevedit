@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.47 2002/09/17 03:18:41 bitman Exp $
+ * $Id: editbox.c,v 1.48 2002/09/29 18:47:13 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1105,6 +1105,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymethod* d)
 {
+	int done;
 #ifdef SDL
 	SDL_AudioSpec spec;
 
@@ -1113,8 +1114,10 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 		return;
 #endif
 
+	done = 0;
+
 	/* Loop through the stringvector looking for #play statements */
-	while (sv->cur != NULL && !d->kbhit()) {
+	while (sv->cur != NULL && !done) {
 		char* tune = strstr(sv->cur->s, "#");
 		if (tune != NULL && str_equ(tune, "#play ", STREQU_UNCASE | STREQU_RFRONT)) {
 			/* Current note and settings */
@@ -1130,9 +1133,12 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 			/* Update everything because we have likely shifted to a new line. */
 			updateditbox(d, sv, U_EDITAREA, editwidth, flags, "", 1);
 
-			while (note.src_pos < strlen(tune) && !d->kbhit()) {
+			while (note.src_pos < strlen(tune) && !done) {
 				int oldpos = note.src_pos;
 				char* strpart;
+
+				if (d->getkey() != DKEY_NONE)
+					done = 1;
 
 				note = zzmGetNote(tune, note);
 
@@ -1158,16 +1164,14 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 
 #ifdef SDL
 	/* TODO: instead of just sitting here, display the progress of playback */
-	/* Wait until the user presses a key */
-	d->getch();
+	/* Wait until the music is done or the user presses a key */
+	while (!IsSynthBufferEmpty() && d->getkey() == DKEY_NONE)
+		;
 
 	CloseSynth();
 #elif defined DOS
 	pcSpeakerFinish();
 #endif
-
-	if (d->kbhit())
-		d->getch();
 }
 
 /***************************************************************************/

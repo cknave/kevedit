@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.19 2002/09/17 20:01:23 bitman Exp $
+ * $Id: display_dos.c,v 1.20 2002/09/29 18:47:13 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,9 @@ _go32_dpmi_seginfo new_kb_handler;
 short videomem;
 int windows;
 static int lshift, rshift; /* 0 = shift not pressed, 1 = shift pressed */
+
+/* Prototype needed by display_dos_init */
+int display_dos_getch();
 
 void release_time_slice()
 {
@@ -134,7 +137,7 @@ int display_dos_init()
 	_go32_dpmi_chain_protected_mode_interrupt_vector(KBD_INT, &new_kb_handler);
 
 	/* flush the keystroke buffer just in case */
-	while (display_dos_kbhit()) display_dos_getch();
+	while (kbhit()) display_dos_getch();
 	
 	return -1;
 }
@@ -174,9 +177,12 @@ int display_dos_getch()
 		return key;
 }
 
-int display_dos_kbhit()
+int display_dos_getkey()
 {
-	return kbhit();
+	if (kbhit())
+		return display_dos_getch();
+	else
+		return DKEY_NONE;
 }
 
 void display_dos_gotoxy(int x, int y)
@@ -251,7 +257,7 @@ displaymethod display_dos =
 	display_dos_end,
 	display_dos_putch,
 	display_dos_getch,
-	display_dos_kbhit,
+	display_dos_getkey,
 	display_dos_gotoxy,
 	display_dos_print,
 	display_dos_titlebar,
