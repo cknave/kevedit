@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.74 2002/09/13 17:51:20 bitman Exp $
+ * $Id: main.c,v 1.75 2002/09/14 01:46:10 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 
 	kevedit(editor);
 
-	mydisplay->end();
+	editor->mydisplay->end();
 
 	/* Free the registers used by copy & paste in the ZOC editor */
 	deleteregisters();
@@ -94,11 +94,11 @@ int main(int argc, char **argv)
 	/* Free the loaded help system */
 	deletehelpsystem();
 
+	/* Free the world */
+	zztWorldFree(editor->myworld);
+
 	/* Free the editor */
 	deletekeveditor(editor);
-
-	/* Free the world */
-	zztWorldFree(myworld);
 
 	return 0;
 }
