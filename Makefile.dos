@@ -12,7 +12,8 @@ VCSA =
 DOS = ON
 
 # Installation directories
-prefix = release-dos
+root = release-dos
+prefix = $(root)
 bindir = $(prefix)
 datadir = $(prefix)
 docdir = $(prefix)

@@ -12,7 +12,8 @@ VCSA =
 DOS =
 
 # Installation directories
-prefix = /usr/local
+root =
+prefix = $(root)/usr/local
 bindir = $(prefix)/bin
 datadir = $(prefix)/share/kevedit
 docdir = $(prefix)/doc/kevedit-$(VERSION)

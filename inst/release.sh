@@ -2,6 +2,7 @@
 
 # Customized settings for this program
 PROJECT=kevedit        # Name of project
+MAKEFILE=Makefile      # Default makefile
 PARENTDIR=../../       # Location of $PROJECT directory
 # Note: The directory $PROJECT must exist in $PARENTDIR
 
@@ -9,56 +10,120 @@ PARENTDIR=../../       # Location of $PROJECT directory
 SPECSOURCEDIR=inst     # Location of $PROJECT.spec.source file
 SOURCEDIR=.            # Location of source code
 
-echo "release.sh version 0.1.0"
+THIS=`basename $0`
+echo "$THIS version 0.2.0"
 echo "Copyright (c) 2001  Ryan Phillips"
 echo "This program may be freely distributed under the terms of the GNU GPL"
 echo
 
-if [ -z $2 ]; then
-	echo "Usage: release.sh version release [--norpm]"
+# At least two parameters required
+if [ $# -lt 2 ]; then
+	echo "Usage: $THIS version release [makefile] [--nobin] [--norpm] [--nosrc]"
 	echo "  version:  version string"
 	echo "  release:  release number"
+	echo "  makefile: makefile to use in binary release"
+	echo "  --nobin:  do not generate binary release"
+	echo "  --norpm:  do not generate binary and source rpms"
+	echo "  --nosrc:  do not generate binary release"
 	echo
-	echo "release.sh creates a source tgz file from a program directory."
+	echo "$THIS creates a source tarball from a program directory. A "
+	echo "binary release, binary rpm and source rpm will also be generated,"
+	echo "unless otherwise specified."
 	echo
-	echo "If the --norpm parameter is not specified, binary and source RPMs"
-	echo "will also be built for the project. Root priviledges may be necessary"
-	echo "to build RPMs on your system."
-	exit
+	echo "Note: root priviledges may be necessary to build rpms on your system."
+	# Bad args
+	exit 65
 fi
 
-VERSION=$1
-RELEASE=$2
-PARAM=$3
+VERSION=$1; shift
+RELEASE=$1; shift
 ARCHIVE=$PROJECT-$VERSION
+
+# Process arguments
+for arg in "$@"; do
+	case $arg in
+		--nosrc) NOSRC="true"; echo "$THIS: Not building source tarball";;
+		--nobin) NOBIN="true"; echo "$THIS: Not building binary tarball";;
+		--norpm) NORPM="true"; echo "$THIS: Not building rpm/srpm";;
+		--*) echo "Ignoring unknown option: $arg";;
+		*) MAKEFILE=$arg; echo "Using makefile: $arg";;
+	esac
+done
 
 # Create copy of program in temporary directory
 cd $PARENTDIR
 cp -R $PROJECT $ARCHIVE
 
+# Remember the release root
+ROOT=`pwd`
+echo "$THIS: Storing release tarballs in: $ROOT"
+
 # Create .spec file
-echo "Generating $PROJECT.spec file"
+echo
+echo "$THIS: Generating $PROJECT.spec file"
 echo "Version: $VERSION" > $ARCHIVE/$PROJECT.spec
 echo "Release: $RELEASE" >> $ARCHIVE/$PROJECT.spec
 cat $ARCHIVE/$SPECSOURCEDIR/$PROJECT.spec.source >> $ARCHIVE/$PROJECT.spec
 
 # Create version file
-echo "Generating $PROJECT.version file"
+echo "$THIS: Generating $PROJECT.version file"
 echo "VERSIONFLAG = -D"$PROJECT"VERSION=\\\"$VERSION\\\"" > $ARCHIVE/$SOURCEDIR/$PROJECT.version
 echo "VERSION = $VERSION" >> $ARCHIVE/$SOURCEDIR/$PROJECT.version
 
 # Create optimization file
-echo "Generating $PROJECT.optimize file"
+echo "$THIS: Generating $PROJECT.optimize file"
 echo "OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium" > $ARCHIVE/$SOURCEDIR/$PROJECT.optimize
 
-# Create tar archive
-echo "Generating" $ARCHIVE.src.tgz "archive"
-tar -czf $ARCHIVE.src.tgz $ARCHIVE --exclude CVS
-rm -R $ARCHIVE
+# Clean source
+echo
+echo "$THIS: Cleaning the source"
+cd $ARCHIVE
+make clean
+cd $ROOT
 
-if [ -z $PARAM ]; then
-# Build RPM & SRPM
-	echo "Building binary and source RPMS"
-	rpm -ta $ARCHIVE.src.tgz
+if [ -z $NOSRC ]; then
+	# Create tarball source release
+	echo
+	echo "$THIS: Generating $ARCHIVE.src.tgz source release tarball"
+	tar -czf $ARCHIVE.src.tgz $ARCHIVE --exclude CVS
 fi
 
+if [ -z $NOBIN ]; then
+	# Build binary tarball
+
+	# Build the binaries
+	echo
+	echo "$THIS: Building binary release"
+	cd $ARCHIVE
+	make -f $MAKEFILE root=
+
+	# Make an $ARCHIVE-release subdirectory to install the binaries to
+	mkdir $ARCHIVE-release
+	make -f $MAKEFILE root=$ARCHIVE-release install
+
+	# Create the binary tar archive
+	echo "$THIS: Generating $ARCHIVE.tgz binary release tarball"
+	cd $ARCHIVE-release
+	tar -czf $ROOT/$ARCHIVE.tgz *
+
+	# Return to the release root
+	cd $ROOT
+
+	# End build binary tarball
+fi
+
+# Remove the build directory
+rm -R $ARCHIVE
+
+if [ -z $NORPM ]; then
+	# Build RPM & SRPM
+	echo
+	echo "$THIS: Building binary and source RPMS"
+	rpm -ta $ARCHIVE.src.tgz
+	echo
+	echo "$THIS: RPMs and SRPMs can be found wherever rpm put them (see above)"
+else
+	echo
+fi
+
+echo "$THIS: Release tarballs can be found in $ROOT"
