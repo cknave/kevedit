@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.44 2002/03/19 19:12:50 kvance Exp $
+ * $Id: screen.c,v 1.45 2002/03/19 19:28:06 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -736,10 +736,11 @@ char *titledialog(char* prompt, displaymethod * d)
 	/* Display the title box */
 	for (y = 12; y < 12 + TITLE_BOX_DEPTH; y++) {
 		for (x = 10; x < 10 + TITLE_BOX_WIDTH; x++) {
-			d->putch(x, y, TITLE_BOX[i], TITLE_BOX[i + 1]);
+			d->putch_discrete(x, y, TITLE_BOX[i], TITLE_BOX[i + 1]);
 			i += 2;
 		}
 	}
+	d->update(10, 12, TITLE_BOX_WIDTH, TITLE_BOX_DEPTH);
 
 	/* Display the prompt */
 	if (strlen(prompt) < 38)
@@ -863,29 +864,30 @@ int dothepanel_f1(displaymethod * d, editorinfo * e)
 
 	for (y = 3; y < 20; y++) {
 		for (x = 0; x < 20; x++) {
-			d->putch(x + 60, y, PANEL_F1[i], PANEL_F1[i + 1]);
+			d->putch_discrete(x + 60, y, PANEL_F1[i], PANEL_F1[i + 1]);
 			i += 2;
 		}
 	}
-	d->putch(78, 4, 2, 0x1f);
-	d->putch(78, 5, 132, e->defc ? 0x03 : color);
-	d->putch(78, 6, 157, e->defc ? 0x06 : color);
-	d->putch(78, 7, 4, color);
-	d->putch(78, 8, 12, color);
+	d->putch_discrete(78, 4, 2, 0x1f);
+	d->putch_discrete(78, 5, 132, e->defc ? 0x03 : color);
+	d->putch_discrete(78, 6, 157, e->defc ? 0x06 : color);
+	d->putch_discrete(78, 7, 4, color);
+	d->putch_discrete(78, 8, 12, color);
 	if (e->defc == 1)
-		d->putch(78, 9, 10, e->forec > 7 ? ((e->forec - 8) << 4) + 0x0f : (e->forec << 4) + 0x0f);
+		d->putch_discrete(78, 9, 10, e->forec > 7 ? ((e->forec - 8) << 4) + 0x0f : (e->forec << 4) + 0x0f);
 	else
-		d->putch(78, 9, 10, (e->backc << 4) + (e->forec));
-	d->putch(78, 10, 232, 0x0f);
+		d->putch_discrete(78, 9, 10, (e->backc << 4) + (e->forec));
+	d->putch_discrete(78, 10, 232, 0x0f);
 	if (e->defc == 1)
-		d->putch(78, 11, 240, e->forec > 7 ? ((e->forec - 8) << 4) + 0x0f : (e->forec << 4) + 0x0f);
+		d->putch_discrete(78, 11, 240, e->forec > 7 ? ((e->forec - 8) << 4) + 0x0f : (e->forec << 4) + 0x0f);
 	else
-		d->putch(78, 11, 240, (e->backc << 4) + (e->forec));
-	d->putch(78, 12, 250, e->defc ? 0x0f : color);
-	d->putch(78, 13, 11, color);
-	d->putch(78, 14, 127, e->defc ? 0x05 : color);
-	d->putch(78, 17, 47, color);
-	d->putch(78, 18, 92, color);
+		d->putch_discrete(78, 11, 240, (e->backc << 4) + (e->forec));
+	d->putch_discrete(78, 12, 250, e->defc ? 0x0f : color);
+	d->putch_discrete(78, 13, 11, color);
+	d->putch_discrete(78, 14, 127, e->defc ? 0x05 : color);
+	d->putch_discrete(78, 17, 47, color);
+	d->putch_discrete(78, 18, 92, color);
+	d->update(60, 3, 20, 22);
 
 	while (1) {
 		i = d->getch();
@@ -941,25 +943,26 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 
 	for (y = 3; y < 20; y++) {
 		for (x = 0; x < 20; x++) {
-			d->putch(x + 60, y, PANEL_F2[i], PANEL_F2[i + 1]);
+			d->putch_discrete(x + 60, y, PANEL_F2[i], PANEL_F2[i + 1]);
 			i += 2;
 		}
 	}
-	/* Bear    */ d->putch(78, 4,  153,  e->defc ? 0x06 : color);
-	/* Ruffian */ d->putch(78, 5,  5,    e->defc ? 0x0d : color);
-	/* Object  */ d->putch(78, 6,  1,    color);
-	/* Slime   */ d->putch(78, 7,  '*',  color);
-	/* Shark   */ d->putch(78, 8,  '^',  e->defc ? 0x07 : color);
-	/* SpinGun */ d->putch(78, 9,  0x18, color);
-	/* Pusher  */ d->putch(78, 10, 0x10, color);
-	/* Lion    */ d->putch(78, 11, 0xEA, e->defc ? 0x0C : color);
-	/* Tiger   */ d->putch(78, 12, 0xE3, e->defc ? 0x0B : color);
+	/* Bear    */ d->putch_discrete(78, 4,  153,  e->defc ? 0x06 : color);
+	/* Ruffian */ d->putch_discrete(78, 5,  5,    e->defc ? 0x0d : color);
+	/* Object  */ d->putch_discrete(78, 6,  1,    color);
+	/* Slime   */ d->putch_discrete(78, 7,  '*',  color);
+	/* Shark   */ d->putch_discrete(78, 8,  '^',  e->defc ? 0x07 : color);
+	/* SpinGun */ d->putch_discrete(78, 9,  0x18, color);
+	/* Pusher  */ d->putch_discrete(78, 10, 0x10, color);
+	/* Lion    */ d->putch_discrete(78, 11, 0xEA, e->defc ? 0x0C : color);
+	/* Tiger   */ d->putch_discrete(78, 12, 0xE3, e->defc ? 0x0B : color);
 
-	/* Bullet  */ d->putch(78, 14, 0xF8, e->defc ? 0x0F : color);
-	/* Star    */ d->putch(78, 15, '/',  e->defc ? 0x0F : color);
+	/* Bullet  */ d->putch_discrete(78, 14, 0xF8, e->defc ? 0x0F : color);
+	/* Star    */ d->putch_discrete(78, 15, '/',  e->defc ? 0x0F : color);
 
-	/* Head    */ d->putch(78, 17, 0xE9, color);
-	/* Segment */ d->putch(78, 18, 'O',  color);
+	/* Head    */ d->putch_discrete(78, 17, 0xE9, color);
+	/* Segment */ d->putch_discrete(78, 18, 'O',  color);
+	d->update(60, 3, 20, 22);
 
 	while (1) {
 		i = d->getch();
@@ -1017,24 +1020,25 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 
 	for (y = 3; y < 20; y++) {
 		for (x = 0; x < 20; x++) {
-			d->putch(x + 60, y, PANEL_F3[i], PANEL_F3[i + 1]);
+			d->putch_discrete(x + 60, y, PANEL_F3[i], PANEL_F3[i + 1]);
 			i += 2;
 		}
 	}
-	d->putch(78, 4, 176, e->defc ? 0x9f : color);
-	d->putch(78, 5, 176, e->defc ? 0x20 : color);
-	d->putch(78, 6, 219, color);
-	d->putch(78, 7, 178, color);
-	d->putch(78, 8, 177, color);
-	d->putch(78, 9, 254, color);
-	d->putch(78, 10, 18, color);
-	d->putch(78, 11, 29, color);
-	d->putch(78, 12, 178, color);
-	d->putch(78, 13, 176, color);
-	d->putch(78, 14, 0xCE, color);
-	d->putch(78, 15, '<', color);
-	d->putch(78, 16, '*', e->defc ? 0x0a : color);
-	d->putch(78, 18, 'E', color);
+	d->putch_discrete(78, 4, 176, e->defc ? 0x9f : color);
+	d->putch_discrete(78, 5, 176, e->defc ? 0x20 : color);
+	d->putch_discrete(78, 6, 219, color);
+	d->putch_discrete(78, 7, 178, color);
+	d->putch_discrete(78, 8, 177, color);
+	d->putch_discrete(78, 9, 254, color);
+	d->putch_discrete(78, 10, 18, color);
+	d->putch_discrete(78, 11, 29, color);
+	d->putch_discrete(78, 12, 178, color);
+	d->putch_discrete(78, 13, 176, color);
+	d->putch_discrete(78, 14, 0xCE, color);
+	d->putch_discrete(78, 15, '<', color);
+	d->putch_discrete(78, 16, '*', e->defc ? 0x0a : color);
+	d->putch_discrete(78, 18, 'E', color);
+	d->update(60, 3, 20, 22);
 	while (1) {
 		i = d->getch();
 		switch (i) {
@@ -1110,10 +1114,11 @@ int charselect(displaymethod * d, int c)
 
 	for (e = 0; e < CHAR_BOX_DEPTH; e++) {
 		for (z = 0; z < CHAR_BOX_WIDTH; z++) {
-			d->putch(z + 13, e + 8, CHAR_BOX[i], CHAR_BOX[i + 1]);
+			d->putch_discrete(z + 13, e + 8, CHAR_BOX[i], CHAR_BOX[i + 1]);
 			i += 2;
 		}
 	}
+	d->update(13, 8, CHAR_BOX_WIDTH, CHAR_BOX_DEPTH);
 
 	while (1) {
 		d->cursorgo(14 + x, 9 + y);
@@ -1320,9 +1325,10 @@ int confirmprompt(displaymethod * mydisplay, char * prompt)
 	int i, x;
 	for (i = 3; i < 25; i++) {
 		for (x = 0; x < 20; x++) {
-			mydisplay->putch(x + 60, i, ' ', 0x1f);
+			mydisplay->putch_discrete(x + 60, i, ' ', 0x1f);
 		}
 	}
+	mydisplay->update(60, 3, 20, 22);
 
 	mydisplay->print(61, 3, 0x1f, prompt);
 	mydisplay->print(61, 4, 0x1e, "y/n");
