@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.4 2002/02/16 10:25:22 bitman Exp $
+ * $Id: zzt.h,v 1.5 2002/02/16 19:44:31 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -230,11 +230,13 @@ char *zztWorldGetFilename(ZZTworld *world);
  */
 int zztBoardSelect(ZZTworld *world, int number);
 /* zztBoardCommit(world)
- * Commits changes to board tiles.  Not very useful unless you want to do
- * something to the rle data yourself.  You shouldn't ever have to use this
- * in normal operation.
+ * Compresses the current board. Not very useful at all.
  */
 void zztBoardCommit(ZZTworld *world);
+/* zztBoardClear(world)
+ * Clear the current board
+ */
+int zztBoardClear(ZZTworld *world);
 /* zztBoardGetCurrent(world)
  * Return the number of the currently selected board
  */
@@ -245,15 +247,6 @@ int zztBoardGetCurrent(ZZTworld *world);
 ZZTboard * zztBoardGetCurPtr(ZZTworld *world);
 
 /***** BOARD MANIPULATORS *****/
-/* zztWorldAddBoard(world, title)
- * Create a blank board at the end of the world with the given title
- */
-void zztWorldAddBoard(ZZTworld *world, char *title);
-/* zztWorldDeleteBoard(world, number, relink)
- * Remove a board from the world
- * Make relink non-zero to correct all the board links
- */
-int zztWorldDeleteBoard(ZZTworld *world, int number, int relink);
 /* zztBoardCreate(title)
  * Create a stand-alone board
  */
@@ -274,6 +267,15 @@ int zztBoardDecompress(ZZTboard *board);
  * Switch board to compressed (rle) form (do not call manually)
  */
 int zztBoardCompress(ZZTboard *board);
+/* zztWorldAddBoard(world, title)
+ * Create a blank board at the end of the world with the given title
+ */
+void zztWorldAddBoard(ZZTworld *world, char *title);
+/* zztWorldDeleteBoard(world, number, relink)
+ * Remove a board from the world
+ * Make relink non-zero to correct all the board links
+ */
+int zztWorldDeleteBoard(ZZTworld *world, int number, int relink);
 /* zztWorldInsertBoard(world, board, position, relink)
  * Insert a stand-alone board into the given world
  * Make relink non-zero to correct all the board links

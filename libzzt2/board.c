@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.3 2002/02/16 10:25:22 bitman Exp $
+ * $Id: board.c,v 1.4 2002/02/16 19:44:31 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,8 @@
  * Found in tiles.c
  */
 int zztParamCopyPtr(ZZTparam *dest, ZZTparam *src);
+
+/* Helper functions native to board.c */
 
 int _zzt_rle_decode(u_int8_t *packed, ZZTblock *block)
 {
@@ -194,6 +196,122 @@ void _zztBoardFree(ZZTboard board)
 	board.params = NULL;
 }
 
+void zztBoardCopyPtr(ZZTboard *dest, ZZTboard *src)
+{
+	int tiles = 0, ofs = 0;
+	int i;
+
+	/* Base board junk */
+	memcpy(dest, src, sizeof(ZZTboard));
+	/* Packed board */
+	if (src->packed != NULL) {
+		do {
+			tiles += src->packed[ofs];
+			ofs += 3;
+		} while(tiles < ZZT_BOARD_MAX_SIZE);
+		dest->packed = malloc(ofs);
+		memcpy(dest->packed, src->packed, ofs);
+	}
+	/* Parameters */
+	if(dest->params != NULL) {
+		dest->params = malloc(sizeof(ZZTparam)*dest->info.paramcount);
+		memcpy(dest->params, src->params, dest->info.paramcount*sizeof(ZZTparam));
+		for(i = 0; i < src->info.paramcount; i++) {
+			if(dest->params[i].length != 0) {
+				dest->params[i].program = malloc(dest->params[i].length);
+				memcpy(dest->params[i].program, src->params[i].program, dest->params[i].length);
+			}
+		}
+	}
+	/* Bigboard */
+	if (src->bigboard != NULL) {
+		dest->bigboard = zztBlockDuplicate(src->bigboard);
+	}
+}
+
+/* _zzt_board_relink(brd, offset, start, end movefrom, moveto)
+ * Add offset to all links in a board between start and end, except
+ * links to "movefrom" which become "moveto" instead
+ */
+void _zzt_board_relink(ZZTboard *brd, int offset, int start, int end, int movefrom, int moveto)
+{
+	int j, board_length;
+
+	/* Cool macro to save major space */
+#define relink(link) if ((link) == movefrom) (link) = moveto; else if ((link) >= start && (link) <= end) (link) += offset;
+
+	/* Relink board connections */
+	relink(brd->info.board_n);
+	relink(brd->info.board_s);
+	relink(brd->info.board_e);
+	relink(brd->info.board_w);
+
+	/* Do the same for passages */
+	if (!zztBoardDecompress(brd)) {
+		fprintf(stderr, "Error decompressing board\n");
+		return;
+	}
+	board_length = brd->bigboard->width * brd->bigboard->height;
+	for (j = 0; j < board_length; j++) {
+		if (brd->bigboard->tiles[j].type == ZZT_PASSAGE) {
+			relink(brd->bigboard->tiles[j].param->data[2]);
+		}
+	}
+}
+
+/* Functions present in zzt.h */
+
+ZZTboard *zztBoardCreate(char *title)
+{
+	int blocks, remainder, ofs;
+	int i;
+
+	/* Create new board */
+	ZZTboard *board = malloc(sizeof(ZZTboard));
+	memset(&board->info, 0, sizeof(ZZTboardinfo));
+	strncpy(board->title, title, ZZT_BOARD_TITLE_SIZE);
+	board->title[ZZT_BOARD_TITLE_SIZE] = '\0';
+	board->info.maxshots = 255;
+	board->bigboard = NULL;
+	/* Make packed blank board */
+	blocks = (ZZT_BOARD_MAX_SIZE-1)/255;
+	remainder = (ZZT_BOARD_MAX_SIZE-1)%255;
+	board->packed = malloc((blocks+2)*3);
+	ofs = 0;
+	board->packed[ofs++] = 1;
+	board->packed[ofs++] = ZZT_PLAYER;
+	board->packed[ofs++] = 0x1F;
+	for(i = 0; i < blocks+1; i++) {
+		board->packed[ofs++] = 255;
+		board->packed[ofs++] = ZZT_EMPTY;
+		board->packed[ofs++] = 0x0F;
+	}
+	board->packed[ofs-3] = remainder;
+	/* Make player param */
+	board->params = malloc(sizeof(ZZTparam));
+	memset(board->params, 0, sizeof(ZZTparam));
+	board->params->cycle = 1;
+	board->info.paramcount = 1;
+	/* Player position: (0, 0) */
+	board->plx = board->ply = 0;
+
+	return board;
+}
+
+void zztBoardFree(ZZTboard *board)
+{
+	_zztBoardFree(*board);
+	/* Delete the board pointer */
+	free(board);
+}
+
+ZZTboard *zztBoardCopy(ZZTboard *board)
+{
+	ZZTboard *new = malloc(sizeof(ZZTboard));
+	zztBoardCopyPtr(new, board);
+	return new;
+}
+
 int zztBoardDecompress(ZZTboard *board)
 {
 	int i;
@@ -250,46 +368,6 @@ int zztBoardCompress(ZZTboard *board)
 	return 1;
 }
 
-void zztBoardCopyPtr(ZZTboard *dest, ZZTboard *src)
-{
-	int tiles = 0, ofs = 0;
-	int i;
-
-	/* Base board junk */
-	memcpy(dest, src, sizeof(ZZTboard));
-	/* Packed board */
-	if (src->packed != NULL) {
-		do {
-			tiles += src->packed[ofs];
-			ofs += 3;
-		} while(tiles < ZZT_BOARD_MAX_SIZE);
-		dest->packed = malloc(ofs);
-		memcpy(dest->packed, src->packed, ofs);
-	}
-	/* Parameters */
-	if(dest->params != NULL) {
-		dest->params = malloc(sizeof(ZZTparam)*dest->info.paramcount);
-		memcpy(dest->params, src->params, dest->info.paramcount*sizeof(ZZTparam));
-		for(i = 0; i < src->info.paramcount; i++) {
-			if(dest->params[i].length != 0) {
-				dest->params[i].program = malloc(dest->params[i].length);
-				memcpy(dest->params[i].program, src->params[i].program, dest->params[i].length);
-			}
-		}
-	}
-	/* Bigboard */
-	if (src->bigboard != NULL) {
-		dest->bigboard = zztBlockDuplicate(src->bigboard);
-	}
-}
-
-ZZTboard *zztBoardCopy(ZZTboard *board)
-{
-	ZZTboard *new = malloc(sizeof(ZZTboard));
-	zztBoardCopyPtr(new, board);
-	return new;
-}
-
 void zztWorldAddBoard(ZZTworld *world, char *title)
 {
 	ZZTboard *backup, *new;
@@ -314,36 +392,6 @@ void zztWorldAddBoard(ZZTworld *world, char *title)
 	new = zztBoardCreate(title);
 	memcpy(&world->boards[bcount-1], new, sizeof(ZZTboard));
 	free(new);	/* Don't ever free a board like this */
-}
-
-/* _zzt_board_relink(brd, offset, start, end movefrom, moveto)
- * Add offset to all links in a board between start and end, except
- * links to "movefrom" which become "moveto" instead
- */
-void _zzt_board_relink(ZZTboard *brd, int offset, int start, int end, int movefrom, int moveto)
-{
-	int j, board_length;
-
-	/* Cool macro to save major space */
-#define relink(link) if ((link) == movefrom) (link) = moveto; else if ((link) >= start && (link) <= end) (link) += offset;
-
-	/* Relink board connections */
-	relink(brd->info.board_n);
-	relink(brd->info.board_s);
-	relink(brd->info.board_e);
-	relink(brd->info.board_w);
-
-	/* Do the same for passages */
-	if (!zztBoardDecompress(brd)) {
-		fprintf(stderr, "Error decompressing board\n");
-		return;
-	}
-	board_length = brd->bigboard->width * brd->bigboard->height;
-	for (j = 0; j < board_length; j++) {
-		if (brd->bigboard->tiles[j].type == ZZT_PASSAGE) {
-			relink(brd->bigboard->tiles[j].param->data[2]);
-		}
-	}
 }
 
 int zztWorldDeleteBoard(ZZTworld *world, int number, int relink)
@@ -543,50 +591,6 @@ int zztWorldMoveBoard(ZZTworld *world, int src, int dest)
 	return 1;
 }
 
-ZZTboard *zztBoardCreate(char *title)
-{
-	int blocks, remainder, ofs;
-	int i;
-
-	/* Create new board */
-	ZZTboard *board = malloc(sizeof(ZZTboard));
-	memset(&board->info, 0, sizeof(ZZTboardinfo));
-	strncpy(board->title, title, ZZT_BOARD_TITLE_SIZE);
-	board->title[ZZT_BOARD_TITLE_SIZE] = '\0';
-	board->info.maxshots = 255;
-	board->bigboard = NULL;
-	/* Make packed blank board */
-	blocks = (ZZT_BOARD_MAX_SIZE-1)/255;
-	remainder = (ZZT_BOARD_MAX_SIZE-1)%255;
-	board->packed = malloc((blocks+2)*3);
-	ofs = 0;
-	board->packed[ofs++] = 1;
-	board->packed[ofs++] = ZZT_PLAYER;
-	board->packed[ofs++] = 0x1F;
-	for(i = 0; i < blocks+1; i++) {
-		board->packed[ofs++] = 255;
-		board->packed[ofs++] = ZZT_EMPTY;
-		board->packed[ofs++] = 0x0F;
-	}
-	board->packed[ofs-3] = remainder;
-	/* Make player param */
-	board->params = malloc(sizeof(ZZTparam));
-	memset(board->params, 0, sizeof(ZZTparam));
-	board->params->cycle = 1;
-	board->info.paramcount = 1;
-	/* Player position: (0, 0) */
-	board->plx = board->ply = 0;
-
-	return board;
-}
-
-void zztBoardFree(ZZTboard *board)
-{
-	_zztBoardFree(*board);
-	/* Delete the board pointer */
-	free(board);
-}
-
 int zztBoardSelect(ZZTworld *world, int number)
 {
 	/* Check range */
@@ -600,6 +604,33 @@ int zztBoardSelect(ZZTworld *world, int number)
 	world->cur_board = number;
 	/* Uncompress to bigboard */
 	zztBoardDecompress(&world->boards[number]);
+
+	return 1;
+}
+
+int zztBoardClear(ZZTworld *world)
+{
+	ZZTboard * brd = zztBoardGetCurPtr(world);
+	ZZTboard * newbrd;
+
+	/* Create a new board */
+	newbrd = zztBoardCreate("");
+	if (newbrd == NULL)
+		return 0;
+
+	/* Free the old board data (not the board itself) */
+	_zztBoardFree(*brd);
+
+	/* Who feels lazy? */
+	memcpy(brd, newbrd, sizeof(ZZTboard));
+
+	/* FREE ONLY THE LOWEST LEVEL of the new board!
+	 * Pointers to other memory locations are now copied
+	 * into the board array via brd */
+	free(newbrd);
+
+	/* Decompress the current board */
+	zztBoardDecompress(brd);
 
 	return 1;
 }

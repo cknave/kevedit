@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.22 2002/02/16 10:25:22 bitman Exp $
+ * $Id: misc.c,v 1.23 2002/02/16 19:44:31 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -283,72 +283,22 @@ void texteditor(displaymethod * mydisplay)
 
 void clearboard(ZZTworld * myworld)
 {
-	/* TODO: how? */
+	zztBoardClear(myworld);
 }
 
 ZZTworld * clearworld(ZZTworld * myworld)
 {
-	/* TODO: how? */
-	return myworld;
+	ZZTworld * newworld;
+
+	/* Create the new world */
+	newworld = zztWorldCreate(NULL, NULL);
+	if (newworld == NULL)
+		return myworld;
+
+	zztWorldFree(myworld);
+
+	return newworld;
 }
-
-#if 0
-void clearboard(world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
-{
-	int i, x;
-	char * buffer;
-	board * curboard;
-
-	curboard = myworld->board[myinfo->curboard];
-	for (i = 0; i < curboard->info->objectcount + 1; i++) {
-		if (curboard->params[i]->moredata != NULL)
-			free(curboard->params[i]->moredata);
-		free(curboard->params[i]);
-	}
-	free(curboard->data);
-	free(curboard->info);
-	buffer = (char *) malloc(sizeof(char) * (strlen(curboard->title) + 2));
-	strcpy(buffer, curboard->title);
-	free(curboard->title);
-	free(curboard);
-
-	curboard = z_newboard(buffer);
-	myworld->board[myinfo->curboard] = curboard;
-
-	free(buffer);
-	rle_decode(curboard->data, bigboard);
-	for (i = 0; i < 25; i++)
-		for (x = 0; x < 60; x++)
-			paramlist[x][i] = 0;
-
-	myinfo->playerx = curboard->params[0]->x - 1;
-	myinfo->playery = curboard->params[0]->y - 1;
-}
-
-
-world * clearworld(world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
-{
-	int i, x;
-
-	z_delete(myworld);
-	myworld = z_newworld();
-	myworld->board[0] = z_newboard("KevEdit World");
-	rle_decode(myworld->board[0]->data, bigboard);
-	for (i = 0; i < 25; i++)
-		for (x = 0; x < 60; x++)
-			paramlist[x][i] = 0;
-	strcpy(myinfo->currenttitle, "UNTITLED");
-	strcpy(myinfo->currentfile,  "untitled.zzt");
-	myinfo->curboard = 0;
-
-	myinfo->playerx = myworld->board[0]->params[0]->x - 1;
-	myinfo->playery = myworld->board[0]->params[0]->y - 1;
-
-	return myworld;
-}
-
-#endif
-
 
 int toggledrawmode(editorinfo * myinfo)
 {
@@ -364,7 +314,6 @@ int toggledrawmode(editorinfo * myinfo)
 
 	return myinfo->drawmode;
 }
-
 
 int togglegradientmode(editorinfo * myinfo)
 {
@@ -472,7 +421,6 @@ void previouspattern(editorinfo * myinfo)
 		myinfo->pbuf->pos = myinfo->pbuf->size - 1;
 	}
 }
-
 
 void nextpattern(editorinfo * myinfo)
 {

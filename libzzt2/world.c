@@ -1,5 +1,5 @@
 /* world.c	-- World functions
- * $Id: world.c,v 1.2 2002/02/15 07:13:12 bitman Exp $
+ * $Id: world.c,v 1.3 2002/02/16 19:44:31 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -129,6 +129,12 @@ int zztWorldSave(ZZTworld *world)
 
 	/* Done */
 	return result;
+}
+
+ZZTworld * zztWorldClear(ZZTworld *world)
+{
+	zztWorldFree(world);
+	return zztWorldCreate(NULL, NULL);
 }
 
 void zztWorldSetBoardcount(ZZTworld *world, u_int16_t count)
