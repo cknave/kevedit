@@ -2,6 +2,7 @@
 $Keystroke Quick Reference
 
 !general;General
+!info;Info Dialogs
 !move;Movement
 !file;File Operations
 !color;Color
@@ -21,8 +22,6 @@ INSERT
  q - Quits KevEdit
  n - Creates a new world
  z - Clears the current board
- i - Board Info
- w - World Info
  r or ALT-T - Runs zzt
  h - Help
  ! - Loads text editor
@@ -30,6 +29,14 @@ CTRL-O
   Reveal hidden objects
 ALT-ENTER
   Toggle fullscreen
+
+:info;Info Dialogs
+ i - Board Info
+ w - World Info
+CTRL-T
+  Tile Info
+CTRL-S
+  Stats Info
 
 :move;Movement
 

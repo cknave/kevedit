@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.8 2002/11/11 13:18:03 bitman Exp $
+ * $Id: params.c,v 1.9 2002/11/21 21:59:10 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -69,8 +69,8 @@ const ZZTprofile _zzt_param_profile_table[] = {
 	/* ZZT_LION           */ { ZZT_PROPERTY_CYCLE, 2, { ZZT_DATAUSE_INTELLIGENCE, 0, 0 } },
 	/* ZZT_TIGER          */ { ZZT_PROPERTY_CYCLE, 2, { ZZT_DATAUSE_INTELLIGENCE, ZZT_DATAUSE_FIRERATEMODE, 0 } },
 	/* ZZT_BLINKVERT      */ { 0, 0, { 0, 0, 0 } },
-	/* ZZT_CENTHEAD       */ { ZZT_PROPERTY_CYCLE, 2, { ZZT_DATAUSE_INTELLIGENCE, ZZT_DATAUSE_DEVIANCE, 0 } },
-	/* ZZT_CENTBODY       */ { ZZT_PROPERTY_CYCLE, 2, { 0, 0, 0 } }
+	/* ZZT_CENTHEAD       */ { ZZT_PROPERTY_CYCLE | ZZT_PROPERTY_LEADER, 2, { ZZT_DATAUSE_INTELLIGENCE, ZZT_DATAUSE_DEVIANCE, 0 } },
+	/* ZZT_CENTBODY       */ { ZZT_PROPERTY_CYCLE | ZZT_PROPERTY_LEADER, 2, { 0, 0, 0 } }
 };
 
 /* Data[] use default value look-up table */

@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.18 2002/11/17 05:54:36 bitman Exp $
+ * $Id: paramed.c,v 1.19 2002/11/21 21:59:09 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -54,6 +54,8 @@
 #define ID_DATA2        0x0B00
 #define ID_BIND         0x0C00
 #define ID_INSTRUCTION  0x0D00
+#define ID_LEADER       0x0E00
+#define ID_FOLLOWER     0x0F00
 /* The other IDs come from the ZZT_DATAUSE_* set */
 
 /* Option IDs used in tile info */
@@ -474,11 +476,49 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 	sprintf(buffer, "%d", tile.param->data[2]); _addoption(buffer, ID_DATA2);
 
 	if (properties & ZZT_PROPERTY_PROGRAM || tile.param->length != 0 || tile.param->bindindex != 0) {
+		char * bindname;
+		if (tile.param->bindindex != 0)
+			bindname = buildparamdescription(zztBoardGetBlock(w), tile.param->bindindex);
+		else
+			bindname = str_dup("(none)");
+
+		_addlabel("Bind to");
+		_addoption(bindname, ID_BIND);
+		free(bindname);
+
 		option.x = 20;
 		_addlabel("Program Instruction");
 		sprintf(buffer, "%d", (int16_t) tile.param->instruction); _addoption(buffer, ID_INSTRUCTION);
-		_addlabel("Bind Index");
-		sprintf(buffer, "%d", (int16_t) tile.param->bindindex);   _addoption(buffer, ID_BIND);
+	}
+
+	if (properties & ZZT_PROPERTY_LEADER) {
+		/* Edit follower/leader values */
+		char * name;
+
+		label.y++; option.y++;
+		option.x++;
+
+		/* Add the leader */
+		if (tile.param->leaderindex != 0xFFFF)
+			name = buildparamdescription(zztBoardGetBlock(w), tile.param->leaderindex);
+		else
+			name = str_dup("(none)");
+		
+		_addlabel("Leader");
+		_addoption(name, ID_LEADER);
+
+		free(name);
+
+		/* Add the follower */
+		if (tile.param->followerindex != 0xFFFF)
+			name = buildparamdescription(zztBoardGetBlock(w), tile.param->followerindex);
+		else
+			name = str_dup("(none)");
+		
+		_addlabel("Follower");
+		_addoption(name, ID_FOLLOWER);
+
+		free(name);
 	}
 
 	return dia;
@@ -587,21 +627,44 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 				tile.param->data[firerateindex] |= num;
 			}
 			return 1;
-		case ID_INSTRUCTION:
 		case ID_BIND:
+			num = tile.param->bindindex;
+			if (num == 0)
+				num = -1;  /* For #bind, 0 means none */
+
+			num = paramlistdialog(d, zztBoardGetBlock(w), num, "Select object to bind with");
+
+			if (num == -1)
+				num = 0;
+			tile.param->bindindex = num;
+			return 1;
+		case ID_INSTRUCTION:
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
 			if (dialogComponentEdit(d, opt, 6, LINED_SNUMBER) == LINED_OK) {
 				sscanf(opt->text, "%d", &num);
 				/* zero's are special */
 				if (opt->text[0] == '\x0') num = 0;
-
-				/* Figure out which param we just edited */
-				if (opt->id == ID_INSTRUCTION)
 					tile.param->instruction = num;
-				else
-					tile.param->bindindex = num;
 			}
+			return 1;
+		case ID_LEADER:
+		case ID_FOLLOWER:
+			if (opt->id == ID_LEADER)
+				num = tile.param->leaderindex;
+			else
+				num = tile.param->followerindex;
+			if (num == 0xFFFF)
+				num = -1;  /* For #bind, 0 means none */
+
+			num = paramlistdialog(d, zztBoardGetBlock(w), num, "Select object to bind with");
+
+			if (num == -1)
+				num = 0xFFFF;
+			if (opt->id == ID_LEADER)
+				tile.param->leaderindex = num;
+			else
+				tile.param->followerindex = num;
 			return 1;
 		case ID_PROJECTILE:
 			tile.param->data[zztParamDatauseLocate(ZZT_DATAUSE_FIRERATEMODE)] ^= 0x80;
@@ -1048,7 +1111,7 @@ char * buildparamdescription(ZZTblock * block, int index)
 
 	description = str_create(strlen(tileName) + 20);
 
-	sprintf(description, "(%2d, %2d): ", (char) param->x, (char) param->y);
+	sprintf(description, "(%2d, %2d): ", (char) param->x + 1, (char) param->y + 1);
 	strcat(description, tileName);
 
 	/* QUICKHACK: if the name is too long, truncate */
@@ -1086,7 +1149,7 @@ int paramlistdialog(displaymethod * d, ZZTblock * block, int curparam, char * ti
 	/* Build the param list and move to the beginning */
 	paramlist = buildparamlist(block);
 	svmovetofirst(&paramlist);
-	preinsertstring(&paramlist, "(none)");
+	preinsertstring(&paramlist, str_dup("(none)"));
 	
 	/* Move to the current param */
 	svmoveby(&paramlist, curparam);

@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.21 2002/11/11 13:18:03 bitman Exp $
+ * $Id: zzt.h,v 1.22 2002/11/21 21:59:10 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -83,6 +83,7 @@ typedef unsigned int u_int32_t;
 #define ZZT_PROPERTY_STEP    0x02
 #define ZZT_PROPERTY_CYCLE   0x04
 #define ZZT_PROPERTY_PROGRAM 0x08
+#define ZZT_PROPERTY_LEADER  0x10
 
 /* Uses for the data[] in a param */
 #define ZZT_DATAUSE_NONE          0

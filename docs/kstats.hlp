@@ -6,7 +6,8 @@ $Stats Editor
 !obj;Objects and Scrolls
 !passage;Passages
 !adv;Advanced Tweaking
-!bind; * Bind Index
+!bind; * Bind to
+!leader; * Leader and Follower
 
 :stats;Stats
 
@@ -23,6 +24,14 @@ select which stat to modify. ENTER often
 allows you to enter a specific value for a
 stat, while LEFT and RIGHT can be used to
 increase and decrease a stat's value.
+
+To see a list of all the stats on current
+board, press CTRL-S to open the Stats Info
+dialog. Here you can easily access any
+tile with stats without needing to find it
+on the board first. Even stats beyond the
+edge of the board can sometimes be found
+here...
 
 :cycle;Cycle
 
@@ -100,23 +109,34 @@ currently executing code. Other values
 represent a character offset from the
 beginning of the object's program.
 
-:bind;Bind Index
+:bind;Bind to
 
-The bind index is used by object with no
-program of its own to indicate which
-object's code to use. This is usually only
-found in saved games. A value of 0 is used
-for no binding, 1 is the first object, 1
-the second, etc.
+One object may share another's code by
+being bound to that object. Use the "Bind
+to" stat to bind an object to another.
+Objects which already have a program
+cannot also be bound.
 
-You can determine the index for the object
-you want to bind to by using the
-!-ktileinf;Tile Info Dialog
+WARNING: ZZT may do very weird things if
+you bind to something that is not an
+object.
 
-Note: the only way to open saved games is
-by opening them in KevEdit from the
-command line, by associating them with
-KevEdit in Windows, or by changing the
-extension to zzt. We're just too lazy to
-add them to the open dialog.
+Using bind here is essentially the same as
+puting a #bind command in an object's
+program.
+
+:leader;Leader and Follower
+
+Centipedes parts move together in chains.
+The leader and follower stats tell each
+centipede part who to lead and who to
+follow. If no values are specified, the
+centipedes will usually be able to figure
+this out on their own. There shouldn't
+usually be any reason to modify these
+values.
+
+WARNING: ZZT may do weird things if you
+lead or follow anything other than a
+centipede part.
 
