@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.13 2002/12/13 00:39:19 bitman Exp $
+ * $Id: kevedit.c,v 1.14 2002/12/14 03:43:32 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -838,7 +838,7 @@ void keveditHandleMovement(keveditor * myeditor)
 				case DKEY_DOWN:      /* Down */
 				case DKEY_ALT_DOWN:  /* Alt+Down */
 					myeditor->cursory++; repeat--;
-					if (myeditor->cursory > myeditor->height) { myeditor->cursory = myeditor->height - 1; repeat = 0; }
+					if (myeditor->cursory >= myeditor->height) { myeditor->cursory = myeditor->height - 1; repeat = 0; }
 					break;
 			}
 
