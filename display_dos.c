@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.6 2001/01/07 23:55:41 bitman Exp $
+ * $Id: display_dos.c,v 1.7 2001/01/26 02:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,11 +29,7 @@
 #include <go32.h>
 
 #include "display.h"
-#ifdef LONG_FILES
 #include "display_dos.h"
-#else
-#include "d_dos.h"
-#endif
 
 #define KBD_INT 0x09
 

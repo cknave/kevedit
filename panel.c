@@ -1,5 +1,5 @@
 /* Image Saved In ACiDDRAW v1.1 */
-/* $Id: panel.c,v 1.1 2000/06/15 03:58:10 kvance Exp $ */
+/* $Id: panel.c,v 1.2 2001/01/26 02:05:49 bitman Exp $ */
 
 #define PANEL_MAIN_WIDTH 20
 #define PANEL_MAIN_DEPTH 25

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.13 2001/01/07 23:55:41 bitman Exp $
+ * $Id: editbox.c,v 1.14 2001/01/26 02:05:49 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -335,6 +335,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 	int updateflags;        /* flags to determine what needs update */
 	stringnode *centerstr;  /* str in center of dialog */
 	stringnode *loopstr;    /* node pointer for use in looping */
+	int selChar = 0;
 
 	/* vars only relating to editing */
 	int pos = 0;            /* position in sv->cur->s */
@@ -921,12 +922,13 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						if (strequ(strbuf, "#char", STREQU_UNCASE | STREQU_FRONT)) {
 							/* append dec value for ascii char */
 
-							c = charselect(d);
+							sscanf(strbuf + 5, "%d", &selChar);
+							selChar = charselect(d, selChar);
 							centerstr->s[5] = ' ';
 							centerstr->s[6] = 0;
 
 							/* change c to a string */
-							sprintf(strbuf, "%d", c);
+							sprintf(strbuf, "%d", selChar);
 							strcat(centerstr->s, strbuf);
 							pos = strlen(centerstr->s);
 							updateflags = U_EDITAREA;
@@ -934,7 +936,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						}
 						else
 							/* ctrl-a: insert ascii char */
-							c = charselect(d);
+							c = selChar = charselect(d, selChar);
 						/* no break; we just changed c & want to insert it */
 
 					default:

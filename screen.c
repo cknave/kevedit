@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.15 2001/01/07 23:55:42 bitman Exp $
+ * $Id: screen.c,v 1.16 2001/01/26 02:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -776,6 +776,10 @@ unsigned char charselect(displaymethod * d, int c)
 {
 	int z, e, i = 0;
 	static int x, y;
+
+	if (c > 255)
+		c = 0;
+
 	if(c != -1) {
 		y = c / (CHAR_BOX_WIDTH-2);
 		x = c % (CHAR_BOX_WIDTH-2);
@@ -830,6 +834,11 @@ unsigned char charselect(displaymethod * d, int c)
 			/* Enter */
 			i = (x + y * 32);
 			break;
+		}
+		if (e == 0 && i == 27) {
+			/* Escape */
+			/* Return the char we recieved without doing anything, unless it is -1 */
+			return (c != -1)? c : (x + y * 32);
 		}
 	}
 
