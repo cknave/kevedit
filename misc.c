@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.4 2001/06/03 17:45:19 bitman Exp $
+ * $Id: misc.c,v 1.5 2001/06/13 02:04:55 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -355,8 +355,10 @@ void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * my
 	strcpy(filename, myinfo->currentfile);
 	filenamedialog(filename, "Save World As", "zzt", 1, mydisplay);
 
+	/*
 	if (!strcmp(filename, myinfo->currentfile))
 		return;
+		*/
 
 	/* Copy filename w/o ext onto world's title */
 	for (i = 0; i < 9 && filename[i] != '.' && filename[i] != '\0'; i++) {
@@ -375,8 +377,8 @@ void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * my
 	myworld->zhead->startboard = myinfo->curboard;
 	saveworld(filename, myworld);
 
-	mydisplay->print(61, 6, 0x1f, "Written.");
-	mydisplay->cursorgo(69, 6);
+	mydisplay->print(61, 5, 0x1f, "Written.");
+	mydisplay->cursorgo(69, 5);
 	mydisplay->getch();
 }
 
