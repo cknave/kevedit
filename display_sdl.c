@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.17 2002/11/12 09:27:07 bitman Exp $
+ * $Id: display_sdl.c,v 1.18 2002/11/15 06:36:01 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -915,7 +915,7 @@ void display_sdl_putch(int x, int y, int ch, int co)
 	display_update(&info, x, y, 1, 1);
 }
 
-void display_fullscreen()
+void display_sdl_fullscreen()
 {
 	/* Toggle fullscreen */
 	info.vflags ^= SDL_FULLSCREEN;
@@ -965,7 +965,7 @@ int display_sdl_getkey()
 				/* Fullscreen toggle */
 				if(event.key.keysym.mod & KMOD_ALT) {
 					event.type = SDL_KEYUP;
-					display_fullscreen();
+					display_sdl_fullscreen();
 				}
 				break;
 			default:
@@ -995,9 +995,6 @@ int display_sdl_getkey()
 			}
 		}
 	}
-
-	/* Hide the cursor in case it moves */
-	display_update(&info, info.write_x, info.write_y, 1, 1);
 
 	if (event.type != SDL_KEYDOWN)
 		return DKEY_NONE;
@@ -1205,29 +1202,19 @@ int display_sdl_getch()
 	int key;
 
 	do {
+		/* Draw the cursor if necessary */
+		if(timer)
+			display_update(&info, info.write_x, info.write_y, 1, 1);
+		else
+			display_curse(info.write_x, info.write_y);
+
+		if (SDL_WaitEvent(NULL) == 0)
+			return DKEY_NONE;
+
 		key = display_sdl_getkey();
 	} while (key == DKEY_NONE);
 
 	return key;
-}
-
-/* This function is obsoleted by getkey(). It never really worked to begin with, anyway. */
-int display_sdl_kbhit()
-{
-	SDL_Event event;
-	int retval;
-
-	/* Make sure pending events get into the event queue */
-	SDL_PumpEvents();
-
-	/* Get number of KEYDOWN events in the queue */
-	retval = SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYDOWN);
-
-	/* Non-zero means 1 */
-	if(retval != 0)
-		retval = 1;
-
-	return retval;
 }
 
 void display_sdl_gotoxy(int x, int y)
