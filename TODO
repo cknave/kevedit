@@ -1,7 +1,33 @@
-ZZT-OOP editor!  Real Soon Now!
-Seperate keys for modify (ENTER) and grab (INS) ala MegaZeux
-DELETE plots an empty.
+For the 0.3 release:
+--------------------
 Do not change the colour of all empties
 Add a special case in floodfill() for empties of any colour
 Allow for coloured empties to be plotted
-Keybindings
+Clear board/new world
+
+For the 0.4 release:
+--------------------
+Global parameter editor for built-in enemies
+All other unimplimented F-key tiles
+Text entry
+
+For the 0.5 release:
+--------------------
+Board Info
+World Info
+Transfer (import/export)
+
+For the 0.6 release:
+--------------------
+Block copy/paste/move/export/import
+ANSI file support (as much as ZZT can do)
+
+For the 0.7 release:
+--------------------
+Configurable keybindings
+UNIX, here we come!
+
+For the 0.8 release:
+--------------------
+On-line help system
+	(ZZT's docs are public domain, stealing is okay :)
