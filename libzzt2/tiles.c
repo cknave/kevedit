@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.7 2002/02/19 03:32:28 bitman Exp $
+ * $Id: tiles.c,v 1.8 2002/02/21 00:26:25 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -417,26 +417,6 @@ u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile)
 		case ZZT_EMPTY:  return 0x0F;
 		case ZZT_EDGE:   return 0x4C;
 		case ZZT_PLAYER: return 0x1F;
-		case ZZT_SCROLL:
-		case ZZT_DUPLICATOR:
-		case ZZT_BOMB:
-		case ZZT_STAR:
-		case ZZT_BULLET:
-		case ZZT_BLINK:
-		case ZZT_TRANSPORTER:
-		case ZZT_BEAR:
-		case ZZT_RUFFIAN:
-		case ZZT_OBJECT:
-		case ZZT_SLIME:
-		case ZZT_SPINNINGGUN:
-		case ZZT_PUSHER:
-		case ZZT_LION:
-		case ZZT_TIGER:
-		case ZZT_CENTHEAD:
-		case ZZT_CENTBODY:
-			if (tile.param == NULL || tile.param->utype == ZZT_EMPTY)
-				break;
-			return (tile.param->ucolor & 0xf0) + (tile.color & 0x0f);
 		case ZZT_BLUETEXT:    return 0x1f;
 		case ZZT_GREENTEXT:   return 0x2f;
 		case ZZT_CYANTEXT:    return 0x3f;
@@ -481,6 +461,14 @@ u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y) {
 	/* Error if board cannot be decompressed */
 	if (!zztBoardDecompress(brd))
 		return '?';
+
+	/* TODO: add options to control display behavior (also for color):
+	 *   * Show char/color underneath
+	 *   * Make objects stand out
+	 *   * Empty character
+	 *   * Invisible wall character
+	 *   * Board edge
+	 */
 
 	return zztTileGetDisplayChar(brd->bigboard, x, y);
 }
