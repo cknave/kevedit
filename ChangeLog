@@ -1,7 +1,9 @@
 0.3.3
 -----
 Bug fixed in save dialog
+Bug fixed when cutting on a single line
 Hypertext help system implemented
+CTRL used instead of ALT in copy/paste
 
 0.3.2: October 4, 2001
 ----------------------

@@ -3,12 +3,12 @@ $-----------------------------------------
 KevEdit 0.3.2
      A world file editor for the game ZZT
 $-----------------------------------------
-Copyright (C) 2000-2001 Kev Vance   <kvance@tekktonik.net>
-With many contributions from bitman <bitman@users.sourceforge.net>
+Copyright (C) 2000-2001 Kev Vance  <kvance@tekktonik.net>
+With many contributions by bitman  <bitman@users.sf.net>
 
 :contents;Using Kevedit
 !starting;Getting Started
-!new;New features
+!new;* New features *
 !basics;Basic Movement and Plotting
 !sidebar;The KevEdit Sidebar
 !defc;Default Color Mode
@@ -44,6 +44,10 @@ will be created.
 !help;Hypertext help dialog!!!
 !creatures;More creatures
 !creatures;Copy and paste!
+
+$Bugs fixed in 0.3.3
+  * Escape cancels save operation
+  * Cut doesn't crash on last line
 
 :basics;Basic Movement and Plotting
 !contents;<-- Back to Contents
@@ -157,9 +161,9 @@ cursor, ESCAPE quits, ctrl+'y' deletes a line.
 
 $******* NEW in 0.3.2 *******
 The ZZT-OOP editor even features copy and paste! Text may be highlighted by
-holding down SHIFT and using the arrow keys to navigate. Use alt+'c' to copy the
-selected text, alt+'x to cut, and alt+'v' to paste. CTRL-DELETE will clear a
-selected area without copying.
+holding down SHIFT and using the arrow keys to navigate. Use CTRL+'c' to copy
+the selected text, CTRL+'x to cut, and CTRL+'v' to paste. CTRL-DELETE will
+clear a selected area without copying.
 
 The ZZT-OOP editor has a configurable word wrap.  alt+'+' and alt+'-' will
 increase or decrease the maximum length of a line of text.  You can also
