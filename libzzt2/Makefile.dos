@@ -1,0 +1,22 @@
+# Makefile for libzzt2
+
+# Choose your compiler & archiver
+CC = i586-pc-msdosdjgpp-gcc
+AR = i586-pc-msdosdjgpp-ar cqs
+
+RM = rm -f
+
+# First line for optimization
+# Second line for debug
+OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+#OPTIMIZE = -g -Wall
+
+# Uncomment when compiling from DOS
+DOS = -DDOS
+
+CFLAGS = $(OPTIMIZE) $(DOS)
+
+# No more modifications below this line
+# -------------------------------------
+
+include KevEdit.make
