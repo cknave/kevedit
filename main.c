@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.20 2000/09/11 00:25:39 bitman Exp $
+ * $Id: main.c,v 1.21 2000/09/20 00:10:54 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -440,30 +440,6 @@ int main(int argc, char **argv)
 			}
 		}
 		switch (c) {
-		case 'a':
-			{
-				stringvector sv;
-				char xbuf[100];
-
-				initstringvector(&sv);
-
-				pushstring(&sv, "Junk");
-				pushstring(&sv, "; $SONG TITLE 2 two");
-				pushstring(&sv, "Junk");
-				pushstring(&sv, "; garbage");
-				pushstring(&sv, "; $SONG TITLE 1 one");
-				pushstring(&sv, "Junk");
-				pushstring(&sv, "; $SONG TITLE 3 three");
-				pushstring(&sv, "Junk");
-				sprintf(xbuf, "You choose song #%d", zzmpicksong(&sv, mydisplay));
-
-				removestringvector(&sv);
-
-				pushstring(&sv, xbuf);
-				editbox(mydisplay, "yawn", &sv, 0, 0);
-				removestringvector(&sv);
-			}
-			break;
 		case '!':
 			/* open text file for edit */
 			strcpy(buffer, "");
