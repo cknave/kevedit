@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.8 2002/02/21 00:26:25 bitman Exp $
+ * $Id: tiles.c,v 1.9 2002/02/22 00:04:28 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -342,6 +342,10 @@ int zztErase(ZZTworld * world, int x, int y)
 	/* No erasing the player */
 	if (x == brd->plx && y == brd->ply)
 		return 0;
+
+	/* Reduce the param count if we are removing a tile */
+	if (zztTileAt(brd->bigboard, x, y).param != NULL)
+		zztBoardSetParamcount(world, zztBoardGetParamcount(world) - 1);
 
 	zztTileErase(brd->bigboard, x, y);
 	

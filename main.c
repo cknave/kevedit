@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.61 2002/02/21 15:28:18 kvance Exp $
+ * $Id: main.c,v 1.62 2002/02/22 00:04:53 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -468,6 +468,7 @@ int main(int argc, char **argv)
 		case DKEY_BACKSPACE:
 		case DKEY_DELETE:
 			zztErase(myworld, myinfo->cursorx, myinfo->cursory);
+			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'f':
 		case 'F':
