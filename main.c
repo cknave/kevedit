@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.14 2000/08/22 17:07:42 kvance Exp $
+ * $Id: main.c,v 1.15 2000/08/27 02:19:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -387,6 +387,21 @@ int main(int argc, char **argv)
 				 z_getcolour(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]));
 
 		switch (c) {
+			case '!':
+				/* open text file for edit */
+				strcpy(buffer, "");
+				filenamedialog(buffer, "Text File For Edit", "", 0, mydisplay);
+				{
+					stringvector editvector;
+					editvector = filetosvector(buffer, 42, 42);
+					editbox(mydisplay, "Edit Text File", &editvector, 42, 0);
+					svectortofile(&editvector, buffer);
+				}
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
+				break;
 			case 'z':
 			case 'Z':
 				if (e == 0) {
@@ -689,7 +704,7 @@ int main(int argc, char **argv)
 		case 'L':
 		case 'l':
 			/* Load world */
-			listpos = filedialog("zzt", mydisplay);
+			listpos = filedialog("zzt", "Load World", mydisplay);
 			if (listpos != -1) {
 				z_delete(myworld);
 				myworld = loadworld(filelist[listpos]);
@@ -784,7 +799,7 @@ int main(int argc, char **argv)
 				drawscrollbox(0, 0, mydisplay);
 				mydisplay->print(24, 4, 0x0a, "About KevEdit");
 				mydisplay->print(9, 12, 0x0a, "KevEdit R5, Version");
-				mydisplay->print(29, 12, 0x0a, VERSION);
+				mydisplay->print(34, 12, 0x0a, VERSION);
 				mydisplay->print(9, 13, 0x0a, "Copyright (C) 2000 Kev Vance");
 				mydisplay->print(9, 14, 0x0a, "Distribute under the terms of the GNU GPL");
 				mydisplay->cursorgo(9, 13);
@@ -1094,4 +1109,6 @@ int main(int argc, char **argv)
 	free(string);
 	free(bigboard);
 	z_delete(myworld);
+
+	return 0;
 }

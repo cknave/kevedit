@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: screen.h,v 1.4 2000/08/20 02:08:34 bitman Exp $
+ * $Id: screen.h,v 1.5 2000/08/27 02:19:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,9 +31,9 @@ extern void cursorspace(displaymethod * d, world * w, editorinfo * e, char *bigb
 
 extern void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
 
-extern int filedialog(char *extention, displaymethod * mydisplay);
+extern int filedialog(char *extention, char *title, displaymethod * mydisplay);
 extern int boarddialog(world * w, editorinfo * e, displaymethod * mydisplay);
-
+extern char* filenamedialog(char * filename, char * prompt, char * ext, int askoverwrite, displaymethod * mydisplay);
 
 extern int dothepanel_f1(displaymethod * d, editorinfo * e);
 extern int dothepanel_f2(displaymethod * d, editorinfo * e);

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.10 2000/08/21 20:06:22 bitman Exp $
+ * $Id: screen.c,v 1.11 2000/08/27 02:19:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include <dirent.h>
+#include <stdio.h>
 
 #include "panel_f1.h"
 #include "panel_f2.h"
@@ -35,6 +36,115 @@ extern char filelist[500][13];
 extern patdef patdefs[16];
 extern param *patparams[10];
 
+
+/* okay most of this was stolen from case 's' in main(), but I needed a more
+ * generic filename input function. case 's' could even be modified to use
+ * this function if main() gets too bloated. --bitman */
+char* filenamedialog(char * filename, char * prompt, char * ext, int askoverwrite, displaymethod * mydisplay)
+{
+	int i = 0, x = 0, c = 0;   /* general vars */
+	int t = strlen(filename);  /* current edit position */
+	int extlen = strlen(ext);  /* length of given extention */
+	char buffer[15] = "";
+
+	if (extlen > 3 || t > 12)
+		return filename;
+
+	for (i = 3; i < 25; i++) {
+		for (x = 0; x < 20; x++) {
+			mydisplay->putch(x + 60, i, ' ', 0x1f);
+		}
+	}
+
+	if (strlen(prompt) < 20)
+		mydisplay->print(61, 3, 0x1f, prompt);
+
+	strcpy(buffer, filename);
+
+	/* if extention is given, remove extention from buffer */
+	if (extlen)
+		for (i = 0; i < t; i++)
+			if (buffer[i] == '.')
+				buffer[t = i] = 0;
+
+	/* show filename */
+	for (i = 0; i < (extlen ? 9 : 12); i++) {
+		if (i > t)
+			mydisplay->putch(61 + i, 4, ' ', 0x0f);
+		else
+			mydisplay->putch(61 + i, 4, buffer[i], 0x0f);
+	}
+	if (extlen > 0 && extlen < 4) {
+		mydisplay->putch(70, 4, '.', 0x1f);
+		mydisplay->print(70, 4, 0x1f, ext);
+	}
+
+	x = 0;
+	while (x != 27) {
+		mydisplay->cursorgo(61 + t, 4);
+		x = mydisplay->getch();
+		switch (x) {
+		case 8:
+			if (t > 0) {
+				t--;
+				buffer[t] = '\0';
+				mydisplay->putch(61 + t, 4, ' ', 0x0f);
+			}
+			break;
+		case 13:
+			if (t > 0) {
+				FILE *fp = NULL;
+
+				if (extlen)
+					strcat(buffer, ext);
+
+				fp = fopen(buffer, "rb");
+				if (fp != NULL && askoverwrite) {
+					fclose(fp);
+					mydisplay->print(61, 5, 0x1f, "Overwrite?");
+					mydisplay->print(72, 5, 0x1e, "y/n");
+					do {
+						c = mydisplay->getch();
+					} while (!(c == 'y' || c == 'Y' || c == 'n' || c == 'N'));
+				} else {
+					c = 'y';
+				}
+
+				if (c == 'y') {
+					strcpy(filename, buffer);
+					x = 27;
+				} else {
+					buffer[t] = 0;
+				}
+			}
+			break;
+		default:
+			if (extlen ? t >= 8 : t >= 12)
+				break;
+			if (x < 45)
+				break;
+			if (x == 46 && extlen)
+				break;
+			if (x > 46 && x < 48)
+				break;
+			if (x > 57 && x < 65)
+				break;
+			if (x > 90 && x < 95)
+				break;
+			if (x == 96)
+				break;
+			if (x > 122)
+				break;
+			buffer[t] = x;
+			mydisplay->putch(61 + t, 4, x, 0x0f);
+			t++;
+			buffer[t] = '\0';
+			mydisplay->cursorgo(61 + t, 4);
+			break;
+		}
+	}
+	return filename;
+}
 
 void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
 {
@@ -258,7 +368,7 @@ int sort_function(const void *a, const void *b)
 }
 
 
-int filedialog(char *extention, displaymethod * mydisplay)
+int filedialog(char *extention, char *title, displaymethod * mydisplay)
 {
 	DIR *dp;
 	struct dirent *dirent;
@@ -268,18 +378,18 @@ int filedialog(char *extention, displaymethod * mydisplay)
 	dp = opendir(".");
 	if (dp == NULL)
 		return -1;
-	if (strlen(extention) != 3)
+	if (strlen(extention) > 3)
 		return -1;
 
 	i = 0;
 	drawscrollbox(0, 0, mydisplay);
-	mydisplay->print(25, 4, 0x0a, "Load World");
+	mydisplay->print(30 - (strlen(title) / 2), 4, 0x0a, title);
 	x = 0;
 	while (1) {
 		dirent = readdir(dp);
 		if (dirent == NULL || x == 500)
 			break;
-		if (tolower(dirent->d_name[strlen(dirent->d_name) - 1]) == extention[2] && tolower(dirent->d_name[strlen(dirent->d_name) - 2]) == extention[1] && tolower(dirent->d_name[strlen(dirent->d_name) - 3]) == extention[0] && dirent->d_name[strlen(dirent->d_name) - 4] == '.') {
+		if (strlen(extention) == 0 || extention[0] == '*' || (tolower(dirent->d_name[strlen(dirent->d_name) - 1]) == extention[2] && tolower(dirent->d_name[strlen(dirent->d_name) - 2]) == extention[1] && tolower(dirent->d_name[strlen(dirent->d_name) - 3]) == extention[0] && dirent->d_name[strlen(dirent->d_name) - 4] == '.')) {
 			strcpy(filelist[x], dirent->d_name);
 			x++;
 		}

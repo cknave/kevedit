@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.3 2000/08/19 21:41:49 kvance Exp $
+ * $Id: svector.c,v 1.4 2000/08/27 02:19:03 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -187,3 +187,16 @@ int deletestringvector(stringvector * v)
 
 	return 0;
 }
+
+/* removestringvector - empties a stringvector without free()ing any s */
+void removestringvector(stringvector * v)
+{
+	if (v == NULL)
+		return;
+
+	v->cur = v->last;
+	while (removestring(v) != NULL);
+
+	return;
+}
+

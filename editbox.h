@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.4 2000/08/21 20:06:22 bitman Exp $
+ * $Id: editbox.h,v 1.5 2000/08/27 02:19:03 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,6 +40,12 @@ void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int firstline
 
 /* wordwrap - wrap text in sv */
 int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wrapwidth, int editwidth);
+
+/* filetosvector - loads a textfile into a new stringvector */
+stringvector filetosvector(unsigned char* filename, int wrapwidth, int editwidth);
+
+/* Copies a stringvector into a file. sv is not changed */
+void svectortofile(stringvector * sv, char *filename);
 
 
 /* REFERENCE -- editbox key actions

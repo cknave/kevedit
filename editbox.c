@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.6 2000/08/22 00:44:48 bitman Exp $
+ * $Id: editbox.c,v 1.7 2000/08/27 02:19:03 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 #include "editbox.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "scroll.h"
 #include "colours.h"
@@ -27,14 +28,18 @@
 
 
 /* What portion of display box needs update? */
-#define U_NONE   0x00
-#define U_CENTER 0x01
-#define U_BOTTOM 0x02
-#define U_TOP    0x04
-#define U_ALL    0x07
+#define U_NONE      0x00
+#define U_CENTER    0x01
+#define U_BOTTOM    0x02
+#define U_TOP       0x04
+#define U_EDITAREA  0x07
+#define U_TITLE     0x08
+#define U_PANEL     0x10
+#define U_ALL       0xFF
 
-/* FIXME: use more descriptive leader than ~ */
-#define SLEADER  "~"
+/* string leader: string to appear at beginning and end of edit field
+ * (now it looks like in zzt, except centered) */
+#define SLEADER  "\x07    \x07    \x07    \x07    \x07    \x07    \x07    \x07    \x07"
 
 /* ZZT Object Code colours */
 #define ZOC_STDCOMMAND_COLOUR  GREEN_F
@@ -63,6 +68,8 @@ int iszztitem(unsigned char *token);
 int iszztkind(unsigned char *token);
 int iszztdir(unsigned char *token);
 
+/* needed to use filedialog */
+extern char filelist[500][13];
 
 void draweditpanel(displaymethod * d, int insertflag, int wrapwidth)
 {
@@ -184,6 +191,10 @@ void editmoredata(displaymethod * d, param * p)
 }
 
 
+/* how to display a line of text */
+#define displayline(d, x, y, s, edit, format, firstline) ((format) ? ((edit) ? displayzoc((d), (x), (y), (s), (firstline)) : displayzoc((d), (x), (y), (s), (firstline))) : d->print((x), (y), 0x0a, (s)))
+
+
 void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, int zocformatting)
 {
 	int c = 0, e = 0;	/* Char & ext flag */
@@ -200,19 +211,25 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 
 	int wrapwidth = editwidth;
 
+
 	if (sv->cur == NULL)
 		return;
 	centerstr = sv->cur;
 
 	drawscrollbox(0, 0, d);
-	d->print(23, 4, 0x0a, title);
-	draweditpanel(d, insertflag, wrapwidth);
-
 	updateflags = U_ALL;
 
 	while (!done && !(c == 13 && e == 0 && editwidth == 0)) {
 
 		d->cursorgo(9 + pos, 13);
+
+		/* update title & panel if needed */
+		if (updateflags & U_TITLE) {
+			drawscrollbox(1, 17, d);
+			d->print(30 - (strlen(title) / 2), 4, 0x0a, title);
+		}
+		if (updateflags & U_PANEL && editwidth)
+			draweditpanel(d, insertflag, wrapwidth);
 
 		/* clear the scrollbox */
 		if (updateflags & U_TOP)
@@ -222,40 +239,39 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 		if (updateflags & U_BOTTOM)
 			drawscrollbox(11, 1, d);
 
-		if (updateflags & (U_CENTER | U_TOP)) {
+		if (updateflags & (U_CENTER)) {
 			/* Draw the center */
-			if (zocformatting)
-				displayzoc(d, 9, 13, centerstr->s, centerstr->prev == NULL);
-			else
-				d->print(9, 13, 0x0a, centerstr->s);
+			displayline(d, 9, 13, centerstr->s, editwidth, zocformatting, centerstr->prev == NULL);
+//			if (zocformatting)
+//				displayzoc(d, 9, 13, centerstr->s, centerstr->prev == NULL);
+//			else
+//				d->print(9, 13, 0x0a, centerstr->s);
 		}
-		if (updateflags & (U_BOTTOM | U_CENTER | U_TOP)) {
+		if (updateflags & (U_BOTTOM)) {
 			/* Draw bottom half */
 			sv->cur = centerstr->next;
 			for (i = 1; i < 8 && sv->cur != NULL; i++, sv->cur = sv->cur->next)
-				if (zocformatting)
-					displayzoc(d, 9, i + 13, sv->cur->s, 0);
-				else
-					d->print(9, i + 13, 0x0a, sv->cur->s);
+				displayline(d, 9, i + 13, sv->cur->s, editwidth, zocformatting, 0);
+//				if (zocformatting)
+//					displayzoc(d, 9, i + 13, sv->cur->s, 0);
+//				else
+//					d->print(9, i + 13, 0x0a, sv->cur->s);
 
 			if (i < 8)
-				d->print(9, i+13, 0x0a, SLEADER);
-				if (zocformatting)
-					displayzoc(d, 9, i + 13, SLEADER, 0);
-				else
-					d->print(9, i + 13, 0x0a, SLEADER);
+				d->print(9, i + 13, 0x07, SLEADER);
 		}
 		if (updateflags & U_TOP) {
 			/* Draw top half */
 			sv->cur = centerstr->prev;
 			for (i = -1; i > -8 && sv->cur != NULL; i--, sv->cur = sv->cur->prev)
-				if (zocformatting)
-					displayzoc(d, 9, i + 13, sv->cur->s, sv->cur->prev == NULL);
-				else
-					d->print(9, i + 13, 0x0a, sv->cur->s);
+				displayline(d, 9, i + 13, sv->cur->s, editwidth, zocformatting, sv->cur->prev == NULL);
+//				if (zocformatting)
+//					displayzoc(d, 9, i + 13, sv->cur->s, sv->cur->prev == NULL);
+//				else
+//					d->print(9, i + 13, 0x0a, sv->cur->s);
 
 			if (i > -8)
-				d->print(9, i+13, 0x0a, SLEADER);
+				d->print(9, i + 13, 0x07, SLEADER);
 		}
 
 		updateflags = U_NONE;
@@ -273,7 +289,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 				centerstr = centerstr->prev;
 				if (pos > strlen(centerstr->s))
 					pos = strlen(centerstr->s);
-				updateflags = U_ALL;
+				updateflags = U_EDITAREA;
 			}
 		} else if (e == 1 && c == 0x50) {
 			/* Down Arrow */
@@ -281,7 +297,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 				centerstr = centerstr->next;
 				if (pos > strlen(centerstr->s))
 					pos = strlen(centerstr->s);
-				updateflags = U_ALL;
+				updateflags = U_EDITAREA;
 			}
 		} else if (e == 1 && c == 0x49) {
 			/* Page Up */
@@ -289,14 +305,14 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 				centerstr = centerstr->prev;
 			if (pos > strlen(centerstr->s))
 				pos = strlen(centerstr->s);
-			updateflags = U_ALL;
+			updateflags = U_EDITAREA;
 		} else if (e == 1 && c == 0x51) {
 			/* Page Down */
 			for (i = 0; i < 7 && centerstr->next != NULL; i++)
 				centerstr = centerstr->next;
 			if (pos > strlen(centerstr->s))
 				pos = strlen(centerstr->s);
-			updateflags = U_ALL;
+			updateflags = U_EDITAREA;
 		} else if (editwidth) {
 			/* We are edititing! Yea! Fun time! */
 			
@@ -311,7 +327,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 							/* Move to end of previous line (or current line) */
 							if (centerstr->prev != NULL) {
 								centerstr = centerstr->prev;
-								updateflags = U_ALL;
+								updateflags = U_EDITAREA;
 							}
 							pos = strlen(centerstr->s);
 						}
@@ -325,7 +341,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 							/* Move to begining of next line (or current line) */
 							if (centerstr->next != NULL) {
 								centerstr = centerstr->next;
-								updateflags = U_ALL;
+								updateflags = U_EDITAREA;
 							}
 							pos = 0;
 						}
@@ -377,6 +393,74 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 						draweditpanel(d, insertflag, wrapwidth);
 						break;
 
+					case 24:
+						/* alt+o: open file */
+					case 23:
+						/* alt+i: insert file */
+						{
+							stringvector filetypelist;
+							int listpos = -1;
+							
+							initstringvector(&filetypelist);
+
+							pushstring(&filetypelist, strcpy((char *) malloc(6), "*.zoc"));
+							pushstring(&filetypelist, strcpy((char *) malloc(6), "*.txt"));
+							pushstring(&filetypelist, strcpy((char *) malloc(6), "*.hlp"));
+							pushstring(&filetypelist, strcpy((char *) malloc(6), "*.*"));
+
+							editbox(d, "Select A File Type", &filetypelist, 0, 0);
+
+							if (filetypelist.cur != NULL)
+								listpos = filedialog(filetypelist.cur->s + 2, (c == 24 ? "Open ZZT Object Code File" : "Insert ZZT Object Code File"), d);
+
+							deletestringvector(&filetypelist);
+
+							if (listpos != -1) {
+								stringvector newsvector;
+								newsvector = filetosvector(filelist[listpos], wrapwidth, editwidth);
+								if (newsvector.first != NULL) {
+									if (c == 24) {
+										/* erase & replace sv */
+										deletestringvector(sv);
+										memcpy(sv, &newsvector, sizeof(stringvector));
+										centerstr = sv->first;
+									} else {
+										/* insert newsvector before centerstr */
+										sv->cur = centerstr;
+										if (sv->cur == sv->first) {
+											/* first node */
+											sv->first = newsvector.first;
+											sv->cur->prev = newsvector.last;
+											newsvector.last->next = sv->cur;
+											centerstr = newsvector.first;
+										} else if (sv->cur->prev != NULL) {
+											/* middle/end node */
+											newsvector.first->prev = sv->cur->prev;
+											sv->cur->prev->next = newsvector.first;
+											newsvector.last->next = sv->cur;
+											sv->cur->prev = newsvector.last;
+											centerstr = newsvector.first;
+										} else {
+											/* this code should be unreachable */
+											deletestringvector(&newsvector);
+										}
+									} /* esle alt-i */
+								}	/* fi file selected */
+							}		/* fi listpos */
+						}			/* block */
+						updateflags = U_EDITAREA | U_TITLE;
+						break;
+
+					case 31:
+						/* alt-s: save to file */
+						{
+							static char savefilename[15] = "temp.zoc";
+							filenamedialog(savefilename, "Save Object Code As", "", 1, d);
+							svectortofile(sv, savefilename);
+							updateflags = U_EDITAREA | U_PANEL;
+						}
+						break;
+
 					default:
 						/* act as if ext key is really not. This way, those used to
 						 * using alt key combos to plot special chars will not be
@@ -404,7 +488,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 							sv->cur = centerstr;
 							pos = wordwrap(sv, strbuf, pos, pos, wrapwidth, editwidth);
 							centerstr = sv->cur;
-							updateflags = U_ALL;
+							updateflags = U_EDITAREA;
 						}
 						break;
 
@@ -420,7 +504,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 						insertstring(sv, tmpstr);
 						centerstr = centerstr->next;
 						pos = 0;
-						updateflags = U_ALL;
+						updateflags = U_EDITAREA;
 						break;
 
 					case '\b':
@@ -460,7 +544,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 								pos = wordwrap(sv, tmpstr, pos, pos, wrapwidth, editwidth);
 								centerstr = sv->cur;
 								free(tmpstr);
-								updateflags = U_ALL;
+								updateflags = U_EDITAREA;
 							}
 						}
 						break;
@@ -493,7 +577,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 						/* ctrl-a: insert ascii char/decimal-value */
 						strcpy(strbuf, centerstr->s);
 						strlwr(strbuf);
-						updateflags = U_ALL;
+						updateflags = U_EDITAREA;
 
 						if ((unsigned char*)strstr(strbuf, "#char") == strbuf) {
 							/* append dec value for ascii char */
@@ -506,7 +590,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 							 * replace it. */
 							strcat(centerstr->s, itoa(c, strbuf, 10));
 							pos = strlen(centerstr->s);
-							updateflags = U_ALL;
+							updateflags = U_EDITAREA;
 							break;
 						}
 						else
@@ -532,7 +616,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 								sv->cur = centerstr;
 								pos = wordwrap(sv, strbuf, pos, pos, wrapwidth, editwidth);
 								centerstr = sv->cur;
-								updateflags = U_ALL;
+								updateflags = U_EDITAREA;
 							}
 						}
 						else {
@@ -550,7 +634,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 									sv->cur = centerstr;
 									pos = wordwrap(sv, strbuf, pos, pos, wrapwidth, editwidth);
 									centerstr = sv->cur;
-									updateflags = U_ALL;
+									updateflags = U_EDITAREA;
 								}
 							}
 							else {
@@ -952,45 +1036,131 @@ int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wra
 	strcpy(sv->cur->s, longstr);
 
 	/* finally: wrap onto next line or new line */
-	if (sv->cur->next != NULL    && strlen(sv->cur->next->s) != 0 &&
-			sv->cur->next->s[0] != '#'  && sv->cur->next->s[0] != '/' &&
-			sv->cur->next->s[0] != '?'  && sv->cur->next->s[0] != ':' &&
-			sv->cur->next->s[0] != '!'  && sv->cur->next->s[0] != '$' &&
-			sv->cur->next->s[0] != '\'' && sv->cur->next->s[0] != '@') {
-		/* next line exists, is not blank, and isn't a zoc command */
+	if (sv->cur->next == NULL       || strlen(sv->cur->next->s) == 0 ||
+			sv->cur->next->s[0] == '#'  || sv->cur->next->s[0] == '/' ||
+			sv->cur->next->s[0] == '?'  || sv->cur->next->s[0] == ':' ||
+			sv->cur->next->s[0] == '!'  || sv->cur->next->s[0] == '$' ||
+			sv->cur->next->s[0] == '\'' || sv->cur->next->s[0] == '@' ||
+			sv->cur->next->s[0] == ' ') {
+		/* next line either does not exist, is blank, is a zoc command,
+		 * or is indented; so, we create a new, blank line to wordwrap onto */
 
-		/* append a space to end of newstr */
+		unsigned char *newnode;
+		newnode = (unsigned char *) malloc(editwidth + 2);
+		newnode[0] = 0;
+		insertstring(sv, newnode);
+	} else {
+		/* we can put text at the beginning of the next line; append a space
+		 * to end of newstr in preparation. */
 		i = strlen(newstr);
 		newstr[i++] = ' ';
 		newstr[i] = 0;
-
-		/* recursively insert newstr at beginning of next line */
-		if (newpos < 0) {
-			/* cursor should be tracked on next line */
-			sv->cur = sv->cur->next;
-			newpos = wordwrap(sv, newstr, 0, newpos, wrapwidth, editwidth);
-		} else {
-			sv->cur = sv->cur->next;
-			wordwrap(sv, newstr, 0, 0, wrapwidth, editwidth);
-			sv->cur = sv->cur->prev;
-		}
-	} else {
-		/* cannot wrapped to next line; create a new line and copy newstr into it */
-		/* FIXME: what if strlen(newstr) > wrapwidth? */
-		unsigned char *newnode;
-		newnode = (unsigned char *) malloc(editwidth + 2);
-
-		strcpy(newnode, newstr);
-		insertstring(sv, newnode);
-		
-		if (newpos < 0) {
-			/* cursor should be on next line */
-			sv->cur = sv->cur->next;
-			newpos = -newpos - 1;
-		}
 	}
+	/* it is now okay to put text at the beginning of the next line */
+
+
+	/* recursively insert newstr at beginning of next line */
+	if (newpos < 0) {
+		/* cursor should be tracked on next line */
+		sv->cur = sv->cur->next;
+		newpos = wordwrap(sv, newstr, 0, newpos, wrapwidth, editwidth);
+	} else {
+		stringnode * nodeptr = sv->cur;
+		sv->cur = sv->cur->next;
+		wordwrap(sv, newstr, 0, 0, wrapwidth, editwidth);
+		sv->cur = nodeptr;
+	}
+
 	free(longstr);
 
 	return newpos;
+}
+
+#define BUFFERSIZE 1000
+/* filetosvector - loads a textfile into a new stringvector */
+stringvector filetosvector(unsigned char* filename, int wrapwidth, int editwidth)
+{
+	stringvector v;
+	FILE * fp;
+	char buffer[BUFFERSIZE] = "";      /* Be nice and wordwrap long lines */
+	unsigned char * str = NULL;
+	int strpos = 0;
+	int c = 0;
+	int i, j;
+
+	initstringvector(&v);
+
+	/* return on bad data */
+	if (wrapwidth > editwidth || editwidth < 1)
+		return v;
+
+	fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return v;
+
+	do {
+		strpos = 0;
+
+		/* FIXME: wordwrap as we load the file, rather than breaking lines */
+		while (strpos < BUFFERSIZE && !((c = fgetc(fp)) == EOF || c == 0x0d || c == 0x0a || c == 0)) {
+			buffer[strpos++] = c;
+		}
+		buffer[strpos] = 0;
+
+		/* remove LF after CR (assume not CR format) */
+		if (c == 0x0d)
+			fgetc(fp);
+
+		str = (unsigned char *) malloc(editwidth + 2);
+		if (str == NULL) {
+			fclose(fp);
+			return v;
+		}
+
+		if (strpos < wrapwidth) {
+			/* simple copy */
+			strcpy(str, buffer);
+			pushstring(&v, str);
+		} else {
+			str[0] = 0;
+			pushstring(&v, str);
+			v.cur = v.last;
+			wordwrap(&v, buffer, 0, 0, wrapwidth, editwidth);
+		}
+	} while (c != EOF);
+
+	fclose(fp);
+
+	/* remove trailing blank line */
+	v.cur = v.last;
+	if (strlen(v.cur->s) == 0)
+		removestring(&v);
+
+	return v;
+}
+
+/* Copies a stringvector into a file. sv is not changed */
+void svectortofile(stringvector * sv, char *filename)
+{
+	FILE* fp;
+	stringnode * curnode = NULL;
+	int i;
+
+	if (sv->first == NULL)
+		return;
+
+	fp = fopen(filename, "wb");
+	if (fp == NULL)
+		return;
+
+	for (curnode = sv->first; curnode != NULL; curnode = curnode->next) {
+		for (i = 0; curnode->s[i] != 0; i++)
+			fputc(curnode->s[i], fp);
+		fputc(0x0d, fp);
+		fputc(0x0a, fp);
+	}
+
+	/* Done with file; success! */
+	fclose(fp);
 }
 

@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.2 2000/08/19 21:41:49 kvance Exp $
+ * $Id: svector.h,v 1.3 2000/08/27 02:19:03 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -61,5 +61,7 @@ int deletestring(stringvector * v);
 /* deletestringvector - deletes entire vector and every s */
 int deletestringvector(stringvector * v);
 
+/* removestringvector - empties a stringvector without free()ing any s */
+void removestringvector(stringvector * v);
 
 #endif
