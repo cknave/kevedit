@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.15 2001/04/08 18:45:05 bitman Exp $
+ * $Id: editbox.c,v 1.16 2001/04/09 02:44:59 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -552,9 +552,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 
 				/******* Copy & Cut **********/
 
-				/* Shift-delete registers the same as plain delete.
+				/* Shift-delete appears the same as plain delete.
 				 * For now, we won't consider shift-delete. */
-//				case 83:     /* shift-delete: cut selected text */
 				case 45:     /* alt-x: cut selected text */
 				case 46:     /* alt-c: copy selected text */
 				case 146:    /* ctrl-insert: copy selected text */
@@ -672,8 +671,37 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								centerstr->s[i] = centerstr->s[i+1];
 							updateflags = U_CENTER;
 						}
-						else {
-							/* TODO: join next line (wordwrap) */
+						else if (strlen(centerstr->s) == 0) {
+							/* This string is empty: destroy */
+							sv->cur = centerstr;
+							deletestring(sv);
+							centerstr = sv->cur;
+							pos = strlen(centerstr->s);
+							updateflags = U_EDITAREA;
+						}
+						else if (centerstr->next != NULL) {
+							if (strlen(centerstr->next->s) == 0) {
+								/* Next string is empty: destroy */
+								sv->cur = centerstr->next;
+								deletestring(sv);
+								updateflags = U_BOTTOM;
+							}
+							else if (strlen(centerstr->s) + 1 < wrapwidth) {
+								/* merge lines; wordwrap */
+								i = strlen(centerstr->s);
+								if (centerstr->s[i-1] != ' ' && centerstr->next->s[0] != ' ') {
+									/* add a space at the end */
+									centerstr->s[i]   = ' ';
+									centerstr->s[++i] = 0;
+								}
+								sv->cur = centerstr->next;
+								tmpstr = removestring(sv);
+								sv->cur = centerstr;
+								pos = wordwrap(sv, tmpstr, i, -1, wrapwidth, editwidth);
+								centerstr = sv->cur;
+								free(tmpstr);
+								updateflags = U_CENTER | U_BOTTOM;
+							}
 						}
 						break;
 
@@ -814,9 +842,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						updateflags = U_EDITAREA | U_TITLE;
 						break;
 
-					/******** Cut & Paste operations *********/
+					/******** Cut operation *********/
 
-//					case 83:     /* shift-delete: cut selected text */
 					case 45:     /* alt-x: cut selected text */
 					case 147:    /* ctrl-delete: clear selected text */
 						/* Clear selected area */
@@ -843,9 +870,27 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 							for (i = 0; i + 1 < offset; i++) {
 								deletestring(sv);
 							}
+							/* Remove the string at the end of the cut */
+							sv->cur = centerstr->next;
+							tmpstr = removestring(sv);
+							/* Remove first selEndPos chars from end string */
+							for (i = 0; i < (strlen(tmpstr) - selEndPos); i++)
+								tmpstr[i] = tmpstr[i+selEndPos];
+							tmpstr[i] = 0;
+
+							/* Truncate the string at the start of the cut */
 							sv->cur = centerstr;
-							/* TODO: cut off the end of sv->cur and the beginning of sv->cur->next,
-							 * then wordwrap the remainder together. */
+							sv->cur->s[selStartPos] = 0;
+							/* Wordwrap the end string onto this one */
+							/* The -1 tells wordwrap to track the cursor position at
+							 * the beginning of tmpstr. Negative tracking values should
+							 * be used only by wordwrap for internal purposes, but
+							 * necessity warrents in this case.     vv    */
+							pos = wordwrap(sv, tmpstr, selStartPos, -1, wrapwidth, editwidth);
+							centerstr = sv->cur;  /* Follow cursor */
+							/* tmpstr is our responsability */
+							free(tmpstr);
+							updateflags = U_EDITAREA;
 						}
 						break;
 
@@ -941,7 +986,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 							else if (strlen(centerstr->prev->s) + 1 < wrapwidth) {
 								/* merge lines; wordwrap */
 								i = strlen(centerstr->prev->s);
-								if (centerstr->prev->s[i-1] != ' ') {
+								if (centerstr->prev->s[i-1] != ' ' && centerstr->s[0] != ' ') {
 									/* add a space at the end */
 									centerstr->prev->s[i]     = ' ';
 									centerstr->prev->s[i + 1] = 0;
@@ -949,7 +994,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								sv->cur = centerstr->prev;
 								tmpstr = removestring(sv);
 								sv->cur = centerstr;
-								pos = wordwrap(sv, tmpstr, pos, pos, wrapwidth, editwidth);
+								pos = wordwrap(sv, tmpstr, 0, 0, wrapwidth, editwidth);
 								centerstr = sv->cur;
 								free(tmpstr);
 								updateflags = U_EDITAREA;

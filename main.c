@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.29 2001/04/08 18:45:05 bitman Exp $
+ * $Id: main.c,v 1.30 2001/04/09 02:44:59 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -674,13 +674,18 @@ int main(int argc, char **argv)
 			break;
 		case 9:
 			/* Toggle draw mode */
-			myinfo->drawmode ^= 1;
-			myinfo->getmode = 0;
 			if (myinfo->gradmode != 0) {
-				/* Turn grad mode off */
-				myinfo->pattern = myinfo->gradmode;
-				myinfo->gradmode = 0;
+				/* If grad mode is on, turn it and drawmode off */
+				myinfo->pattern = (myinfo->gradmode > 0 ? myinfo->gradmode :
+				                                          -(myinfo->gradmode));
+				myinfo->gradmode = myinfo->drawmode = 0;
+			} else {
+				/* Otherwise toggle draw mode */
+				myinfo->drawmode ^= 1;
 			}
+			/* Get mode should go off either way */
+			myinfo->getmode = 0;
+			/* Update changes and start plotting if we entered draw mode */
 			updatepanel(mydisplay, myinfo, myworld);
 			if (myinfo->drawmode == 1) {
 				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
@@ -718,20 +723,27 @@ int main(int argc, char **argv)
 
 			myinfo->getmode = 0;
 			if (myinfo->gradmode != 0) {
-				/* Turn gradmode & drawmode off, restoring the current pattern */
-				myinfo->pattern = myinfo->gradmode;
-				myinfo->drawmode = myinfo->gradmode = 0;
+				/* Gradmode is already on, advance once and reverse it */
+				if (myinfo->gradmode < 0) {
+					if (--myinfo->pattern < 6)
+						myinfo->pattern = -(myinfo->gradmode);
+				} else {
+					if (++myinfo->pattern > myinfo->gradmode)
+						myinfo->pattern = 6;
+				}
+				myinfo->gradmode = -(myinfo->gradmode);
 			} else {
-				/* Turn gradmode & drawmode on, moving to the first buffer pattern */
+				/* Turn gradmode & drawmode on */
 				myinfo->drawmode = 1;
-				myinfo->gradmode = myinfo->pattern;
-			}
+				/* Gradmode cycles backward by default */
+				myinfo->gradmode = -(myinfo->pattern);
 
-			updatepanel(mydisplay, myinfo, myworld);
-			if (myinfo->drawmode == 1) {
+				/* Plot only when first turning gradmode on */
 				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
+
+			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'v':
 		case 'V':
@@ -1395,19 +1407,23 @@ int main(int argc, char **argv)
 										 c == 155 || c == 157 || c == 152 || c == 160)) {
 			/* Common code for all movement actions */
 			if (myinfo->getmode != 0) {
-				/* Grab if getmode is on */
+				/* Get if getmode is on */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
 					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
 				else
 					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
 				updatepanel(mydisplay, myinfo, myworld);
 			}
-			if (myinfo->gradmode != 0) {
-				/* If gradmode has a value, cycle down the pattern buffer
-				 * and return to the gradmode value if we bottom out */
+			/* If gradmode is on, cycle through the pattern buffer.
+			 * Negative values move backward, positive values forward. */
+			if (myinfo->gradmode < 0) {
 				if (--myinfo->pattern < 6)
-					myinfo->pattern = myinfo->gradmode;
+					myinfo->pattern = -(myinfo->gradmode);
+			} else if (myinfo->gradmode > 0) {
+				if (++myinfo->pattern > myinfo->gradmode)
+					myinfo->pattern = 6;
 			}
+			/* If drawmode is on, plot */
 			if (myinfo->drawmode == 1) {
 				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 			}
