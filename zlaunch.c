@@ -27,8 +27,8 @@ const char* defaultzlinfodata[] = {
 	"perform zztkeys",
 	"",
 	"\' List of actions and optional actions:",
-	"action copydat copy zzt.dat",
-	"action copyhlp copy *.hlp",
+	"action copydat displace docs/zzt.dat",
+	"action copyhlp copy docs/*.hlp",
 	"optional screenthief run st/st.exe",
 	"optional zzfont run zzfont.com i",
 	"optional zztkeys keystrokes kc<ENTER>",
@@ -103,7 +103,6 @@ void  initzlinfo(zlaunchinfo* zli)
 {
 	initstringvector(&(zli->actionstoperform));
 	initstringvector(&(zli->paramlist));
-	initstringvector(&(zli->filestoremove));
 
 	zli->bindir  = NULL;
 	zli->datadir = NULL;
@@ -115,7 +114,6 @@ void  deletezlinfo(zlaunchinfo* zli)
 {
 	deletestringvector(&(zli->actionstoperform));
 	deletestringvector(&(zli->paramlist));
-	deletestringvector(&(zli->filestoremove));
 
 	if (zli->bindir  != NULL) { free(zli->bindir);  zli->bindir  = NULL; }
 	if (zli->datadir != NULL) { free(zli->datadir); zli->datadir = NULL; }
@@ -177,6 +175,8 @@ zlaunchinfo loadzlinfofromsvector(stringvector info)
 					action->type = ZL_KEYSTROKES;
 				else if (str_equ(token, "copy", STREQU_UNCASE))
 					action->type = ZL_COPY;
+				else if (str_equ(token, "displace", STREQU_UNCASE))
+					action->type = ZL_DISPLACE;
 				else if (str_equ(token, "permcopy", STREQU_UNCASE))
 					action->type = ZL_PERMCOPY;
 				else if (str_equ(token, "permcopyover", STREQU_UNCASE))
@@ -229,13 +229,13 @@ stringvector loadinfo(char* datapath, char* worldfile)
 	}
 
 	/* Try the default config file in the current directory */
-	info = filetosvector(DEFAULTCONFIG, 0, 0);
+	info = filetosvector(ZL_DEFAULTCONFIG, 0, 0);
 
 	if (info.first != NULL)
 		return info;
 
 	/* Try the default config in the datapath */
-	filename = fullpath(datapath, DEFAULTCONFIG, SLASH_DEFAULT);
+	filename = fullpath(datapath, ZL_DEFAULTCONFIG, SLASH_DEFAULT);
 	info = filetosvector(filename, 0, 0);
 
 	if (info.first != NULL) {
@@ -257,6 +257,9 @@ stringvector loadinfo(char* datapath, char* worldfile)
 void zlaunchact(zlaunchinfo* zli)
 {
 	zlaunchaction* curaction = zli->actions;
+	stringvector successfulcopies;
+
+	successfulcopies = filetosvector(ZL_RMFILENAME, 0, 0);
 
 	while (curaction != NULL) {
 		int cmsize = strlen(curaction->command);
@@ -314,7 +317,11 @@ void zlaunchact(zlaunchinfo* zli)
 				break;
 			case ZL_COPY:
 				copyfilepatternbydir(zli->datadir, ".", command, COPY_NOOVERWRITE,
-														 &(zli->filestoremove));
+														 &successfulcopies);
+				break;
+			case ZL_DISPLACE:
+				copyfilepatternbydir(zli->datadir, ".", command, COPY_DISPLACE,
+														 &successfulcopies);
 				break;
 			case ZL_PERMCOPY:
 				copyfilepatternbydir(zli->datadir, ".", command, COPY_NOOVERWRITE, NULL);
@@ -328,22 +335,41 @@ void zlaunchact(zlaunchinfo* zli)
 		curaction = curaction->next;
 		free(command);
 	}
+
+	/* Write filestoremove to a file */
+	svectortofile(&successfulcopies, ZL_RMFILENAME);
+	deletestringvector(&successfulcopies);
 }
 
 void zlaunchcleanup(zlaunchinfo* zli)
 {
-	stringvector* files = &(zli->filestoremove);
+	stringvector files = filetosvector(ZL_RMFILENAME, 0, 0);
 
 	/* Start from the top */
-	svmovetofirst(files);
+	svmovetofirst(&files);
 
-	while (files->cur != NULL) {
-		/* Delete the file */
-		remove(files->cur->s);
+	while (files.cur != NULL) {
+		/* Test for a displacement */
+		char* dispfilename = strstr(files.cur->s, DISPLACE_SEPERATOR);
+		if (dispfilename != NULL) {
+			/* Restore original file */
+			char* origfilename = str_duplen(files.cur->s,
+																			dispfilename - files.cur->s);
+			dispfilename += strlen(DISPLACE_SEPERATOR);
+
+			rename(dispfilename, origfilename);
+
+			free(origfilename);
+		} else {
+			/* Delete the file */
+			remove(files.cur->s);
+		}
 
 		/* Delete the string */
-		deletestring(files);
+		deletestring(&files);
 	}
+	
+	remove(ZL_RMFILENAME);
 }
 
 

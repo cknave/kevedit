@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.h,v 1.2 2001/12/12 22:08:02 bitman Exp $
+ * $Id: files.h,v 1.3 2002/01/05 22:00:59 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
 /* Copy flags */
 #define COPY_NOOVERWRITE 0
 #define COPY_OVERWRITE   1
+#define COPY_DISPLACE    2
 
 /* Copy results */
 #define COPY_SUCCESS   0  /* Ok */
@@ -41,6 +42,10 @@
 #define SLASH_DEFAULT 0
 #define SLASH_FORWARD 0
 #define SLASH_BACK    1
+
+/* Displacement constants */
+#define DISPLACE_LEADER "~"
+#define DISPLACE_SEPERATOR "?"
 
 /* filetosvector() - loads a textfile into a new stringvector */
 stringvector filetosvector(char* filename, int wrapwidth, int editwidth);

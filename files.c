@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.4 2001/12/12 22:08:02 bitman Exp $
+ * $Id: files.c,v 1.5 2002/01/05 22:00:59 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -260,7 +260,7 @@ stringvector globtosvector(char * pattern, int filetypes)
 /* globdirectorytosvector() - globs a directory listing into an svector */
 stringvector globdirectorytosvector(char * dir, char * pattern, int filetypes)
 {
-	char* globpattern = fullpath(dir, pattern, SLASH_FORWARD);
+	char* globpattern = fullpath(dir, pattern, SLASH_DEFAULT);
 
 	stringvector fullfiles = globtosvector(globpattern, filetypes);
 	stringvector files;
@@ -352,20 +352,9 @@ int
 copyfilebydir(char* srcdir, char* destdir, char* filename, int flags)
 {
 	int result;
-#if 0
-	char* srcname  = malloc(sizeof(char)*(strlen(srcdir) +strlen(filename)+2));
-	char* destname = malloc(sizeof(char)*(strlen(destdir)+strlen(filename)+2));
 
-	strcpy(srcname, srcdir);
-	strcat(srcname, "/");
-	strcat(srcname, filename);
-
-	strcpy(destname, destdir);
-	strcat(destname, "/");
-	strcat(destname, filename);
-#endif
-	char* srcname = fullpath(srcdir, filename, SLASH_FORWARD);
-	char* destname = fullpath(destdir, filename, SLASH_FORWARD);
+	char* srcname = fullpath(srcdir, filename, SLASH_DEFAULT);
+	char* destname = fullpath(destdir, filename, SLASH_DEFAULT);
 
 	result = copyfile(srcname, destname, flags);
 
@@ -380,15 +369,64 @@ int
 copyfilepatternbydir(char* srcdir, char* destdir, char* pattern,
 										 int flags, stringvector * successlist)
 {
-	stringvector files = globdirectorytosvector(srcdir, pattern, FTYPE_FILE);
+	/* glob the pattern in the source directory */
+	char* globpattern = fullpath(srcdir, pattern, SLASH_DEFAULT);
+	stringvector files = globtosvector(globpattern, FTYPE_FILE);
 
+	/* Copy each file */
 	for (svmovetofirst(&files); files.cur != NULL; files.cur = files.cur->next) {
-		if (copyfilebydir(srcdir, destdir, files.cur->s, flags) == COPY_SUCCESS)
-			if (successlist != NULL) {
-				pushstring(successlist, str_dup(files.cur->s));
+		char* destfile = str_duplen("", strlen(files.cur->s));
+		char* destfullname;
+
+		/* Determine the full name of the destination file */
+		fileof(destfile, files.cur->s, strlen(files.cur->s));
+		destfullname = fullpath(destdir, destfile, SLASH_DEFAULT);
+
+		/* Copy */
+		if (copyfile(files.cur->s, destfullname, flags) == COPY_SUCCESS) {
+			if (successlist != NULL)
+				pushstring(successlist, str_dup(destfullname));
+		}
+		else if ((flags & COPY_DISPLACE)) {
+			/* If copy failed and the displacement flag is set and
+			 * the destination file can be over-written, then displace it. */
+			char* displacefile = str_duplen(DISPLACE_LEADER, strlen(destfile) +
+																			strlen(DISPLACE_LEADER));
+			char* displacefullname;
+
+			/* Determine full pathname */
+			strcat(displacefile, destfile);
+			displacefullname = fullpath(destdir, displacefile, SLASH_DEFAULT);
+
+			/* Rename w/o over-writing */
+			if (access(displacefullname, F_OK) &&
+					!rename(destfullname, displacefullname)) {
+				/* If the displace filename was available and copy completed,
+				 * force the original copy and record to successlist */
+				if (copyfile(files.cur->s, destfullname, COPY_OVERWRITE) ==
+						COPY_SUCCESS) {
+					if (successlist != NULL) {
+						char* record = str_duplen(destfullname, strlen(destfullname) +
+																			strlen(DISPLACE_SEPERATOR) +
+																			strlen(displacefullname));
+						strcat(record, DISPLACE_SEPERATOR);
+						strcat(record, displacefullname);
+						pushstring(successlist, record);
+					}
+				}
 			}
+
+			/* Cleanup */
+			free(displacefile);
+			free(displacefullname);
+		}
+
+		/* Cleanup */
+		free(destfile);
+		free(destfullname);
 	}
 
+	free(globpattern);
 	deletestringvector(&files);
 	return 0;
 }

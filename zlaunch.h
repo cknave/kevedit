@@ -5,15 +5,17 @@
 #include "svector.h"
 
 /* Default config file to use */
-#define DEFAULTCONFIG "default.zln"
+#define ZL_DEFAULTCONFIG "default.zln"
+#define ZL_RMFILENAME "rmlist.tmp"
 
 /* Actions to be performed by the launcher */
 #define ZL_NONE         0
 #define ZL_RUN          1
 #define ZL_KEYSTROKES   2
 #define ZL_COPY         3
-#define ZL_PERMCOPY     4
-#define ZL_PERMCOPYOVER 5
+#define ZL_DISPLACE     4
+#define ZL_PERMCOPY     5
+#define ZL_PERMCOPYOVER 6
 
 /* Action structure */
 typedef struct zlauchaction {
@@ -32,7 +34,6 @@ typedef struct zlaunchinfo {
 	stringvector paramlist;          /* list of parameters */
 	char* bindir;                    /* location of binaries */
 	char* datadir;                   /* location of datafiles */
-	stringvector filestoremove;      /* list of files to delete when finished */
 
 	zlaunchaction* actions;    /* Linked list of actions */
 } zlaunchinfo;
