@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.10 2002/09/23 21:21:22 bitman Exp $
+ * $Id: board.c,v 1.11 2002/09/23 21:42:29 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -66,11 +66,9 @@ int _zzt_rle_encoded_size(ZZTblock *block)
 		type = block->tiles[ofs].type;
 		color = block->tiles[ofs++].color;
 
-		while(type == block->tiles[ofs].type && color == block->tiles[ofs].color && blocks < 255) {
+		while(ofs < maxcount && type == block->tiles[ofs].type && color == block->tiles[ofs].color && blocks < 255) {
 			blocks++;
 			ofs++;
-			if (ofs >= maxcount)
-				break;
 		}
 		size++;
 	} while(ofs < maxcount);
