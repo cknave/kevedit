@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.23 2002/12/04 23:53:06 kvance Exp $
+ * $Id: zzt.h,v 1.24 2002/12/08 00:12:25 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,10 @@
 
 #ifndef __ZZT_H
 #define __ZZT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Perhaps we can put these type defines in another file?
  * "types.h" seems okay, but something like "sizetypes.h" would be more
@@ -619,5 +623,9 @@ extern const char * _zzt_type_kind_table[];
 #define ZZT_BPURPLETEXT   0x3B
 #define ZZT_BYELLOWTEXT   0x3C
 #define ZZT_BWHITETEXT    0x3D
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __ZZT_H */
