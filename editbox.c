@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.19 2001/05/12 21:15:27 bitman Exp $
+ * $Id: editbox.c,v 1.20 2001/10/04 23:09:42 kvance Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,9 +17,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
-/* Uncomment the following line when display->shift() actually works! */
-/* #define _SHIFTDETECTWORKS 1 */
 
 #include "editbox.h"
 #include "scroll.h"
@@ -481,18 +478,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 			e = 1;
 			c = d->getch();
 		}
+		selectFlag = d->shift();
 
-		/* Check for alt-arrows and change to select mode if they are used */
-		if ((e == 1) && (c == 155 || c == 157 || c == 152 || c == 160)) {
-			selectFlag = 1;
-			c -= 80;
-		} else {
-#ifdef _SHIFTDETECTWORKS
-			selectflag = d->shift();
-#else
-			selectFlag = 0;
-#endif
-		}
 		/* If we just started selecting, remember where we started */
 		if (selectFlag && selPos == -1)
 			selPos = pos;

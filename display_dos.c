@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.9 2001/05/12 21:15:27 bitman Exp $
+ * $Id: display_dos.c,v 1.10 2001/10/04 23:09:42 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,8 +21,9 @@
  */
 
 #include <stdlib.h>
-#include <conio.h>
 #include <string.h>
+#include <stdio.h>
+#include <conio.h>
 
 #include <sys/nearptr.h>
 #include <sys/farptr.h>
@@ -72,6 +73,7 @@ int kb_isr()
 {
 	__dpmi_regs r;
 	unsigned char key;
+	static unsigned char last = 0;
 
 	/* Get the key from port 60h */
 	asm("sti");
@@ -81,7 +83,9 @@ int kb_isr()
 	asm("cli");
 
 	/* Check for shifts */
-	if(key == 0x2A)
+	if(key == 0x2A && last != 0xE0)
+		/* Arrow keys sometimes return E0 2A */
+		/* We have to ignore this or it causes trouble */
 		lshift = 1;
 	if(key == 0x36)
 		rshift = 1;
@@ -89,7 +93,9 @@ int kb_isr()
 		lshift = 0;
 	if(key == 0xB6)
 		rshift = 0;
-	/* TODO: this should return something */
+
+	last = key;
+	return 0;
 }
 
 
