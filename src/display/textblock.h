@@ -1,5 +1,5 @@
 /* textblock.h   -- A block of coloured display text
- * $Id: textblock.h,v 1.1 2003/11/02 21:39:41 bitman Exp $
+ * $Id: textblock.h,v 1.2 2003/11/02 22:20:01 bitman Exp $
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 #define DISPLAY_TEXTBLOCK_H 1
 
 #ifdef HAVE_U_INT8_T
+#include <sys/types.h>
 typedef u_int8_t textDatum;
 #else
 typedef unsigned char textDatum;
