@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.48 2001/11/11 06:38:07 bitman Exp $
+ * $Id: main.c,v 1.49 2001/11/11 23:59:25 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -512,6 +512,7 @@ int main(int argc, char **argv)
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
+			break;
 
 		/***************** Backbuffer Actions ****************/
 
