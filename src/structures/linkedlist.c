@@ -1,6 +1,8 @@
-/* linkedlist	-- a generic linked list
+/**@file linkedlist.c   An abstract linked list.
+ * $Id: linkedlist.c,v 1.2 2003/11/09 20:57:51 bitman Exp $
+ * @author Ryan Phillips
+ *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sourceforge.net>
- * $Id: linkedlist.c,v 1.1 2003/11/01 23:45:57 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,14 +25,32 @@
 #include <malloc.h>
 #include <string.h>
 
+/** An empty item. */
 const listitem EMPTY_ITEM = { 0, NULL };
 
+/**
+ * @relates linkedlist
+ * @brief Initialize a linked list.
+ *
+ * @param list  an uninitialized list.
+ *
+ * Always initialize a linked list before using it.
+ **/
 void initlinkedlist(linkedlist * list)
 {
 	list->first = list->last = list->cur = NULL;
 }
 
 
+/**
+ * @relates linkedlist
+ * @brief Push an item onto the end of the list.
+ *
+ * @param list  a list.
+ * @param item  item to push.
+ *
+ * @return 0 on success, 1 on error.
+ **/
 int listPush(linkedlist * list, listitem item)
 {
 	link *newnode = NULL;
@@ -58,33 +78,18 @@ int listPush(linkedlist * list, listitem item)
 	return 0;
 }
 
-#if 0
-/* Insert _after_ current node */
-int listInsert(linkedlist * list, listitem item)
-{
-	link *newnode = NULL;
-
-	if (list == NULL || item.value == NULL || item.size == 0)
-		return 1;
-
-	if (list->first == NULL || list->last == list->cur)
-		return listPush(list, item);
-
-	if (list->cur == NULL || list->cur->next == NULL)
-		return 1;
-
-	newnode = (link *) malloc(sizeof(link));
-	newnode->item = item;
-	newnode->prev = list->cur;
-	newnode->next = list->cur->next;
-	newnode->next->prev = newnode;
-	newnode->prev->next = newnode;
-
-	return 0;
-}
-#endif
-
-
+/**
+ * @relates linkedlist
+ * @brief Insert an item.
+ *
+ * @param list  a list.
+ * @param item  item to insert
+ *
+ * Item is inserted before @c cur. Use <code>list.cur = NULL</code> to insert
+ * at the end of the list.
+ *
+ * @return 0 on success, 1 on error.
+ **/
 int listInsert(linkedlist * list, listitem item)
 {
 	link *newnode = NULL;
@@ -121,6 +126,14 @@ int listInsert(linkedlist * list, listitem item)
 	return 0;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Remove the current item.
+ *
+ * @param list  a list.
+ *
+ * @return the removed item.
+ **/
 listitem listRemoveItem(linkedlist * list)
 {
 	listitem item;
@@ -171,6 +184,14 @@ listitem listRemoveItem(linkedlist * list)
 	return item;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Delete (free) the current item.
+ *
+ * @param list  a list.
+ *
+ * @return 0 on success, 1 on error.
+ **/
 int listDeleteItem(linkedlist * list)
 {
 	void *value = listRemoveItem(list).value;
@@ -183,6 +204,13 @@ int listDeleteItem(linkedlist * list)
 	return 0;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Remove all items without freeing them.
+ *
+ * @param list  a list.
+ *
+ **/
 void listRemoveAll(linkedlist * list)
 {
 	if (list == NULL)
@@ -195,6 +223,16 @@ void listRemoveAll(linkedlist * list)
 	return;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Delete (free) all items.
+ *
+ * @param list  
+ *
+ * All items in the list will be freed.
+ *
+ * @return 0 on success, 1 on error.
+ **/
 int listDeleteAll(linkedlist * list)
 {
 	if (list == NULL)
@@ -206,6 +244,19 @@ int listDeleteAll(linkedlist * list)
 	return 0;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Duplicate a list.
+ *
+ * @param list  
+ *
+ * Exact copies of each item will be allocated.
+ *
+ * @warning If an item's @c data contains pointer(s) to more data, that data
+ * will not be duplicated.
+ *
+ * @return a copy of @c list.
+ **/
 linkedlist listDuplicate(linkedlist list)
 {
 	link * iterator = NULL;
@@ -228,6 +279,21 @@ linkedlist listDuplicate(linkedlist list)
 	return dup;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Concatinate two lists.
+ *
+ * @param list1  first list.
+ * @param list2  second list.
+ *
+ * @c list2 will be appened to the end of @c list1. Both lists will share the
+ * same items and thus be identical, with the exception of @c cur.
+ *
+ * @warning Do not continue to use both @c list1 and @c list2 if any changes
+ * are made to the list structure. 
+ *
+ * @return The now concatinated @c list1.
+ **/
 linkedlist * listCat(linkedlist * list1, linkedlist * list2)
 {
 	if (listIsEmpty(list1)) {
@@ -248,11 +314,27 @@ linkedlist * listCat(linkedlist * list1, linkedlist * list2)
 	return list1;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Check whether list is empty.
+ *
+ * @param list  a list.
+ *
+ * @return true only if the list is empty.
+ **/
 int listIsEmpty(linkedlist* list)
 {
 	return list->first == NULL || list->last == NULL;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Get the current item.
+ *
+ * @param list  a list.
+ *
+ * @return the current item.
+ **/
 listitem listGetItem(linkedlist * list)
 {
 	if (list != NULL && list->cur != NULL)
@@ -261,11 +343,25 @@ listitem listGetItem(linkedlist * list)
 		return EMPTY_ITEM;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Move to the first item in the list.
+ *
+ * @param list  a list.
+ **/
 void listStart(linkedlist* list)
 {
 	list->cur = list->first;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Advance to the next item in the list.
+ *
+ * @param list  a list.
+ *
+ * @return true on success, false when the end of the list has been reached.
+ **/
 int listAdvance(linkedlist* list)
 {
 	/* Don't even bother advancing if we've reached the end */
@@ -282,6 +378,18 @@ int listAdvance(linkedlist* list)
 		return 1;
 }
 
+/**
+ * @relates linkedlist
+ * @brief Move forward or backward by a number of items.
+ *
+ * @param list   a list.
+ * @param delta  number of steps to move.
+ *
+ * Positive values for @c delta will move @c cur forward, negative values
+ * will move backward.
+ *
+ * @return number of items actually traversed.
+ **/
 int listMoveBy(linkedlist* list, int delta)
 {
 	int i;
@@ -297,6 +405,14 @@ int listMoveBy(linkedlist* list, int delta)
 	}
 }
 
+/**
+ * @relates linkedlist
+ * @brief Get the current position.
+ *
+ * @param list  a list.
+ *
+ * @return offset of @c cur from the beginning of the list.
+ **/
 int listGetPosition(linkedlist* list)
 {
 	int pos = 0;
@@ -313,6 +429,14 @@ int listGetPosition(linkedlist* list)
 
 /* Item functions */
 
+/**
+ * @relates listitem
+ * @brief Duplicate an item.
+ *
+ * @param src  item to duplicate.
+ *
+ * @return an exact allocated copy of @c src.
+ **/
 listitem duplicateItem(listitem src)
 {
 	listitem dest;

@@ -1,5 +1,7 @@
-/* linkedlist	-- a generic linked list
- * $Id: linkedlist.h,v 1.1 2003/11/01 23:45:57 bitman Exp $
+/**@file linkedlist.h   An abstract linked list.
+ * $Id: linkedlist.h,v 1.2 2003/11/09 20:57:51 bitman Exp $
+ * @author Ryan Phillips
+ *
  * Copyright (C) 2002 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,88 +21,82 @@
 
 #include <stdlib.h>
 
-#ifndef LINKEDLIST_H
-#define LINKEDLIST_H 1
+#ifndef STRUCTURES_LINKEDLIST_H
+#define STRUCTURES_LINKEDLIST_H
 
-typedef struct listitem {
-	size_t size;
-	void *value;
+/**
+ * A list item. The listitem structure keeps track of the data pointer and the
+ * size of the data for each item in the list. You can cast as a listitem any
+ * structure which has the form:
+ *
+ * @code
+ * struct {
+ * 	size_t size;
+ * 	sometype* value;
+ * };
+ * @endcode
+ *
+ * This may be useful when providing a wrapper for a specific data type.
+ */
+typedef struct {
+	size_t size;         /**< Size of the data stored in @c value. */
+	void *value;         /**< Item data. */
 } listitem;
 
-/* A link in the list */
-typedef struct link {
-	listitem item;
+/** A link in a linkedlist. */
+typedef struct {
+	listitem item;       /**< Item belonging to this link. */
 
-	struct link *next;
-	struct link *prev;
+	struct link *next;   /**< Next link. */
+	struct link *prev;   /**< Previous link. */
 } link;
 
-/* A linked list */
-typedef struct linkedlist {
-	link *first;
-	link *last;
+/**
+ * A linked list. An abstracted type that can store, duplicate, and free() data
+ * of any type.
+ */
+typedef struct {
+	link *first;         /**< First item in the list. */
+	link *last;          /**< Last item in the list. */
+
+	/**
+	 * Current item in the list. Determines where insert, remove, and delete
+	 * operations will occur.
+	 */
 	link *cur;
 
 } linkedlist;
 
-/* Always initialize a linked list before using */
+
+extern const listitem EMPTY_ITEM;
+
+/* Linked list functions */
+
 void initlinkedlist(linkedlist * list);
 
-/* Most list*() functions return 1 on error, 0 on success. */
-/* Insert functions do not modify cur.
- * Insert functions do not allocate a new copy of the item.
- * Delete functions move cur to the next node when possible. */
-
-/* Push an item onto the end of the list */
 int listPush(linkedlist * list, listitem item);
-
-/* Insert an item before cur
- * When cur == NULL, item will be inserted at the end of the list */
 int listInsert(linkedlist * list, listitem item);
 
-/* Remove the current item, returning the item */
 listitem listRemoveItem(linkedlist * list);
-
-/* Delete (free) the current item */
 int listDeleteItem(linkedlist * list);
-
-/* Remove all items from the list, but do not free any of them */
 void listRemoveAll(linkedlist * list);
-
-/* Delete (free) all items in the list */
 int listDeleteAll(linkedlist * list);
 
-
-/* Duplicate a list. Exact copies of each item will be allocated. */
 linkedlist listDuplicate(linkedlist list);
-
-/* Concatinate two lists. Both lists will then be identical (except cur). */
 linkedlist * listCat(linkedlist * list1, linkedlist * list2);
 
-
-/* Returns true if the list is empty */
 int listIsEmpty(linkedlist* list);
-
-/* Get the current item in the list */
 listitem listGetItem(linkedlist * list);
 
-/* Move cur to the first element in the list */
 void listStart(linkedlist* list);
-
-/* Advance to the next item in the list
- * Returns true on success, false when the end of the list has been reached */
 int listAdvance(linkedlist* list);
 
-/* Move cur forward or backward by a number of steps */
 int listMoveBy(linkedlist* list, int delta);
-
-/* Find the offset of cur from first */
 int listGetPosition(linkedlist* list);
 
 
 /* Item functions */
 
-/* Allocate an exact copy of an item */
 listitem duplicateItem(listitem src);
 
 #endif

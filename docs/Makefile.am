@@ -8,9 +8,15 @@ HELPFILES = creature.hlp index.hlp item.hlp kadvance.hlp kbackbuf.hlp kbasics.hl
 
 EXTRA_DIST = makehelp.sh $(HELPFILES)
 
-MOSTLYCLEANFILES = kevedit.zml
+MOSTLYCLEANFILES = kevedit.zml -R html/ latex/
 
 kevedit.zml: $(srcdir)/*.hlp
 	chmod a+x $(srcdir)/makehelp.sh
 	$(srcdir)/makehelp.sh $(srcdir) .
+
+# Rules to generate doxygen documentation
+dox: kevedit/html/index.html
+
+kevedit/html/index.html: $(srcdir)/kevedit.dox
+	SRCPREFIX=$(srcdir)/ doxygen $(srcdir)/kevedit.dox
 
