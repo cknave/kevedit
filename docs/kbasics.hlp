@@ -120,9 +120,9 @@ pattern selector.
 
 To quickly access a position in the
 pattern selector, the numbers 0-9 can be
-used. Pressing 0 will select the Solid
-Wall pattern. Pressing one of 1-9 will
-select a slot in the backbuffer.
+used. Pressing 0 will select the Empty
+pattern. Pressing one of 1-9 will select a
+slot in the backbuffer.
 
 :color;The Color Selector
 

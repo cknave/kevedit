@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.62 2002/02/22 00:04:53 bitman Exp $
+ * $Id: main.c,v 1.63 2002/02/22 00:22:30 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -180,9 +180,9 @@ int main(int argc, char **argv)
 		if (key >= '0' && key <= '9') {
 			/* Change to appropriate backbuffer position */
 			if (key == '0') {
-				/* First slot in standard patterns */
+				/* Empty tile slot in standard patterns */
 				myinfo->pbuf = myinfo->standard_patterns;
-				myinfo->pbuf->pos = 0;
+				myinfo->pbuf->pos = 4;
 			} else {
 				/* Change to backbuffer slot */
 				if (key - '1' < myinfo->backbuffer->size) {
