@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.29 2001/11/11 06:38:07 bitman Exp $
+ * $Id: editbox.c,v 1.30 2001/11/13 07:22:40 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1427,8 +1427,8 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 					d->print(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
 					k = tokenadvance(token, args, &j);
 				}
-				if (token[0] == '#') {
-					/* remainder of args is a #command */
+				if (token[0] == '#' || token[0] == '/' || token[0] == '?') {
+					/* remainder of args is a #command or movement */
 					displayzoc(x + j - k, y, args + j - k, 1, 0, d);
 					j = strlen(args);  /* Avoid overwriting */
 				} else {
