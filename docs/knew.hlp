@@ -4,6 +4,7 @@ $New Features
 $New in Version 0.5.1
 !-ksupport;Support help topic
 !-kbasics:text;F4 text entry wraps at end of line
+!-kselect;Select discriminates by object char
 :;  *  DOS virtual shift: toggle using F12
 
 $Bugs fixed in version 0.5.1

@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.45 2002/12/14 02:46:20 bitman Exp $
+ * $Id: misc.c,v 1.46 2003/02/07 10:01:04 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -688,6 +688,17 @@ patbuffer* createstandardpatterns(void)
 	return standard_patterns;
 }
 
+/* Determine whether two tiles are equivalent
+ * (for the purposes of selecting) */
+#define tileEquivalent(t1, t2) \
+	(t1).type  == (t2).type && \
+	((t1).color == (t2).color || \
+	 (t1).type == ZZT_EMPTY) && \
+	/* If type is Object, chars must be the same */ \
+	((t1).type != ZZT_OBJECT || \
+	 (zztParamGetProperty((t1).param, ZZT_DATAUSE_CHAR) == \
+		zztParamGetProperty((t2).param, ZZT_DATAUSE_CHAR)))
+
 void floodselect(ZZTblock* block, selection fillsel, int x, int y)
 {
 	/* If we've already been selected, go back a level */
@@ -699,33 +710,25 @@ void floodselect(ZZTblock* block, selection fillsel, int x, int y)
 
 	/* A little to the left */
 	if (x > 0) {
-		if ( zztTileAt(block, x - 1, y).type  == zztTileAt(block, x, y).type &&
-		    (zztTileAt(block, x - 1, y).color == zztTileAt(block, x, y).color ||
-				 zztTileAt(block, x, y).type == ZZT_EMPTY))
+		if (tileEquivalent(zztTileAt(block, x, y), zztTileAt(block, x - 1, y)))
 			floodselect(block, fillsel, x - 1, y);
 	}
 
 	/* A little to the right */
 	if (x < block->width - 1) {
-		if ( zztTileAt(block, x + 1, y).type  == zztTileAt(block, x, y).type &&
-		    (zztTileAt(block, x + 1, y).color == zztTileAt(block, x, y).color ||
-				 zztTileAt(block, x, y).type == ZZT_EMPTY))
+		if (tileEquivalent(zztTileAt(block, x, y), zztTileAt(block, x + 1, y)))
 			floodselect(block, fillsel, x + 1, y);
 	}
 
 	/* A little to the north */
 	if (y > 0) {
-		if ( zztTileAt(block, x, y - 1).type  == zztTileAt(block, x, y).type &&
-		    (zztTileAt(block, x, y - 1).color == zztTileAt(block, x, y).color ||
-				 zztTileAt(block, x, y).type == ZZT_EMPTY))
+		if (tileEquivalent(zztTileAt(block, x, y), zztTileAt(block, x, y - 1)))
 			floodselect(block, fillsel, x, y - 1);
 	}
 
 	/* A little to the south */
 	if (y < block->height - 1) {
-		if ( zztTileAt(block, x, y + 1).type  == zztTileAt(block, x, y).type &&
-		    (zztTileAt(block, x, y + 1).color == zztTileAt(block, x, y).color ||
-				 zztTileAt(block, x, y).type == ZZT_EMPTY))
+		if (tileEquivalent(zztTileAt(block, x, y), zztTileAt(block, x, y + 1)))
 			floodselect(block, fillsel, x, y + 1);
 	}
 }
@@ -735,11 +738,10 @@ void tileselect(ZZTblock* block, selection fillsel, ZZTtile tile)
 	int x, y;
 
 	for (x = 0; x < block->width; x++)
-		for (y = 0; y < block->height; y++)
-			if ( zztTileAt(block, x, y).type  == tile.type &&
-			    (zztTileAt(block, x, y).color == tile.color ||
-			     tile.type == ZZT_EMPTY))
+		for (y = 0; y < block->height; y++) {
+			if (tileEquivalent(tile, zztTileAt(block, x, y)))
 				selectpos(fillsel, x, y);
+		}
 }
 
 void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag)

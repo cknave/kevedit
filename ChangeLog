@@ -3,6 +3,7 @@
 Windows installer defaults to running KevEdit in "My Documents" folder
 F4 text entry wraps at end of line
 Virtual shift in DOS display: toggled by F12
+Flood/Tile Select discriminate by object char
 Bug fixed: duplicator cycle speed
 Bug fixed: params created for items on F3 menu
 Bug fixed: Stats editor panel updated after editing object code or passage dest
