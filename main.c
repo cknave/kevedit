@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.21 2000/09/20 00:10:54 bitman Exp $
+ * $Id: main.c,v 1.22 2000/10/20 02:17:18 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,9 +27,6 @@
 #include "scroll.h"
 #include "zzt.h"
 #include "editbox.h"
-
-/* temp */
-#include "zzm.h"
 
 patdef patdefs[16];
 param *patparams[10];
@@ -439,6 +436,7 @@ int main(int argc, char **argv)
 					continue;
 			}
 		}
+
 		switch (c) {
 		case '!':
 			/* open text file for edit */
@@ -446,7 +444,7 @@ int main(int argc, char **argv)
 			{
 				stringvector editvector;
 				initstringvector(&editvector);
-				editbox(mydisplay, "Text Editor", &editvector, 42, 0);
+				editbox("Text Editor", &editvector, 42, 0, mydisplay);
 				if (filenamedialog(buffer, "Save As", "", 1, mydisplay) != NULL)
 					svectortofile(&editvector, buffer);
 				deletestringvector(&editvector);
@@ -1130,7 +1128,7 @@ int main(int argc, char **argv)
 						/* we have params; lets edit them! */
 						if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_SCROLL || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_OBJECT) {
 							/* Load editor on current moredata */
-							editmoredata(mydisplay, myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+							editmoredata(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);
 							/* redraw everything */
 							drawpanel(mydisplay);
 							updatepanel(mydisplay, myinfo, myworld);

@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.4 2000/09/09 02:33:51 bitman Exp $
+ * $Id: svector.h,v 1.5 2000/10/20 02:17:18 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 /* basic structures for a string vector */
 
 typedef struct stringnode {
-	unsigned char *s;
+	char *s;
 	struct stringnode *next;
 	struct stringnode *prev;
 
@@ -44,16 +44,16 @@ void initstringvector(stringvector * v);
  * In each function, the pointer s is copied, not the string. */
 
 /* pushstring - pushes string s to end of vector v */
-int pushstring(stringvector * v, unsigned char *s);
+int pushstring(stringvector * v, char *s);
 
 /* insertstring - inserts string s after cur in vector v */
-int insertstring(stringvector * v, unsigned char *s);
+int insertstring(stringvector * v, char *s);
 
 /* preinsertstring - inserts string s before cur in vector v */
-int preinsertstring(stringvector * v, unsigned char *s);
+int preinsertstring(stringvector * v, char *s);
 
 /* removestring - removes cur node and returns pointer to s */
-unsigned char *removestring(stringvector * v);
+char *removestring(stringvector * v);
 
 /* deletestring - free()s cur node & s */
 int deletestring(stringvector * v);

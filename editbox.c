@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.10 2000/09/11 00:25:39 bitman Exp $
+ * $Id: editbox.c,v 1.11 2000/10/20 02:17:18 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,39 +44,94 @@
 #define SLEADER  "\x07    \x07    \x07    \x07    \x07    \x07    \x07    \x07    \x07"
 
 /* ZZT Object Code colours */
-#define ZOC_TEXT_COLOUR        GREEN_F | BRIGHT_F
+
 #define ZOC_DEFAULT_COLOUR     WHITE_F
-
-#define ZOC_STDCOMMAND_COLOUR  GREEN_F
-#define ZOC_STDMESSAGE_COLOUR  RED_F | BRIGHT_F
-#define ZOC_STDFLAG_COLOUR     WHITE_F | BRIGHT_F
-#define ZOC_STDITEM_COLOUR     WHITE_F | BRIGHT_F
-#define ZOC_STDKIND_COLOUR     WHITE_F | BRIGHT_F
-#define ZOC_STDDIR_COLOUR      WHITE_F | BRIGHT_F
-
 #define ZOC_OPERATOR_COLOUR    YELLOW_F | BRIGHT_F
 #define ZOC_HEADING_COLOUR     WHITE_F | BRIGHT_F
 #define ZOC_HYPER_COLOUR       WHITE_F | BRIGHT_F
 #define ZOC_HYPARROW_COLOUR    RED_F
 
-#define ZOC_LABEL_COLOUR       RED_F
-#define ZOC_SENDMESSAGE_COLOUR MAGENTA_F | BRIGHT_F
 #define ZOC_OBJNAME_COLOUR     BLUE_F | BRIGHT_F
 #define ZOC_COMMENT_COLOUR     CYAN_F | BRIGHT_F
+#define ZOC_TEXT_COLOUR        GREEN_F | BRIGHT_F
+
+#define ZOC_STDCOMMAND_COLOUR  GREEN_F
+#define ZOC_STDITEM_COLOUR     WHITE_F | BRIGHT_F
+#define ZOC_STDKIND_COLOUR     WHITE_F | BRIGHT_F
+#define ZOC_STDDIR_COLOUR      WHITE_F | BRIGHT_F
+#define ZOC_STDMESSAGE_COLOUR  MAGENTA_F | BRIGHT_F
+#define ZOC_STDLABEL_COLOUR    RED_F | BRIGHT_F
+#define ZOC_STDFLAG_COLOUR     YELLOW_F | BRIGHT_F
+
+#define ZOC_MESSAGE_COLOUR     MAGENTA_F
+#define ZOC_LABEL_COLOUR       RED_F
+#define ZOC_FLAG_COLOUR        YELLOW_F
 
 /* token testing functions */
-int iszztcommand(unsigned char *token);
-int iszztmessage(unsigned char *token);
-int iszztflag(unsigned char *token);
-int iszztitem(unsigned char *token);
-int iszztkind(unsigned char *token);
-int iszztdir(unsigned char *token);
+int iszztcommand(char *token);
+int iszztmessage(char *token);
+int iszztflag(char *token);
+int iszztitem(char *token);
+int iszztkind(char *token);
+int iszztdir(char *token);
+int iszztcolour(char *token);
 
 /* needed to use filedialog */
 extern char filelist[500][13];
 
 
-void draweditpanel(displaymethod * d, int insertflag, int wrapwidth, int zocformatting)
+/***** strequ() *****************/
+/* TODO: Move this function to a more appropriate file & add prototype */
+
+#include <malloc.h>
+
+#define STREQU_UNCASE  0x01
+#define STREQU_FRONT   0x02
+
+int strequ(const char *str1, const char *str2, int flags)
+{
+	char *lwr1, *lwr2;
+	int i;
+	int isequ = 1;		/* Strings are equal until proven otherwise */
+
+	if (str1[0] == 0 && str2[0] == 0)
+		return 1;
+   else if (str1[0] == 0 || str2[0] == 0)
+   	return 0;
+
+	lwr1 = (char *) malloc(strlen(str1) * sizeof(char) + 1);
+	lwr2 = (char *) malloc(strlen(str2) * sizeof(char) + 1);
+	if (lwr1 == NULL || lwr2 == NULL)
+		return -1;
+
+	strcpy(lwr1, str1);
+	strcpy(lwr2, str2);
+
+	if (flags & STREQU_UNCASE) {
+		strlwr(lwr1);
+		strlwr(lwr2);
+	}
+
+	for (i = 0; lwr1[i] != 0 && lwr2[i] != 0; i++)
+		if (lwr1[i] != lwr2[i]) {
+			isequ = 0;
+			break;
+		}
+
+	/* Strings must be equal */
+	if (lwr1[i] != lwr2[i] && !(flags & STREQU_FRONT))
+		isequ = 0;
+
+	free(lwr1);
+	free(lwr2);
+
+	return isequ;
+}
+
+
+/***** draweditpanel() ***********/
+
+void draweditpanel(int insertflag, int wrapwidth, int zocformatting, displaymethod * d)
 {
 	int x, y, i = 0;
 	char buf[10] = "";
@@ -100,10 +155,12 @@ void draweditpanel(displaymethod * d, int insertflag, int wrapwidth, int zocform
 }
 
 
-void editmoredata(displaymethod * d, param * p)
+/***** editmoredata() *********/
+
+void editmoredata(param * p, displaymethod * d)
 {
 	stringvector sv;		/* list of strings */
-	unsigned char *str = NULL;	/* temporary string */
+	char *str = NULL;	/* temporary string */
 	int strpos = 0;			/* position in str */
 	int newdatalength = 0;		/* when writing, size of moredata */
 	int i = 0, j = 0;		/* general counters */
@@ -114,13 +171,13 @@ void editmoredata(displaymethod * d, param * p)
 	/* load the vector */
 	if (p->moredata == NULL | p->length <= 0) {
 		/* We need to create an empty node */
-		str = (unsigned char *) malloc(editwidth + 2);
+		str = (char *) malloc(editwidth + 2);
 		strcpy(str, "");
 		pushstring(&sv, str);
 	} else {
 		/* Let's fill the node from moredata! */
 		strpos = 0;
-		str = (unsigned char *) malloc(editwidth + 2);
+		str = (char *) malloc(editwidth + 2);
 
 		for (i = 0; i < p->length; i++) {
 			if (p->moredata[i] == 0x0d) {
@@ -128,14 +185,14 @@ void editmoredata(displaymethod * d, param * p)
 				str[strpos] = 0;
 				pushstring(&sv, str);
 				strpos = 0;
-				str = (unsigned char *) malloc(editwidth + 2);
+				str = (char *) malloc(editwidth + 2);
 			} else if (strpos > editwidth) {
 				/* hmmm... really long line; must not have been made in ZZT... */
 				/* let's truncate! */
 				str[strpos] = 0;
 				pushstring(&sv, str);
 				strpos = 0;
-				str = (unsigned char *) malloc(editwidth + 2);
+				str = (char *) malloc(editwidth + 2);
 				/* move to next 0x0d */
 				do i++; while (i < p->length && p->moredata[i] != 0x0d);
 
@@ -145,7 +202,7 @@ void editmoredata(displaymethod * d, param * p)
 				str[strpos + 1] = 0;
 				pushstring(&sv, str);
 				strpos = 0;
-				str = (unsigned char *) malloc(editwidth + 2);
+				str = (char *) malloc(editwidth + 2);
 				*/
 
 			} else {
@@ -166,7 +223,7 @@ void editmoredata(displaymethod * d, param * p)
 
 	/* Now that the node is full, we can edit it. */
 	sv.cur = sv.first;	/* This is redundant, but hey. */
-	editbox(d, "Object Editor", &sv, editwidth, 1);
+	editbox("Object Editor", &sv, editwidth, 1, d);
 
 	/* Okay, let's put the vector back in moredata */
 
@@ -184,7 +241,7 @@ void editmoredata(displaymethod * d, param * p)
 	}
 	/* lets make room for all that moredata */
 	strpos = 0;
-	str = (unsigned char *) malloc(newdatalength);
+	str = (char *) malloc(newdatalength);
 
 	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next) {
 		j = strlen(sv.cur->s);	/* I feel efficient today */
@@ -216,10 +273,10 @@ void editmoredata(displaymethod * d, param * p)
  */
 
 /* how to display a line of text */
-#define displayline(d, x, y, s, edit, format, firstline) ((format) ? displayzoc((d), (x), (y), (s), !(edit), (firstline)) : d->print((x), (y), ZOC_TEXT_COLOUR, (s)))
+#define displayline(x, y, s, edit, format, firstline, d) ((format) ? displayzoc((x), (y), (s), !(edit), (firstline), (d)) : d->print((x), (y), ZOC_TEXT_COLOUR, (s)))
 
 
-int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, int zocformatting)
+int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, displaymethod * d)
 {
 	int c = 0, e = 0;	/* Char & ext flag */
 	int i, j;		/* general counters */
@@ -229,8 +286,8 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 
 	/* vars only relating to editing */
 	int pos = 0;			/* position in sv->cur->s */
-	unsigned char *tmpstr;		/* temporary string for pushing */
-	unsigned char strbuf[80] = "";  /* general buffer */
+	char *tmpstr;		/* temporary string for pushing */
+	char strbuf[80] = "";  /* general buffer */
 
 	/* statics */
 	static int insertflag = 1;	/* nonzero when in insert mode */
@@ -246,7 +303,8 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 	centerstr = sv->cur;
 
 	if (!editwidth) {
-		d->cursorgo(0, 0);
+		/* It would be nice if we could hide the cursor here. */
+		d->cursorgo(9, 13);
 		if (zocformatting && sv->first->s[0] == '@' && centerstr == sv->first)
 			centerstr = centerstr->next;
 	}
@@ -268,7 +326,7 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 			d->print(30 - (strlen(title) / 2), 4, 0x0a, title);
 		}
 		if (updateflags & U_PANEL && editwidth)
-			draweditpanel(d, insertflag, wrapwidth, zocformatting);
+			draweditpanel(insertflag, wrapwidth, zocformatting, d);
 
 		/* clear the scrollbox */
 		if (updateflags & U_TOP)
@@ -280,13 +338,13 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 
 		if (updateflags & (U_CENTER)) {
 			/* Draw the center */
-			displayline(d, 9, 13, centerstr->s, editwidth, zocformatting, centerstr->prev == NULL);
+			displayline(9, 13, centerstr->s, editwidth, zocformatting, centerstr->prev == NULL, d);
 		}
 		if (updateflags & (U_BOTTOM)) {
 			/* Draw bottom half */
 			sv->cur = centerstr->next;
 			for (i = 1; i < 8 && sv->cur != NULL; i++, sv->cur = sv->cur->next)
-				displayline(d, 9, i + 13, sv->cur->s, editwidth, zocformatting, 0);
+				displayline(9, i + 13, sv->cur->s, editwidth, zocformatting, 0, d);
 
 			if (i < 8)
 				d->print(9, i + 13, 0x07, SLEADER);
@@ -295,7 +353,7 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 			/* Draw top half */
 			sv->cur = centerstr->prev;
 			for (i = -1; i > -8 && sv->cur != NULL; i--, sv->cur = sv->cur->prev)
-				displayline(d, 9, i + 13, sv->cur->s, editwidth, zocformatting, sv->cur->prev == NULL);
+				displayline(9, i + 13, sv->cur->s, editwidth, zocformatting, sv->cur->prev == NULL, d);
 
 			if (!editwidth && sv->cur == NULL && sv->first->s[0] == '@')
 				i++;
@@ -448,7 +506,7 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 							pushstring(&filetypelist, "*.txt");
 							pushstring(&filetypelist, "*.hlp");
 							pushstring(&filetypelist, "*.*");
-							if (editbox(d, "Select A File Type", &filetypelist, 0, 1) == 27) {
+							if (editbox("Select A File Type", &filetypelist, 0, 1, d) == 27) {
 								updateflags = U_EDITAREA | U_TITLE;
 								break;
 							}
@@ -518,7 +576,7 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 										/* copy song into sv */
 										sv->cur = centerstr;
 										for (song.cur = song.first; song.cur != NULL; song.cur = song.cur->next) {
-											tmpstr = (unsigned char*) malloc(editwidth + 2);
+											tmpstr = (char*) malloc(editwidth + 2);
 
 											if (zocformatting) {
 												strcpy(tmpstr, "#play ");
@@ -575,7 +633,7 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 
 					case 13:
 						/* Enter */
-						tmpstr = (unsigned char*) malloc(editwidth + 2);
+						tmpstr = (char*) malloc(editwidth + 2);
 						for (i = pos, j = 0; i < strlen(centerstr->s); i++, j++)
 							tmpstr[j] = centerstr->s[i];
 						centerstr->s[pos] = 0;
@@ -609,7 +667,8 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 								/* remove previous line */
 								sv->cur = centerstr->prev;
 								deletestring(sv);
-								updateflags = U_TOP;
+								/* update center too, in case @ line has moved to top now */
+								updateflags = U_TOP | U_CENTER;
 							}
 							else if (strlen(centerstr->prev->s) + 1 < wrapwidth) {
 								/* merge lines; wordwrap */
@@ -660,7 +719,8 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 						strlwr(strbuf);
 						updateflags = U_EDITAREA;
 
-						if ((unsigned char*)strstr(strbuf, "#char") == strbuf) {
+//						if ((char*)strstr(strbuf, "#char") == strbuf) {
+						if (strequ(strbuf, "#char", STREQU_UNCASE | STREQU_FRONT)) {
 							/* append dec value for ascii char */
 
 							c = charselect(d);
@@ -735,11 +795,17 @@ int editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, in
 }
 
 
-void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int format, int firstline)
+/***************************************************************************/
+/**** Syntax highlighting functions ****************************************/
+/***************************************************************************/
+
+
+void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod * d)
 {
 	int i = 0;			/* position in s */
 	int j = 0;			/* position in token */
-	unsigned char token[80] = "";	/* token buffer */
+	int k = 0;			/* length of subtoken */
+	char token[80] = "";	/* token buffer */
 
 	/* find out what we're dealing with based on the first char */
 	switch (s[0]) {
@@ -750,11 +816,25 @@ void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int format, i
 				token[i - 1] = s[i];
 			token[i - 1] = 0;
 
-			d->print(x + 1, y, (iszztcommand(token) ? ZOC_STDCOMMAND_COLOUR : ZOC_SENDMESSAGE_COLOUR), token);
+			if (iszztcommand(token)) {
+				d->print(x + 1, y, ZOC_STDCOMMAND_COLOUR, token);
 
-			/* TODO: process remainder of s based on value of token */
-			d->print(x + i, y, ZOC_DEFAULT_COLOUR, s + i);
+				displaycommand(x + i, y, token, s + i, d);
+			} else {
+				/* Display as #send call */
+				if (strchr(token, ':') != NULL) {
+					for (j = 1; s[j] != ':' && s[j] != 0; j++)
+						d->putch(x + j, y, s[j], ZOC_OBJNAME_COLOUR);
+					d->putch(x + j, y, ':', ZOC_OPERATOR_COLOUR);
+					if (j < strlen(s)) j++;
+					d->print(x + j, y, (iszztmessage(s + j) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), s + j);
+				} else
+					d->print(x + 1, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token);
+				d->print(x + i, y, ZOC_DEFAULT_COLOUR, s + i);
+			}
+
 			break;
+
 		case ':':
 			/* message */
 			if (format) {
@@ -767,7 +847,7 @@ void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int format, i
 					token[i - 1] = s[i];
 				token[i - 1] = 0;
 				
-				d->print(x + 1, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_LABEL_COLOUR), token);
+				d->print(x + 1, y, (iszztmessage(token) ? ZOC_STDLABEL_COLOUR : ZOC_LABEL_COLOUR), token);
 				
 				if (s[i] == '\'')
 					d->print(x + i, y, ZOC_COMMENT_COLOUR, s + i);
@@ -778,30 +858,35 @@ void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int format, i
 		case '/':
 			/* movement */
 			d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
-			for (i = 1; s[i] != '?' && s[i] != '/' && s[i] != '\'' && s[i] != ' ' && s[i] != 0; i++) 
-				token[i-1] = s[i];
-			token[i-1] = 0;
+			k = iszztdir(s+1);
 
-			d->print(x + 1, y, (iszztdir(token) ? ZOC_STDDIR_COLOUR : ZOC_DEFAULT_COLOUR), token);
+			if (k) {
+				for (i = 1; i <= k; i++)
+					d->putch(x + i, y, s[i], ZOC_STDDIR_COLOUR);
 
-			/* Recursively display next movement/comment/text if there is any */
-			if (s[i] != 0)
-				displayzoc(d, x + i, y, s + i, format, 0);
-			
+				/* Recursiveness is an art. */
+				if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ')
+					displayzoc(x + i, y, s + i, format, 0, d);
+				else
+					d->print(x + i, y, ZOC_DEFAULT_COLOUR, s + i);
+			} else {
+				d->print(x + 1, y, ZOC_DEFAULT_COLOUR, s + 1);
+			}
+
 			break;
 
 		case '!':
 			/* hypermessage */
 			if (format) {
 				/* white and -> indented */
-				d->putch(x + 1, y, 0x10, ZOC_HYPARROW_COLOUR);
+				d->putch(x + 2, y, 0x10, ZOC_HYPARROW_COLOUR);
 				s = strstr(s, ";");
 				if (s != NULL)
-					d->print(x + 3, y, ZOC_HYPER_COLOUR, s + 1);
+					d->print(x + 5, y, ZOC_HYPER_COLOUR, s + 1);
 			} else {
 				d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
 				for (i = 1; s[i] != ';' && s[i] != 0; i++)
-					d->putch(x + i, y, s[i], ZOC_SENDMESSAGE_COLOUR);
+					d->putch(x + i, y, s[i], ZOC_MESSAGE_COLOUR);
 
 				if (s[i] == 0) break;
 
@@ -858,10 +943,40 @@ void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int format, i
 #define ZZTCOMMANDCOUNT 27
 const char zztcommands[ZZTCOMMANDCOUNT][12] =
 {
-      "become", "bind", "change", "char", "clear", "cycle", "die", "end",
-	"endgame", "give", "go", "idle", "if", "lock", "play", "put",
-	"restart", "restore", "send", "set", "shoot", "take", "throwstar",
-	"try", "unlock", "walk", "zap"
+	"become",  "bind",    "change", "char",
+	"clear",   "cycle",   "die",    "end",
+	"endgame", "give",    "go",     "idle",
+	"if",      "lock",    "play",   "put",
+	"restart", "restore", "send",   "set",
+	"shoot",   "take",    "throwstar",
+	"try",     "unlock",  "walk",   "zap"
+};
+
+
+/* Command syntax:
+ * Each type of argument to a command is given a letter and stored
+ * in a string in zztcommandtax[], which corresponds to that same
+ * numbered element in zztcommands */
+
+#define CTAX_KIND 'k'
+#define CTAX_OBJECTNAME 'o'
+#define CTAX_NUMBER 'n'
+#define CTAX_FLAG 'f'
+#define CTAX_ITEM 'i'
+#define CTAX_DIRECTION 'd'
+#define CTAX_THENMESSAGE 't'
+#define CTAX_SOUND 's'
+#define CTAX_MESSAGE 'm'
+
+const char zztcommandtax[ZZTCOMMANDCOUNT][30] =
+{
+	"k",  "o",   "kk", "n",
+	"f",  "n",   "",   "",
+	"",   "in",  "d",  "",
+	"ft", "",    "s",  "dk",
+	"",   "m",   "m",  "f",
+	"d",  "inm", "d",
+	"dm", "",    "d",  "m"
 };
 
 #define ZZTMESSAGECOUNT 5
@@ -870,10 +985,10 @@ const char zztmessages[ZZTMESSAGECOUNT][10] =
 	"touch", "shot", "bombed", "thud", "energize"
 };
 
-#define ZZTFLAGCOUNT 5
+#define ZZTFLAGCOUNT 6
 const char zztflags[ZZTFLAGCOUNT][12] =
 {
-	"alligned", "contact", "blocked", "energized", "exists"
+	"alligned", "contact", "blocked", "energized", "exists", "any"
 };
 
 #define ZZTITEMCOUNT 5
@@ -882,10 +997,20 @@ const char zztitems[ZZTITEMCOUNT][8] =
 	"ammo", "gems", "torches", "health", "score"
 };
 
-#define ZZTKINDCOUNT 1
+#define ZZTKINDCOUNT 41
 const char zztkinds[ZZTKINDCOUNT][12] =
 {
-	"key"
+	"empty", "player", "ammo", "torch",
+	"gem", "key", "door", "scroll",
+	"passage", "duplicator", "bomb", "energizer",
+	"star", "clockwise", "counter", "bullet",
+	"water", "forest", "solid", "normal",
+	"breakable", "boulder", "sliderns", "sliderew",
+	"fake", "invisible", "blinkwall", "transporter",
+	"line", "ricochet", "bear", "ruffian",
+	"object", "slime", "shark", "spinninggun",
+	"pusher", "lion", "tiger", "head",
+	"segment"
 };
 
 #define ZZTCOLOURCOUNT 7
@@ -897,8 +1022,9 @@ const char zztcolours[ZZTCOLOURCOUNT][8] =
 #define ZZTDIRCOUNT 14
 const char zztdirs[ZZTDIRCOUNT][6] =
 {
-	"n", "north", "s", "south", "e", "east", "w", "west", "i", "idle",
-	"seek", "flow", "rndns", "rndne"
+	"north", "south", "east", "west", "idle",
+	"seek", "flow", "rndns", "rndne",
+	"n", "s", "e", "w", "i"
 };
 
 #define ZZTDIRMODCOUNT 4
@@ -908,135 +1034,295 @@ const char zztdirmods[ZZTDIRMODCOUNT][5] =
 };
 
 
-/* token testers */
-int iszztcommand(unsigned char *token)
+/* advance token in source from pos, returning token length */
+int tokenadvance(char *token, char *source, int *pos)
 {
 	int i = 0;
-	char buffer[12] = "";
 
-	memcpy(buffer, token, 11);
-	buffer[11] = 0;
+	/* Move forward past any spaces */
+	while (*pos < strlen(source) && source[*pos] == ' ') (*pos)++;
+
+	/* Grab next token */
+	for (; *pos < strlen(source) != 0 && source[*pos] != ' '; i++, (*pos)++)
+		token[i] = source[*pos];
+	token[i] = 0;
+
+	return i;
+}
+
+
+/* grow token in source from pos, returning token length */
+int tokengrow(char *token, char *source, int *pos)
+{
+	int i = strlen(token);
+
+	/* Grab any spaces */
+	for (; *pos < strlen(source) != 0 && source[*pos] == ' '; i++, (*pos)++)
+		token[i] = source[*pos];
+
+	/* Grab next token */
+	for (; *pos < strlen(source) != 0 && source[*pos] != ' '; i++, (*pos)++)
+		token[i] = source[*pos];
+	token[i] = 0;
+
+	return i;
+}
+
+
+/* display a zzt #command */
+void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
+{
+	int t;			/* Index in zztcommands syntax list */
+	int i;			/* Index in zztcommandtax[t] */
+	int j;			/* Index in args */
+	int k;			/* Length of buffer */
+	int l;			/* General counter */
+	char ctax;	/* Current command arg syntax */
+	char token[41] = "";
+
+	for (t = 0; t < ZZTCOMMANDCOUNT; t++)
+		if (strequ(zztcommands[t], command, STREQU_UNCASE))
+			break;
+
+	if (t == ZZTCOMMANDCOUNT) {
+		d->print(x, y, ZOC_DEFAULT_COLOUR, args);
+		return;
+	}
+
+	j = 0;
+	for (i = 0; i < strlen(zztcommandtax[t]); i++) {
+		/* Advance to next token */
+		k = tokenadvance(token, args, &j);
+
+		ctax = zztcommandtax[t][i];
+
+		/* Determine current token type (stage 1) */
+		switch (ctax) {
+			case CTAX_OBJECTNAME:
+				d->print(x + j - k, y, ZOC_OBJNAME_COLOUR, token);
+				break;
+
+			case CTAX_NUMBER:
+				d->print(x + j - k, y, ZOC_TEXT_COLOUR, token);
+				break;
+
+			case CTAX_FLAG:
+				if (strequ(token, "not", STREQU_UNCASE)) {
+					d->print(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
+					/* Advance to next token */
+					k = tokenadvance(token, args, &j);
+				}
+				/* If it's a built-in, display it as such */
+				if (iszztflag(token))
+					d->print(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
+				else
+					d->print(x + j - k, y, ZOC_FLAG_COLOUR, token);
+				/* Check the blocked flag for directions */
+				if (strequ(token, "blocked", STREQU_UNCASE)) {
+					k = tokenadvance(token, args, &j);
+					ctax = CTAX_DIRECTION;
+				}
+				if (strequ(token, "any", STREQU_UNCASE)) {
+					k = tokenadvance(token, args, &j);
+					ctax = CTAX_KIND;
+				}
+				break;
+
+			case CTAX_ITEM:
+				if (iszztitem(token)) {
+					d->print(x + j - k, y, ZOC_STDITEM_COLOUR, token);
+				} else
+					d->print(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
+				break;
+
+			case CTAX_THENMESSAGE:
+				if (strequ(token, "then", STREQU_UNCASE)) {
+					d->print(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
+					k = tokenadvance(token, args, &j);
+				}
+				if (token[0] == '#') {
+					/* remainder of args is a #command */
+					displayzoc(x + j - k, y, args + j - k, 1, 0, d);
+					j = strlen(args);
+				} else {
+					/* Thenmessage was not a command, so display it as a normal message */
+					ctax = CTAX_MESSAGE;
+				}
+				break;
+
+			case CTAX_SOUND:
+				d->print(x + j - k, y, ZOC_TEXT_COLOUR, token);
+				break;
+		}
+
+		/* Determine current token type (stage 2) */
+		switch (ctax) {
+			case CTAX_KIND:
+				if (iszztkind(token)) {
+					d->print(x + j - k, y, ZOC_STDKIND_COLOUR, token);
+				} else {
+					k = tokengrow(token, args, &j);
+					if (iszztkind(token)) {
+						d->print(x + j - k, y, ZOC_STDKIND_COLOUR, token);
+					} else
+						d->print(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
+				}
+				break;
+
+			case CTAX_DIRECTION:
+				while (!(iszztdir(token) == strlen(token)) && j < strlen(args))
+					k = tokengrow(token, args, &j);
+				if (iszztdir(token) == strlen(token))
+					d->print(x + j - k, y, ZOC_STDDIR_COLOUR, token);
+				else
+					d->print(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
+				break;
+
+			case CTAX_MESSAGE:
+				if (strchr(token, ':') != NULL) {
+					/* We have an objectname included */
+					for (l = 0; token[l] != ':'; l++)
+						d->putch(x + j - k + l, y, token[l], ZOC_OBJNAME_COLOUR);
+					d->putch(x + j - k + l, y, ':', ZOC_OPERATOR_COLOUR);
+					l++;
+					d->print(x + j - k + l, y, (iszztmessage(token + l) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token + l);
+				} else
+					d->print(x + j - k, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token);
+				break;
+		}
+	}
+
+	/* Finish anything we haven't dealt with */
+	for (; j < strlen(args); j++)
+		d->putch(x + j, y, args[j], ZOC_DEFAULT_COLOUR);
+}
+
+
+/* token testers */
+int iszztcommand(char *token)
+{
+	int i = 0;
+	char buffer[41] = "";
+
+	memcpy(buffer, token, 40);
+	buffer[40] = 0;
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTCOMMANDCOUNT; i++)
-		if (!strcmp(buffer, zztcommands[i]))
+		if (strequ(buffer, zztcommands[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
 }
 
-int iszztmessage(unsigned char *token)
+int iszztmessage(char *token)
 {
 	int i = 0;
-	char buffer[12] = "";
+	char buffer[41] = "";
 
-	memcpy(buffer, token, 11);
-	buffer[11] = 0;
+	memcpy(buffer, token, 40);
+	buffer[40] = 0;
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTMESSAGECOUNT; i++)
-		if (!strcmp(buffer, zztmessages[i]))
+		if (strequ(buffer, zztmessages[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
 }
 
-int iszztflag(unsigned char *token)
+int iszztflag(char *token)
 {
 	int i = 0;
-	char buffer[12] = "";
+	char buffer[41] = "";
 
-	memcpy(buffer, token, 11);
-	buffer[11] = 0;
+	memcpy(buffer, token, 40);
+	buffer[40] = 0;
 	strlwr(buffer);
 
-	if ((char*)strstr(buffer, "not") == buffer) {
-		/* Advance token to nearest space */
-		token +=3;
-		do token++; while (token[0] != ' ' && token[0] != 0);
-		/* Advance token to nearest nonspace */
-		do token++; while (token[0] == ' ');
-
-		/* now see if next word is a valid token */
-		return iszztflag(token);
-	}
-
 	for (i = 0; i < ZZTFLAGCOUNT; i++)
-		if (!strcmp(buffer, zztflags[i]))
+		if (strequ(buffer, zztflags[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
 }
 
-int iszztitem(unsigned char *token)
+int iszztitem(char *token)
 {
 	int i = 0;
-	char buffer[12] = "";
+	char buffer[41] = "";
 
-	memcpy(buffer, token, 11);
-	buffer[11] = 0;
+	memcpy(buffer, token, 40);
+	buffer[40] = 0;
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTITEMCOUNT; i++)
-		if (!strcmp(buffer, zztitems[i]))
+		if (strequ(buffer, zztitems[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
 }
 
-int iszztkind(unsigned char *token)
+int iszztkind(char *token)
 {
 	int i = 0;
-	char buffer[12] = "";
+	char buffer[41] = "";
 
-	memcpy(buffer, token, 11);
-	buffer[11] = 0;
+	memcpy(buffer, token, 40);
+	buffer[40] = 0;
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTCOLOURCOUNT; i++)
-		if ((char*)strstr(buffer, zztcolours[i]) == buffer) {
+		if (strequ(buffer, zztcolours[i], STREQU_UNCASE | STREQU_FRONT)) {
 			/* Advance token to nearest space */
-			do token++; while (token[0] != ' ' && token[0] != 0);
+			while (token[0] != ' ' && token[0] != 0) token++;
 			/* Advance token to nearest nonspace */
-			do token++; while (token[0] == ' ');
+			while (token[0] == ' ') token++; 
 
 			/* now see if next word is a valid token */
 			return iszztkind(token);
 		}
 
 	for (i = 0; i < ZZTKINDCOUNT; i++)
-		if (!strcmp(buffer, zztkinds[i]))
+		if (strequ(buffer, zztkinds[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
 }
 
-int iszztdir(unsigned char *token)
+int iszztdir(char *token)
 {
 	int i = 0;
-	char buffer[12] = "";
+	char buffer[41] = "";
 
-	memcpy(buffer, token, 11);
-	buffer[11] = 0;
+	memcpy(buffer, token, 40);
+	buffer[40] = 0;
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTDIRMODCOUNT; i++)
-		if ((char*)strstr(buffer, zztdirmods[i]) == buffer) {
+		if (strequ(buffer, zztdirmods[i], STREQU_UNCASE | STREQU_FRONT)) {
+			int modlen = 0;
 			/* Advance token to nearest space */
-			do token++; while (token[0] != ' ' && token[0] != 0);
+			while (token[0] != ' ' && token[0] != 0) { token++; modlen++; } 
 			/* Advance token to nearest nonspace */
-			do token++; while (token[0] == ' ');
+			while (token[0] == ' ') { token++; modlen++; } 
 
 			/* now see if next word is a valid token */
-			return iszztdir(token);
+			i = iszztdir(token);
+			return (i ? modlen + i : 0);
 		}
 
 	for (i = 0; i < ZZTDIRCOUNT; i++)
-		if (!strcmp(buffer, zztdirs[i]))
-			return 1;
+		if (strequ(buffer, zztdirs[i], STREQU_UNCASE | STREQU_FRONT))
+			return strlen(zztdirs[i]);
 
 	return 0;
 }
+
+
+/***************************************************************************/
+/**** Wordwrap *************************************************************/
+/***************************************************************************/
 
 
 /* wordwrap
@@ -1054,14 +1340,14 @@ int iszztdir(unsigned char *token)
  *
  * NOTE: str will not be modified nor free()d in any way.
  */
-int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wrapwidth, int editwidth)
+int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth)
 {
 	int i, j, k;		/* general counters */
-	unsigned char *longstr;	/* Combination of sv->cur->s & str */
+	char *longstr;	/* Combination of sv->cur->s & str */
 	int longlen;		/* Length of longstr */
 	int newpos;		/* new position after insert */
 
-	unsigned char *newstr;     /* new string for next line */
+	char *newstr;     /* new string for next line */
 
 	/* check for bad data */
 	if (sv->cur == NULL || sv->cur->s == NULL || wrapwidth > editwidth || editwidth < 2 || inspos > strlen(sv->cur->s))
@@ -1069,7 +1355,7 @@ int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wra
 
 	/* first determine longlen and allocate longstr */
 	longlen = strlen(sv->cur->s) + strlen(str);
-	longstr = (unsigned char *) malloc(longlen + 2);
+	longstr = (char *) malloc(longlen + 2);
 	memset(longstr, 0, longlen + 2);
 	
 	/* fill longstr
@@ -1145,8 +1431,8 @@ int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wra
 		/* next line either does not exist, is blank, is a zoc command,
 		 * or is indented; so, we create a new, blank line to wordwrap onto */
 
-		unsigned char *newnode;
-		newnode = (unsigned char *) malloc(editwidth + 2);
+		char *newnode;
+		newnode = (char *) malloc(editwidth + 2);
 		newnode[0] = 0;
 		insertstring(sv, newnode);
 	} else {
@@ -1176,14 +1462,20 @@ int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wra
 	return newpos;
 }
 
+
+/***************************************************************************/
+/**** File I/O for editbox editing *****************************************/
+/***************************************************************************/
+
+
 #define BUFFERSIZE 1000
 /* filetosvector - loads a textfile into a new stringvector */
-stringvector filetosvector(unsigned char* filename, int wrapwidth, int editwidth)
+stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
 {
 	stringvector v;
 	FILE * fp;
 	char buffer[BUFFERSIZE] = "";      /* Be nice and wordwrap long lines */
-	unsigned char * str = NULL;
+	char * str = NULL;
 	int strpos = 0;
 	int c = 0;
 	int i, j;
@@ -1210,7 +1502,7 @@ stringvector filetosvector(unsigned char* filename, int wrapwidth, int editwidth
 		if (c == 0x0d)
 			fgetc(fp);
 
-		str = (unsigned char *) malloc(editwidth + 2);
+		str = (char *) malloc(editwidth + 2);
 		if (str == NULL) {
 			fclose(fp);
 			return v;

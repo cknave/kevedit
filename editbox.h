@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.6 2000/09/09 02:37:57 bitman Exp $
+ * $Id: editbox.h,v 1.7 2000/10/20 02:17:18 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 #include "svector.h"
 
 /* editmoredata - edits p->moredata in a scroll box */
-void editmoredata(displaymethod * d, param * p);
+void editmoredata(param * p, displaymethod * d);
 
 /* editbox - display/edit a string vector in a scroll box, starting
  * at sv->cur. editwidth tells how long a line can be & how much memory to use
@@ -34,17 +34,20 @@ void editmoredata(displaymethod * d, param * p);
  * Code (ZOC) highlighting.
  *
  * Return code: ascii code for exit keypress (i.e. 13 or 27) */
-int editbox(displaymethod * d, char* title, stringvector * sv, int editwidth, int zocformatting);
+int editbox(char* title, stringvector * sv, int editwidth, int zocformatting, displaymethod * d);
 
 /* displayzoc - display a string with zoc highlighting. If firstline is true,
  * "@" will be allowed to denote object name. */
-void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int format, int firstline);
+void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod * d);
+
+/* displayzcommand - displays highlighting for zzt #command arguments */
+void displaycommand(int x, int y, char *command, char *args, displaymethod * d);
 
 /* wordwrap - wrap text in sv */
-int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wrapwidth, int editwidth);
+int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth);
 
 /* filetosvector - loads a textfile into a new stringvector */
-stringvector filetosvector(unsigned char* filename, int wrapwidth, int editwidth);
+stringvector filetosvector(char* filename, int wrapwidth, int editwidth);
 
 /* Copies a stringvector into a file. sv is not changed */
 void svectortofile(stringvector * sv, char *filename);

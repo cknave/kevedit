@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.5 2000/09/09 02:33:51 bitman Exp $
+ * $Id: svector.c,v 1.6 2000/10/20 02:17:18 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ void initstringvector(stringvector * v)
 
 
 /* pushstring - pushes string s to end of vector v */
-int pushstring(stringvector * v, unsigned char *s)
+int pushstring(stringvector * v, char *s)
 {
 	stringnode *newnode = NULL;
 
@@ -57,7 +57,7 @@ int pushstring(stringvector * v, unsigned char *s)
 }
 
 /* insertstring - inserts string s after cur in vector v */
-int insertstring(stringvector * v, unsigned char *s)
+int insertstring(stringvector * v, char *s)
 {
 	stringnode *newnode = NULL;
 
@@ -81,7 +81,7 @@ int insertstring(stringvector * v, unsigned char *s)
 }
 
 /* preinsertstring - inserts string s before cur in vector v */
-int preinsertstring(stringvector * v, unsigned char *s)
+int preinsertstring(stringvector * v, char *s)
 {
 	stringnode *newnode = NULL;
 
@@ -112,10 +112,10 @@ int preinsertstring(stringvector * v, unsigned char *s)
 
 
 /* removestring - removes cur node and returns pointer to s */
-unsigned char *
+char *
  removestring(stringvector * v)
 {
-	unsigned char *s;
+	char *s;
 	stringnode *cur;
 
 	if (v == NULL || v->cur == NULL)
@@ -165,7 +165,7 @@ unsigned char *
 /* deletestring - free()s cur node & s */
 int deletestring(stringvector * v)
 {
-	unsigned char *s = NULL;
+	char *s = NULL;
 
 	s = removestring(v);
 	if (s == NULL)
