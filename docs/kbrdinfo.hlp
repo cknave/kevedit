@@ -37,6 +37,13 @@ be moved back to the position where he
 entered the room.
 !-zap;Ways the player is "zapped"
 
+When the player is zapped, he or she is
+returned to the position set by Re-Enter X
+and Re-Enter Y. Modifying these values is
+usually not useful, however, because ZZT
+sets them whenever the player enters a
+board.
+
 :timelimit;Time Limit
 
 A limit can be imposed on the amount the

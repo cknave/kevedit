@@ -6,6 +6,7 @@ Virtual shift in DOS display: toggled by F12
 Bug fixed: duplicator cycle speed
 Bug fixed: params created for items on F3 menu
 Bug fixed: Stats editor panel updated after editing object code or passage dest
+Bug fixed: Reenter coordinates don't decrease every time a board is saved
 
 0.5.0
 -----

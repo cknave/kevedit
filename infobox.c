@@ -1,5 +1,5 @@
 /* infobox.c - board/world information dialogs
- * $Id: infobox.c,v 1.15 2002/12/04 23:53:06 kvance Exp $
+ * $Id: infobox.c,v 1.16 2002/12/27 06:09:28 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -179,9 +179,9 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	/* Numerical */
 
 	/* Re-enter x/y */
-	sprintf(buffer, "%d", zztBoardGetReenter_x(myworld));
+	sprintf(buffer, "%d", zztBoardGetReenter_x(myworld) + 1);
 	_addoption(buffer, BRDINFO_REENTERX);
-	sprintf(buffer, "%d", zztBoardGetReenter_y(myworld));
+	sprintf(buffer, "%d", zztBoardGetReenter_y(myworld) + 1);
 	_addoption(buffer, BRDINFO_REENTERY);
 
 	/* Time Limit */
@@ -326,8 +326,8 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 					number = 255;
 
 				switch (opt->id) {
-					case BRDINFO_REENTERX: zztBoardSetReenter_x(myworld, number); break;
-					case BRDINFO_REENTERY: zztBoardSetReenter_y(myworld, number); break;
+					case BRDINFO_REENTERX: zztBoardSetReenter_x(myworld, number-1); break;
+					case BRDINFO_REENTERY: zztBoardSetReenter_y(myworld, number-1); break;
 					case BRDINFO_MAXSHOTS: zztBoardSetMaxshots (myworld, number); break;
 				}
 			}

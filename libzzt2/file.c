@@ -1,5 +1,5 @@
 /* file.c	-- File routines
- * $Id: file.c,v 1.5 2002/12/04 23:53:06 kvance Exp $
+ * $Id: file.c,v 1.6 2002/12/27 06:09:39 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -319,8 +319,8 @@ ZZTboard *zztBoardRead(FILE *fp)
 		_zzt_inb_or(&board->params[i].data[0], fp) freeboard;
 		_zzt_inb_or(&board->params[i].data[1], fp) freeboard;
 		_zzt_inb_or(&board->params[i].data[2], fp) freeboard;
-		_zzt_inw_or(&board->params[i].leaderindex, fp) freeboard;
 		_zzt_inw_or(&board->params[i].followerindex, fp) freeboard;
+		_zzt_inw_or(&board->params[i].leaderindex, fp) freeboard;
 		_zzt_inb_or(&board->params[i].utype, fp) freeboard;
 		_zzt_inb_or(&board->params[i].ucolor, fp) freeboard;
 		_zzt_inb_or(&board->params[i].magic[0], fp) freeboard;
@@ -397,8 +397,14 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 	b = strlen(board->info.message);
 	_zzt_outb_ordie(&b, fp);
 	_zzt_outspad_ordie(board->info.message, b, ZZT_MESSAGE_SIZE, fp);
+	/* Increment re-entry points by 1 before storing to file */
+	board->info.reenter_x++;
+	board->info.reenter_y++;
 	_zzt_outb_ordie(&board->info.reenter_x, fp);
 	_zzt_outb_ordie(&board->info.reenter_y, fp);
+	/* Decrease again so that they are still usable */
+	board->info.reenter_x--;
+	board->info.reenter_y--;
 	_zzt_outw_ordie(&board->info.timelimit, fp);
 	_zzt_outspad_ordie(NULL, 0, 16, fp);
 	w = (board->info.paramcount == 0) ? 0 : board->info.paramcount-1;
@@ -416,8 +422,8 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 		_zzt_outb_ordie(&p->data[0], fp);
 		_zzt_outb_ordie(&p->data[1], fp);
 		_zzt_outb_ordie(&p->data[2], fp);
-		_zzt_outw_ordie(&p->leaderindex, fp);
 		_zzt_outw_ordie(&p->followerindex, fp);
+		_zzt_outw_ordie(&p->leaderindex, fp);
 		_zzt_outb_ordie(&p->utype, fp);
 		_zzt_outb_ordie(&p->ucolor, fp);
 		_zzt_outb_ordie(&p->magic[0], fp);
