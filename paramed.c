@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.5 2002/02/20 00:37:27 bitman Exp $
+ * $Id: paramed.c,v 1.6 2002/02/20 07:13:41 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -270,7 +270,7 @@ char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w
 				strcpy(buffer, w->boards[data].title);
 			break;
 		case ZZT_DATAUSE_CHAR:
-			sprintf(buffer, "%c - #char %d - %Xh", data, data, data);
+			sprintf(buffer, "%c - #char %d - %Xh", (data != 0 ? data : ' '), data, data);
 			break;
 		case ZZT_DATAUSE_OWNER:
 			strcpy(buffer, data == 0 ? "Player" : "Creature");
