@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.5 2001/05/05 21:34:17 bitman Exp $
+ * $Id: kevedit.h,v 1.6 2001/09/23 19:59:10 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,8 @@
 #define _KEVEDIT_H 1
 
 #include "zzt.h"
+
+#define MAX_BACKBUF 128
 
 typedef struct patdef {
 	int type;
