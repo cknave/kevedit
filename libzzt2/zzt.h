@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.17 2002/06/02 03:55:01 bitman Exp $
+ * $Id: zzt.h,v 1.18 2002/08/24 06:36:19 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -363,6 +363,8 @@ void zztBoardSetBoard_s(ZZTworld *world, u_int8_t board_s);
 void zztBoardSetBoard_w(ZZTworld *world, u_int8_t board_w);
 void zztBoardSetBoard_e(ZZTworld *world, u_int8_t board_e);
 void zztBoardSetReenter(ZZTworld *world, u_int8_t reenter);
+void zztBoardSetReenter_x(ZZTworld *world, u_int8_t reenter_x);
+void zztBoardSetReenter_y(ZZTworld *world, u_int8_t reenter_y);
 void zztBoardSetMessage(ZZTworld *world, char *message);
 void zztBoardSetTimelimit(ZZTworld *world, u_int16_t timelimit);
 void zztBoardSetParamcount(ZZTworld *world, u_int16_t paramcount);	/* Don't ever use */
@@ -377,6 +379,8 @@ u_int8_t zztBoardGetBoard_s(ZZTworld *world);
 u_int8_t zztBoardGetBoard_w(ZZTworld *world);
 u_int8_t zztBoardGetBoard_e(ZZTworld *world);
 u_int8_t zztBoardGetReenter(ZZTworld *world);
+u_int8_t zztBoardGetReenter_x(ZZTworld *world);
+u_int8_t zztBoardGetReenter_y(ZZTworld *world);
 u_int8_t *zztBoardGetMessage(ZZTworld *world);
 u_int16_t zztBoardGetTimelimit(ZZTworld *world);
 u_int16_t zztBoardGetParamcount(ZZTworld *world);

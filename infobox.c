@@ -1,5 +1,5 @@
 /* infobox.c - board/world information dialogs
- * $Id: infobox.c,v 1.13 2002/03/24 08:39:54 bitman Exp $
+ * $Id: infobox.c,v 1.14 2002/08/24 06:36:18 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -47,16 +47,19 @@
 /* Types of board info */
 #define ID_NONE          0
 #define BRDINFO_TITLE    1
+#define BRDINFO_MESSAGE  2
 
-#define BRDINFO_DARKNESS 2
-#define BRDINFO_REENTER  3
-#define BRDINFO_TIMELIM  4
-#define BRDINFO_MAXSHOTS 5
+#define BRDINFO_DARKNESS 3
+#define BRDINFO_REENTER  4
+#define BRDINFO_REENTERX 5
+#define BRDINFO_REENTERY 6
+#define BRDINFO_TIMELIM  7
+#define BRDINFO_MAXSHOTS 8
 
-#define BRDINFO_BRDNORTH 6
-#define BRDINFO_BRDSOUTH 7
-#define BRDINFO_BRDEAST  8
-#define BRDINFO_BRDWEST  9
+#define BRDINFO_BRDNORTH 9
+#define BRDINFO_BRDSOUTH 10
+#define BRDINFO_BRDEAST  11
+#define BRDINFO_BRDWEST  12
 
 dialog buildboardinfodialog(ZZTworld * myworld);
 int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt);
@@ -143,8 +146,8 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	int boardsize = zztBoardGetSize(zztBoardGetCurPtr(myworld));
 	dialog dia;
 
-	dialogComponent label  = dialogComponentMake(DIALOG_COMP_LABEL,   3, 3, LABEL_COLOR,  NULL, ID_NONE);
-	dialogComponent option = dialogComponentMake(DIALOG_COMP_OPTION, 25, 3, OPTION_COLOR, NULL, ID_NONE);
+	dialogComponent label  = dialogComponentMake(DIALOG_COMP_LABEL,   3, 2, LABEL_COLOR,  NULL, ID_NONE);
+	dialogComponent option = dialogComponentMake(DIALOG_COMP_OPTION, 25, 2, OPTION_COLOR, NULL, ID_NONE);
 
 	/* Handy macros for using template label & option */
 #define _addlabel(TEXT)      { label.text  = (TEXT); dialogAddComponent(&dia, label); label.y++; }
@@ -157,12 +160,16 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_TITLE, 0, 0, 0x0F, "Board Info", ID_NONE));
 
 	/* Board title */
+#if 0
 	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, 0, 0x0F, "Title", ID_NONE));
-	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_OPTION, 21 - (strlen(zztBoardGetTitle(myworld)) / 2), 1, OPTION_COLOR, zztBoardGetTitle(myworld), BRDINFO_TITLE));
+#endif
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_OPTION, 21 - (strlen(zztBoardGetTitle(myworld)) / 2), 0, OPTION_COLOR, zztBoardGetTitle(myworld), BRDINFO_TITLE));
 
 	/* Basic board info */
 	_addlabel("       Board is dark:");
 	_addlabel("Re-Enter When Zapped:");
+	_addlabel("          Re-Enter X:");
+	_addlabel("          Re-Enter Y:");
 	_addlabel("          Time Limit:");
 	_addlabel("       Maximum Shots:");
 
@@ -170,6 +177,13 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	_addoption(zztBoardGetReenter(myworld)  ? "Yes" : "No", BRDINFO_REENTER);
 
 	/* Numerical */
+
+	/* Re-enter x/y */
+	sprintf(buffer, "%d", zztBoardGetReenter_x(myworld));
+	_addoption(buffer, BRDINFO_REENTERX);
+	sprintf(buffer, "%d", zztBoardGetReenter_y(myworld));
+	_addoption(buffer, BRDINFO_REENTERY);
+
 	/* Time Limit */
 	if (zztBoardGetTimelimit(myworld) > 0)
 		sprintf(buffer, "%d", zztBoardGetTimelimit(myworld));
@@ -181,8 +195,16 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	sprintf(buffer, "%d", zztBoardGetMaxshots(myworld));
 	_addoption(buffer, BRDINFO_MAXSHOTS);
 
+	/* Message */
+	/* Don't bother trying to edit this. A special stat has to be created
+	 * at position (0,0) which stores the remaining message time in
+	 * param[1], of all places. If said stat is missing, no message is
+	 * displayed. TODO: support this automatically in libzzt2. */
+	label.x = 0;
+	_addlabel(zztBoardGetMessage(myworld));
+
 	/* Advance template cursors */
-	label.y += 2; option.y += 2;
+	label.y += 1; option.y += 2;
 	label.x = 2; option.x = 5;
 
 	/* Board links */
@@ -234,14 +256,12 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	
 	/* Board size statistics */
 
-	label.x = 9; _addlabel("Board Size:");
+	label.x = 4; _addlabel("Board Size:");
 	/* Red color for dangerously large board size */
 	label.color = (boardsize < 20000 ? 0x0B : 0x0C);
-	label.y--; label.x = 21;
+	label.y--; label.x = 16;
 
-	sprintf(buffer, "%d bytes", boardsize);
-	_addlabel(buffer);
-	sprintf(buffer, "%.3f", (float)boardsize / 1024);
+	sprintf(buffer, "%d bytes, %.3f KB", boardsize, (float)boardsize / 1024);
 	_addlabel(buffer);
 
 	return dia;
@@ -258,6 +278,13 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 			opt->x = 0; opt->color = 0x0F;
 			if (dialogComponentEdit(d, opt, 42, LINED_NORMAL) == LINED_OK)
 				zztBoardSetTitle(myworld, opt->text);
+			/* Update */
+			return 1;
+
+		case BRDINFO_MESSAGE:
+			/* 58 chars is the actual limit, but 42 is enough */
+			if (dialogComponentEdit(d, opt, 42, LINED_NORMAL) == LINED_OK)
+				zztBoardSetMessage(myworld, opt->text);
 			/* Update */
 			return 1;
 
@@ -285,18 +312,24 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 			zztBoardSetReenter(myworld, !zztBoardGetReenter(myworld));
 			return 1;
 
+		case BRDINFO_REENTERX:
+		case BRDINFO_REENTERY:
 		case BRDINFO_MAXSHOTS:
-			if (zztBoardGetMaxshots(myworld) == 0)
-				opt->text[0] = '\x0';
+			if (opt->text[0] == '0') /* If the number is zero */
+				opt->text[0] = '\x0';  /* Clear the text */
 			if (dialogComponentEdit(d, opt, 3, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES) == LINED_OK) {
-				int maxshots;
-				sscanf(opt->text, "%d", &maxshots);
+				int number;
+				sscanf(opt->text, "%d", &number);
 				if (strlen(opt->text) == 0)
-					zztBoardSetMaxshots(myworld, 0);
-				else if (maxshots > 255)
-					zztBoardSetMaxshots(myworld, 255);
-				else
-					zztBoardSetMaxshots(myworld, (u_int8_t) maxshots);
+					number = 0;
+				else if (number > 255)
+					number = 255;
+
+				switch (opt->id) {
+					case BRDINFO_REENTERX: zztBoardSetReenter_x(myworld, number); break;
+					case BRDINFO_REENTERY: zztBoardSetReenter_y(myworld, number); break;
+					case BRDINFO_MAXSHOTS: zztBoardSetMaxshots (myworld, number); break;
+				}
 			}
 			return 1;
 

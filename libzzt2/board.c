@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.7 2002/03/24 08:39:54 bitman Exp $
+ * $Id: board.c,v 1.8 2002/08/24 06:36:19 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -788,6 +788,14 @@ void zztBoardSetReenter(ZZTworld *world, u_int8_t reenter)
 {
 	world->boards[world->cur_board].info.reenter = reenter;
 }
+void zztBoardSetReenter_x(ZZTworld *world, u_int8_t reenter_x)
+{
+	world->boards[world->cur_board].info.reenter_x = reenter_x;
+}
+void zztBoardSetReenter_y(ZZTworld *world, u_int8_t reenter_y)
+{
+	world->boards[world->cur_board].info.reenter_y = reenter_y;
+}
 void zztBoardSetMessage(ZZTworld *world, char *message)
 {
 	strncpy(world->boards[world->cur_board].info.message, message, ZZT_MESSAGE_SIZE);
@@ -834,6 +842,14 @@ u_int8_t zztBoardGetBoard_e(ZZTworld *world)
 u_int8_t zztBoardGetReenter(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.reenter;
+}
+u_int8_t zztBoardGetReenter_x(ZZTworld *world)
+{
+	return world->boards[world->cur_board].info.reenter_x;
+}
+u_int8_t zztBoardGetReenter_y(ZZTworld *world)
+{
+	return world->boards[world->cur_board].info.reenter_y;
 }
 u_int8_t *zztBoardGetMessage(ZZTworld *world)
 {
