@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.17 2000/09/02 04:33:23 kvance Exp $
+ * $Id: main.c,v 1.18 2000/09/06 19:00:21 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -746,7 +746,7 @@ int main(int argc, char **argv)
 			} else
 				x = patdefs[myinfo->pattern].color;
 
-			if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == patdefs[myinfo->pattern].type && bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == x)
+			if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == patdefs[myinfo->pattern].type && (patdefs[myinfo->pattern].type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == x))
 				break;
 			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, myinfo->cursorx, myinfo->cursory, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
 			updatepanel(mydisplay, myinfo, myworld);
