@@ -1,5 +1,5 @@
 /* sdl_synth.c	-- SDL music synthesizer
- * $Id: sdl_synth.c,v 1.6 2002/09/22 00:19:34 bitman Exp $
+ * $Id: sdl_synth.c,v 1.7 2002/09/22 00:53:27 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -62,17 +62,11 @@ int OpenSynth(SDL_AudioSpec * spec)
 
 void CloseSynth(void)
 {
-	/* Silence and an empty buffer makes things quiet */
+	/* Silence, close the audio, and clean up the memory we used. */
 	SDL_PauseAudio(1);
-	AudioCleanUp();
-
-	/* TODO: Find out why the Linux version of SDL doesn't like us closing
-	 * audio and then opening it up again -- at least on bitman's computer.
-	 * In windows, we'll crash if we try opening it again but haven't closed
-	 * it. I'm very confused. Perhaps removing the CTRL-C handler would help... */
-#ifdef WIN32
 	SDL_CloseAudio();
-#endif
+
+	AudioCleanUp();
 }
 
 int IsSynthBufferEmpty()
