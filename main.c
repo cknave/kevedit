@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.13 2000/08/22 00:44:48 bitman Exp $
+ * $Id: main.c,v 1.14 2000/08/22 17:07:42 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -784,7 +784,7 @@ int main(int argc, char **argv)
 				drawscrollbox(0, 0, mydisplay);
 				mydisplay->print(24, 4, 0x0a, "About KevEdit");
 				mydisplay->print(9, 12, 0x0a, "KevEdit R5, Version");
-				mydisplay->print(34, 12, 0x0a, VERSION);
+				mydisplay->print(29, 12, 0x0a, VERSION);
 				mydisplay->print(9, 13, 0x0a, "Copyright (C) 2000 Kev Vance");
 				mydisplay->print(9, 14, 0x0a, "Distribute under the terms of the GNU GPL");
 				mydisplay->cursorgo(9, 13);
