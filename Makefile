@@ -26,8 +26,8 @@ all: kevedit
 clean:
 	rm -f *.o kevedit
 
-kevedit: display.o main.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
-	$(CC) -o $@ display.o main.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
+kevedit: display.o main.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
+	$(CC) -o $@ display.o main.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
 
 display.o: display.c display.h
 	$(CC) -o $@ display.c $(CFLAGS) -c
@@ -41,8 +41,10 @@ libzzt.o: libzzt.c zzt.h
 	$(CC) -o $@ libzzt.c $(CFLAGS) -c
 svector.o: svector.c svector.h
 	$(CC) -o $@ svector.c $(CFLAGS) -c
-editbox.o: editbox.c editbox.h colours.h panel_ed.h
+editbox.o: editbox.c editbox.h colours.h svector.h panel_ed.h zzm.h
 	$(CC) -o $@ editbox.c $(CFLAGS) -c
+zzm.o: zzm.c zzm.h svector.h editbox.h
+	$(CC) -o $@ zzm.c $(CFLAGS) -c
 
 panel.o: panel.c panel.h
 	$(CC) -o $@ panel.c $(CFLAGS) -c

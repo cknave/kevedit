@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.5 2000/08/27 02:19:03 bitman Exp $
+ * $Id: editbox.h,v 1.6 2000/09/09 02:37:57 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,12 +31,14 @@ void editmoredata(displaymethod * d, param * p);
  * at sv->cur. editwidth tells how long a line can be & how much memory to use
  * on new lines. If editwidth is zero, editsvector acts as a listbox and sets
  * sv->cur to selected node.  If zochighlight is nonzero, it does ZZT Object
- * Code (ZOC) highlighting. */
-void editbox(displaymethod * d, char* title, stringvector * sv, int editwidth, int zocformatting);
+ * Code (ZOC) highlighting.
+ *
+ * Return code: ascii code for exit keypress (i.e. 13 or 27) */
+int editbox(displaymethod * d, char* title, stringvector * sv, int editwidth, int zocformatting);
 
 /* displayzoc - display a string with zoc highlighting. If firstline is true,
  * "@" will be allowed to denote object name. */
-void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int firstline);
+void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int format, int firstline);
 
 /* wordwrap - wrap text in sv */
 int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wrapwidth, int editwidth);
