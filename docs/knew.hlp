@@ -2,6 +2,7 @@
 $New Features
 
 $New in Version 0.5.1
+!-langtut;Improved syntax highlighting
 !-ksupport;Support help topic
 !-kbasics:text;F4 text entry wraps at end of line
 !-kselect;Select discriminates by object char

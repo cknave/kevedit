@@ -162,10 +162,10 @@ $RNDNS
 $RNDNE
     Either North or East, at random.
 $RND
-		Any direction, at random, with East
-		or West being twice as likely as
-		North or South. Opposite directions
-		hold equal probability.
+    Any direction, at random, with East
+    or West being twice as likely as
+    North or South. Opposite directions
+    hold equal probability.
 $CW <direction>
     Clockwise from the given direction,
     i.e. CW NORTH = EAST.
@@ -289,14 +289,14 @@ $Descriptions of commands:
 
 :send;#[SEND] [SELF:]<message>
      Similar to basic's "GOTO" command.
- #SEND followed by the name of a label
+#SEND followed by the name of a label
 within the program will cause program
 execution to continue at that label.
 
-Example:  :ABCDEF
-          ...program loop goes
-             here...
-          #SEND ABCDEF
+Example:
+ :ABCDEF
+ ...program loop goes here...
+ #SEND ABCDEF
 
 #[SEND] <objectname>:<message>
 
@@ -308,9 +308,9 @@ coordinated.  For example, the player
 touches Creature A.  Creature A tells
 Creature B to attack the player.
 
-Example:  :TOUCH
-          #SEND CreatureB:
-                 AttackPlayer
+Example:
+ :TOUCH
+ #SEND CreatureB:AttackPlayer
 
 Note:  If the program receiving the
        message is in the locked state, the
@@ -387,7 +387,7 @@ issue the "Walk idle" command.
 automatically receives a THUD message.
 Unfortunately, it will keep going back to
 the same label over and over until
- #ZAP THUD is used.
+#ZAP THUD is used.
 
 :idle;#IDLE
 
@@ -408,9 +408,9 @@ game will not be terminated, and the
 player's health will be set to n.
 
      Program execution continues past
- #endgame. In fact, only 3 commands halt
+#endgame. In fact, only 3 commands halt
 program execution:
- #END, #DIE, and #BECOME.
+#END, #DIE, and #BECOME.
 
 :die;#DIE
 
@@ -450,7 +450,7 @@ any fakes or water in its way.
      Disables the first occurrence of a
 label by turning it into a comment.  For
 example, #ZAP TOUCH would turn the label
- :TOUCH into the comment 'TOUCH.  Allows a
+:TOUCH into the comment 'TOUCH.  Allows a
 program to have several routines with the
 same labels, so that the desired label
 is called at the appropriate time.
@@ -514,13 +514,13 @@ state, so it is free to receive incoming
 messages.  Any messages that happened to
 arrive while it was LOCKed are lost.
 
-Example:  :TOUCH
-          #LOCK
-          'code to handle
-          '"touch" message
-          'goes here...
-          #UNLOCK
-          #END
+Example:
+ :TOUCH
+ #LOCK
+ 'code to handle "touch" message
+ 'goes here...
+ #UNLOCK
+ #END
 
 :give;#GIVE <item> <quantity>
 
@@ -556,17 +556,16 @@ does not have the given amount, none will
 be taken, and if a message is given, it
 will be sent.
 
-Example:  #TAKE GEMS 2 TooPoor
-          "Thank you for the 
-          gems!"
-          #END
-          :TooPoor
-          "You don't have
-          enough gems!"
-          #END
+Example:
+ #TAKE GEMS 2 TooPoor
+ "Thank you for the gems!"
+ #END
+ :TooPoor
+ "You don't have enough gems!"
+ #END
 
      TIME can also be used in #give and
- #take statements, as long as the time
+#take statements, as long as the time
 limit is turned on in the information
 menu.  However, #give takes the time
 closer to 0, even cycling back to the

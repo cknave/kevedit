@@ -30,10 +30,11 @@ removed before using the code.
 
  Commands    Comments
  ----------  -----------------
- @BadGuy     ' We are giving this object
+ @BadGuy
+             ' We are giving this object
              ' the name "BadGuy".
  /s/s/s      ' Start out by moving south
-               three times.
+             ' three times.
  #shoot n    ' Next, shoot north.
  #end        ' Now stop and wait for us to
              ' receive a message.
