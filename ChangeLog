@@ -1,3 +1,7 @@
+0.4
+---
+Mini-keyboard handler chained to default one to detect shift keys
+
 0.3.1: October 21, 2000
 ----
 Blinkwall lines now drawn properly
