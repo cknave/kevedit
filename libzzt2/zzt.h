@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.10 2002/02/20 15:33:09 kvance Exp $
+ * $Id: zzt.h,v 1.11 2002/03/07 06:06:21 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -399,6 +399,15 @@ void zztBlockFree(ZZTblock *block);
  * Create a copy of a block
  */
 ZZTblock *zztBlockDuplicate(ZZTblock *block);
+/* zztBlockCopyArea(src, x1, y1, x2, y2)
+ * Create a copy of a rectangular area
+ */
+ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2);
+/* zztBlockPaste(dest, src, x, y)
+ * Paste the src block onto dest at (x, y)
+ * Clipping occurs if src is too big
+ */
+int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y);
 
 /***** PARAMETER MANIPULATORS *****/
 /* zztParamCreate(tile)
@@ -484,6 +493,10 @@ u_int8_t zztGetDisplayColor(ZZTworld * world, int x, int y);
  * Returns a descriptive name for a tile (do not modify!)
  */
 const char * zztTileGetName(ZZTtile tile);
+/* zztTileGetKind(tile)
+ * Returns the kind name used in object code (do not modify!)
+ */
+const char * zztTileGetKind(ZZTtile tile);
 
 
 /***** TILE TYPES *****/

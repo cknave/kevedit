@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.9 2002/02/22 00:04:28 bitman Exp $
+ * $Id: tiles.c,v 1.10 2002/03/07 06:06:21 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,11 @@
 #include <string.h>
 
 #include "zzt.h"
+
+/* The all-powerful min/max/swap macros */
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define swap(a, b, type) { type c = (a); (a) = (b); (b) = c; }
 
 /* Look-up table for tile type names */
 const char * _zzt_type_name_table[] = {
@@ -56,7 +61,7 @@ const char * _zzt_type_name_table[] = {
 	/* ZZT_BLINK          */ "Blink Wall",
 	/* ZZT_TRANSPORTER    */ "Transporter",
 	/* ZZT_LINE           */ "Line",
-	/* ZZT_RICOCHET       */ "Richochet",
+	/* ZZT_RICOCHET       */ "Ricochet",
 	/* ZZT_BLINKHORIZ     */ "Horizontal Blink Wall",
 	/* ZZT_BEAR           */ "Bear",
 	/* ZZT_RUFFIAN        */ "Ruffian",
@@ -78,6 +83,63 @@ const char * _zzt_type_name_table[] = {
 	/* ZZT_YELLOWTEXT     */ "Yellow Text",
 	/* ZZT_WHITETEXT      */ "White Text",
 	/* Invalid type       */ "Unknown",
+};
+
+const char * _zzt_type_kind_table[] = {
+	/* ZZT_EMPTY          */ "empty",
+	/* ZZT_EDGE           */ "",
+	/* Invalid            */ "(none)",
+	/* Invalid            */ "(none)",
+	/* ZZT_PLAYER         */ "player",
+	/* ZZT_AMMO           */ "ammo",
+	/* ZZT_TORCH          */ "torch",
+	/* ZZT_GEM            */ "gem",
+	/* ZZT_KEY            */ "key",
+	/* ZZT_DOOR           */ "door",
+	/* ZZT_SCROLL         */ "scroll",
+	/* ZZT_PASSAGE        */ "passage",
+	/* ZZT_DUPLICATOR     */ "duplicator",
+	/* ZZT_BOMB           */ "bomb",
+	/* ZZT_ENERGIZER      */ "energizer",
+	/* ZZT_STAR           */ "star",
+	/* ZZT_CWCONV         */ "clockwise",
+	/* ZZT_CCWCONV        */ "counter",
+	/* ZZT_BULLET         */ "bullet",
+	/* ZZT_WATER          */ "water",
+	/* ZZT_FOREST         */ "forest",
+	/* ZZT_SOLID          */ "solid",
+	/* ZZT_NORMAL         */ "normal",
+	/* ZZT_BREAKABLE      */ "breakable",
+	/* ZZT_BOULDER        */ "boulder",
+	/* ZZT_NSSLIDER       */ "sliderns",
+	/* ZZT_EWSLIDER       */ "sliderew",
+	/* ZZT_FAKE           */ "fake",
+	/* ZZT_INVISIBLE      */ "invisible",
+	/* ZZT_BLINK          */ "blinkwall",
+	/* ZZT_TRANSPORTER    */ "transporter",
+	/* ZZT_LINE           */ "line",
+	/* ZZT_RICOCHET       */ "ricochet",
+	/* ZZT_BLINKHORIZ     */ "(none)",
+	/* ZZT_BEAR           */ "bear",
+	/* ZZT_RUFFIAN        */ "ruffian",
+	/* ZZT_OBJECT         */ "object",
+	/* ZZT_SLIME          */ "slime",
+	/* ZZT_SHARK          */ "shark",
+	/* ZZT_SPINNINGGUN    */ "spinninggun",
+	/* ZZT_PUSHER         */ "pusher",
+	/* ZZT_LION           */ "lion",
+	/* ZZT_TIGER          */ "tiger",
+	/* ZZT_BLINKVERT      */ "(none)",
+	/* ZZT_CENTHEAD       */ "head",
+	/* ZZT_CENTBODY       */ "segment",
+	/* ZZT_BLUETEXT       */ "(none)",
+	/* ZZT_GREENTEXT      */ "(none)",
+	/* ZZT_CYANTEXT       */ "(none)",
+	/* ZZT_REDTEXT        */ "(none)",
+	/* ZZT_PURPLETEXT     */ "(none)",
+	/* ZZT_YELLOWTEXT     */ "(none)",
+	/* ZZT_WHITETEXT      */ "(none)",
+	/* Invalid type       */ "(none)"
 };
 
 /* Look-up table for converting zzt types to display chars */
@@ -221,6 +283,80 @@ ZZTblock *zztBlockDuplicate(ZZTblock *block)
 	}
 	
 	return dest;
+}
+
+ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2)
+{
+	int row;          /* Current row in source */
+	int destpos;      /* Current index in the dest block */
+	ZZTblock * dest;  /* Destination block */
+
+	/* Make sure (x1, y1) is upper left corner and (x2, y2) is lower right */
+	if (x1 > x2) swap(x1, x2, int);
+	if (y1 > y2) swap(y1, y2, int);
+
+	/* Make sure coords are within range */
+	if (x1 > src->width)  x1 = src->width  - 1;
+	if (x2 > src->width)  x2 = src->width  - 1;
+	if (y1 > src->height) y1 = src->height - 1;
+	if (y2 > src->height) y2 = src->height - 1;
+
+	/* Create the destination block */
+	/* Endpoints are included in the copy */
+	dest = zztBlockCreate(x2 - x1 + 1, y2 - y1 + 1);
+
+	if (dest == NULL)
+		return NULL;
+
+	/* Copy */
+
+	destpos = 0;   /* Start at beginning of dest->tiles */
+	for (row = y1; row <= y2; row++) {
+		/* Find start and end indexes within src */
+		int srcpos = row * src->width + x1;
+		int endpos = row * src->width + x2;
+		for (; srcpos <= endpos; srcpos++, destpos++) {
+			/* Copy the current source tile onto the current dest tile */
+			dest->tiles[destpos] = src->tiles[srcpos];
+			dest->tiles[destpos].param = zztParamDuplicate(src->tiles[srcpos].param);
+		}
+	}
+
+	return dest;
+}
+
+int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y)
+{
+	int srcpos;     /* Current index in source */
+	int row, col;   /* Current row and col in dest */
+
+	/* Paste */
+
+	srcpos = 0;     /* Start at beginning of source object */
+	for (row = y; row < src->height + y && row < dest->height; row++) {
+		for (col = x; col < src->width + x && col < dest->width; col++, srcpos++) {
+			/* Paste the currently indexed tile from source to (row, col) in dest */
+
+			/* TODO: allow positions to be excluded via selection mask (easy!) */
+			
+			/* Can't use plot because we want to maintain terrain under creatures
+			 * from the source block, not the destination block */
+
+			/* Free existing tile param */
+			if (zztTileAt(dest, col, row).param != NULL)
+				zztParamFree(zztTileAt(dest, col, row).param);
+
+			/* Copy (I love this macro) */
+			zztTileAt(dest, col, row) = src->tiles[srcpos];
+			zztTileAt(dest, col, row).param = zztParamDuplicate(src->tiles[srcpos].param);
+		}
+		/* If the loop stopped short of using every column in src, advance
+		 * the srcpos index to ignore these columns */
+		while (col < src->width + x) { col++; srcpos++; }
+	}
+
+	/* Success! */
+	return 1;
 }
 
 int zztTilePlot(ZZTblock * block, int x, int y, ZZTtile tile)
@@ -494,5 +630,14 @@ const char * zztTileGetName(ZZTtile tile)
 	}
 	/* Default to string at end of table */
 	return _zzt_type_name_table[ZZT_WHITETEXT + 1];
+}
+
+const char * zztTileGetKind(ZZTtile tile)
+{
+	if (tile.type <= ZZT_WHITETEXT) {
+		return _zzt_type_kind_table[tile.type];
+	}
+	/* Default to string at end of table */
+	return _zzt_type_kind_table[ZZT_WHITETEXT + 1];
 }
 
