@@ -1,5 +1,5 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.5 2002/06/04 18:51:13 kvance Exp $
+ * $Id: notes.c,v 1.6 2002/06/07 02:03:12 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,12 +19,48 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "SDL.h"
 
 #include "notes.h"
 
 Uint8 *masterplaybuffer = NULL;
 static size_t playbuffersize = 0, playbufferloc = 0, playbuffermax = 0;
+
+int OpenSynth(SDL_AudioSpec * spec)
+{
+	SDL_AudioSpec desired, obtained;
+
+	if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+		return 1;
+	}
+
+	/* Set desired sound opts */
+	desired.freq = 44100;
+	desired.format = AUDIO_U16SYS;
+	desired.channels = 1;
+	desired.samples = 4096;
+	desired.callback = AudioCallback;
+	desired.userdata = &obtained;
+
+	/* Open audio device */
+	if(SDL_OpenAudio(&desired, &obtained) < 0) {
+		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+		exit(1);
+	}
+	SDL_PauseAudio(0);
+
+	(*spec) = obtained;
+
+	return 0;
+}
+
+void CloseSynth(void)
+{
+	SDL_CloseAudio();
+	AudioCleanUp();
+}
 
 /* Return the frequency of the given note, "octave" octaves from middle */
 float NoteFreq(int note, int octave)
@@ -67,11 +103,13 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 	size_t wordsize;
 	size_t i, j;
 
-	float hfreq = (spec.freq/freq/2.0);
 	int osc = 1;
 
 	Uint16 uon = U16_1, uoff = U16_0;
 	Sint16 son = S16_1, soff = S16_0;
+
+	/* Don't let the callback function access the playbuffer while we're editing it! */
+	SDL_LockAudio();
 
 	if(spec.format == AUDIO_U8 || spec.format == AUDIO_S8)
 		wordsize = 1;
@@ -81,8 +119,8 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 	if(playbuffersize != 0 && playbufferloc != 0) {
 		/* Shift buffer back to zero */
 		memcpy(masterplaybuffer,
-			&masterplaybuffer[wordsize*playbufferloc],
-			wordsize*(playbuffersize-playbufferloc));
+			&masterplaybuffer[playbufferloc],
+			playbuffersize-playbufferloc);
 		playbuffermax -= playbufferloc;
 		playbufferloc = 0;
 	}
@@ -94,7 +132,8 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 	if((notesize*wordsize) > (playbuffersize-playbuffermax)) {
 		/* Make bigger buffer */
 		masterplaybuffer = realloc(masterplaybuffer,
-				(playbuffermax+notesize)*wordsize);
+				playbuffersize+notesize*wordsize);
+
 		playbuffersize += notesize*wordsize;
 	}
 
@@ -106,6 +145,7 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 		playbuffermax += notesize*wordsize;
 	} else {
 		/* Tone */
+		float hfreq = (spec.freq/freq/2.0);
 		for(i = 0, j = 0; i < notesize; i++, j++) {
 			if(j >= hfreq) {
 				osc ^= 1;
@@ -135,6 +175,9 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 			playbuffermax += wordsize;
 		}
 	}
+
+	/* Now let AudioCallback do its work */
+	SDL_UnlockAudio();
 }
 
 void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len)
@@ -145,7 +188,7 @@ void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len)
 		playbufferloc++;
 	}
 	for(; i < len; i++)
-		stream[i] = spec->silence;
+		stream[i] = ((SDL_AudioSpec *) spec)->silence;
 }
 
 void AudioCleanUp()

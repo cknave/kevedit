@@ -1,5 +1,5 @@
 /* play.c	-- Play ZZT music from the commandline
- * $Id: play.c,v 1.6 2002/06/04 18:51:13 kvance Exp $
+ * $Id: play.c,v 1.7 2002/06/07 02:03:12 bitman Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,9 +19,12 @@
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "SDL.h"
 
 #include "notes.h"
+
+int PlayZZTMusic(char *string);
 
 int main(int argc, char **argv)
 {
@@ -33,34 +36,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-int PlayZZTMusic(char *string)
-{
-	SDL_AudioSpec desired, obtained;
-	void *masterbufer;
-	int pos = 0, len = strlen(string);
-	float time = LEN_T;
-	int octave = 0;
-	int delaytime = 0;
-
-	if(SDL_Init(SDL_INIT_AUDIO) < 0) {
-		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
-		return 1;
-	}
-	atexit(SDL_Quit);
-
-	/* Set desired sound opts */
-	desired.freq = 48000;
-	desired.format = AUDIO_U16SYS;
-	desired.channels = 1;
-	desired.samples = 4096;
-	desired.callback = AudioCallback;
-	desired.userdata = &obtained;
-
-	/* Open audio device */
-	if(SDL_OpenAudio(&desired, &obtained) < 0) {
-		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
-		exit(1);
-	}
+void printSoundStats(SDL_AudioSpec obtained) {
 	printf("Sound device:\n"\
 	       "Freq = %i\n"\
 	       "Channels = %i\n"\
@@ -93,8 +69,25 @@ int PlayZZTMusic(char *string)
 			printf("UNKNOWN!!!\n");
 			break;
 	}
+}
 
-	SDL_PauseAudio(0);
+int PlayZZTMusic(char *string)
+{
+	SDL_AudioSpec obtained;
+	int pos = 0, len = strlen(string);
+	float time = LEN_T;
+	int octave = 0;
+	int delaytime = 0;
+
+	SDL_Init(SDL_INIT_AUDIO);
+
+	atexit(SDL_Quit);
+
+	if (OpenSynth(&obtained))
+		return 1;
+
+	printSoundStats(obtained);
+
 	while(pos < len) {
 		char c = string[pos];
 		if(isalpha(c))
@@ -193,11 +186,18 @@ int PlayZZTMusic(char *string)
 				delaytime += time * 1000;
 			}
 		}
+
+		/* Test delay inside loop */
+		SDL_Delay(delaytime);
+		delaytime = 0;
 		pos++;
 	}
 
 	SDL_Delay(delaytime + 500);
 
-	AudioCleanUp();
+	CloseSynth();
+
 	SDL_Quit();
+
+	return 0;
 }

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.41 2002/05/04 20:33:34 bitman Exp $
+ * $Id: editbox.c,v 1.42 2002/06/07 02:03:11 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1090,6 +1090,9 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymethod* d)
 {
+	/* Open the zzm audio device */
+	zzmOpenaudio();
+
 	/* Loop through the stringvector looking for #play statements */
 	while (sv->cur != NULL && !d->kbhit()) {
 		char* tune = strstr(sv->cur->s, "#");
@@ -1120,16 +1123,17 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 				free(strpart);
 				d->cursorgo(oldpos + 15 + xoff, 13);
 
-				zzmPCspeakerPlaynote(note);
+				zzmPlaynote(note);
 			}
-
-			zzmPCspeakerFinish();
 		}
 		sv->cur = sv->cur->next;
 	}
 
 	if (d->kbhit())
 		d->getch();
+
+	/* Close audio */
+	zzmCloseaudio();
 }
 
 /***************************************************************************/

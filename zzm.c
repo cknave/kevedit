@@ -1,5 +1,5 @@
 /* zzm.c  -- zzm file routines
- * $Id: zzm.c,v 1.7 2002/05/04 04:17:43 bitman Exp $
+ * $Id: zzm.c,v 1.8 2002/06/07 02:03:11 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,13 @@
 #include <dos.h>
 #endif
 
+#ifdef SDL
+#include "SDL.h"
+#include "synth/notes.h"
+
+SDL_AudioSpec audiospec;
+#endif
+
 /* Note lengths, given in millisecond delay */
 #define NOTE_QUARTER      440
 #define NOTE_HALF         (NOTE_QUARTER * 2)
@@ -42,9 +49,6 @@
 
 #define NOTE_DRUMBREAK   2 /* 2 millisecond delay between drum changes */ 
 #define NOTE_NOSLURBREAK 8 /* Break of 8 if notes are not to be slurred */
-
-#define MAXOCTAVE 6
-#define MINOCTAVE 1
 
 /* Scale, in octave 6 */
 static short scale[12]=
@@ -249,8 +253,8 @@ zzmnote zzmgetnote(char * tune, zzmplaystate * s)
 			case '.': s->duration += (s->duration >> 1); break;
 								/* increase current duration by half */
 			/* octave modifiers */
-			case '+': if (s->octave < MAXOCTAVE) s->octave++; break;
-			case '-': if (s->octave > MINOCTAVE) s->octave--; break;
+			case '+': if (s->octave < ZZM_MAXOCTAVE) s->octave++; break;
+			case '-': if (s->octave > ZZM_MINOCTAVE) s->octave--; break;
 		}
 
 		/* If we finally reached a note */
@@ -272,7 +276,7 @@ zzmnote zzmgetnote(char * tune, zzmplaystate * s)
 					note.index = 0;
 
 					/* we shouldn't go higher than MAXOCTAVE */
-					if ((++note.octave) > MAXOCTAVE) note.octave = MAXOCTAVE;
+					if ((++note.octave) > ZZM_MAXOCTAVE) note.octave = ZZM_MAXOCTAVE;
 				}
 
 				/* advance the position to the next character */
@@ -285,7 +289,7 @@ zzmnote zzmgetnote(char * tune, zzmplaystate * s)
 					note.index = 12;
 
 					/* no going beneath MINOCTAVE */
-					if ((--note.octave) < MINOCTAVE) note.octave = MINOCTAVE;
+					if ((--note.octave) < ZZM_MINOCTAVE) note.octave = ZZM_MINOCTAVE;
 				}
 
 				/* advance the position to the next character */
@@ -318,12 +322,23 @@ zzmnote zzmgetnote(char * tune, zzmplaystate * s)
 
 int zzmgetfrequency(zzmnote note)
 {
-	return scale[note.index] >> (MAXOCTAVE - note.octave);
+	return scale[note.index] >> (ZZM_MAXOCTAVE - note.octave);
 }
 
+int zzmOpenaudio()
+{
+#ifdef SDL
+	return OpenSynth(&audiospec);
+#elif defined (DOS)
+	return 0; /* Audio is always available in DOS */
+#else
+	return 1; /* No other audio systems available */
+#endif
+}
+
+#ifdef DOS
 void zzmPCspeakerPlaynote(zzmnote note)
 {
-#ifdef DOS
 	if (note.type == ZZM_NOTE) {
 		int frequency = zzmgetfrequency(note);
 
@@ -363,13 +378,93 @@ void zzmPCspeakerPlaynote(zzmnote note)
 		if (!note.slur)
 			delay(NOTE_NOSLURBREAK);
 	}
+}
+#endif
 
+#ifdef SDL
+int zzmSynthPlayNote(zzmnote note)
+{
+	/* Length of time note will take to play */
+	int delaytime = 0;
+
+	if (note.type == ZZM_NOTE) {
+		int synthNote;
+		float frequency;
+		float wait;
+
+		/* Translate to the note system used by the synthesizer */
+		if (note.index >= 9)
+			synthNote = note.index - 9;
+		else
+			synthNote = -(note.index + 3);
+
+#if 1
+		printf("Playing note index: %d, translated to: %d, octave: %d\n", note.index, synthNote, note.octave);
+#endif
+
+		/* Find the frequency */
+		frequency	= NoteFreq(synthNote, note.octave - 3);
+		wait = ((float) note.duration) / 1000;
+
+		/* Add the sound to the buffer */
+		AddToBuffer(audiospec, frequency, wait);
+		delaytime += note.duration;
+
+		/* If we aren't slurring, insert a break */
+		if (!note.slur) {
+			AddToBuffer(audiospec, 0, ((float) NOTE_NOSLURBREAK) / 1000);
+			delaytime += NOTE_NOSLURBREAK;
+		}
+	}
+
+	/* Rests are simple */
+	if (note.type == ZZM_REST) {
+		AddToBuffer(audiospec, 0, ((float) note.duration) / 1000);
+		delaytime += note.duration;
+	}
+
+	/* Drums */
+	if (note.type == ZZM_DRUM) {
+		/* TODO */
+#if 0
+		int i;
+
+		/* Loop through each drum cycle */
+		for (i = 0; i < DRUMCYCLES; i++) {
+			sound(drums[note.index][i]);
+			delay(NOTE_DRUMBREAK);
+		}
+		nosound();
+
+		/* Add a break based on the current duration */
+		delay(note.duration - NOTE_DRUMBREAK * DRUMCYCLES);
+
+		/* Insert a delay when not sluring. No sense in leaving the sound on
+		 * for such a brief noise, though. */
+		if (!note.slur)
+			delay(NOTE_NOSLURBREAK);
+#endif
+	}
+
+	/* Pause for the length of the note */
+	return delaytime;
+}
+#endif
+
+void zzmPlaynote(zzmnote note)
+{
+#ifdef SDL
+	SDL_Delay(zzmSynthPlayNote(note));
+#elif defined (DOS)
+	zzmPCspeakerPlaynote(note);
 #endif
 }
 
-void zzmPCspeakerFinish(void)
+void zzmCloseaudio()
 {
-#ifdef DOS
+#ifdef SDL
+	CloseSynth();
+#elif defined (DOS)
 	nosound();
 #endif
 }

@@ -7,7 +7,7 @@ include kevedit.optimize
 # Set up display settings
 ifeq ($(SDL),ON)
   SDL = -DSDL `sdl-config --cflags`
-  SDLOBJ = display_sdl.o
+  SDLOBJ = display_sdl.o synth/notes.o
   LDFLAGS += `sdl-config --libs`
 endif
 
@@ -67,7 +67,7 @@ uninstall:
 	rm -f -R $(docdir)
 
 clean:
-	rm -f *.o kevedit kevedit.exe kevedit.zln
+	rm -f *.o kevedit kevedit.exe kevedit.zln synth/*.o
 	make -C libzzt2 clean
 
 # Libraries
@@ -96,6 +96,7 @@ zlaunch.o: zlaunch.c zlaunch.h svector.h
 helplist.o: helplist.c helplist.h svector.h
 hypertxt.o: hypertxt.c hypertxt.h svector.h
 gradient.o: gradient.c gradient.h
+synth/notes.o: synth/notes.c synth/notes.h
 
 # Misc
 patbuffer.o: patbuffer.c kevedit.h libzzt2/zzt.h display.h

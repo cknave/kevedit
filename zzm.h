@@ -1,5 +1,5 @@
 /* zzm.h  -- zzm file routines
- * $Id: zzm.h,v 1.5 2002/05/04 04:17:43 bitman Exp $
+ * $Id: zzm.h,v 1.6 2002/06/07 02:03:11 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,10 @@ typedef struct zzmplaystate {
 #define ZZM_REST  2   /* Rest for a moment */
 #define ZZM_DRUM  3   /* Tick-tock */
 
+/* ZZM octave bounds */
+#define ZZM_MAXOCTAVE 6
+#define ZZM_MINOCTAVE 1
+
 typedef struct zzmnote {
 	int type;       /* Type of note */
 	int duration;   /* Millisecond duration */
@@ -59,8 +63,13 @@ zzmnote zzmgetnote(char * tune, zzmplaystate * s);
 /* zzmgetfrequency() - get the frequency of a zzmnote */
 int zzmgetfrequency(zzmnote note);
 
-/* Play music to PC speaker */
-void zzmPCspeakerPlaynote(zzmnote note);
-void zzmPCspeakerFinish(void);
+/* zzmOpenaudio() - open the audio device */
+int zzmOpenaudio();
+
+/* zzmPlaynote() - play a note to the audio device */
+void zzmPlaynote(zzmnote note);
+
+/* zzmCloseaudio() - close the audio device */
+void zzmCloseaudio();
 
 #endif
