@@ -1,5 +1,10 @@
-0.4
----
+0.3.3
+-----
+Bug fixed in save dialog
+Hypertext help system implemented
+
+0.3.2: October 4, 2001
+----------------------
 Mini-keyboard handler chained to default one to detect shift keys
 Scrolls implemented
 Editing an object also edits its character
@@ -8,9 +13,10 @@ Getcolour function fixed for sharks
 Copy and paste in ZOC Editor
 Random floodfill, get mode, gradient mode
 Help displays readme file & interprets ZOC markup
+Many internal upgrades
 
 0.3.1: October 21, 2000
-----
+-----------------------
 Blinkwall lines now drawn properly
 DPMI time slices are given up for more multitasking friendliness
 Text entry implemented
