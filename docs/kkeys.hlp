@@ -101,6 +101,12 @@ SHIFT+CURSOR KEYS
  f - Fill
  F - Random Fill
  g - Gradient
+CTRL-C
+  Copy selected tiles
+CTRL-V
+  Paste copied tiles
+CTRL-X
+  Cut selected tiles
 
 :menu;Tile Menus
 

@@ -38,6 +38,11 @@ the copied tiles to where you want
 them, then press SPACEBAR or ENTER. To
 cancel pasting, press ESCAPE.
 
+To cut a selected area, press CTRL-X.
+This will copy the selected area and then
+fill it with the currently selected
+pattern.
+
 If an area is selected when you paste a
 group of tiles, then only the selected
 area will be affected. This can be very
