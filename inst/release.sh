@@ -10,9 +10,10 @@ PARENTDIR=../../       # Location of $PROJECT directory
 SPECSOURCEDIR=inst     # Location of $PROJECT.spec.source file
 SOURCEDIR=.            # Location of source code
 
-THIS=`basename $0`
-echo "$THIS version 0.2.0"
-echo "Copyright (c) 2001  Ryan Phillips"
+THIS="`basename $0`"
+HERE="`dirname $0`"
+echo "$THIS version 0.2.1"
+echo "Copyright (c) 2001  Ryan Phillips <bitman@users.sf.net>"
 echo "This program may be freely distributed under the terms of the GNU GPL"
 echo
 
@@ -51,7 +52,7 @@ for arg in "$@"; do
 done
 
 # Create copy of program in temporary directory
-cd $PARENTDIR
+cd $HERE/$PARENTDIR
 cp -R $PROJECT $ARCHIVE
 
 # Remember the release root
