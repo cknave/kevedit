@@ -44,9 +44,6 @@ char* fileof(char* buffer, char* fullpath, int buflen);
 char* pathof(char* buffer, char* fullpath, int buflen);
 char* fullpath(char* path, char* file, int slashtype);
 
-/* Determine whether file exists */
-int   fileexists(char* filename);
-
 /* Keboard buffer stuffing routines */
 void performkeystrokes(char* keystrokes);
 void stuffkbdbuffer(unsigned char scancode, unsigned char ch);

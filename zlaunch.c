@@ -270,20 +270,6 @@ fullpath(char* path, char* file, int slashtype)
 }
 
 
-int
-fileexists(char* filename)
-{
-	FILE* testfile;
-
-	testfile = fopen(filename, "rb");
-	if (testfile == NULL) 
-		return 0;
-
-	fclose(testfile);
-	return 1;
-}
-
-
 void
 stuffkbdbuffer(unsigned char scancode, unsigned char ch)
 {

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.41 2001/11/04 06:37:02 bitman Exp $
+ * $Id: main.c,v 1.42 2001/11/06 05:44:58 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@
 
 #define MAIN_BUFLEN 255
 
+/* Interrupt signal for CTRL-C (do nothing) */
 void sigInt(int i)
 {
 }
@@ -380,14 +381,26 @@ int main(int argc, char **argv)
 		case 'L':
 		case 'l':
 			/* Load world */
-			filedialog(buffer, "zzt", "Load World", mydisplay);
-			if (strlen(buffer) != 0) {
-				z_delete(myworld);
-				myworld = loadworld(buffer);
-				strncpy(myinfo->currentfile, buffer, 13);
+			if (filedialog(buffer, "zzt", "Load World", mydisplay)) {
+				if (strlen(buffer) != 0) {
+					world* newworld = loadworld(buffer);
+					if (newworld != NULL) {
+						char newpath[MAIN_BUFLEN];
 
-				updateinfo(myworld, myinfo, bigboard);
-				updateparamlist(myworld, myinfo, paramlist);
+						/* Out with the old and in with the new */
+						z_delete(myworld);
+						myworld = newworld;
+
+						/* Change directory */
+						pathof(newpath, buffer, MAIN_BUFLEN);
+						chdir(newpath);
+
+						/* Copy the file portion of the filename */
+						fileof(myinfo->currentfile, buffer, 14);
+						updateinfo(myworld, myinfo, bigboard);
+						updateparamlist(myworld, myinfo, paramlist);
+					}
+				}
 			}
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			drawpanel(mydisplay);

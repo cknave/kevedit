@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.27 2001/10/27 19:30:42 kvance Exp $
+ * $Id: screen.c,v 1.28 2001/11/06 05:44:58 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "screen.h"
 #include "display.h"
@@ -29,6 +30,8 @@
 #include "zzt.h"
 #include "scroll.h"
 #include "editbox.h"
+#include "hypertxt.h"
+#include "zlaunch.h"
 
 #include "panel.h"
 #include "panel_f1.h"
@@ -197,7 +200,7 @@ char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, 
 {
 	int i = 0, x = 0, c = 0;	/* general vars */
 	int t = strlen(filename);	/* current edit position */
-	int extlen = strlen(ext);	/* length of given extention */
+	int extlen = strlen(ext);	/* length of given extension */
 	char buffer[15] = "";
 
 	if (extlen > 3 || t > 12)
@@ -214,7 +217,7 @@ char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, 
 
 	strcpy(buffer, filename);
 
-	/* if extention is given, remove extention from buffer */
+	/* if extension is given, remove extension from buffer */
 	if (extlen)
 		for (i = 0; i < t; i++)
 			if (buffer[i] == '.')
@@ -555,61 +558,121 @@ void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsi
 	}
 }
 
-int sort_function(const void *a, const void *b)
-{
-	return strcmp((char *) a, (char *) b);
-}
+#define FTYPE_FILE 1
+#define FTYPE_DIR  2
+#define FTYPE_ALL  3
 
-
-char * filedialog(char * buffer, char * extention, char * title, displaymethod * mydisplay)
+stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 {
-	DIR *dp;
-	struct dirent *dirent;
-	int i, x;
-	char filelist[500][13];
 	stringvector files;
+	DIR *dp;
 
-	buffer[0] = 0;
 	initstringvector(&files);
 
-	dp = opendir(".");
+	dp = opendir(dir);
 	if (dp == NULL)
-		return buffer;
-	if (strlen(extention) > 3)
-		return buffer;
+		return files;
 
-	i = 0;
-	drawscrollbox(0, 0, mydisplay);
-	mydisplay->print(30 - (strlen(title) / 2), 4, 0x0a, title);
-
-	x = 0;
 	while (1) {
+		char * fulld_name;
+		struct dirent *dirent;
+
 		dirent = readdir(dp);
-		if (dirent == NULL || x == 500)
+
+		if (dirent == NULL)
 			break;
-		if (strlen(extention) == 0 || extention[0] == '*' || (tolower(dirent->d_name[strlen(dirent->d_name) - 1]) == extention[2] && tolower(dirent->d_name[strlen(dirent->d_name) - 2]) == extention[1] && tolower(dirent->d_name[strlen(dirent->d_name) - 3]) == extention[0] && dirent->d_name[strlen(dirent->d_name) - 4] == '.')) {
-			strcpy(filelist[x], dirent->d_name);
-			x++;
+
+		fulld_name = fullpath(dir, dirent->d_name, SLASH_DEFAULT);
+
+		if (access(fulld_name, D_OK)) {
+			if (filetypes & FTYPE_FILE) {
+				/* The current file is not a directory, check the extension */
+				if (extension[0] == '*' ||
+						(dirent->d_name[strlen(dirent->d_name) - strlen(extension) - 1]
+							 == '.' &&
+						str_equ(dirent->d_name + strlen(dirent->d_name) - strlen(extension),
+										extension, STREQU_UNCASE))) {
+					pushstring(&files, str_dup(dirent->d_name));
+				}
+			}
+		} else if (!str_equ(dirent->d_name, ".", 0)) {
+			if (filetypes & FTYPE_DIR) {
+				/* Current file is a directory */
+				char* dirline = (char*) malloc(sizeof(char) *
+																			 (strlen(dirent->d_name)*2 + 5));
+				strcpy(dirline, "!");
+				strcat(dirline, dirent->d_name);
+				strcat(dirline, ";[");
+				strcat(dirline, dirent->d_name);
+				strcat(dirline, "]");
+				pushstring(&files, dirline);
+			}
 		}
+
+		free(fulld_name);
 	}
 	closedir(dp);
-	if (x != 0) {
-		/* This qsort sure was worth all that wasted memory */
-		qsort(filelist, x, 13, sort_function);
-	} else {
-		return buffer;
+
+	inssortstringvector(&files, strcmp);
+
+	return files;
+}
+
+char * betterfiledialog(char * dir, char * extension, char * title, displaymethod * mydisplay)
+{
+	int done = 0;
+	char* result = NULL;
+	stringvector files;
+	char* curdir = strdup(dir);
+
+	while (!done) {
+		int response;
+
+		files = readdirectorytosvector(curdir, extension, FTYPE_DIR | FTYPE_FILE);
+
+		response = browsedialog(title, &files, mydisplay);
+
+		switch (response) {
+			case EDITBOX_OK:
+			case EDITBOX_FORWARD:
+				if (ishypermessage(files)) {
+					/* A directory was chosen */
+					char* nextdirectory;
+					char* subdir = gethypermessage(files);
+
+					nextdirectory = fullpath(curdir, subdir, SLASH_DEFAULT);
+					free(curdir);
+					curdir = nextdirectory;
+
+					free(subdir);
+				} else {
+					/* A file was chosen */
+					result = fullpath(curdir, files.cur->s, SLASH_DEFAULT);
+					done = 1;
+				}
+				break;
+
+			case EDITBOX_CANCEL:
+				done = 1;
+				break;
+		}
 	}
 
-	for (i = 0; i < x; i++)
-		pushstring(&files, str_dup(filelist[i]));
-
-	if (editbox(title, &files, 0, 1, mydisplay) == EDITBOX_OK)
-		strcpy(buffer, files.cur->s);
-
 	deletestringvector(&files);
+	free(curdir);
 
+	return result;
+}
+
+char * filedialog(char * buffer, char * extension, char * title, displaymethod * mydisplay)
+{
+	char* filename = betterfiledialog(".", extension, title, mydisplay);
+	if (filename != NULL)
+		strcpy(buffer, filename);
+	free(filename);
 	return buffer;
 }
+
 
 char *titledialog(displaymethod * d)
 {

@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.11 2001/10/20 03:05:49 bitman Exp $
+ * $Id: svector.h,v 1.12 2001/11/06 05:44:58 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -79,6 +79,9 @@ void svmoveby(stringvector* v, int delta);
 
 /* svgetposoiton() - count how far cur is from first */
 int svgetposition(stringvector* v);
+
+/* inssortstringvector() - insertion sort vector using strcmp()-like funct */
+void inssortstringvector(stringvector* v, int (*compare)(const char* s1, const char* s2));
 
 /* General string operations which become useful when paired with svectors */
 

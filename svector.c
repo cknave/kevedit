@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.14 2001/10/20 03:05:49 bitman Exp $
+ * $Id: svector.c,v 1.15 2001/11/06 05:44:58 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -244,6 +244,31 @@ int svgetposition(stringvector* v)
 	}
 
 	return pos;
+}
+
+/* inssortstringvector() - insertion sort vector using strcmp()-like funct */
+void inssortstringvector(stringvector* v, int (*compare)(const char* s1, const char* s2))
+{
+	char *curstr = NULL;
+	stringnode *nodepos = NULL, * sortnode = NULL;
+
+	if (v->first == NULL || v->first->next == NULL)
+		return;  /* No point in sorting one or none nodes. */
+
+	for (sortnode = v->first->next; sortnode != NULL; sortnode = sortnode->next) {
+		curstr = sortnode->s;
+		
+		/* Find place to insert curstr */
+		nodepos = sortnode;
+		while (nodepos != v->first && compare(nodepos->prev->s, curstr) > 0) {
+			/* So long as the previous node is bigger, move it forward and step back. */
+			nodepos->s = nodepos->prev->s;
+			nodepos = nodepos->prev;
+		}
+		nodepos->s = curstr;
+	}
+	/* TODO: don't use v->cur */
+	v->cur = v->first;
 }
 
 

@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.15 2001/10/27 19:30:42 kvance Exp $
+ * $Id: screen.h,v 1.16 2001/11/06 05:44:58 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 #include "display.h"
 #include "zzt.h"
 #include "kevedit.h"
+#include "svector.h"
 
 /* line_editor flags */
 #define LINED_NORMAL   0x00
@@ -40,6 +41,10 @@
 #define LINED_CANCEL 0
 #define LINED_OK     1
 
+#define FTYPE_FILE 1
+#define FTYPE_DIR  2
+#define FTYPE_ALL  3
+
 int line_editor(int x, int y, int color,
 								char* str, int editwidth, int flags, displaymethod* d);
 int line_editnumber(int x, int y, int color, int * number, int maxval,
@@ -53,7 +58,9 @@ extern void cursorspace(displaymethod * d, world * w, editorinfo * e, char *bigb
 
 extern void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
 
-extern char * filedialog(char * buffer, char * extention, char * title, displaymethod * mydisplay);
+extern char * filedialog(char * buffer, char * extension, char * title, displaymethod * mydisplay);
+extern stringvector readdirectorytosvector(char * dir, char * extension, int filetypes);
+extern char * betterfiledialog(char * dir, char * extension, char * title, displaymethod * mydisplay);
 extern int boarddialog(world * w, int curboard, int firstnone, char * title, displaymethod * mydisplay);
 extern int switchboard(world * w, editorinfo * e, displaymethod * mydisplay);
 extern char * filenamedialog(char * filename, char * prompt, char * ext, int askoverwrite, displaymethod * mydisplay);
