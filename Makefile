@@ -1,10 +1,17 @@
 # Makefile for KevEdit
 
 # Comment next line if you can't use long file names (e.g. in DOS)
-LONGFILES = ON
+#LONGFILES = ON
+LFN = -DLONG_FILES
+
+# Choose your compiler
+#CC = i586-pc-msdosdjgpp-gcc
+CC = gcc
 
 # Uncomment next line to optimize kevedit
+# Uncomment second line to not optimize and include debugging information
 #OPTIMIZE = -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+OPTIMIZE = -g
 
 # Set CGI to ON to enable GGI display
 GGI =
@@ -12,15 +19,6 @@ GGI =
 VCSA =
 # Set DOS to ON to enable DOS display
 DOS = ON
-
-# Determine compiler & LONG_FILES define based on whether we are using long file names
-ifeq ($(LONGFILES), ON)
-CC = i586-pc-msdosdjgpp-gcc
-LFN = -DLONG_FILES
-else
-CC = gcc
-LFN =
-endif
 
 # Set up display settings
 ifeq ($(GGI),ON)
@@ -35,11 +33,7 @@ endif
 
 ifeq ($(DOS),ON)
   DOS = -DDOS
-  ifeq ($(LONGFILES), ON)
-    DOSOBJ = display_dos.o
-  else
-    DOSOBJ = d_dos.o
-  endif
+	DOSOBJ = display_dos.o
 endif
 
 CFLAGS = -s $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) $(LFN) -DVERSION=\"0.3.1\"
@@ -93,10 +87,5 @@ display_ggi.o: display_ggi.c display.h display_ggi.h
 	$(CC) -o $@ display_ggi.c $(CFLAGS) -c
 display_vcsa.o: display_vcsa.c display.h display_vcsa.h
 	$(CC) -o $@ display_vcsa.c $(CFLAGS) -c
-ifeq ($(LONGFILES), ON)
 display_dos.o: display_dos.c display.h display_dos.h
 	$(CC) -o $@ display_dos.c $(CFLAGS) -c
-else
-d_dos.o: d_dos.c display.h d_dos.h
-	$(CC) -o $@ d_dos.c $(CFLAGS) -c
-endif
