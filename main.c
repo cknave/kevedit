@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.11 2000/08/19 21:41:49 kvance Exp $
+ * $Id: main.c,v 1.12 2000/08/19 22:35:21 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -90,9 +90,7 @@ void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int
 	/* Plot the type */
 	bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = patdefs[myinfo->pattern].type;
 	/* Plot the colour */
-	if (patdefs[myinfo->pattern].type == Z_EMPTY)
-		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x07;
-	else if (myinfo->pattern < 6 || myinfo->defc == 0) {
+	if (myinfo->pattern < 6 || myinfo->defc == 0) {
 		i = (myinfo->backc << 4) + myinfo->forec;
 		if (myinfo->blinkmode == 1)
 			i += 0x80;
@@ -133,9 +131,7 @@ void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, 
 #define CURRENTFLOODPARAM	myworld->board[myinfo->curboard]->params[paramlist[xpos][ypos]]
 
 	/* Find the target colour */
-	if (patdefs[myinfo->pattern].type == Z_EMPTY)
-		targetcolour = 0x07;
-	else if (myinfo->pattern < 6 || myinfo->defc == 0) {
+	if (myinfo->pattern < 6 || myinfo->defc == 0) {
 		i = (myinfo->backc << 4) + myinfo->forec;
 		if (myinfo->blinkmode == 1)
 			i += 0x80;
@@ -195,19 +191,19 @@ void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, 
 		myworld->board[myinfo->curboard]->info->objectcount--;
 	}
 	if (xpos != 0) {
-		if (bigboard[((xpos - 1) + ypos * 60) * 2] == code && bigboard[((xpos - 1) + ypos * 60) * 2 + 1] == colour)
+		if (bigboard[((xpos - 1) + ypos * 60) * 2] == code && (bigboard[((xpos - 1) + ypos * 60) * 2 + 1] == colour || bigboard[((xpos - 1) + ypos * 60) * 2] == Z_EMPTY))
 			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos - 1, ypos, code, colour);
 	}
 	if (xpos != 59) {
-		if (bigboard[((xpos + 1) + ypos * 60) * 2] == code && bigboard[((xpos + 1) + ypos * 60) * 2 + 1] == colour)
+		if (bigboard[((xpos + 1) + ypos * 60) * 2] == code && (bigboard[((xpos + 1) + ypos * 60) * 2 + 1] == colour || bigboard[((xpos + 1) + ypos * 60) * 2] == Z_EMPTY))
 			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos + 1, ypos, code, colour);
 	}
 	if (ypos != 0) {
-		if (bigboard[(xpos + (ypos - 1) * 60) * 2] == code && bigboard[(xpos + (ypos - 1) * 60) * 2 + 1] == colour)
+		if (bigboard[(xpos + (ypos - 1) * 60) * 2] == code && (bigboard[(xpos + (ypos - 1) * 60) * 2 + 1] == colour || bigboard[(xpos + (ypos - 1) * 60) * 2] == Z_EMPTY))
 			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos - 1, code, colour);
 	}
 	if (ypos != 24) {
-		if (bigboard[(xpos + (ypos + 1) * 60) * 2] == code && bigboard[(xpos + (ypos + 1) * 60) * 2 + 1] == colour)
+		if (bigboard[(xpos + (ypos + 1) * 60) * 2] == code && (bigboard[(xpos + (ypos + 1) * 60) * 2 + 1] == colour || bigboard[(xpos + (ypos + 1) * 60) * 2] == Z_EMPTY))
 			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos + 1, code, colour);
 	}
 }
@@ -325,12 +321,6 @@ int main(int argc, char **argv)
 			myinfo->currenttitle[myworld->zhead->titlelength] = '\0';
 			myinfo->curboard = myworld->zhead->startboard;
 			rle_decode(myworld->board[myworld->zhead->startboard]->data, bigboard);
-			/* Sweep the board and make all empties 0x07.  This saves space in rle
-			   and makes the floodfill work correctly */
-			for (i = 0; i < BOARD_MAX * 2; i += 2) {
-				if (bigboard[i] == Z_EMPTY)
-					bigboard[i + 1] = 0x07;
-			}
 			for (i = 0; i < 25; i++)
 				for (x = 0; x < 60; x++)
 					paramlist[x][i] = 0;
@@ -397,6 +387,80 @@ int main(int argc, char **argv)
 				 z_getcolour(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]));
 
 		switch (c) {
+			case 'z':
+			case 'Z':
+				if (e == 0) {
+				/* Clear board */
+				for (i = 3; i < 25; i++) {
+					for (x = 0; x < 20; x++) {
+						mydisplay->putch(x + 60, i, ' ', 0x1f);
+					}
+				}
+				mydisplay->print(61, 3, 0x1f, "Clear board?");
+				mydisplay->print(61, 4, 0x1e, "y/n");
+				i = 0;
+				while (i == 0) {
+					i = mydisplay->getch();
+					if (i == 'y' || i == 'Y') {
+						for(i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
+							if(myworld->board[myinfo->curboard]->params[i]->moredata != NULL)
+								free(myworld->board[myinfo->curboard]->params[i]->moredata);
+							free(myworld->board[myinfo->curboard]->params[i]);
+						}
+						free(myworld->board[myinfo->curboard]->data);
+						free(myworld->board[myinfo->curboard]->info);
+						strcpy(buffer, myworld->board[myinfo->curboard]->title);
+						free(myworld->board[myinfo->curboard]->title);
+						free(myworld->board[myinfo->curboard]);
+						myworld->board[myinfo->curboard] = z_newboard(buffer);
+						rle_decode(myworld->board[myinfo->curboard]->data, bigboard);
+						break;
+					} else if (i == 'n' || i == 'N') {
+						break;
+					} else
+						i = 0;
+				}
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
+			}
+			break;
+			case 'n':
+			case 'N':
+				if (e == 0) {
+				/* New world */
+				for (i = 3; i < 25; i++) {
+					for (x = 0; x < 20; x++) {
+						mydisplay->putch(x + 60, i, ' ', 0x1f);
+					}
+				}
+				mydisplay->print(61, 3, 0x1f, "Make new world?");
+				mydisplay->print(61, 4, 0x1e, "y/n");
+				i = 0;
+				while (i == 0) {
+					i = mydisplay->getch();
+					if (i == 'y' || i == 'Y') {
+						z_delete(myworld);
+						myworld = z_newworld();
+						myworld->board[0] = z_newboard("KevEdit World");
+						rle_decode(myworld->board[0]->data, bigboard);
+						for(i = 0; i < 25; i++)
+							for(x = 0; x < 60; x++)
+								paramlist[x][i] = 0;
+						strcpy(myinfo->currenttitle, "UNTITLED");
+						myinfo->currentfile = "untitled.zzt";
+						myinfo->curboard = 0;
+						break;
+					} else if (i == 'n' || i == 'N') {
+						break;
+					} else
+						i = 0;
+				}
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
+			}
+			break;
 		case 'q':
 		case 'Q':
 			/* Quit */
@@ -481,12 +545,6 @@ int main(int argc, char **argv)
 			if (myinfo->curboard > myworld->zhead->boardcount)
 				myinfo->curboard = 0;
 			rle_decode(myworld->board[myinfo->curboard]->data, bigboard);
-			/* Sweep the board and make all empties 0x07.  This saves space in rle and
-			   makes the floodfill work correctly */
-			for (i = 0; i < BOARD_MAX * 2; i += 2) {
-				if (bigboard[i] == Z_EMPTY)
-					bigboard[i + 1] = 0x07;
-			}
 			for (i = 0; i < 25; i++)
 				for (x = 0; x < 60; x++)
 					paramlist[x][i] = 0;
@@ -614,9 +672,7 @@ int main(int argc, char **argv)
 		case 'f':
 		case 'F':
 			/* Flood fill */
-			if (patdefs[myinfo->pattern].type == Z_EMPTY)
-				x = 0x07;
-			else if (myinfo->pattern < 6 || myinfo->defc == 0) {
+			if (myinfo->pattern < 6 || myinfo->defc == 0) {
 				i = (myinfo->backc << 4) + myinfo->forec;
 				if (myinfo->blinkmode == 1)
 					i += 0x80;
@@ -642,12 +698,6 @@ int main(int argc, char **argv)
 				myinfo->currenttitle[myworld->zhead->titlelength] = '\0';
 				myinfo->curboard = myworld->zhead->startboard;
 				rle_decode(myworld->board[myworld->zhead->startboard]->data, bigboard);
-				/* Sweep the board and make all empties 0x07.  This saves space in
-				   rle and makes the floodfill work correctly */
-				for (i = 0; i < BOARD_MAX * 2; i += 2) {
-					if (bigboard[i] == Z_EMPTY)
-						bigboard[i + 1] = 0x07;
-				}
 				for (i = 0; i < 25; i++)
 					for (x = 0; x < 60; x++)
 						paramlist[x][i] = 0;
