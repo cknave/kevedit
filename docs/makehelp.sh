@@ -1,12 +1,25 @@
 #!/bin/sh
 
-HELPFILE=../kevedit.zml
+SRCDIR=.
+OUTDIR=..
+
+if [ $# -gt 0 ]; then
+	SRCDIR=$1
+fi
+
+if [ $# -gt 1 ]; then
+	OUTDIR=$2
+fi
+
+HELPFILE=$OUTDIR/kevedit.zml
+SRCFILES=$SRCDIR/*.hlp
 
 rm -f $HELPFILE
 
-for i in *.hlp; do
-	echo @@$i >> $HELPFILE
-	cat $i >> $HELPFILE
+for i in $SRCFILES; do
+	basename=`basename $i` &&
+	echo @@$basename >> $HELPFILE &&
+	cat $i >> $HELPFILE || exit 1
 done
 
-echo "Help metafile generated"
+echo "Help metafile $HELPFILE generated from $SRCFILES"

@@ -6,8 +6,11 @@ noinst_LIBRARIES = libsynth.a
 
 libsynth_a_SOURCES = notes.c notes.h synth.h zzm.c zzm.h
 
-EXTRA_libsynth_a_SOURCES = sdl_synth.c sdl_synth.h pcspeaker.c pcspeaker.h
+if SDL
+libsynth_a_SOURCES += sdl_synth.c sdl_synth.h
+endif
 
-libsynth_a_LIBADD = $(SYNTH_SDL) $(SYNTH_PCSPEAKER)
-libsynth_a_DEPENDENCIES = $(SYNTH_SDL) $(SYNTH_PCSPEAKER)
+if DOS
+libsynth_a_SOURCES += pcspeaker.c pcspeaker.h
+endif
 
