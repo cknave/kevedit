@@ -1,5 +1,5 @@
 /* zzm.c  -- zzm file routines
- * $Id: zzm.c,v 1.3 2001/01/07 23:55:42 bitman Exp $
+ * $Id: zzm.c,v 1.4 2001/04/24 23:12:55 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ stringvector zzmpullsong(stringvector * zzmv, int songnum)
 
 	for (curline = zzmv->first; curline != NULL; curline = curline->next) {
 		if (curline->s != NULL &&
-		    strequ(curline->s, "; $SONG ", STREQU_UNCASE | STREQU_FRONT)) {
+		    str_equ(curline->s, "; $SONG ", STREQU_UNCASE | STREQU_FRONT)) {
 			int cursongnum = 0;
 			sscanf(curline->s + 8, "%d", &cursongnum);
 			if (cursongnum == songnum)
@@ -75,7 +75,7 @@ int zzmpicksong(stringvector * zzmv, displaymethod * d)
 	/* put header info at top of songtitles */
 	for (curline = zzmv->first; curline != NULL; curline = curline->next) {
 		if (curline->s != NULL &&
-		    strequ(curline->s, "; $TITLE ", STREQU_UNCASE | STREQU_FRONT)) {
+		    str_equ(curline->s, "; $TITLE ", STREQU_UNCASE | STREQU_FRONT)) {
 			newstr = (char *) malloc(43);
 			strcpy(newstr, "$");
 			strncat(newstr, curline->s + 9, 41);
@@ -91,7 +91,7 @@ int zzmpicksong(stringvector * zzmv, displaymethod * d)
 	/* find all the song titles and put them songnames */
 	for (curline = zzmv->first; curline != NULL; curline = curline->next) {
 		if (curline->s != NULL &&
-		    strequ(curline->s, "; $SONG TITLE ", STREQU_UNCASE | STREQU_FRONT)) {
+		    str_equ(curline->s, "; $SONG TITLE ", STREQU_UNCASE | STREQU_FRONT)) {
 
 			/* put the song number and title in rawtitles */
 			pushstring(&rawtitles, curline->s + 14);

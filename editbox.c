@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.16 2001/04/09 02:44:59 bitman Exp $
+ * $Id: editbox.c,v 1.17 2001/04/24 23:12:53 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -764,7 +764,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								if (newsvector.first != NULL) {
 									if (c == 24) {
 										strcpy(savefilename, filelist[listpos]);
-										if (strequ(filetypelist.cur->s, "*.zoc", 0))
+										if (str_equ(filetypelist.cur->s, "*.zoc", 0))
 											zocformatting = 1;
 										else
 											zocformatting = 0;
@@ -1029,10 +1029,10 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 					case 1: 
 						/* ctrl-a: insert ascii char/decimal-value */
 						strcpy(strbuf, centerstr->s);
-						strlwr(strbuf);
+						str_lowercase(strbuf);
 						updateflags = U_EDITAREA;
 
-						if (strequ(strbuf, "#char", STREQU_UNCASE | STREQU_FRONT)) {
+						if (str_equ(strbuf, "#char", STREQU_UNCASE | STREQU_FRONT)) {
 							/* append dec value for ascii char */
 
 							sscanf(strbuf + 5, "%d", &selChar);
@@ -1319,7 +1319,7 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 	char token[41] = "";
 
 	for (t = 0; t < ZZTCOMMANDCOUNT; t++)
-		if (strequ(zztcommands[t], command, STREQU_UNCASE))
+		if (str_equ(zztcommands[t], command, STREQU_UNCASE))
 			break;
 
 	if (t == ZZTCOMMANDCOUNT) {
@@ -1345,7 +1345,7 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 				break;
 
 			case CTAX_FLAG:
-				if (strequ(token, "not", STREQU_UNCASE)) {
+				if (str_equ(token, "not", STREQU_UNCASE)) {
 					d->print(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
 					/* Advance to next token */
 					k = tokenadvance(token, args, &j);
@@ -1356,11 +1356,11 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 				else
 					d->print(x + j - k, y, ZOC_FLAG_COLOUR, token);
 				/* Check the blocked flag for directions */
-				if (strequ(token, "blocked", STREQU_UNCASE)) {
+				if (str_equ(token, "blocked", STREQU_UNCASE)) {
 					k = tokenadvance(token, args, &j);
 					ctax = CTAX_DIRECTION;
 				}
-				if (strequ(token, "any", STREQU_UNCASE)) {
+				if (str_equ(token, "any", STREQU_UNCASE)) {
 					k = tokenadvance(token, args, &j);
 					ctax = CTAX_KIND;
 				}
@@ -1374,7 +1374,7 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 				break;
 
 			case CTAX_THENMESSAGE:
-				if (strequ(token, "then", STREQU_UNCASE)) {
+				if (str_equ(token, "then", STREQU_UNCASE)) {
 					d->print(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
 					k = tokenadvance(token, args, &j);
 				}
@@ -1447,7 +1447,7 @@ int iszztcommand(char *token)
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTCOMMANDCOUNT; i++)
-		if (strequ(buffer, zztcommands[i], STREQU_UNCASE))
+		if (str_equ(buffer, zztcommands[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
@@ -1463,7 +1463,7 @@ int iszztmessage(char *token)
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTMESSAGECOUNT; i++)
-		if (strequ(buffer, zztmessages[i], STREQU_UNCASE))
+		if (str_equ(buffer, zztmessages[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
@@ -1479,7 +1479,7 @@ int iszztflag(char *token)
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTFLAGCOUNT; i++)
-		if (strequ(buffer, zztflags[i], STREQU_UNCASE))
+		if (str_equ(buffer, zztflags[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
@@ -1495,7 +1495,7 @@ int iszztitem(char *token)
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTITEMCOUNT; i++)
-		if (strequ(buffer, zztitems[i], STREQU_UNCASE))
+		if (str_equ(buffer, zztitems[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
@@ -1511,7 +1511,7 @@ int iszztkind(char *token)
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTCOLOURCOUNT; i++)
-		if (strequ(buffer, zztcolours[i], STREQU_UNCASE | STREQU_FRONT)) {
+		if (str_equ(buffer, zztcolours[i], STREQU_UNCASE | STREQU_FRONT)) {
 			/* Advance token to nearest space */
 			while (token[0] != ' ' && token[0] != 0) token++;
 			/* Advance token to nearest nonspace */
@@ -1522,7 +1522,7 @@ int iszztkind(char *token)
 		}
 
 	for (i = 0; i < ZZTKINDCOUNT; i++)
-		if (strequ(buffer, zztkinds[i], STREQU_UNCASE))
+		if (str_equ(buffer, zztkinds[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;
@@ -1538,7 +1538,7 @@ int iszztdir(char *token)
 	strlwr(buffer);
 
 	for (i = 0; i < ZZTDIRMODCOUNT; i++)
-		if (strequ(buffer, zztdirmods[i], STREQU_UNCASE | STREQU_FRONT)) {
+		if (str_equ(buffer, zztdirmods[i], STREQU_UNCASE | STREQU_FRONT)) {
 			/* Advance token to nearest space */
 			while (token[0] != ' ' && token[0] != 0) token++; 
 			/* Advance token to nearest nonspace */
@@ -1549,7 +1549,7 @@ int iszztdir(char *token)
 		}
 
 	for (i = 0; i < ZZTDIRCOUNT; i++)
-		if (strequ(buffer, zztdirs[i], STREQU_UNCASE))
+		if (str_equ(buffer, zztdirs[i], STREQU_UNCASE))
 			return 1;
 
 	return 0;

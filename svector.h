@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.8 2001/04/21 03:06:48 bitman Exp $
+ * $Id: svector.h,v 1.9 2001/04/24 23:12:55 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -74,13 +74,15 @@ void pushstringcopy(stringvector * v, char * s);
 /* This really belongs somewhere else, but this function is so small I can't
  * justify giving it its own header & .c file. */
 
-#include <malloc.h>
-
 #define STREQU_UNCASE  0x01
 #define STREQU_FRONT   0x02
 
-/* strequ - compares two strings, ignoring case & length based on flags */
-int strequ(const char *str1, const char *str2, int flags);
+
+/* str_lowercase - changes string to lowercase and returns it */
+char* str_lowercase(char* string);
+
+/* str_equ - compares two strings, ignoring case & length based on flags */
+int str_equ(const char *str1, const char *str2, int flags);
 
 
 #endif
