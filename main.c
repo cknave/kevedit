@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.5 2000/08/12 18:13:22 kvance Exp $
+ * $Id: main.c,v 1.6 2000/08/12 18:17:28 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -125,7 +125,7 @@ void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int
 		updatepanel(mydisplay, myinfo, myworld);
 }
 
-void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int9_t * bigboard, patdef patdefs[16], int xpos, int ypos, char code, u_int8_t colour)
+void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16], int xpos, int ypos, char code, u_int8_t colour)
 {
 	int i, x, t, targetcolour;
 	int u = 0;
