@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.58 2002/02/19 03:32:28 bitman Exp $
+ * $Id: main.c,v 1.59 2002/02/19 23:44:57 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -98,6 +98,9 @@ int main(int argc, char **argv)
 	if (myworld == NULL) {
 		myworld = zztWorldCreate(NULL, NULL);
 	}
+
+	/* Switch to the start board */
+	zztBoardSelect(myworld, zztWorldGetStartboard(myworld));
 
 	/* Trap ctrl+c */
 	signal(SIGINT, sigInt);
