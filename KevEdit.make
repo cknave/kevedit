@@ -38,6 +38,9 @@ PATHS = -DDATAPATH=\"$(datadir)\" -DBINPATH=\"$(bindir)\"
 
 CFLAGS += $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(VERSIONFLAG) $(PATHS)
 
+# Defines usually set by the new build system
+CFLAGS += -DHAVE_MALLOC_H
+
 # Objects
 
 CENTRALOBJS = kevedit.o misc.o dosemu.o menu.o editbox.o screen.o
