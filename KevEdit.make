@@ -21,6 +21,13 @@ ifeq ($(DOS),ON)
 	DOSOBJ = display_dos.o
 endif
 
+# Check if we need to install the DEXE
+ifeq ($(DOSEMU),ON)
+	DATA = dexe/zzt.dexe kevedit.zml
+else
+	DATA = kevedit.zml
+endif
+
 # Link in libglob
 ifeq ($(BUILDGLOB),ON)
 	CFLAGS += -DCANGLOB -Iglob
@@ -68,7 +75,7 @@ install: all
 	mkdir -p $(datadir)
 	mkdir -p $(docdir)
 	$(INSTALL) $(BINARY) $(bindir)
-	$(INSTALL) kevedit.zml $(datadir)
+	$(INSTALL) $(DATA) $(datadir)
 	$(INSTALL) $(DOCS) $(docdir)
 
 uninstall:
