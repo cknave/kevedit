@@ -30,18 +30,24 @@ drawn in a variety of ways. Press 'g' to
 activate the Gradient Tool and follow the
 provided instructions.
 
-To use the standard gradient, put the
-pattern selector over one of the standard
-patterns (on the left). The gradient tool
-will use the current colour settings to
-create a gradient which fades from
-the foreground colour to the background
+If the pattern selector is above the
+standard patterns (left of the
+backbuffer), then the gradient tool will
+use the current colour settings to create
+a gradient of walls fading from the
+foreground colour to the background
 colour.
 
-For a custom gradient, load a gradient
-into the backbuffer and put the pattern
-selector there before using the gradient
-tool.
+If the pattern selector is above the
+backbuffer, the patterns in the backbuffer
+will be used by the gradient tool.
+
+Note: as an extension to the flood
+selection option of the gradient tool, 'm'
+may be used to flood select multiple
+areas. Because the areas are not
+highlighted in any way, this feature is,
+at present, only useful to the die-hard.
 
 :gradient;Gradient Draw Mode
 
