@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.12 2002/05/04 04:17:43 bitman Exp $
+ * $Id: tiles.c,v 1.13 2002/08/24 22:59:08 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@
 const char * _zzt_type_name_table[] = {
 	/* ZZT_EMPTY          */ "Empty",
 	/* ZZT_EDGE           */ "Board Edge",
-	/* Invalid            */ "Unknown",
+	/* ZZT_MESSAGETIMER   */ "Message Timer",
 	/* ZZT_MONITOR        */ "Monitor",
 	/* ZZT_PLAYER         */ "Player",
 	/* ZZT_AMMO           */ "Ammo",
@@ -89,7 +89,7 @@ const char * _zzt_type_name_table[] = {
 const char * _zzt_type_kind_table[] = {
 	/* ZZT_EMPTY          */ "empty",
 	/* ZZT_EDGE           */ "",
-	/* Invalid            */ "(unknown)",
+	/* Invalid            */ "(message timer)",
 	/* ZZT_MONITOR        */ "monitor",
 	/* ZZT_PLAYER         */ "player",
 	/* ZZT_AMMO           */ "ammo",
@@ -148,7 +148,7 @@ const char * _zzt_type_kind_table[] = {
 const u_int8_t _zzt_display_char_table[] = {
 	' ', /* ZZT_EMPTY          */
 	'E', /* ZZT_EDGE           */
-	'?', /* Invalid            */
+	'T', /* ZZT_MESSAGETIMER   */
 	'M', /* ZZT_MONITOR        */
 	2,   /* ZZT_PLAYER         */
 	132, /* ZZT_AMMO           */

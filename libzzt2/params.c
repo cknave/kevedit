@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.6 2002/06/02 03:55:01 bitman Exp $
+ * $Id: params.c,v 1.7 2002/08/24 22:59:08 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,7 @@
 const ZZTprofile _zzt_param_profile_table[] = {
 	/* ZZT_EMPTY          */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_EDGE           */ { 0, 0, { 0, 0, 0 } },   /* TODO: are edges paramless? */
-	/* Invalid            */ { 0, 0, { 0, 0, 0 } },
+	/* ZZT_MESSAGETIMER   */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_MONITOR        */ { ZZT_PROPERTY_CYCLE, 1, { 0, 0, 0 } },
 	/* ZZT_PLAYER         */ { ZZT_PROPERTY_CYCLE, 1, { 0, 0, 0 } },
 	/* ZZT_AMMO           */ { 0, 0, { 0, 0, 0 } },

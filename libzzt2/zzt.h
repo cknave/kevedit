@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.18 2002/08/24 06:36:19 bitman Exp $
+ * $Id: zzt.h,v 1.19 2002/08/24 22:59:08 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -526,6 +526,7 @@ extern const char * _zzt_type_kind_table[];
 /***** TILE TYPES *****/
 #define ZZT_EMPTY         0x00
 #define ZZT_EDGE          0x01
+#define ZZT_MESSAGETIMER  0x02
 #define ZZT_MONITOR       0x03
 #define ZZT_PLAYER        0x04
 #define ZZT_AMMO          0x05
