@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.18 2002/09/16 06:47:24 bitman Exp $
+ * $Id: kevedit.h,v 1.19 2002/09/17 05:05:39 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,9 +36,8 @@
 #define UD_CURSOR       (0x20 | UD_PANEL_TOP)  /* The cursor spot and panel indicator */
 #define UD_SPOT         0x40            /* The spot around the cursor */
 #define UD_BOARDTITLE   0x80            /* Title of current board should be drawn */
-#define UD_WORLDTITLE   0x100           /* Title of the world has changed */
+#define UD_WORLDTITLE   0x100 | UD_PANEL_TOP   /* Title of the world has changed */
 #define UD_OBJCOUNT     UD_PANEL_TOP    /* Object count */
-#define UD_WORLDTITLE   UD_PANEL_TOP    /* World Title */
 #define UD_TEXTMODE     UD_PANEL_MIDDLE /* Text entry mode */
 #define UD_DRAWMODE     UD_PANEL_MIDDLE /* Draw mode */
 #define UD_BLINKMODE    UD_PANEL_BOTTOM /* Blink mode */
