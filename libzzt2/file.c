@@ -1,5 +1,5 @@
 /* file.c	-- File routines
- * $Id: file.c,v 1.1 2002/01/30 07:20:57 kvance Exp $
+ * $Id: file.c,v 1.2 2002/02/02 05:18:44 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -254,6 +254,8 @@ ZZTboard *zztBoardRead(FILE *fp)
 	if(len > ZZT_BOARD_TITLE_SIZE)
 		freeboard;
 	_zzt_inspad_or(board->title, len, ZZT_BOARD_TITLE_SIZE, fp) freeboard;
+	/* Put a null-zero at the end of the title to make it a valid C-string */
+	board->title[len] = '\0';
 	/* Board packed tiles */
 	do {
 		_zzt_inb_or(&number, fp) freeboard;
@@ -361,8 +363,10 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 	/* Write board header */
 	_zzt_outw_ordie(&size, fp);
 	b = strlen(board->title);
+	if (b > ZZT_BOARD_TITLE_SIZE)
+		b = ZZT_BOARD_TITLE_SIZE;
 	_zzt_outb_ordie(&b, fp);
-	_zzt_outspad_ordie(board->title, strlen(board->title), ZZT_BOARD_TITLE_SIZE, fp);
+	_zzt_outspad_ordie(board->title, b, ZZT_BOARD_TITLE_SIZE, fp);
 	/* Write board */
 	_zzt_outs_ordie(board->packed, ofs, fp);
 	/* Write board info */
