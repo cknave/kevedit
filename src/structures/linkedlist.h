@@ -1,5 +1,5 @@
 /**@file linkedlist.h   An abstract linked list.
- * $Id: linkedlist.h,v 1.2 2003/11/09 20:57:51 bitman Exp $
+ * $Id: linkedlist.h,v 1.3 2003/11/21 18:52:28 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2002 Ryan Phillips <bitman@users.sourceforge.net>
@@ -38,13 +38,13 @@
  *
  * This may be useful when providing a wrapper for a specific data type.
  */
-typedef struct {
+typedef struct listitem {
 	size_t size;         /**< Size of the data stored in @c value. */
 	void *value;         /**< Item data. */
 } listitem;
 
 /** A link in a linkedlist. */
-typedef struct {
+typedef struct link {
 	listitem item;       /**< Item belonging to this link. */
 
 	struct link *next;   /**< Next link. */
@@ -55,7 +55,7 @@ typedef struct {
  * A linked list. An abstracted type that can store, duplicate, and free() data
  * of any type.
  */
-typedef struct {
+typedef struct linkedlist {
 	link *first;         /**< First item in the list. */
 	link *last;          /**< Last item in the list. */
 
