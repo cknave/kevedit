@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.1 2002/03/19 03:11:06 kvance Exp $
+ * $Id: display_sdl.c,v 1.2 2002/03/19 19:46:19 kvance Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -207,18 +207,18 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
   Uint32 fg, bg;
   Uint32 i, i2, i3, i4;
 
-  char_pointer = vdest->buffer + (y*80+x)*2;
-  color_pointer = vdest->buffer + (y*80+x)*2 + 1;
+  char_pointer = vdest->buffer + ((y*80+x)<<1);
+  color_pointer = vdest->buffer + ((y*80+x)<<1) + 1;
   current_char_pointer = charset_pointer + (*(char_pointer) * 14);
 
   video_pointer += 640*(y*14);
-  video_pointer += (x*8);
+  video_pointer += (x<<3);
 
   i = height;
   while(i) {
     i2 = width;
     if(height != 1)
-	    video_pointer = root + ((height-i+y)*14)*(640)+(x*8);
+	    video_pointer = root + ((height-i+y)*14)*(640)+(x<<3);
     while(i2) {
       last_pointer = video_pointer;
       bg = *(palette_pointer + (*(color_pointer) >> 4));
@@ -263,19 +263,19 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
     }
     /* Move char/color pointers to the next line of the block */
     video_pointer = end_pointer;
-    char_pointer += (80-width)*2;
-    color_pointer += (80-width)*2;
+    char_pointer += (80-width)<<1;
+    color_pointer += (80-width)<<1;
     current_char_pointer = charset_pointer + (*(char_pointer) * 14);
     i--;
   }
 
   /* Update the buffer surface to the real thing.. */
 
-  src_rect.x = (x*8);
+  src_rect.x = (x<<3);
   src_rect.y = (y*14);
   dest_rect.x = src_rect.x+xstart;
   dest_rect.y = src_rect.y+ystart;
-  src_rect.w = dest_rect.w = (width*8);
+  src_rect.w = dest_rect.w = (width<<3);
   src_rect.h = dest_rect.h = (height*14);
 
   SDL_BlitSurface(vdest->buffer_surface, &src_rect, vdest->video, &dest_rect);
@@ -309,11 +309,11 @@ void display_curse(int x, int y)
 	int i1, i2;
 
 	/* Find out the color */
-	color = info.buffer[(x+y*80)*2+1];
+	color = info.buffer[((x+y*80)<<1)+1];
 	fg = info.palette[color & 15];
 
 	/* Draw the cursor */
-	video_pointer += (x*8)+(y*14)*640;
+	video_pointer += (x<<3)+(y*14)*640;
 	for(i1 = 0; i1 < 14; i1++) {
 		for(i2 = 0; i2 < 8; i2++) {
 			*(video_pointer) = fg;
@@ -323,7 +323,7 @@ void display_curse(int x, int y)
 	}
 
 	/* Command SDL to update this char */
-	src_rect.x = (x*8);
+	src_rect.x = (x<<3);
 	src_rect.y = (y*14);
 	dest_rect.x = src_rect.x+xstart;
 	dest_rect.y = src_rect.y+ystart;
@@ -343,11 +343,11 @@ void display_curse_inactive(int x, int y)
 	int i;
 
 	/* Find out the color */
-	color = info.buffer[(x+y*80)*2+1];
+	color = info.buffer[((x+y*80)<<1)+1];
 	fg = info.palette[color & 15];
 
 	/* Draw the cursor */
-	video_pointer += (x*8)+(y*14)*640;
+	video_pointer += (x<<3)+(y*14)*640;
 	/* Top part of box */
 	for(i = 0; i < 8; i++) {
 		*(video_pointer) = fg;
@@ -368,7 +368,7 @@ void display_curse_inactive(int x, int y)
 	}
 
 	/* Command SDL to update this char */
-	src_rect.x = (x*8);
+	src_rect.x = (x<<3);
 	src_rect.y = (y*14);
 	dest_rect.x = src_rect.x+xstart;
 	dest_rect.y = src_rect.y+ystart;
