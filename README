@@ -124,6 +124,17 @@ this, it will be placed in the backbufffer.
 
 To copy a tile to the backbuffer without editing it, press INSERT.
 
+Objects and scrolls are programmed in the ZZT-OOP language.  When you edit
+these types, you will be presented with the object editor.  This is a simple
+text editor with features specific to ZZT programming.  ARROW KEYS move the
+cursor, ESCAPE quits, ctrl+'y' deletes a line.
+
+The ZZT-OOP editor has a configurable word wrap.  alt+'+' and alt+'-' will
+increase or decrease the maximum length of a line of text.  You can also
+insert arbitrary ASCII characters into your program by pressing ctrl+'a'.  If
+the cursor is after a #char command, it will place the number of the character
+into the program instead.
+
 ---------------
 File Operations
 ---------------
@@ -168,4 +179,4 @@ http://kevedit.sourceforge.net/ is where you can check for new releases, get
 the CVS code, post bug reports, etc.
 
     Kev Vance <kvance@tekktonik.net>
-    August 18, 2000
+    August 22, 2000
