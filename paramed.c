@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.20 2002/12/04 23:53:06 kvance Exp $
+ * $Id: paramed.c,v 1.21 2002/12/14 02:47:05 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -119,6 +119,11 @@ void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 			case DKEY_F1:
 				helpsectiontopic("kstats", "", d);
 				break;
+		}
+
+		if (rebuild == 2) {
+			/* Redraw the side panel */
+			drawsidepanel(d, PANEL_STATS_DIALOG);
 		}
 
 		if (rebuild) {
@@ -532,10 +537,10 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 	switch (opt->id) {
 		case ID_PROGRAM:
 			editprogram(d, tile.param);
-			return 1;
+			return 2;
 		case ZZT_DATAUSE_PASSAGEDEST:
 			tile.param->data[2] = boarddialog(w, tile.param->data[2], "Passage Destination", 0, d);
-			return 1;
+			return 2;
 		case ZZT_DATAUSE_CHAR:
 			num = charselect(d, tile.param->data[0]);
 			if (num != -1)
@@ -789,7 +794,6 @@ void tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 			dialogFree(&dia);
 			dia = buildtileinfodialog(w, x, y);
 		}
-
 	} while (key != DKEY_ESC);
 
 	dialogFree(&dia);
