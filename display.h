@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.11 2002/03/18 03:12:41 bitman Exp $
+ * $Id: display.h,v 1.12 2002/03/19 03:09:35 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,12 @@ typedef struct displaymethod {
 	void (*print) (int x, int y, int c, char *ch);	/* Simple print function */
 
 	void (*titlebar) (char *);	/* Set the titlebar if in MS-Windows or X11 */
+
 	int (*shift) (void);	/* Is shift pressed? */
+
+	void (*putch_discrete)(int x, int y, int ch, int co);	/* Draw a character without necessarily updating the screen */
+
+	void (*update)(int x, int y, int w, int h);	/* Update the screen after a putch_discrete() */
 
 } displaymethod;
 
@@ -132,6 +137,5 @@ extern void RegisterDisplays();
 #define DKEY_ALT_MINUS  (130 | DDOSKEY_EXT) 
 /* TODO: make alt + different from alt = */
 #define DKEY_ALT_PLUS   (131 | DDOSKEY_EXT)
-
 
 #endif				/* _DISPLAY_H */

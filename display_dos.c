@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.16 2002/02/21 22:30:58 kvance Exp $
+ * $Id: display_dos.c,v 1.17 2002/03/19 03:09:35 kvance Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -234,11 +234,16 @@ int display_dos_shift()
 	return lshift | rshift;
 }
 
+void display_dos_update(int x, int y, int w, int h)
+{
+	/* The screen is always updated in DOS */
+}
+
 displaymethod display_dos =
 {
 	NULL,
 	"DOS Display Method",
-	"1.1",
+	"1.2",
 	display_dos_init,
 	display_dos_end,
 	display_dos_putch,
@@ -247,5 +252,7 @@ displaymethod display_dos =
 	display_dos_gotoxy,
 	display_dos_print,
 	display_dos_titlebar,
-	display_dos_shift	
+	display_dos_shift,
+	display_dos_putch,
+	display_dos_update
 };

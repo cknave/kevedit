@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.12 2002/03/17 09:35:58 bitman Exp $
+ * $Id: zzt.h,v 1.13 2002/03/19 03:09:35 kvance Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,16 @@
 
 #ifdef DOS
 /* If you're running DOS, you'll need these defined */
+typedef char int8_t;
+typedef short int int16_t;
+typedef int int32_t;
+typedef unsigned char u_int8_t;
+typedef unsigned short int u_int16_t;
+typedef unsigned int u_int32_t;
+#endif
+
+#ifdef WIN32
+/* Same for win32 */
 typedef char int8_t;
 typedef short int int16_t;
 typedef int int32_t;

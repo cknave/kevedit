@@ -1,5 +1,5 @@
 /* display.c    -- Functions for the modular display
- * $Id: display.c,v 1.4 2001/10/27 19:30:42 kvance Exp $
+ * $Id: display.c,v 1.5 2002/03/19 03:09:35 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,8 +19,8 @@
 
 #include "display.h"
 
-#ifdef GGI
-#include "display_ggi.h"
+#ifdef SDL
+#include "display_sdl.h"
 #endif
 #ifdef VCSA
 #include "display_vcsa.h"
@@ -36,7 +36,7 @@ void RegisterDisplays()
 #ifdef DOS
 	display = display_dos;
 #else
-	display = display_ggi;
+	display = display_sdl;
 #ifdef VCSA
 	display.next = &display_vcsa;
 #endif

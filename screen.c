@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.42 2002/03/17 09:35:58 bitman Exp $
+ * $Id: screen.c,v 1.43 2002/03/19 03:09:35 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -57,8 +57,7 @@
 #define BBSCROLLSTART 7
 #define BBVWIDTH      10
 
-int line_editor(int x, int y, int color,
-								char* str, int editwidth, int flags, displaymethod* d)
+int line_editor(int x, int y, int color, char* str, int editwidth, int flags, displaymethod* d)
 {
 	int pos = strlen(str);   /* Position in str */
 	int key;                 /* Key being acted on */
@@ -89,7 +88,8 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 		/* Display the line */
 		d->print(x, y, color, str);
 		for (i = strlen(str); i <= editwidth; i++)
-			d->putch(x + i, y, ' ', color);
+			d->putch_discrete(x + i, y, ' ', color);
+		d->update(x, y, i, 1);
 
 		/* Move the cursor */
 		d->cursorgo(x + pos, y);
@@ -354,10 +354,11 @@ void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
 
 	for (t = 3 + yoffset; t < 3 + (SCROLL_BOX_DEPTH - yendoffset); t++) {
 		for (x = 4; x < 4 + SCROLL_BOX_WIDTH; x++) {
-			mydisplay->putch(x, t, SCROLL_BOX[i], SCROLL_BOX[i + 1]);
+			mydisplay->putch_discrete(x, t, SCROLL_BOX[i], SCROLL_BOX[i + 1]);
 			i += 2;
 		}
 	}
+	mydisplay->update(4, 3 + yoffset, SCROLL_BOX_WIDTH, SCROLL_BOX_DEPTH - yendoffset - yoffset);
 }
 
 void drawscrolltitle(displaymethod * d, char * title)
@@ -371,10 +372,11 @@ void drawpanel(displaymethod * d)
 
 	for (y = 0; y < 25; y++) {
 		for (x = 0; x < 20; x++) {
-			d->putch(x + 60, y, PANEL_MAIN[i], PANEL_MAIN[i + 1]);
+			d->putch_discrete(x + 60, y, PANEL_MAIN[i], PANEL_MAIN[i + 1]);
 			i += 2;
 		}
 	}
+	d->update(60, 0, 20, 25);
 }
 
 void drawsidepanel(displaymethod * d, unsigned char panel[])
@@ -383,10 +385,11 @@ void drawsidepanel(displaymethod * d, unsigned char panel[])
 
 	for (y = 0; y < 22; y++) {
 		for (x = 0; x < 20; x++) {
-			d->putch(x + 60, y + 3, panel[i], panel[i + 1]);
+			d->putch_discrete(x + 60, y + 3, panel[i], panel[i + 1]);
 			i += 2;
 		}
 	}
+	d->update(60, 3, 20, 22);
 }
 
 void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
@@ -396,14 +399,14 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 	char * title = zztWorldGetTitle(w);
 
 	/* (x, y) position */
-	d->putch(62, 0, ' ', 0x1f);
-	d->putch(63, 0, ' ', 0x1f);
-	d->putch(76, 0, ' ', 0x1f);
-	d->putch(77, 0, ' ', 0x1f);
+	d->putch_discrete(62, 0, ' ', 0x1f);
+	d->putch_discrete(63, 0, ' ', 0x1f);
+	d->putch_discrete(76, 0, ' ', 0x1f);
+	d->putch_discrete(77, 0, ' ', 0x1f);
 	sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w));
 	i = 70 - strlen(s) / 2;
 	for (x = 0; x < strlen(s); x++) {
-		d->putch(i + x, 0, s[x], 0x1c);
+		d->putch_discrete(i + x, 0, s[x], 0x1c);
 	}
 
 	/* Draw Mode? */
@@ -431,36 +434,36 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 
 	/* Arrows to point at current colour */
 	for (i = 61; i < 77; i++) {
-		d->putch(i, 22, ' ', 0x1f);
+		d->putch_discrete(i, 22, ' ', 0x1f);
 	}
 	for (i = 61; i < 77; i++) {
-		d->putch(i, 24, ' ', 0x1f);
+		d->putch_discrete(i, 24, ' ', 0x1f);
 	}
 	for (i = 61; i < 78; i++) {
-		d->putch(i, 20, ' ', 0x1f);
+		d->putch_discrete(i, 20, ' ', 0x1f);
 	}
-	d->putch(61 + e->forec, 22, 31, 0x17);
-	d->putch(69 + e->backc, 24, 30, 0x17);
+	d->putch_discrete(61 + e->forec, 22, 31, 0x17);
+	d->putch_discrete(69 + e->backc, 24, 30, 0x17);
 
 	/* Default colour mode? */
 	if (e->defc == 1)
-		d->putch(78, 23, 'D', 0x1e);
+		d->putch_discrete(78, 23, 'D', 0x1e);
 	else
-		d->putch(78, 23, 'd', 0x18);
+		d->putch_discrete(78, 23, 'd', 0x18);
 
 	/* Get mode? */
 	if (e->aqumode == 1)
-		d->putch(78, 21, 'A', 0x1e);
+		d->putch_discrete(78, 21, 'A', 0x1e);
 	else
-		d->putch(78, 21, 'a', 0x18);
+		d->putch_discrete(78, 21, 'a', 0x18);
 
 	/* Too long title */
 	if (strlen(title) > 8) {
 		for (x = 0; x < 5; x++) {
-			d->putch(71 + x, 1, title[x], 0x17);
+			d->putch_discrete(71 + x, 1, title[x], 0x17);
 		}
 		for (x = 0; x < 3; x++) {
-			d->putch(76 + x, 1, '.', 0x1f);
+			d->putch_discrete(76 + x, 1, '.', 0x1f);
 		}
 	} else {
 		/* Regular title */
@@ -475,7 +478,7 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 	/* Draw standard patterns in all their colourful grandure */
 	for (i = 0; i < e->standard_patterns->size; i++) {
 		patdef pattern = e->standard_patterns->patterns[i];
-		d->putch(61 + i, 21,
+		d->putch_discrete(61 + i, 21,
 						 zztLoneTileGetDisplayChar(pattern),
 						 zztLoneTileGetDisplayColor(pattern));
 	}
@@ -483,32 +486,33 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 
 	/* Pattern arrow */
 	if (e->pbuf == e->standard_patterns) {
-		d->putch(61 + e->pbuf->pos, 20, 31, 0x17);
+		d->putch_discrete(61 + e->pbuf->pos, 20, 31, 0x17);
 		x = 0;
 	} else {
 		x = min(e->backbuffer->pos - BBSCROLLSTART, e->backbuffer->size - BBVWIDTH);
 		if (x < 0)
 			x = 0;
-		d->putch(68 + e->pbuf->pos - x, 20, 31, 0x17);
+		d->putch_discrete(68 + e->pbuf->pos - x, 20, 31, 0x17);
 	}
 	
 	/* Backbuffer lock state */
 	if (e->backbuffer->lock == PATBUF_UNLOCK)
-		d->putch(67, 21, 0xB3, 0x01);  /* Blue vertical line */
+		d->putch_discrete(67, 21, 0xB3, 0x01);  /* Blue vertical line */
 	else
-		d->putch(67, 21, '/', 0x04);   /* Red slash */
+		d->putch_discrete(67, 21, '/', 0x04);   /* Red slash */
 
 	/* Draw pattern backbuffer */
 	for (i = 0; i < BBVWIDTH && i + x < e->backbuffer->size; i++) {
 		ZZTtile pattern = e->backbuffer->patterns[i + x];
-		d->putch(68 + i, 21,
+		d->putch_discrete(68 + i, 21,
 						 zztLoneTileGetDisplayChar(pattern),
 						 zztLoneTileGetDisplayColor(pattern));
 	}
 	/* Start where we left off and fill the rest w/ blue solids */
 	for (; i < BBVWIDTH; i++) {
-		d->putch(68 + i, 21, ' ', 0x1F);
+		d->putch_discrete(68 + i, 21, ' ', 0x1F);
 	}
+	d->update(61, 0, 18, 25);
 }
 
 void drawscreen(displaymethod * d, ZZTworld * w)
@@ -517,9 +521,10 @@ void drawscreen(displaymethod * d, ZZTworld * w)
 
 	for (y = 0; y < 25; y++) {
 		for (x = 0; x < 60; x++) {
-			d->putch(x, y, zztGetDisplayChar(w, x, y), zztGetDisplayColor(w, x, y));
+			d->putch_discrete(x, y, zztGetDisplayChar(w, x, y), zztGetDisplayColor(w, x, y));
 		}
 	}
+	d->update(0, 0, 60, 25);
 }
 
 /* Make the cursor more visible */
