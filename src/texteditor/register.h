@@ -1,5 +1,5 @@
 /* register.h  -- text editor memory registers
- * $Id: register.h,v 1.1 2003/11/01 23:45:57 bitman Exp $
+ * $Id: register.h,v 1.2 2003/12/21 03:21:29 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,21 @@
  * deleteregister() frees all memory used by registers
  */
 
-void regyank(char whichreg, stringnode * startn, stringnode * endn, int startpos, int endpos);
+/**
+ * Boundaries for a selected area of text.
+ **/
+typedef struct {
+	stringnode * startLine;  /**< First selected line. */
+	stringnode * endLine;    /**< Last selected line. */
+
+	/** Position of selection start on first line. */
+	int startPos;
+	/** Position of selection end on last line. */
+	int endPos;
+} selectionBounds;
+
+
+void regyank(char whichreg, selectionBounds bounds);
 void regstore(char whichreg, stringvector src);
 int regput(char whichreg, stringvector * dest, int inspos, int wrapwidth, int editwidth);
 void clearregister(char whichreg);

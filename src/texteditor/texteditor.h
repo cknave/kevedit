@@ -1,5 +1,5 @@
-/**@file texteditor.h  Text editor/viewer.
- * $Id: texteditor.h,v 1.1 2003/12/20 09:12:21 bitman Exp $
+/**@file texteditor/texteditor.h  Text editor/viewer.
+ * $Id: texteditor.h,v 1.2 2003/12/21 03:21:29 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>

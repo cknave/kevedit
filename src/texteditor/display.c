@@ -1,5 +1,5 @@
 /**@file texteditor/display.c  Text editor display functions.
- * $Id: display.c,v 1.1 2003/12/20 09:12:21 bitman Exp $
+ * $Id: display.c,v 1.2 2003/12/21 03:21:29 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -23,10 +23,12 @@
 #include "texteditor.h"
 
 #include "display/colours.h"
+#include "themes/theme.h"
 
 void texteditDisplayLine(texteditor * editor, int offset, char * line);
 void texteditDisplayText(texteditor * editor);
 void texteditDisplaySelection(texteditor * editor);
+void texteditDisplayPanel(texteditor * editor);
 
 /** The X and Y positions on the display of the leftmost cursor position. */
 const int baseX = 9, baseY = 13;
@@ -44,6 +46,7 @@ char leadText[] =
 void texteditUpdateDisplay(texteditor * editor)
 {
 	/** @TODO: Phase out drawscrollbox(). */
+	texteditDisplayPanel(editor);
 
 	/* Clear the entire scrollbox. */
 	if (editor->updateflags == TUD_ALL) {
@@ -96,7 +99,7 @@ void texteditDisplayText(texteditor * editor)
 	}
 
 	/* Draw top half. */
-	if (editor->updateflags & TUD_BOTTOM) {
+	if (editor->updateflags & TUD_TOP) {
 		text->cur = editor->curline->prev;
 		for (i = -1; i >= -btLineCount && text->cur != NULL; i--, text->cur = text->cur->prev)
 			texteditDisplayLine(editor, i, text->cur->s);
@@ -233,4 +236,25 @@ void texteditDisplaySelection(texteditor * editor)
 			editor->d->putch_discrete(baseX + i, baseY + lineoffset, text->cur->s[i], highlightColour);
 	}
 }
+
+void texteditDisplayPanel(texteditor * editor)
+{
+	char buf[10] = "";
+
+	/* Only update the panel if necessary. */
+	if (!(editor->updateflags & TUD_PANEL) || !editor->editflag)
+		return;
+
+	drawsidepanel(editor->d, PANEL_EDIT);
+	
+	editor->d->print(76, 6,  YELLOW_F | BRIGHT_F | BLUE_B, (editor->insertflag ? "on" : "off"));
+
+	sprintf(buf, "%d", editor->wrapwidth);
+
+	if (editor->wrapwidth != 0)
+		editor->d->print(76, 8, YELLOW_F | BRIGHT_F | BLUE_B, buf);
+	else
+		editor->d->print(72, 8, YELLOW_F | BRIGHT_F | BLUE_B, "off");
+}
+
 

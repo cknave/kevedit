@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.1 2003/11/01 23:45:57 bitman Exp $
+ * $Id: editbox.c,v 1.2 2003/12/21 03:21:29 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -317,6 +317,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 				if (selPos != -1) {
 					stringnode *selStart = centerstr, *selEnd = centerstr;
 					int selStartPos, selEndPos;
+					selectionBounds bounds;
 
 					if (selLineOffset > 0) {
 						/* Other end of selection is below current line, move end down to meet it. */
@@ -343,7 +344,12 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						}
 					}
 
-					regyank('\"', selStart, selEnd, selStartPos, selEndPos);
+					bounds.startLine = selStart;
+					bounds.endLine = selEnd;
+					bounds.startPos = selStartPos;
+					bounds.endPos = selEndPos;
+
+					regyank('\"', bounds);
 				}
 				break;
 

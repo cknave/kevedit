@@ -1,5 +1,5 @@
 /* register.c  -- text editor memory registers
- * $Id: register.c,v 1.1 2003/11/01 23:45:57 bitman Exp $
+ * $Id: register.c,v 1.2 2003/12/21 03:21:29 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,13 +25,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, int startpos, int endpos);
+
+void loadsvector(stringvector * dest, selectionBounds bounds);
 int mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwidth, int editwidth);
 
 static stringvector reg = { NULL, NULL, NULL };
 
 
-void regyank(char whichreg, stringnode * startn, stringnode * endn, int startpos, int endpos)
+void regyank(char whichreg, selectionBounds bounds)
 {
 	/* NOTE: for the time being, whichreg will be ignored. In the future I hope
 	 * to implement a * number of registers, much in the same fashion as vim,
@@ -41,7 +42,7 @@ void regyank(char whichreg, stringnode * startn, stringnode * endn, int startpos
 	/* if the register already contains info, erase it. */
 	clearregister(whichreg);
 
-	loadsvector(&reg, startn, endn, startpos, endpos);
+	loadsvector(&reg, bounds);
 }
 
 void regstore(char whichreg, stringvector src)
@@ -70,7 +71,7 @@ void deleteregisters(void)
 }
 
 
-void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, int startpos, int endpos)
+void loadsvector(stringvector * dest, selectionBounds bounds)
 {
 	stringnode * curnode = NULL;
 	char * tempstr = NULL;
@@ -78,40 +79,44 @@ void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, in
 	/* We should be able to delete the following commented code */
 	/* If starting on 0, start with blank line */
 
-	if (startn == endn) {
-		if (startpos < strlen(startn->s) && endpos <= strlen(startn->s)) {
-			/* swap startpos & endpos if startpos is greater */
-			if (startpos > endpos) { int swapper = startpos; startpos = endpos; endpos = swapper; }
+	if (bounds.startLine == bounds.endLine) {
+		if (bounds.startPos < strlen(bounds.startLine->s) && bounds.endPos <= strlen(bounds.startLine->s)) {
+			/* swap bounds.startPos & bounds.endPos if bounds.startPos is greater */
+			if (bounds.startPos > bounds.endPos) {
+				int swapper = bounds.startPos;
+				bounds.startPos = bounds.endPos;
+				bounds.endPos = swapper;
+			}
 
 			/* Copy only the section of the node which we need */
-			tempstr = (char *) malloc(strlen(startn->s) + 2);
-			strcpy(tempstr, endn->s + startpos);
-			tempstr[endpos - startpos] = 0;
+			tempstr = (char *) malloc(strlen(bounds.startLine->s) + 2);
+			strcpy(tempstr, bounds.endLine->s + bounds.startPos);
+			tempstr[bounds.endPos - bounds.startPos] = 0;
 			pushstring(dest, tempstr);
 		}
 		return;
 	}
-	if (startn->next == NULL)
+	if (bounds.startLine->next == NULL)
 		return;
 
 	/* Copy first line to dest */
-	if (startpos < strlen(startn->s))
-		pushstring(dest, strcpy((char *) malloc(strlen(startn->s) - startpos + 2), startn->s + startpos));
+	if (bounds.startPos < strlen(bounds.startLine->s))
+		pushstring(dest, strcpy((char *) malloc(strlen(bounds.startLine->s) - bounds.startPos + 2), bounds.startLine->s + bounds.startPos));
 
 	/* Copy the meat */
-	for (curnode = startn->next; curnode != endn && curnode != NULL; curnode = curnode->next)
+	for (curnode = bounds.startLine->next; curnode != bounds.endLine && curnode != NULL; curnode = curnode->next)
 		pushstring(dest, strcpy((char *) malloc(strlen(curnode->s) + 2), curnode->s));
 
-	/* See if we failed to reach endn */
+	/* See if we failed to reach bounds.endLine */
 	if (curnode == NULL) {
 		pushstring(dest, strcpy((char *) malloc(1), ""));
 		return;
 	}
 
 	/* Copy the last line */
-	tempstr = (char *) malloc(strlen(endn->s) + 2);
-	strcpy(tempstr, endn->s);
-	tempstr[endpos] = 0;
+	tempstr = (char *) malloc(strlen(bounds.endLine->s) + 2);
+	strcpy(tempstr, bounds.endLine->s);
+	tempstr[bounds.endPos] = 0;
 	pushstring(dest, tempstr);
 }
 

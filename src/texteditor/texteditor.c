@@ -1,5 +1,5 @@
-/**@file texteditor.c  Text editor/viewer.
- * $Id: texteditor.c,v 1.1 2003/12/20 09:12:21 bitman Exp $
+/**@file texteditor/texteditor.c  Text editor/viewer.
+ * $Id: texteditor.c,v 1.2 2003/12/21 03:21:29 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -31,6 +31,7 @@
 #include "display/colours.h"
 
 #include "register.h"
+#include "select.h"
 #include "help/help.h"
 
 #include "themes/theme.h"
@@ -46,10 +47,10 @@
 #include <ctype.h>
 
 int texteditReadyToEdit(texteditor * editor);
+void texteditHandleInput(texteditor * editor);
 
-void texteditHandleSelection(texteditor * editor);
 void texteditHandleScrolling(texteditor * editor);
-void texteditHandleCopy(texteditor * editor);
+void texteditHandleEditMovement(texteditor * editor);
 void texteditHandleEditKey(texteditor * editor);
 
 int texteditGrabTitle(texteditor * editor);
@@ -66,9 +67,6 @@ void texteditZZMRip(texteditor * editor);
 
 void texteditFileOpen(texteditor * editor, int insertflag);
 void texteditFileSave(texteditor * editor, char * prompt);
-
-void texteditClearSelectedText(texteditor * editor);
-void texteditPaste(texteditor * editor);
 
 void texteditInsertSpaces(texteditor * editor, int count);
 void texteditInsertNewline(texteditor * editor);
@@ -192,19 +190,14 @@ void textedit(texteditor * editor)
 		return;
 
 	while (!editor->exitflag) {
+		/* Start by updating the display. */
 		texteditUpdateDisplay(editor);
 
+		/* Get a key from the display. */
 		editor->key = editor->d->getch();
 
-		texteditHandleSelection(editor);
-
-		if (editor->key == DKEY_ESC)
-			editor->exitflag = 1;
-
-		texteditHandleScrolling(editor);
-		texteditHandleCopy(editor);
-
-		texteditHandleEditKey(editor);
+		/* Handle the input. */
+		texteditHandleInput(editor);
 	}
 
 	editor->text->cur = editor->curline;
@@ -242,33 +235,27 @@ int texteditReadyToEdit(texteditor * editor)
 	return 1;
 }
 
-
 /**
  * @relates texteditor
- * @brief Handle text selection.
+ * @brief Handle all possible types of input.
  **/
-void texteditHandleSelection(texteditor * editor)
+void texteditHandleInput(texteditor * editor)
 {
-	/* Start selecting text if SHIFT key is held down just now. */
-	int oldSelectFlag = editor->selectflag;
+	/* Check for exit key. */
+	if (editor->key == DKEY_ESC)
+		editor->exitflag = 1;
 
-	/* Selection is based on whether the shift key is down */
-	editor->selectflag = editor->d->shift();
+	/* Allow user to copy text. */
+	texteditHandleCopy(editor);
+	/* Perform editting. */
+	texteditHandleEditKey(editor);
 
-	/* Except that shift + ASCII key does not start selection mode */
-	if (editor->key < 0x7F)
-		editor->selectflag = 0;
+	/* Allow user to select text. */
+	texteditHandleSelection(editor);
 
-	/* If we just started selecting, remember current position */
-	if (editor->selectflag && !oldSelectFlag) {
-		editor->selectpos = editor->pos;
-		editor->selectlineoffset = 0;
-	}
-
-	/* If we just stopped selecting, the edit area needs updated */
-	if (oldSelectFlag && !editor->selectflag) {
-		editor->updateflags |= TUD_EDITAREA;
-	}
+	/* Handle cursor movements. */
+	texteditHandleScrolling(editor);
+	texteditHandleEditMovement(editor);
 }
 
 /**
@@ -348,65 +335,14 @@ void texteditHandleScrolling(texteditor * editor)
 
 /**
  * @relates texteditor
- * @brief Handle copying of text.
+ * @brief Handle edit movement.
  **/
-void texteditHandleCopy(texteditor * editor)
-{
-	/* Copy to register */
-	stringnode * selStart = editor->curline;
-	stringnode * selEnd   = editor->curline;
-	int selStartPos, selEndPos;
-	int i;
-
-	if (editor->key != DKEY_CTRL_C && editor->key != DKEY_CTRL_X)
-		return;
-
-	/* Can't copy if nothing is selected */
-	/* CONSIDER: copy the current line, maybe? */
-	if (!editor->selectflag)
-		return;
-
-	if (editor->selectlineoffset > 0) {
-		/* Other end of selection is below current line, move end down to meet it. */
-		selStartPos = editor->pos;
-		selEndPos = editor->selectpos;
-		for (i = 0; i < editor->selectlineoffset; i++)
-			if (selEnd->next != NULL)
-				selEnd = selEnd->next;
-	} else if (editor->selectlineoffset < 0) {
-		/* Other end of selection is above current line, move end up to meet it. */
-		selStartPos = editor->selectpos;
-		selEndPos = editor->pos;
-		for (i = 0; i > editor->selectlineoffset; i--)
-			if (selStart->prev != NULL)
-				selStart = selStart->prev;
-	} else {
-		/* Selection is only on current line: selStartPos gets the lesser of selectpos & pos */
-		if (editor->selectpos > editor->pos) {
-			selStartPos = editor->pos;
-			selEndPos   = editor->selectpos;
-		} else {
-			selStartPos = editor->selectpos;
-			selEndPos   = editor->pos;
-		}
-	}
-
-	regyank('\"', selStart, selEnd, selStartPos, selEndPos);
-}
-
-/**
- * @relates texteditor
- * @brief Handle an edit keypress.
- **/
-void texteditHandleEditKey(texteditor * editor)
+void texteditHandleEditMovement(texteditor * editor)
 {
 	if (!editor->editflag)
 		return;
 
 	switch (editor->key) {
-
-		/********** Movement ***********/
-
 		case DKEY_LEFT:  /* Left Arrow */
 			texteditCursorLeft(editor);
 			break;
@@ -422,6 +358,19 @@ void texteditHandleEditKey(texteditor * editor)
 		case DKEY_END: /* End */
 			editor->pos = strlen(editor->curline->s);
 			break;
+	}
+}
+
+/**
+ * @relates texteditor
+ * @brief Handle an edit keypress.
+ **/
+void texteditHandleEditKey(texteditor * editor)
+{
+	if (!editor->editflag)
+		return;
+
+	switch (editor->key) {
 
 		/********** Insert & Delete ***********/
 
@@ -767,6 +716,7 @@ void texteditFileOpen(texteditor * editor, int insertflag)
 				deletestringvector(editor->text);
 				*editor->text = filetext;
 				editor->curline = editor->text->first;
+				editor->pos = 0;
 			} else {
 				/* insert filetext before editor->curline */
 				editor->text->cur = editor->curline;
@@ -819,113 +769,6 @@ void texteditFileSave(texteditor * editor, char * prompt)
 		free(filename);
 	}
 	editor->updateflags |= TUD_EDITAREA | TUD_PANEL | TUD_PANEL;
-}
-
-/**
- * @relates texteditor
- * @brief Clear the selected text.
- *
- * @TODO: this code sucks.
- **/
-void texteditClearSelectedText(texteditor * editor)
-{
-	/* Destroy the meat of the selection */
-	int selStartPos, selEndPos, offset = editor->selectlineoffset;
-
-	int i;
-
-	if (!editor->selectflag)
-		return;
-
-	editor->text->cur = editor->curline;
-
-	/* Calculate the start and end of the selected area. */
-	if (offset < 0) {
-		/* Other end is above editor->curline */
-		offset = -offset;
-		selStartPos = editor->selectpos;
-		selEndPos = editor->pos;
-		/* Move back to top of selection */
-		for (i = 0; i < offset; i++) {
-			if (editor->text->cur->prev != NULL)
-				editor->text->cur = editor->text->cur->prev;
-		}
-		/* Change editor->curline to reflect the top of the selection */
-		editor->curline = editor->text->cur;
-	} else {
-		selStartPos = editor->pos;
-		selEndPos = editor->selectpos;
-	}
-
-	if (offset == 0) {
-		/* Only one line to work with */
-		int deltaPos;
-
-		/* Reverse selStartPos and selEndPos if start is bigger */
-		if (selStartPos > selEndPos) {
-			int swapPos = selStartPos;
-			selStartPos = selEndPos;
-			selEndPos = swapPos;
-		}
-		
-		/* Remove everything between selStartPos and selEndPos */
-		deltaPos = selEndPos - selStartPos;
-		for (i = selEndPos; i < strlen(editor->curline->s); i++) {
-			editor->curline->s[i - deltaPos] = editor->curline->s[i];
-		}
-		editor->curline->s[i - deltaPos] = '\0';
-		
-		/* Move the cursor to the starting position of the cut */
-		editor->pos = selStartPos;
-	} else {
-		/* Multiple lines were involved */
-		char * cutend;
-
-		/* Remove lines following the first line of the block */
-		editor->text->cur = editor->curline->next;
-		for (i = 0; i + 1 < offset; i++) {
-			deletestring(editor->text);
-		}
-
-		/* Remove the string at the end of the cut */
-		editor->text->cur = editor->curline->next;
-		cutend = removestring(editor->text);
-		/* Remove first selEndPos chars from end string */
-		for (i = 0; i < (strlen(cutend) - selEndPos); i++)
-			cutend[i] = cutend[i+selEndPos];
-		cutend[i] = '\x0';
-
-		/* Truncate the string at the start of the cut */
-		editor->text->cur = editor->curline;
-		editor->text->cur->s[selStartPos] = '\0';
-
-		/* Wordwrap the end string onto this one */
-		/* The -1 tells wordwrap to track the cursor position at
-		 * the beginning of cutend. Negative tracking values should
-		 * be used only by wordwrap for internal purposes, but
-		 * necessity warrents in this case.     vv    */
-		editor->pos = wordwrap(editor->text, cutend, selStartPos, -1, editor->wrapwidth, editor->linewidth);
-		editor->curline = editor->text->cur;  /* Follow cursor */
-
-		/* Free the cutend */
-		free(cutend);
-	}
-
-	editor->updateflags |= TUD_EDITAREA;
-}
-
-/**
- * @relates texteditor
- * @brief Paste copied text into the editor.
- */
-void texteditPaste(texteditor * editor)
-{
-	editor->text->cur = editor->curline;
-
-	editor->pos = regput('\"', editor->text, editor->pos, editor->wrapwidth, editor->linewidth);
-
-	editor->curline = editor->text->cur;
-	editor->updateflags |= TUD_EDITAREA;
 }
 
 /**
