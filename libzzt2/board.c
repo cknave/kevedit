@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.5 2002/02/17 07:26:03 bitman Exp $
+ * $Id: board.c,v 1.6 2002/02/20 02:54:52 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -530,7 +530,10 @@ int zztWorldDeleteBoard(ZZTworld *world, int number, int relink)
 		if(relink) {
 			for(i = 0; i < bcount; i++) {
 				ZZTboard* brd = &(world->boards[i]);
-				_zzt_board_relink(brd, -1, number + 1, zztWorldGetBoardcount(world) - 1, number, 0);
+				/* Relink links pointing to the next board up to
+				 * where the boardcount ended _before_ we deleted this board!
+				 * (that's one less that bcount + 1) */
+				_zzt_board_relink(brd, -1, number + 1, bcount, number, 0);
 
 				/* Recompress the board unless it is the current board */
 				if (i != world->cur_board)
