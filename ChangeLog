@@ -1,3 +1,8 @@
+0.6.x
+-----
+Bug fixed: "#if flag !msg;text" is now parsed correctly.
+Bug fixed: Messages and hypermessages now parsed correctly.
+
 0.5.1
 -----
 Windows installer defaults to running KevEdit in "My Documents" folder

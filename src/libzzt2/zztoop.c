@@ -1,5 +1,5 @@
 /* zztoop - zzt oop parser */
-/* $Id: zztoop.c,v 1.1 2003/11/01 23:45:57 bitman Exp $ */
+/* $Id: zztoop.c,v 1.2 2004/01/04 21:51:37 bitman Exp $ */
 /* Copyright (C) 2002 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -209,6 +209,55 @@ int zztoopNextToken(ZZTOOPparser * parser)
 }
 
 
+/**
+ * @brief Grow the current token by appending the next token.
+ *
+ * @return the new token length.
+ **/
+int zztoopGrowToken(ZZTOOPparser * parser)
+{
+	char * newToken = NULL;
+	char * oldToken = NULL;
+	int oldTokenPos = 0;
+	int tokenLen = 0;
+
+	/* Copy the old token. */
+	oldToken = str_dup(parser->token);
+	tokenLen = strlen(oldToken);
+	oldTokenPos = parser->tokenPos;
+
+	/* Grab the next token. */
+	tokenLen += zztoopNextToken(parser);
+
+	newToken = str_duplen(oldToken, tokenLen);
+	strcat(newToken, parser->token);
+
+	free(oldToken);
+	free(parser->token);
+	parser->token = newToken;
+	parser->tokenPos = oldTokenPos;
+
+	return tokenLen;
+}
+
+/**
+ * @brief Grow the current token until the next token will be a symbol.
+ *
+ * This function is useful when a token is expected to contain whitespace.
+ *
+ * @return the new token length.
+ **/
+int zztoopGrowTokenUntilSymbol(ZZTOOPparser * parser)
+{
+	int tokenLen = strlen(parser->token);
+
+	/* Grow token to collect extra spaces. */
+	while (strchr("#:?/!\'$@;\n\r", parser->line[parser->nextTokenPos]) == NULL)
+		tokenLen = zztoopGrowToken(parser);
+
+	return tokenLen;
+}
+
 ZZTOOPcomponent * zztoopParseLine(ZZTOOPparser * parser)
 {
 	/* Grab a token to start with */
@@ -371,6 +420,9 @@ void zztoopParseLabel(ZZTOOPparser * parser)
 		return;
 	}
 
+	/* Grow token to collect extra spaces. */
+	zztoopGrowTokenUntilSymbol(parser);
+
 	/* Store the token as a label */
 	zztoopAddToken(parser, ZOOPTYPE_LABEL, zztoopFindMessage(parser->token));
 
@@ -428,6 +480,9 @@ void zztoopParseMessage(ZZTOOPparser * parser)
 		zztoopAddToken(parser, ZOOPTYPE_SYMBOL, parser->token[0]);
 	}
 
+	/* Grow token to collect extra spaces. */
+	zztoopGrowTokenUntilSymbol(parser);
+
 	/* Add the message */
 	zztoopAddToken(parser, ZOOPTYPE_MESSAGE, zztoopFindMessage(parser->token));
 }
@@ -437,9 +492,24 @@ void zztoopParseHypermessage(ZZTOOPparser * parser)
 	if (parser->tokenType == ZOOPTOK_NONE)
 		return;
 
-	/* TODO: check for !-file;text, !-file:msg;text formats */
+	/* Check for leading '-' symbol, indicating that the next token in a
+	 * filename. */
+	if (parser->token[0] == '-') {
+		char * newToken = NULL;
+		zztoopAddComponent(parser, zztoopCreateComponent(ZOOPTYPE_SYMBOL, '-', "-", parser->tokenPos));
+
+		/* Advance the token by one character. */
+		newToken = str_dup(parser->token + 1);
+		free(parser->token);
+		parser->token = newToken;
+		parser->tokenPos++;
+	}
 
 	if (parser->flags & ZOOPFLAG_STRICTZZT) {
+		/* Collect tokens until ";", newline, or NULL begins next token. */
+		while (strchr(";\n\r", parser->line[parser->nextTokenPos]) == NULL)
+			zztoopGrowToken(parser);
+
 		/* Add the hypermessage */
 		zztoopAddToken(parser, ZOOPTYPE_MESSAGE, zztoopFindMessage(parser->token));
 	} else {
@@ -527,7 +597,7 @@ void zztoopParseCommandArgs(ZZTOOPparser * parser, int command)
 					zztoopAddWhitespace(parser);
 				}
 
-				if (strchr("#/?", parser->token[0])) {
+				if (strchr("#/?!", parser->token[0])) {
 					/* Remainder of args is #command or movement, parse from the top */
 					zztoopParseRoot(parser);
 				} else {
