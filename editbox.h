@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.1 2000/08/18 04:36:26 bitman Exp $
+ * $Id: editbox.h,v 1.2 2000/08/19 21:41:49 kvance Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,16 +25,16 @@
 #include "svector.h"
 
 /* editmoredata - edits p->moredata in a scroll box */
-void editmoredata(displaymethod* d, param* p);
+void editmoredata(displaymethod * d, param * p);
 
 /* editbox - display/edit a string vector in a scroll box, starting
  * at sv->cur. editwidth tells how long a line can be & how much memory to use
  * on new lines. If editwidth is zero, editsvector acts as a listbox and sets
  * sv->cur to selected node.  If zochighlight is nonzero, it does ZZT Object
  * Code (ZOC) highlighting. */
-void editbox(displaymethod* d, char* title, stringvector* sv, int editwidth, int zochighlight);
+void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, int zochighlight);
 
 /* displayzoc - display a string with zoc highlighting */
-void displayzoc(displaymethod* d, int x, int y, unsigned char* s);
+void displayzoc(displaymethod * d, int x, int y, unsigned char *s);
 
 #endif

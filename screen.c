@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.7 2000/08/18 04:39:47 bitman Exp $
+ * $Id: screen.c,v 1.8 2000/08/19 21:41:49 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -43,7 +43,7 @@ void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
 	i = yoffset * SCROLL_BOX_WIDTH * 2;
 
 	for (t = 3 + yoffset; t < 3 + (SCROLL_BOX_DEPTH - yendoffset); t++) {
-		for (x = 5; x < 5 + SCROLL_BOX_WIDTH; x++) {
+		for (x = 4; x < 4 + SCROLL_BOX_WIDTH; x++) {
 			mydisplay->putch(x, t, SCROLL_BOX[i], SCROLL_BOX[i + 1]);
 			i += 2;
 		}

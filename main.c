@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.10 2000/08/18 18:30:18 kvance Exp $
+ * $Id: main.c,v 1.11 2000/08/19 21:41:49 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -212,9 +212,9 @@ void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, 
 	}
 }
 
-void runzzt(char* args)
+void runzzt(char *args)
 {
-	char runcommand[256];           /* [12] should be enough, but... */
+	char runcommand[256];	/* [12] should be enough, but... */
 
 	strcpy(runcommand, "zzt ");
 
@@ -503,112 +503,112 @@ int main(int argc, char **argv)
 			break;
 		case 's':
 		case 'S':
-			if(e != 1) {
-			/* Save World */
-			free(myworld->board[myinfo->curboard]->data);
-			myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
-			for (i = 3; i < 25; i++) {
-				for (x = 0; x < 20; x++) {
-					mydisplay->putch(x + 60, i, ' ', 0x1f);
-				}
-			}
-			mydisplay->print(61, 3, 0x1f, "Save As");
-			for (i = 0; i < 9; i++) {
-				if (myinfo->currentfile[i] == '.' || myinfo->currentfile[i] == '\0') {
-					buffer[i] = '\0';
-					t = i;
-					break;
-				}
-				buffer[i] = myinfo->currentfile[i];
-			}
-			for (i = 0; i < 9; i++) {
-				if (i > strlen(buffer))
-					mydisplay->putch(61 + i, 4, ' ', 0x0f);
-				else
-					mydisplay->putch(61 + i, 4, buffer[i], 0x0f);
-			}
-			mydisplay->print(70, 4, 0x1f, ".zzt");
-			x = 0;
-			while (x != 27) {
-				mydisplay->cursorgo(61 + t, 4);
-				x = mydisplay->getch();
-				switch (x) {
-				case 8:
-					if (t > 0) {
-						t--;
-						buffer[t] = '\0';
-						mydisplay->putch(61 + t, 4, ' ', 0x0f);
+			if (e != 1) {
+				/* Save World */
+				free(myworld->board[myinfo->curboard]->data);
+				myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
+				for (i = 3; i < 25; i++) {
+					for (x = 0; x < 20; x++) {
+						mydisplay->putch(x + 60, i, ' ', 0x1f);
 					}
-					break;
-				case 13:
-					if (t > 0) {
-						if (!strcmp(myworld->zhead->title, "UNTITLED")) {
-							strcpy(myworld->zhead->title, buffer);
-							myworld->zhead->titlelength = strlen(buffer);
-						}
-						strcpy(myinfo->currenttitle, buffer);
-						strcat(buffer, ".zzt");
-						strcpy(myinfo->currentfile, buffer);
-						fp = fopen(buffer, "rb");
-						if (fp != NULL) {
-							fclose(fp);
-							mydisplay->print(61, 5, 0x1f, "Overwrite?");
-							mydisplay->print(72, 5, 0x1e, "y/n");
-							while (c != 0) {
-								c = mydisplay->getch();
-								if (c == 'y' || c == 'Y') {
-									goto __saveconfirm;
-								}
-								if (c == 'n' || c == 'N') {
-									c = 0;
-								}
-							}
-						} else {
-						      __saveconfirm:
-							myworld->zhead->startboard = myinfo->curboard;
-							saveworld(buffer, myworld);
-							mydisplay->print(61, 6, 0x1f, "Written.");
-							mydisplay->cursorgo(69, 6);
-							mydisplay->getch();
-
-						}
-						x = 27;
+				}
+				mydisplay->print(61, 3, 0x1f, "Save As");
+				for (i = 0; i < 9; i++) {
+					if (myinfo->currentfile[i] == '.' || myinfo->currentfile[i] == '\0') {
+						buffer[i] = '\0';
+						t = i;
+						break;
 					}
-					break;
-				default:
-					if (t == 8)
-						break;
-					if (x < 45)
-						break;
-					if (x > 45 && x < 48)
-						break;
-					if (x > 57 && x < 65)
-						break;
-					if (x > 90 && x < 95)
-						break;
-					if (x == 96)
-						break;
-					if (x > 122)
-						break;
-					buffer[t] = x;
-					mydisplay->putch(61 + t, 4, x, 0x0f);
-					t++;
-					buffer[t] = '\0';
+					buffer[i] = myinfo->currentfile[i];
+				}
+				for (i = 0; i < 9; i++) {
+					if (i > strlen(buffer))
+						mydisplay->putch(61 + i, 4, ' ', 0x0f);
+					else
+						mydisplay->putch(61 + i, 4, buffer[i], 0x0f);
+				}
+				mydisplay->print(70, 4, 0x1f, ".zzt");
+				x = 0;
+				while (x != 27) {
 					mydisplay->cursorgo(61 + t, 4);
-					break;
+					x = mydisplay->getch();
+					switch (x) {
+					case 8:
+						if (t > 0) {
+							t--;
+							buffer[t] = '\0';
+							mydisplay->putch(61 + t, 4, ' ', 0x0f);
+						}
+						break;
+					case 13:
+						if (t > 0) {
+							if (!strcmp(myworld->zhead->title, "UNTITLED")) {
+								strcpy(myworld->zhead->title, buffer);
+								myworld->zhead->titlelength = strlen(buffer);
+							}
+							strcpy(myinfo->currenttitle, buffer);
+							strcat(buffer, ".zzt");
+							strcpy(myinfo->currentfile, buffer);
+							fp = fopen(buffer, "rb");
+							if (fp != NULL) {
+								fclose(fp);
+								mydisplay->print(61, 5, 0x1f, "Overwrite?");
+								mydisplay->print(72, 5, 0x1e, "y/n");
+								while (c != 0) {
+									c = mydisplay->getch();
+									if (c == 'y' || c == 'Y') {
+										goto __saveconfirm;
+									}
+									if (c == 'n' || c == 'N') {
+										c = 0;
+									}
+								}
+							} else {
+							      __saveconfirm:
+								myworld->zhead->startboard = myinfo->curboard;
+								saveworld(buffer, myworld);
+								mydisplay->print(61, 6, 0x1f, "Written.");
+								mydisplay->cursorgo(69, 6);
+								mydisplay->getch();
+
+							}
+							x = 27;
+						}
+						break;
+					default:
+						if (t == 8)
+							break;
+						if (x < 45)
+							break;
+						if (x > 45 && x < 48)
+							break;
+						if (x > 57 && x < 65)
+							break;
+						if (x > 90 && x < 95)
+							break;
+						if (x == 96)
+							break;
+						if (x > 122)
+							break;
+						buffer[t] = x;
+						mydisplay->putch(61 + t, 4, x, 0x0f);
+						t++;
+						buffer[t] = '\0';
+						mydisplay->cursorgo(61 + t, 4);
+						break;
+					}
 				}
-			}
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			} else {
-			/* Plot an empty */	
-			x = myinfo->pattern;
-			myinfo->pattern = 4;	/* That's an empty */
-			plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-			myinfo->pattern = x;
-			updatepanel(mydisplay, myinfo, myworld);
-			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+				/* Plot an empty */
+				x = myinfo->pattern;
+				myinfo->pattern = 4;	/* That's an empty */
+				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+				myinfo->pattern = x;
+				updatepanel(mydisplay, myinfo, myworld);
+				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
 		case 'f':
@@ -800,11 +800,11 @@ int main(int argc, char **argv)
 				break;
 			if (e == 1) {
 				i = dothepanel_f1(mydisplay, myinfo);
-				if(i == Z_PLAYER) {
+				if (i == Z_PLAYER) {
 					/* The player is a special case */
 					bigboard[(myinfo->playerx + myinfo->playery * 60) * 2] = Z_EMPTY;
 					bigboard[(myinfo->playerx + myinfo->playery * 60) * 2 + 1] = 0x07;
-					if(paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
+					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 						/* We're overwriting a parameter */
 						if (CURRENTPARAM->moredata != NULL)
 							free(CURRENTPARAM->moredata);
@@ -829,61 +829,61 @@ int main(int argc, char **argv)
 					myworld->board[myinfo->curboard]->params[0]->x++;
 					myworld->board[myinfo->curboard]->params[0]->y++;
 				} else {
-				switch (i) {
-				case -1:
-					break;
-				case Z_GEM:
-				case Z_KEY:
-					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
-					break;
-				case Z_AMMO:
-				case Z_TORCH:
-				case Z_ENERGIZER:
-					if (myinfo->defc == 0)
-						x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-					else {
-						if (i == Z_AMMO)
-							x = 0x03;
-						if (i == Z_DUPLICATOR)
-							x = 0x0f;
-						if (i == Z_TORCH)
-							x = 0x06;
-						if (i == Z_ENERGIZER)
-							x = 0x05;
+					switch (i) {
+					case -1:
+						break;
+					case Z_GEM:
+					case Z_KEY:
+						push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
+						break;
+					case Z_AMMO:
+					case Z_TORCH:
+					case Z_ENERGIZER:
+						if (myinfo->defc == 0)
+							x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+						else {
+							if (i == Z_AMMO)
+								x = 0x03;
+							if (i == Z_DUPLICATOR)
+								x = 0x0f;
+							if (i == Z_TORCH)
+								x = 0x06;
+							if (i == Z_ENERGIZER)
+								x = 0x05;
+						}
+						push(i, x, NULL);
+						break;
+					case Z_DOOR:
+						if (myinfo->defc == 1)
+							x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
+						else
+							x = (myinfo->backc << 4) + (myinfo->forec) + (myinfo->blinkmode * 0x80);
+						push(i, x, NULL);
+						break;
+					case Z_PASSAGE:
+						pm = z_newparam_passage(myinfo->cursorx + 1, myinfo->cursory + 1, boarddialog(myworld, myinfo, mydisplay));
+						if (myinfo->defc == 1)
+							x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
+						else
+							x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+						push(i, x, pm);
+						break;
+					case Z_CWCONV:
+					case Z_CCWCONV:
+						pm = z_newparam_conveyer(myinfo->cursorx + 1, myinfo->cursory + 1);
+						push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
+						break;
+					case Z_BOMB:
+						pm = z_newparam_bomb(myinfo->cursorx + 1, myinfo->cursory + 1);
+						push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
+						break;
 					}
-					push(i, x, NULL);
-					break;
-				case Z_DOOR:
-					if (myinfo->defc == 1)
-						x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
-					else
-						x = (myinfo->backc << 4) + (myinfo->forec) + (myinfo->blinkmode * 0x80);
-					push(i, x, NULL);
-					break;
-				case Z_PASSAGE:
-					pm = z_newparam_passage(myinfo->cursorx + 1, myinfo->cursory + 1, boarddialog(myworld, myinfo, mydisplay));
-					if(myinfo->defc == 1)
-						x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
-					else
-						x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-					push(i, x, pm);
-					break;
-				case Z_CWCONV:
-				case Z_CCWCONV:
-					pm = z_newparam_conveyer(myinfo->cursorx + 1, myinfo->cursory + 1);
-					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
-					break;
-				case Z_BOMB:
-					pm = z_newparam_bomb(myinfo->cursorx + 1, myinfo->cursory + 1);
-					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
-					break;
-				}
-				if (i != -1 && i != Z_PLAYER) {
-					x = myinfo->pattern;
-					myinfo->pattern = 6;
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-					myinfo->pattern = x;
-				}
+					if (i != -1 && i != Z_PLAYER) {
+						x = myinfo->pattern;
+						myinfo->pattern = 6;
+						plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+						myinfo->pattern = x;
+					}
 				}
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
@@ -905,20 +905,20 @@ int main(int argc, char **argv)
 						i = -1;
 						break;
 					} else {
-					/* Anything important under it? */
-					x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
-					switch (x) {
-					case Z_WATER:
-					case Z_FAKE:
+						/* Anything important under it? */
+						x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
+						switch (x) {
+						case Z_WATER:
+						case Z_FAKE:
+							break;
+						default:
+							x = Z_EMPTY;
+							break;
+						}
+						pm = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
+						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+						push(i, t, pm);
 						break;
-					default:
-						x = Z_EMPTY;
-						break;
-					}
-					pm = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
-					t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-					push(i, t, pm);
-					break;
 					}
 				}
 				if (i != -1) {
@@ -955,14 +955,14 @@ int main(int argc, char **argv)
 				case Z_WATER:
 				case Z_FOREST:
 				case Z_RICOCHET:
-					if(myinfo->defc == 0)
+					if (myinfo->defc == 0)
 						x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
 					else {
-						if(i == Z_WATER)
+						if (i == Z_WATER)
 							x = 0x9f;
-						if(i == Z_FOREST)
+						if (i == Z_FOREST)
 							x = 0x20;
-						if(i == Z_RICOCHET)
+						if (i == Z_RICOCHET)
 							x = 0x0a;
 					}
 					push(i, x, NULL);
@@ -971,13 +971,12 @@ int main(int argc, char **argv)
 					push(i, 0x07, NULL);
 					break;
 				}
-				if(i != -1) {
+				if (i != -1) {
 					x = myinfo->pattern;
 					myinfo->pattern = 6;
 					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 					myinfo->pattern = x;
 				}
-
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -1003,9 +1002,8 @@ int main(int argc, char **argv)
 						/* TODO: modify other params */
 					}
 				}
-				e = 1;  /* set ext so that <insert> code below is used */
+				e = 1;	/* set ext so that <insert> code below is used */
 			}
-
 			/* Don't break here! When we modify, we grab too! */
 		case 0x52:
 		case 'r':
@@ -1018,14 +1016,13 @@ int main(int argc, char **argv)
 					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
 				updatepanel(mydisplay, myinfo, myworld);
 				break;
-			}
-			else {
+			} else {
 				/* 'r'un zzt */
 				/* Load current world into zzt */
 				if (e == 0) {
 					mydisplay->end();
 					runzzt(myinfo->currentfile);
-					
+
 					/* restart display from scratch */
 					mydisplay->init();
 					drawpanel(mydisplay);

@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.2 2000/08/18 17:08:10 bitman Exp $
+ * $Id: svector.c,v 1.3 2000/08/19 21:41:49 kvance Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,49 +22,44 @@
 #include <stdlib.h>
 
 
-void
-initstringvector(stringvector* v)
+void initstringvector(stringvector * v)
 {
 	v->first = v->last = v->cur = NULL;
 }
 
 
 /* pushstring - pushes string s to end of vector v */
-int
-pushstring(stringvector* v, unsigned char* s)
+int pushstring(stringvector * v, unsigned char *s)
 {
-	stringnode* newnode = NULL;
+	stringnode *newnode = NULL;
 
 	if (v == NULL || s == NULL)
 		return 1;
 
 	if (v->first == NULL) {
-		newnode = (stringnode*) malloc(sizeof(stringnode));
+		newnode = (stringnode *) malloc(sizeof(stringnode));
 		newnode->next = NULL;
 		newnode->prev = NULL;
-		newnode->s    = s;
+		newnode->s = s;
 
 		v->cur = v->last = v->first = newnode;
-	}
-	else if (v->last != NULL) {
-		newnode = (stringnode*) malloc(sizeof(stringnode));
-		newnode->s    = s;
+	} else if (v->last != NULL) {
+		newnode = (stringnode *) malloc(sizeof(stringnode));
+		newnode->s = s;
 		newnode->prev = v->last;
 		newnode->next = NULL;
 		v->last->next = newnode;
-		v->last       = newnode;
-	}
-	else
+		v->last = newnode;
+	} else
 		return 1;
 
 	return 0;
 }
 
 /* insertstring - inserts string s after cur in vector v */
-int
-insertstring(stringvector* v, unsigned char* s)
+int insertstring(stringvector * v, unsigned char *s)
 {
-	stringnode* newnode = NULL;
+	stringnode *newnode = NULL;
 
 	if (v == NULL || s == NULL)
 		return 1;
@@ -75,8 +70,8 @@ insertstring(stringvector* v, unsigned char* s)
 	if (v->cur == NULL || v->cur->next == NULL)
 		return 1;
 
-	newnode = (stringnode*) malloc(sizeof(stringnode));
-	newnode->s    = s;
+	newnode = (stringnode *) malloc(sizeof(stringnode));
+	newnode->s = s;
 	newnode->prev = v->cur;
 	newnode->next = v->cur->next;
 	newnode->next->prev = newnode;
@@ -86,10 +81,9 @@ insertstring(stringvector* v, unsigned char* s)
 }
 
 /* preinsertstring - inserts string s before cur in vector v */
-int
-preinsertstring(stringvector* v, unsigned char* s)
+int preinsertstring(stringvector * v, unsigned char *s)
 {
-	stringnode* newnode = NULL;
+	stringnode *newnode = NULL;
 
 	if (v == NULL || s == NULL)
 		return 1;
@@ -100,8 +94,8 @@ preinsertstring(stringvector* v, unsigned char* s)
 	if (v->first == NULL)
 		return pushstring(v, s);
 
-	newnode = (stringnode*) malloc(sizeof(stringnode));
-	newnode->s    = s;
+	newnode = (stringnode *) malloc(sizeof(stringnode));
+	newnode->s = s;
 	newnode->prev = v->cur->prev;
 	newnode->next = v->cur;
 	newnode->next->prev = newnode;
@@ -118,11 +112,11 @@ preinsertstring(stringvector* v, unsigned char* s)
 
 
 /* removestring - removes cur node and returns pointer to s */
-unsigned char*
-removestring(stringvector* v)
+unsigned char *
+ removestring(stringvector * v)
 {
-	unsigned char* s;
-	stringnode* cur;
+	unsigned char *s;
+	stringnode *cur;
 
 	if (v == NULL || v->cur == NULL)
 		return NULL;
@@ -147,13 +141,12 @@ removestring(stringvector* v)
 
 	/* v->cur will either be set to the next node or the last node,
 	 * depending on whether cur is at the end of the list */
-	
+
 	/* if there is a next node, link it backward to the previous node */
 	if (cur->next != NULL) {
 		cur->next->prev = cur->prev;
 		v->cur = cur->next;
 	}
-
 	/* else if the current node is not last, list is messed up */
 	else if (cur != v->last)
 		return NULL;
@@ -170,10 +163,9 @@ removestring(stringvector* v)
 }
 
 /* deletestring - free()s cur node & s */
-int
-deletestring(stringvector* v)
+int deletestring(stringvector * v)
 {
-	unsigned char* s = NULL;
+	unsigned char *s = NULL;
 
 	s = removestring(v);
 	if (s == NULL)
@@ -185,15 +177,13 @@ deletestring(stringvector* v)
 }
 
 /* deletestringvector - deletes entire vector and every s */
-int
-deletestringvector(stringvector* v)
+int deletestringvector(stringvector * v)
 {
 	if (v == NULL)
 		return 1;
-	
+
 	v->cur = v->last;
-	while (deletestring(v) != 1)
-		;
+	while (deletestring(v) != 1);
 
 	return 0;
 }

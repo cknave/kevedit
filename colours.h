@@ -1,6 +1,6 @@
 /* colours.h   -- colour defines
- * $Id: colours.h,v 1.1 2000/08/18 04:36:26 bitman Exp $
- */ 
+ * $Id: colours.h,v 1.2 2000/08/19 21:41:49 kvance Exp $
+ */
 
 #ifndef __COLOURS_H
 #define __COLOURS_H

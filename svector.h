@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.1 2000/08/18 04:36:26 bitman Exp $
+ * $Id: svector.h,v 1.2 2000/08/19 21:41:49 kvance Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,42 +24,42 @@
 /* basic structures for a string vector */
 
 typedef struct stringnode {
-	unsigned char* s;
-	struct stringnode* next;
-	struct stringnode* prev;
+	unsigned char *s;
+	struct stringnode *next;
+	struct stringnode *prev;
 
 } stringnode;
 
 typedef struct stringvector {
-	stringnode* first;
-	stringnode* last;
-	stringnode* cur;
+	stringnode *first;
+	stringnode *last;
+	stringnode *cur;
 
 } stringvector;
 
 /* Allways initialize a string vector to all NULLs before use */
-void initstringvector(stringvector* v);
+void initstringvector(stringvector * v);
 
 /* The string() functions return 1 on error, 0 on success.
  * In each function, the pointer s is copied, not the string. */
 
 /* pushstring - pushes string s to end of vector v */
-int pushstring(stringvector* v, unsigned char* s);
+int pushstring(stringvector * v, unsigned char *s);
 
 /* insertstring - inserts string s after cur in vector v */
-int insertstring(stringvector* v, unsigned char* s);
+int insertstring(stringvector * v, unsigned char *s);
 
 /* preinsertstring - inserts string s before cur in vector v */
-int preinsertstring(stringvector* v, unsigned char* s);
+int preinsertstring(stringvector * v, unsigned char *s);
 
 /* removestring - removes cur node and returns pointer to s */
-unsigned char* removestring(stringvector* v);
+unsigned char *removestring(stringvector * v);
 
 /* deletestring - free()s cur node & s */
-int deletestring(stringvector* v);
+int deletestring(stringvector * v);
 
 /* deletestringvector - deletes entire vector and every s */
-int deletestringvector(stringvector* v);
+int deletestringvector(stringvector * v);
 
 
 #endif
