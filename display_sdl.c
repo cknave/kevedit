@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.10 2002/09/16 06:47:24 bitman Exp $
+ * $Id: display_sdl.c,v 1.11 2002/09/17 06:00:44 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -764,6 +764,8 @@ static int shift;	/* Shift state */
 static int timer, csoc;	/* Timer for cursor, current state of cursor */
 static SDL_TimerID timerId;	/* Timer ID */
 
+#define CURSOR_RATE 400
+
 /* Nice timer update callback thing */
 static Uint32 display_tick(Uint32 interval, void *blank)
 {
@@ -876,7 +878,7 @@ int display_sdl_init()
 	shift = 0;
 	timer = csoc = 0;
 
-	timerId = SDL_AddTimer(100, display_tick, NULL);
+	timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
 
 	return 1;
 }
@@ -912,6 +914,9 @@ void display_fullscreen()
 int display_sdl_getch()
 {
 	SDL_Event event;
+
+	/* Draw the cursor immediately */
+	display_curse(info.write_x, info.write_y);
 
 	/* Wait for a KEYDOWN event */
 	do {
@@ -951,7 +956,7 @@ int display_sdl_getch()
 				if(event.active.gain && timer == 2) {
 					/* Make cursor normal */
 					csoc = timer = 1;
-					timerId = SDL_AddTimer(100, display_tick, NULL);
+					timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
 					display_curse(info.write_x, info.write_y);
 				} else {
 					/* Inactive cursor */
@@ -963,6 +968,9 @@ int display_sdl_getch()
 			}
 		}
 	} while(event.type != SDL_KEYDOWN);
+
+	/* Clear the cursor, in case it is still displayed */
+	display_update(&info, info.write_x, info.write_y, 1, 1);
 
 	/* Map the weirder keysyms to KevEdit form */
 	switch(event.key.keysym.sym) {
