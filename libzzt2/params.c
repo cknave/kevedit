@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.11 2002/12/08 00:20:43 bitman Exp $
+ * $Id: params.c,v 1.12 2002/12/13 00:46:06 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -251,7 +251,7 @@ const char *zztParamDatauseGetName(ZZTtile tile, int which)
 
 int zztParamDatauseLocate(int datause)
 {
-	if (datause > 12) return 0;
+	if (datause > ZZT_DATAUSE_MAX) return 0;
 	return _zzt_datause_location_table[datause];
 }
 
