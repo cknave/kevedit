@@ -29,6 +29,7 @@ Source: "..\TODO";         Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\AUTHORS";      Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\ChangeLog";    Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\SDL.dll";      Destdir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\README-SDL.txt"; Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\default.zml";  Destdir: "{app}"; CopyMode: alwaysoverwrite
 
 [Icons]
