@@ -1,3 +1,7 @@
 ZZT-OOP editor!  Real Soon Now!
 Seperate keys for modify (ENTER) and grab (INS) ala MegaZeux
 DELETE plots an empty.
+Do not change the colour of all empties
+Add a special case in floodfill() for empties of any colour
+Allow for coloured empties to be plotted
+Keybindings
