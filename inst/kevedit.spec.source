@@ -9,8 +9,8 @@ Group: Games
 Buildroot: /tmp/%{name}-%{version}
 Source: %{name}-%{version}.src.tgz
 # TODO: Anything else?
-Requires: SDL
-BuildRequires: SDL-devel
+Requires: SDL >= 1.2.3
+BuildRequires: SDL-devel >= 1.2.3
 
 %Description
 KevEdit is a powerful editor for the ZZT game creation system.
@@ -19,7 +19,8 @@ KevEdit is a powerful editor for the ZZT game creation system.
 %setup -q -n %{name}-%{version}
 
 %Build
-make keveditVERSION=%{version}
+# KevEdit will install to /usr
+make prefix=/usr keveditVERSION=%{version}
 
 %Install
 mkdir -p $RPM_BUILD_ROOT

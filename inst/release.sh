@@ -9,23 +9,27 @@ PARENTDIR=../../       # Location of $PROJECT directory
 SPECSOURCEDIR=inst     # Location of $PROJECT.spec.source file
 SOURCEDIR=.            # Location of source code
 
-echo "mkrpmtar version 0.0.3"
+echo "release.sh version 0.1.0"
 echo "Copyright (c) 2001  Ryan Phillips"
 echo "This program may be freely distributed under the terms of the GNU GPL"
 echo
 
 if [ -z $2 ]; then
-	echo "Usage: mkrpmtar.sh version release"
+	echo "Usage: release.sh version release [--norpm]"
 	echo "  version:  version string"
 	echo "  release:  release number"
 	echo
-	echo "mkrpmtar creates a tar file from a program directory and uses it"
-	echo "to build source and binary rpms for that program."
+	echo "release.sh creates a source tgz file from a program directory."
+	echo
+	echo "If the --norpm parameter is not specified, binary and source RPMs"
+	echo "will also be built for the project. Root priviledges may be necessary"
+	echo "to build RPMs on your system."
 	exit
 fi
 
 VERSION=$1
 RELEASE=$2
+PARAM=$3
 ARCHIVE=$PROJECT-$VERSION
 
 # Create copy of program in temporary directory
@@ -52,6 +56,9 @@ echo "Generating" $ARCHIVE.src.tgz "archive"
 tar -czf $ARCHIVE.src.tgz $ARCHIVE --exclude CVS
 rm -R $ARCHIVE
 
+if [ -z $PARAM ]; then
 # Build RPM & SRPM
-echo "Building binary and source RPMS"
-rpm -ta $ARCHIVE.src.tgz
+	echo "Building binary and source RPMS"
+	rpm -ta $ARCHIVE.src.tgz
+fi
+

@@ -56,7 +56,7 @@ all: kevedit kevedit.zml
 kevedit: $(OBJECTS) main.o
 	$(CC) -o $@ $(OBJECTS) main.o $(CFLAGS) $(LDFLAGS)
 
-kevedit.zml: docs/*.hlp
+kevedit.zml: docs/*.hlp permissions
 	cd docs; ./makehelp.sh; cd ..
 
 install: all
@@ -74,9 +74,13 @@ uninstall:
 	rm -f -R $(docdir)
 
 clean:
-	rm -f *.o kevedit kevedit.exe kevedit.zln synth/*.o
+	rm -f *.o kevedit kevedit.exe kevedit.zml synth/*.o
 	make -C libzzt2 clean
 	make -C glob clean
+
+# Sometimes permissions are not stored correctly
+permissions:
+	chmod a+x `find | grep .sh$$`
 
 # Libraries
 libzzt2/libzzt2.a: libzzt2/*.c libzzt2/*.h
