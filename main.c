@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.3 2000/08/08 01:57:38 kvance Exp $
+ * $Id: main.c,v 1.4 2000/08/10 13:23:19 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -334,6 +334,8 @@ int main(int argc, char **argv)
 			for (i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
 				if (myworld->board[myinfo->curboard]->params[i]->x > 0 && myworld->board[myinfo->curboard]->params[i]->x < 61 && myworld->board[myinfo->curboard]->params[i]->y > 0 && myworld->board[myinfo->curboard]->params[i]->y < 26)
 					paramlist[myworld->board[myinfo->curboard]->params[i]->x - 1][myworld->board[myinfo->curboard]->params[i]->y - 1] = i;
+				myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
+				myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
 			}
 		}
 	}
@@ -499,6 +501,8 @@ int main(int argc, char **argv)
 				if (myworld->board[myinfo->curboard]->params[i]->x > 0 && myworld->board[myinfo->curboard]->params[i]->x < 61 && myworld->board[myinfo->curboard]->params[i]->y > 0 && myworld->board[myinfo->curboard]->params[i]->y < 26)
 					paramlist[myworld->board[myinfo->curboard]->params[i]->x - 1][myworld->board[myinfo->curboard]->params[i]->y - 1] = i;
 			}
+			myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
+			myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			updatepanel(mydisplay, myinfo, myworld);
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -647,6 +651,8 @@ int main(int argc, char **argv)
 				for (i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
 					if (myworld->board[myinfo->curboard]->params[i]->x > 0 && myworld->board[myinfo->curboard]->params[i]->x < 61 && myworld->board[myinfo->curboard]->params[i]->y > 0 && myworld->board[myinfo->curboard]->params[i]->y < 26)
 						paramlist[myworld->board[myinfo->curboard]->params[i]->x - 1][myworld->board[myinfo->curboard]->params[i]->y - 1] = i;
+					myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
+					myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
 				}
 			}
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -934,4 +940,5 @@ int main(int argc, char **argv)
 	free(myinfo);
 	free(string);
 	free(bigboard);
+	z_delete(myworld);
 }

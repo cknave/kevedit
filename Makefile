@@ -16,7 +16,7 @@ DOS =
 DOS = -DDOS
 DOSOBJ = display_dos.o
 
-CFLAGS = -g -O6 $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.2\"
+CFLAGS = -s -O6 $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.2\"
 
 # No more modifications below this line
 # -------------------------------------
