@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.24 2000/10/28 01:52:06 kvance Exp $
+ * $Id: main.c,v 1.25 2000/11/13 19:56:23 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1010,6 +1010,26 @@ int main(int argc, char **argv)
 							x = (myinfo->backc << 4) + (myinfo->forec) + (myinfo->blinkmode * 0x80);
 						push(i, x, NULL);
 						break;
+					case Z_SCROLL:
+						if (myworld->board[myinfo->curboard]->info->objectcount == 150) {
+							i = -1;
+							break;
+						} else {
+							/* Anything important under it? */
+							x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
+							switch (x) {
+							case Z_WATER:
+							case Z_FAKE:
+								break;
+							default:
+								x = Z_EMPTY;
+								break;
+							}
+						pm = z_newparam_scroll(myinfo->cursorx + 1, myinfo->cursory + 1, x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
+						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+						push(i, t, pm);
+						break;
+						}
 					case Z_PASSAGE:
 						pm = z_newparam_passage(myinfo->cursorx + 1, myinfo->cursory + 1, boarddialog(myworld, myinfo, mydisplay));
 						if (myinfo->defc == 1)
@@ -1151,13 +1171,17 @@ int main(int argc, char **argv)
 						if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_SCROLL || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_OBJECT) {
 							/* Load editor on current moredata */
 							editmoredata(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);
-							/* redraw everything */
-							drawpanel(mydisplay);
-							updatepanel(mydisplay, myinfo, myworld);
-							mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-							drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+						}
+						if(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_PASSAGE) {
+							/* Choose passage destination */
+							myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]->data3 = boarddialog(myworld, myinfo, mydisplay);
 						}
 						/* TODO: modify other params */
+						/* redraw everything */
+						drawpanel(mydisplay);
+						updatepanel(mydisplay, myinfo, myworld);
+						mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+						drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 					}
 				}
 				e = 1;	/* set ext so that <insert> code below is used */

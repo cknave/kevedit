@@ -1,7 +1,21 @@
 For the 0.4 release:
 --------------------
 Global parameter editor for built-in enemies
-All other unimplimented F-key tiles
+All other unimplemented F-key tiles:
+	* Duplicator
+	* Bear
+	* Ruffian
+	* Slime
+	* Shark
+	* Spinning Gun
+	* Pusher
+	* Lion
+	* Tiger
+	* Bullet
+	* Star
+	* Head
+	* Segment
+	* Transporter
 
 For the 0.5 release:
 --------------------

@@ -1,5 +1,5 @@
 /* zzt.h        -- ZZT library definitions
- * $Id: zzt.h,v 1.5 2000/09/02 04:33:23 kvance Exp $
+ * $Id: zzt.h,v 1.6 2000/11/13 19:56:23 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -191,6 +191,9 @@ extern board *z_newboard(char *);
 /* z_newparam_object(x, y, char, undertype, undercolor)
  * Creates a new object paramater record with the given information and a NULL program */
 extern param *z_newparam_object(int x, int y, int ch, int undert, int underc);
+/* z_newparam_scroll(x, y, undertype, undercolor)
+ * Creates a new scroll parameter record with the given information and NULL data */
+extern param *z_newparam_scroll(int x, int y, int undert, int underc);
 /* z_newparam_conveyer(x, y)
  * Creates a new conveyer parameter at cycle 3 */
 extern param *z_newparam_conveyer(int x, int y);

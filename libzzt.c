@@ -1,5 +1,5 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.4 2000/09/02 04:33:23 kvance Exp $
+ * $Id: libzzt.c,v 1.5 2000/11/13 19:56:23 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -196,6 +196,30 @@ param *z_newparam_object(int x, int y, int ch, int undert, int underc)
 
 	return p;
 }
+
+param *z_newparam_scroll(int x, int y, int undert, int underc)
+{
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = 0;
+	p->ystep = 0;
+	p->cycle = 1;
+	p->data1 = 0;
+	p->data2 = 0;
+	p->data3 = 0;
+	p->magic = 0xFFFFFFFF;
+	p->undert = undert;
+	p->underc = underc;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
+
 
 u_int8_t *
  rle_encode(u_int8_t * unclean)
