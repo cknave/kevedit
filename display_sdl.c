@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.16 2002/11/11 22:38:15 bitman Exp $
+ * $Id: display_sdl.c,v 1.17 2002/11/12 09:27:07 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -579,6 +579,8 @@ void display_restart(video_info *vdest)
 
 void display_end(video_info *vdest)
 {
+	SDL_FreeSurface(vdest->buffer_surface);
+
 	free(vdest->buffer);
 	free(vdest->char_set);
 	free(vdest->palette);
