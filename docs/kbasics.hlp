@@ -202,8 +202,10 @@ press F4 to activate text entry mode.
 Every character you type will be written
 on the board.  To add a non-typable
 character, press CTRL+'a' for the ASCII
-selection dialog box.  To leave text entry
-mode, press F4 again.
+selection dialog box. Text will wrap past
+the end of the line, though it will not
+wordwrap.  To leave text entry mode, press
+F4 again.
 
 :file;File Operations
 

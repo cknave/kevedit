@@ -1,6 +1,15 @@
 @New Features
 $New Features
 
+$New in Version 0.5.1
+!-ksupport;Support help topic
+!-kbasics:text;F4 text entry wraps at end of line
+:;  *  DOS virtual shift: toggle using F12
+
+$Bugs fixed in version 0.5.1
+:;  *  Duplicator cycle speed is not 0
+:;  *  Params created for F3 menu items
+
 $New in Version 0.5.0
 :;  *  Native Linux and Windows support
 !-kstats;Stats Editor documentation

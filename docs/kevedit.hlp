@@ -1,3 +1,4 @@
+@Using KevEdit
 $-----------------------------------------
 KevEdit 0.5.0
                       Powerful ZZT Editing
@@ -25,9 +26,10 @@ With many contributions by
 !-creature;Creatures
 !-terrain;Terrain
 
+!-ksupport;Support and Troubleshooting
 !help;The Help System
 !quit;Quitting
-!support;Support
+!enjoy;Enjoy!
 
 :help;Help!
 
@@ -46,33 +48,13 @@ want to quit, or perhaps you would just
 like to save your work instead, because I
 hate it when programs doubt my quititude.
 
-:support;Support
+:enjoy;Enjoy!
 
-Technical support for KevEdit is not
-guaranteed. However, you are encouraged to
-send an email to bitman
-<bitman@users.sf.net> if you have any
-questions, problems, or praise. Also
-consider posting to the "ZZT Editors"
-forum on zzt2.com if you have a general
-question. For announcements and technical
-discussion of KevEdit, join the
-kevedit-talk mailing list by visiting:
-
-https://lists.sourceforge.net/
-        lists/listinfo/kevedit-talk
-
-If you find bugs, try to fix it and send
-in a patch :)  If you can't fix it, report
-it. For the overzealous, you can do what
-bitman did join in on the development if
-you find sending in patches too tedious.
-CVS is great for that sort of thing.
-
-http://kevedit.sourceforge.net/ is where
-you can check for new releases, get the
-CVS code, post bug reports, etc.
+We hope you enjoy using KevEdit as much as
+we enjoyed creating it. Feedback is always
+welcome; we'd love to hear what you think
+of our work.
 
     Kev Vance <kev@kvance.com>
     Ryan Phillips <bitman@users.sf.net>
-    December 2, 2002
+    December 13, 2002

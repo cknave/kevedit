@@ -1,6 +1,10 @@
 0.5.1
 -----
+Windows installer defaults to running KevEdit in "My Documents" folder
+F4 text entry wraps at end of line
+Virtual shift in DOS display: toggled by F12
 Bug fixed: duplicator cycle speed
+Bug fixed: params created for items on F3 menu
 
 0.5.0
 -----

@@ -1,0 +1,44 @@
+@Support and Troubleshooting
+$Support and Troubleshooting
+
+!web;Website
+!trouble;Troubleshooting
+!support;Support
+
+:web;Website
+
+Visit http://kevedit.sourceforge.net/ to
+check for new releases, get the CVS code,
+post bug reports, etc.
+
+:trouble;Troubleshooting
+
+If you are having trouble using SHIFT to
+select blocks or text in the DOS version
+of KevEdit, you can use F12 to toggle
+selection on or off.
+
+:support;Support
+
+Technical support for KevEdit is not
+guaranteed. However, you are encouraged to
+send an email to bitman
+<bitman@users.sf.net> if you have any
+questions, problems, or praise. Also
+consider posting to the "ZZT Editors"
+forum on http://zzt.the-underdogs.org/ if
+you have a general question. For
+announcements and technical discussion of
+KevEdit, join the kevedit-talk mailing
+list by visiting:
+
+https://lists.sourceforge.net/
+        lists/listinfo/kevedit-talk
+
+If you find bugs, try to fix it and send
+in a patch. :)  If you can't fix it,
+report it. For the overzealous, you can do
+what bitman did join in on the development
+if you find sending in patches too
+tedious. CVS is great for that sort of
+thing.
