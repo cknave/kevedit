@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.10 2001/11/11 01:17:23 bitman Exp $
+ * $Id: misc.h,v 1.11 2001/12/12 22:08:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,20 +24,6 @@
 
 #include "display.h"
 
-/* Running zzt */
-int runzztforworld(char* zztpath, char* worldname);
-int copyzztdatfile(char* srcdir, char* destdir);
-
-/* Finds location of executable based on main()'s argv[0] and cwd() */
-char* locateself(char* argv0);
-
-/* Filename parsing */
-char* fileof(char* buffer, char* fullpath, int buflen);
-char* pathof(char* buffer, char* fullpath, int buflen);
-
-/* Confirms that a file exists */
-int fileexists(char* filename);
-
 /* Kevedit initialization routines */
 displaymethod * pickdisplay(displaymethod * rootdisplay);
 void initeditorinfo(editorinfo * myinfo);
@@ -45,7 +31,9 @@ void initeditorinfo(editorinfo * myinfo);
 /* TODO: Everything from this point on needs to be sorted
  * very thoroughly. Most should be moved to other files. */
 
-void runzzt(char* zztpath, char *world);
+/* Running zzt */
+void runzzt(char* path, char* world);
+
 void showParamData(param * p, int paramNumber, displaymethod * d);
 void texteditor(displaymethod * mydisplay);
 

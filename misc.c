@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.19 2001/11/14 00:57:23 bitman Exp $
+ * $Id: misc.c,v 1.20 2001/12/12 22:08:02 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 #include "hypertxt.h"
 #include "selection.h"
 #include "gradient.h"
+#include "zlaunch.h"
 
 #include "patbuffer.h"
 
@@ -42,6 +43,37 @@
 #include <unistd.h>
 #include <time.h>
 
+void runzzt(char* path, char* world)
+{
+	stringvector actions, files;
+	stringvector info;
+	zlaunchinfo zli;
+
+	/* Initialize the vectors */
+	initstringvector(&actions);
+	initstringvector(&files);
+
+	/* Add the world as the first option */
+	pushstring(&files, str_dup(world));
+	pushstring(&actions, str_dup("play"));
+
+	info = loadinfo(path, world);
+	zli = loadzlinfofromsvector(info);
+
+	zli.datadir = str_dup(path);
+	zli.bindir  = str_dup(path);
+	zli.paramlist = files;
+	stringvectorcat(&(zli.actionstoperform), &actions);
+
+	zlaunchact(&zli);
+
+	/* Cleanup */
+	zlaunchcleanup(&zli);
+	deletezlinfo(&zli);
+
+	deletestringvector(&info);
+	/* DO NOT delete actions and files. deletezlinfo() did this already */
+}
 
 displaymethod * pickdisplay(displaymethod * rootdisplay)
 {

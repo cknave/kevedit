@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.50 2001/11/13 01:38:36 bitman Exp $
+ * $Id: main.c,v 1.51 2001/12/12 22:08:02 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -49,9 +49,6 @@ void sigInt(int i)
 int main(int argc, char **argv)
 {
 	int i, x;             /* General counters */
-#if 0
-	int c, e;
-#endif
 	int key;              /* Keypress */
 	int quit = 0;
 	displaymethod *mydisplay;

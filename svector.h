@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.13 2001/11/10 07:42:39 bitman Exp $
+ * $Id: svector.h,v 1.14 2001/12/12 22:08:03 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -75,7 +75,7 @@ stringvector * stringvectorcat(stringvector * v1, stringvector * v2);
 void svmovetofirst(stringvector* v);
 
 /* svmoveby() - move by a number of steps, negative for backward */
-void svmoveby(stringvector* v, int delta);
+int svmoveby(stringvector* v, int delta);
 
 /* svgetposoiton() - count how far cur is from first */
 int svgetposition(stringvector* v);
@@ -108,6 +108,7 @@ char * str_dup   (char * s);
 char * str_dupmin(char * s, int min);
 char * str_dupmax(char * s, int max);
 char * str_duplen(char * s, int len);
+char * str_dupadd(char * s, int add);
 
 /* str_lowercase - changes string to lowercase and returns it */
 char* str_lowercase(char* string);
@@ -115,5 +116,11 @@ char* str_lowercase(char* string);
 /* str_equ - compares two strings, ignoring case & length based on flags */
 int str_equ(const char *str1, const char *str2, int flags);
 
+/* tokens */
+/* advance token in source from pos, returning token length */
+int tokenadvance(char *token, char *source, int *pos);
+
+/* grow token in source from pos, returning token length */
+int tokengrow(char *token, char *source, int *pos);
 
 #endif

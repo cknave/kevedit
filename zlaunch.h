@@ -2,47 +2,55 @@
 /* $id$ */
 /* Copyright (c) 2001 Ryan Phillips <bitman@users.sf.net> */
 
+#include "svector.h"
+
+/* Default config file to use */
+#define DEFAULTCONFIG "default.zln"
+
+/* Actions to be performed by the launcher */
+#define ZL_NONE         0
+#define ZL_RUN          1
+#define ZL_KEYSTROKES   2
+#define ZL_COPY         3
+#define ZL_PERMCOPY     4
+#define ZL_PERMCOPYOVER 5
+
+/* Action structure */
+typedef struct zlauchaction {
+	char* name;              /* name of the action */
+	int optional;            /* false will force this action to be performed */
+
+	int type;                /* Type of action (one of above defines) */
+	char* command;           /* Action command */
+
+	struct zlauchaction* next;    /* Next action in the list */
+} zlaunchaction;
+
 /* Configuration settings for the zlauncher */
 typedef struct zlaunchinfo {
-	int copyzztdat;
-	int copyhlpfiles;
-	char* stdfont;       /* Name of standard font program */
-	char* keystrokes;    /* Keystrokes to be "performed" when running zzt */
+	stringvector actionstoperform;   /* list of action names to actually use */
+	stringvector paramlist;          /* list of parameters */
+	char* bindir;                    /* location of binaries */
+	char* datadir;                   /* location of datafiles */
+	stringvector filestoremove;      /* list of files to delete when finished */
+
+	zlaunchaction* actions;    /* Linked list of actions */
 } zlaunchinfo;
 
-/* Copy types */
-#define COPY_DONT 0       /* Never copy */
-#define COPY_PERMINANT 1  /* Copy and leave there */
-#define COPY_TEMPORARY 2  /* Copy and remove when done */
-#define COPY_OVERWRITE 3  /* Overwrite existing files and leave there */
-
-/* Types of slashes */
-#define SLASH_DEFAULT 0
-#define SLASH_FORWARD 0
-#define SLASH_BACK    1
 
 /* Info operations */
-void  initzlinfo(zlaunchinfo* zli);
-void  deletezlinfo(zlaunchinfo* zli);
-zlaunchinfo loadzlinfofromfile(char* filename);
+void initzlinfo(zlaunchinfo* zli);
+void deletezlinfo(zlaunchinfo* zli);
 
-/* Run zzt on the given world, all bells and whistles handled perfectly */
-int   runzzt(char* path, char* world);
+stringvector defaultzlinfo(void);
+zlaunchinfo loadzlinfofromsvector(stringvector info);
 
-/* Run a program with given path and arguments in current directory */
-int   run(char* path, char* program, char* args);
+/* Load info from a number of sources */
+stringvector loadinfo(char* datapath, char* worldfile);
 
-/* File copying */
-int   copyfilebydir(char* srcdir, char* destdir, char* filename);
-int   copyfile(char* srcname, char* destname);
-
-/* Determine path of self from main's argv[0] */
-char* locateself(char* argv0);
-
-/* Deduce filename or path from a file's full path */
-char* fileof(char* buffer, char* fullpath, int buflen);
-char* pathof(char* buffer, char* fullpath, int buflen);
-char* fullpath(char* path, char* file, int slashtype);
+/* zlaunching */
+void zlaunchact(zlaunchinfo* zli);
+void zlaunchcleanup(zlaunchinfo* zli);
 
 /* Keboard buffer stuffing routines */
 void performkeystrokes(char* keystrokes);

@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.6 2001/11/11 06:42:23 bitman Exp $
+ * $Id: patbuffer.c,v 1.7 2001/12/12 22:08:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 #include "screen.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 
 /* Create an empty patbuffer of given size */

@@ -1,5 +1,5 @@
 /* helplist.c  -- very simple linked list of help sections
- * $Id: helplist.c,v 1.2 2001/11/10 01:07:32 bitman Exp $
+ * $Id: helplist.c,v 1.3 2001/12/12 22:08:02 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 #include "svector.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /* inithelpsection() - returns an empty help section */
 void inithelpsection(helpsection* section)

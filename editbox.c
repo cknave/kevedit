@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.31 2001/11/14 00:58:13 bitman Exp $
+ * $Id: editbox.c,v 1.32 2001/12/12 22:08:02 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1322,41 +1322,6 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 	}
 }
 
-
-
-/* advance token in source from pos, returning token length */
-int tokenadvance(char *token, char *source, int *pos)
-{
-	int i = 0;
-
-	/* Move forward past any spaces */
-	while (*pos < strlen(source) && source[*pos] == ' ') (*pos)++;
-
-	/* Grab next token */
-	for (; *pos < strlen(source) != 0 && source[*pos] != ' '; i++, (*pos)++)
-		token[i] = source[*pos];
-	token[i] = 0;
-
-	return i;
-}
-
-
-/* grow token in source from pos, returning token length */
-int tokengrow(char *token, char *source, int *pos)
-{
-	int i = strlen(token);
-
-	/* Grab any spaces */
-	for (; *pos < strlen(source) != 0 && source[*pos] == ' '; i++, (*pos)++)
-		token[i] = source[*pos];
-
-	/* Grab next token */
-	for (; *pos < strlen(source) != 0 && source[*pos] != ' '; i++, (*pos)++)
-		token[i] = source[*pos];
-	token[i] = 0;
-
-	return i;
-}
 
 
 /* display a zzt #command */

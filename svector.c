@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.16 2001/11/10 07:42:39 bitman Exp $
+ * $Id: svector.c,v 1.17 2001/12/12 22:08:03 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,8 +205,12 @@ void removestringvector(stringvector * v)
 
 stringvector * stringvectorcat(stringvector * v1, stringvector * v2)
 {
+	if (v1->first == NULL) {
+		*v1 = *v2;
+		return v1;
+	}
 	v1->last->next       = v2->first;
-	v1->last->next->prev = v1->last;
+	v2->first->prev      = v1->last;
 	v1->last             = v2->last;
 	v2->first            = v1->first;
 	return v1;
@@ -219,16 +223,18 @@ void svmovetofirst(stringvector* v)
 }
 
 /* svmoveby() - move by a number of steps, negative for backward */
-void svmoveby(stringvector* v, int delta)
+int svmoveby(stringvector* v, int delta)
 {
 	int i;
 	
 	if (delta > 0) {
 		for (i = 0; i < delta && v->cur->next != NULL; i++)
 			v->cur = v->cur->next;
+		return i;
 	} else {
 		for (i = 0; i > delta && v->cur->prev != NULL; i--)
 			v->cur = v->cur->prev;
+		return -i;
 	}
 }
 
@@ -469,6 +475,24 @@ char * str_duplen(char * s, int len)
 	return copy;
 }
 
+char * str_dupadd(char * s, int add)
+{
+	char* copy;
+	int duplen = strlen(s) + add;
+
+	if (add < 0)
+		return NULL;
+
+	copy = (char *) malloc(sizeof(char) * (duplen + 1));
+	if (copy == NULL)
+		return NULL;
+
+	strncpy(copy, s, duplen);
+	copy[duplen] = '\0';
+	return copy;
+}
+
+
 /* str_lowercase - used by str_equ to convert a string to lowercase,
  *                 same as strlwr() in djgpp, but more compatible.
  *                 introduced by Elchonon Edelson for linux port */
@@ -530,5 +554,38 @@ int str_equ(const char *str1, const char *str2, int flags)
 	return isequ;
 }
 
+/* advance token in source from pos, returning token length */
+int tokenadvance(char *token, char *source, int *pos)
+{
+	int i = 0;
+
+	/* Move forward past any spaces */
+	while (*pos < strlen(source) && source[*pos] == ' ') (*pos)++;
+
+	/* Grab next token */
+	for (; *pos < strlen(source) != 0 && source[*pos] != ' '; i++, (*pos)++)
+		token[i] = source[*pos];
+	token[i] = 0;
+
+	return i;
+}
+
+
+/* grow token in source from pos, returning token length */
+int tokengrow(char *token, char *source, int *pos)
+{
+	int i = strlen(token);
+
+	/* Grab any spaces */
+	for (; *pos < strlen(source) != 0 && source[*pos] == ' '; i++, (*pos)++)
+		token[i] = source[*pos];
+
+	/* Grab next token */
+	for (; *pos < strlen(source) != 0 && source[*pos] != ' '; i++, (*pos)++)
+		token[i] = source[*pos];
+	token[i] = 0;
+
+	return i;
+}
 
 

@@ -1,5 +1,5 @@
 /* hypertxt.c  -- hypertext link system
- * $Id: hypertxt.c,v 1.3 2001/11/10 07:42:39 bitman Exp $
+ * $Id: hypertxt.c,v 1.4 2001/12/12 22:08:02 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 #include "svector.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /* Returns true if sv.cur contains a line in the form of "!message;text"
  * In the case of message == "", returns false.

@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.3 2001/11/10 22:05:12 bitman Exp $
+ * $Id: files.c,v 1.4 2001/12/12 22:08:02 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,12 +27,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <glob.h>
+#include <unistd.h>   /* For getcwd() */
+
+#define BUFFERSIZE 42     /* Expanding buffer for text files */
+#define CWDMAXLEN 4096    /* Max to allow getcwd() to reserve */
+#define CPBUFFERSIZE 1024 /* Binary file transfer buffer */ 
 
 /***************************************************************************/
 /**** File I/O *************************************************************/
 /***************************************************************************/
 
-#define BUFFERSIZE 42
 /* filetosvector() - loads a textfile into a new stringvector */
 stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
 {
@@ -221,5 +226,284 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 	inssortstringvector(&files, filecomp);
 
 	return files;
+}
+
+/* globtosvector() - put raw glob information in an svector */
+stringvector globtosvector(char * pattern, int filetypes)
+{
+	int i;
+
+	stringvector files;
+	glob_t listing;
+
+	initstringvector(&files);
+
+	/* Get the listing */
+	glob(pattern, GLOB_MARK, NULL, &listing);
+
+	/* Cycle through the listing */
+	for (i = 0; i < listing.gl_pathc; i++) {
+		char* filename = str_dup(listing.gl_pathv[i]);
+		/* Determine whether it is a directory or file */
+		if (filename[strlen(filename) - 1] == '/') {
+			if (filetypes & FTYPE_DIR)
+				pushstring(&files, filename);
+		} else if (filetypes & FTYPE_FILE) {
+			pushstring(&files, filename);
+		}
+	}
+
+	globfree(&listing);
+	return files;
+}
+
+/* globdirectorytosvector() - globs a directory listing into an svector */
+stringvector globdirectorytosvector(char * dir, char * pattern, int filetypes)
+{
+	char* globpattern = fullpath(dir, pattern, SLASH_FORWARD);
+
+	stringvector fullfiles = globtosvector(globpattern, filetypes);
+	stringvector files;
+
+	free(globpattern);
+	initstringvector(&files);
+
+	for (svmovetofirst(&fullfiles);
+			 fullfiles.cur != NULL;
+			 fullfiles.cur = fullfiles.cur->next) {
+		char* smallname = (char*) malloc(sizeof(char) * strlen(fullfiles.cur->s));
+
+		if (fullfiles.cur->s[strlen(fullfiles.cur->s) - 1] == '/') {
+			char* zocname;
+			fullfiles.cur->s[strlen(fullfiles.cur->s) - 1] = '\x0';
+
+			fileof(smallname, fullfiles.cur->s, strlen(fullfiles.cur->s));
+			zocname = str_duplen("!", strlen(smallname) * 2 + 4);
+			strcat(zocname, smallname);
+			strcat(zocname, ";[");
+			strcat(zocname, smallname);
+			strcat(zocname, "]");
+			pushstring(&files, zocname);
+
+			free(smallname);
+		}
+		
+		fileof(smallname, fullfiles.cur->s, strlen(fullfiles.cur->s));
+		pushstring(&files, smallname);
+	}
+
+	deletestringvector(&fullfiles);
+
+	return files;
+}
+
+int
+copyfile(char* srcname, char* destname, int flags)
+{
+	FILE* src, * dest;
+	size_t readsize;
+	int* copybuffer;
+
+	if (!(flags & COPY_OVERWRITE)) {
+		/* Check for existence of destination file */
+		dest = fopen(destname, "rb");
+		if (dest != NULL) {
+			/* The destination file already exists */
+			fclose(dest);
+			return COPY_EXISTS;
+		}
+	}
+
+	/* Open the source file for reading */
+	src = fopen(srcname, "rb");
+	if (src == NULL) {
+		/* The source file cannot be opened! Error! */
+		fprintf(stderr, "Cannot open %s for reading.", srcname);
+		return COPY_BADSOURCE;
+	}
+	
+	/* Open the destination file for writing */
+	dest = fopen(destname, "wb");
+	if (dest == NULL) {
+		/* Can't write to this file */
+		fprintf(stderr, "Cannot open %s for writing.", destname);
+
+		fclose(src);
+		return COPY_BADDEST;
+	}
+
+	/* Copy src to dest */
+	copybuffer = (int*) malloc(sizeof(int) * CPBUFFERSIZE);
+	do {
+		readsize = fread(copybuffer, sizeof(int), CPBUFFERSIZE, src);
+		fwrite(copybuffer, sizeof(int), readsize, dest);
+	} while (readsize == CPBUFFERSIZE);
+	free(copybuffer);
+
+	/* Close everything down */
+	fclose(src);
+	fclose(dest);
+
+	return COPY_SUCCESS;
+}
+
+
+int
+copyfilebydir(char* srcdir, char* destdir, char* filename, int flags)
+{
+	int result;
+#if 0
+	char* srcname  = malloc(sizeof(char)*(strlen(srcdir) +strlen(filename)+2));
+	char* destname = malloc(sizeof(char)*(strlen(destdir)+strlen(filename)+2));
+
+	strcpy(srcname, srcdir);
+	strcat(srcname, "/");
+	strcat(srcname, filename);
+
+	strcpy(destname, destdir);
+	strcat(destname, "/");
+	strcat(destname, filename);
+#endif
+	char* srcname = fullpath(srcdir, filename, SLASH_FORWARD);
+	char* destname = fullpath(destdir, filename, SLASH_FORWARD);
+
+	result = copyfile(srcname, destname, flags);
+
+	free(destname);
+	free(srcname);
+
+	return result;
+}
+
+
+int
+copyfilepatternbydir(char* srcdir, char* destdir, char* pattern,
+										 int flags, stringvector * successlist)
+{
+	stringvector files = globdirectorytosvector(srcdir, pattern, FTYPE_FILE);
+
+	for (svmovetofirst(&files); files.cur != NULL; files.cur = files.cur->next) {
+		if (copyfilebydir(srcdir, destdir, files.cur->s, flags) == COPY_SUCCESS)
+			if (successlist != NULL) {
+				pushstring(successlist, str_dup(files.cur->s));
+			}
+	}
+
+	deletestringvector(&files);
+	return 0;
+}
+
+
+/* Returns a malloc()ed string bearing the location of this program based
+ * on main's argv[0]. Not useful for much else. */
+char*
+locateself(char* argv0)
+{
+	char* path = (char*) malloc(sizeof(char) * (strlen(argv0) + 1));
+	char* cwd = NULL;
+	char* fullpathname = NULL;
+
+	pathof(path, argv0, strlen(argv0));
+
+	/* If we find a ':' in the path of this program, it's probably a
+	 * DOS full path (anyone know of an exception to this???) */
+	if (strchr(path, ':') != NULL)
+		return path;
+
+	/* path is a relative path, so we need to prepend the current dir */
+
+	cwd = getcwd(NULL, CWDMAXLEN + 1);
+	if (cwd == NULL)
+		return path;
+
+	fullpathname = (char*) malloc(sizeof(char) * (strlen(path)+strlen(cwd)+2));
+	strcpy(fullpathname, cwd);
+	strcat(fullpathname, "/");
+	strcat(fullpathname, path);
+
+	free(path);
+	free(cwd);
+	return fullpathname;
+}
+
+/* Extracts the local filename from filename given by fullpath */
+char*
+fileof(char* buffer, char* fullpath, int buflen)
+{
+	char* lastslash, * lastbackslash, * start;
+	int i;
+
+	lastslash     = strrchr(fullpath, '/');
+	lastbackslash = strrchr(fullpath, '\\');
+
+	if (lastslash == NULL && lastbackslash == NULL)
+		start = fullpath;
+	else if (lastslash > lastbackslash)
+		start = lastslash + 1;
+	else
+		start = lastbackslash + 1;
+
+	for (i = 0; start[i] != '\0' && i < buflen; i++)
+		buffer[i] = start[i];
+	buffer[i] = '\0';
+
+	return buffer;
+}
+
+/* Extracts the path from filename given by fullpath */
+char*
+pathof(char* buffer, char* fullpath, int buflen)
+{
+	char* lastslash, * lastbackslash;
+	int end;
+	int i;
+
+	lastslash     = strrchr(fullpath, '/');
+	lastbackslash = strrchr(fullpath, '\\');
+
+	if (lastslash == NULL && lastbackslash == NULL) {
+		strcpy(buffer, ".");
+		return buffer;
+	} else if (lastslash > lastbackslash)
+		end = lastslash - fullpath;
+	else
+		end = lastbackslash - fullpath;
+
+	for (i = 0; i < end && i < buflen; i++)
+		buffer[i] = fullpath[i];
+	buffer[i] = '\0';
+
+	return buffer;
+}
+
+char*
+fullpath(char* path, char* file, int slashtype)
+{
+	char* fullpath = (char*) malloc(sizeof(char)*(strlen(path)+strlen(file)+2));
+	strcpy(fullpath, path);
+	strcat(fullpath, (slashtype == SLASH_FORWARD ? "/" : "\\"));
+	strcat(fullpath, file);
+
+	return fullpath;
+}
+
+int
+run(char* path, char* program, char* args)
+{
+	int result;
+	char* command = malloc(sizeof(char) *
+												 (strlen(path)+strlen(program)+strlen(args)+3));
+
+	strcpy(command, path);
+	strcat(command, "/");
+	strcat(command, program);
+	strcat(command, " ");
+	strcat(command, args);
+
+	result = system(command);
+
+	free(command);
+
+	return result;
 }
 

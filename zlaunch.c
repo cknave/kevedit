@@ -5,268 +5,345 @@
 #include "zlaunch.h"
 
 #include "svector.h"
+#include "files.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
-#include <unistd.h>   /* For getcwd() */
 
 /* Keyboard buffer stuffing */
 #ifdef DOS
 #include <dpmi.h>
 #endif
 
-#define CPBUFFERSIZE 1024
+/* Default configuration info */
+#define DEFAULTZLINFOLEN 14
+const char* defaultzlinfodata[] = {
+	"\' zlaunch configuration file",
+	"",
+	"\' List of optional actions to perform:",
+	"\' (remove \"zztkeys\" to disable virtual keystrokes)",
+	"perform zztkeys",
+	"",
+	"\' List of actions and optional actions:",
+	"action copydat copy zzt.dat",
+	"action copyhlp copy *.hlp",
+	"optional screenthief run st/st.exe",
+	"optional zzfont run zzfont.com i",
+	"optional zztkeys keystrokes kc<ENTER>",
+	"optional play keystrokes p",
+	"action zzt run zzt %1"
+};
+
+/****** Local functions **************/
+
+/* Action operations */
+void initaction(zlaunchaction* action);
+void deleteactions(zlaunchaction* action);
+void addaction(zlaunchinfo* zli, zlaunchaction* action);
+
+void removefiles(stringvector files);
+
+/****** Action creation/destruction ***************/
+void initaction(zlaunchaction* action)
+{
+	action->name = NULL;
+	action->optional = 0;
+
+	action->type = ZL_NONE;
+	action->command = 0;
+	
+	action->next = NULL;
+}
+
+void deleteactions(zlaunchaction* action)
+{
+	zlaunchaction* next;
+
+	if (action == NULL)
+		return;
+
+	next = action->next;
+
+	/* Cleanup */
+	if (action->name != NULL) {
+		free(action->name);
+		action->name = NULL;
+	}
+
+	if (action->command != NULL) {
+		free(action->command);
+		action->command = NULL;
+	}
+
+	/* Recurse */
+	deleteactions(next);
+}
+
+void addaction(zlaunchinfo* zli, zlaunchaction* action)
+{
+	zlaunchaction* node = zli->actions;
+
+	if (zli->actions == NULL) {
+		zli->actions = action;
+		return;
+	}
+
+	/* Advance to end of list */
+	while (node->next != NULL)
+		node = node->next;
+
+	node->next = action;
+}
 
 
+/*********** Info creation/destruction ***************/
 void  initzlinfo(zlaunchinfo* zli)
 {
-	zli->copyzztdat   = COPY_TEMPORARY;
-	zli->copyhlpfiles = COPY_TEMPORARY;
-	zli->stdfont      = str_dup("zzfont.com");
-	zli->keystrokes   = str_dup("kc<ENTER>");
+	initstringvector(&(zli->actionstoperform));
+	initstringvector(&(zli->paramlist));
+	initstringvector(&(zli->filestoremove));
+
+	zli->bindir  = NULL;
+	zli->datadir = NULL;
+
+	zli->actions = NULL;
 }
 
 void  deletezlinfo(zlaunchinfo* zli)
 {
-	if (zli->stdfont != NULL) free(zli->stdfont);
-	if (zli->keystrokes != NULL) free(zli->keystrokes);
+	deletestringvector(&(zli->actionstoperform));
+	deletestringvector(&(zli->paramlist));
+	deletestringvector(&(zli->filestoremove));
+
+	if (zli->bindir  != NULL) { free(zli->bindir);  zli->bindir  = NULL; }
+	if (zli->datadir != NULL) { free(zli->datadir); zli->datadir = NULL; }
+	
+	deleteactions(zli->actions);
+	zli->actions = NULL;
 }
 
-zlaunchinfo loadzlinfofromfile(char* filename)
+
+/******** Stringvector to zlinfo ******************/
+stringvector defaultzlinfo(void)
 {
-	char buffer[CPBUFFERSIZE];
-	FILE* infofile;
+	stringvector info;
+	int i;
+
+	initstringvector(&info);
+
+	for (i = 0; i < DEFAULTZLINFOLEN; i++) {
+	pushstring(&info, str_dup((char *)defaultzlinfodata[i]));
+	}
+
+	return info;
+}
+
+zlaunchinfo loadzlinfofromsvector(stringvector info)
+{
 	zlaunchinfo zli;
+	stringnode* cur;
+
+	char token[256];
+	int pos = 0;
 
 	initzlinfo(&zli);
 
-	if ((infofile = fopen(filename, "r")) == NULL) {
-		return zli;
+	for (cur = info.first; cur != NULL; cur = cur->next) {
+		/* Get the first token on this line, space seperated */
+		pos = 0;
+		tokenadvance(token, cur->s, &pos);
+
+		if (str_equ(token, "action",   STREQU_UNCASE) ||
+				str_equ(token, "optional", STREQU_UNCASE)) {
+			zlaunchaction* action = (zlaunchaction*) malloc(sizeof(zlaunchaction));
+
+			initaction(action);
+
+			/* set optional flag if it is an optional command */
+			if (str_equ(token, "optional", STREQU_UNCASE)) 
+				action->optional = 1;
+
+			/* get the action's title */
+			if (tokenadvance(token, cur->s, &pos))
+				action->name = str_dup(token);
+
+			/* get the action's type */
+			if (tokenadvance(token, cur->s, &pos)) {
+				if      (str_equ(token, "run", STREQU_UNCASE))
+					action->type = ZL_RUN;
+				else if (str_equ(token, "keystrokes", STREQU_UNCASE))
+					action->type = ZL_KEYSTROKES;
+				else if (str_equ(token, "copy", STREQU_UNCASE))
+					action->type = ZL_COPY;
+				else if (str_equ(token, "permcopy", STREQU_UNCASE))
+					action->type = ZL_PERMCOPY;
+				else if (str_equ(token, "permcopyover", STREQU_UNCASE))
+					action->type = ZL_PERMCOPYOVER;
+			}
+
+			/* get the action's command */
+			while (cur->s[pos] == ' ') pos++;
+			action->command = str_dup(cur->s + pos);
+
+			/* Add the action to the list */
+			addaction(&zli, action);
+
+		} else if (str_equ(token, "perform", STREQU_UNCASE)) {
+			while (tokenadvance(token, cur->s, &pos))
+				pushstring(&(zli.actionstoperform), str_dup(token));
+		}
 	}
-
-	fgets(buffer, CPBUFFERSIZE, infofile);
-	fclose(infofile);
-
-	if (strlen(buffer) <= 0)
-		return zli;
-
-	if (zli.keystrokes != NULL)
-		free(zli.keystrokes);
-
-	zli.keystrokes = str_dup(buffer);
 
 	return zli;
 }
 
-int
-runzzt(char* path, char* world)
+
+stringvector loadinfo(char* datapath, char* worldfile)
 {
-	zlaunchinfo zli;
-	char* configfile = fullpath(path, "zlaunch.cfg", SLASH_DEFAULT);
+	stringvector info;
+	char* filename = NULL;
+	char* search;
 
-	zli = loadzlinfofromfile(configfile);
-	free(configfile);
+	if (worldfile != NULL) {
+		/* Try the first filename with an .zln extension tacked on */
+		filename = str_dupadd(worldfile, 4);
+		strcat(filename, ".zln");
+		info = filetosvector(filename, 0, 0);
+		free(filename);
+		
+		if (info.first != NULL)
+			return info;
 
-	copyfilebydir(path, ".", "zzt.dat");
-	run(path, zli.stdfont, "I");
+		/* Try replacing the extension */
+		filename = str_dupadd(worldfile, 4);
+		if ((search = strrchr(filename, '.')) != NULL) {
+			strcpy(search, ".zln");
+			info = filetosvector(filename, 0, 0);
+		}
+		free(filename);
 
-	performkeystrokes(zli.keystrokes);
-
-	if (run(path, "zzt", world))
-		if (run(".", "zzt", world))
-			if (run("", "zzt", world))
-				return 1;
-
-	deletezlinfo(&zli);
-	return 0;
-}
-
-int
-run(char* path, char* program, char* args)
-{
-	int result;
-	char* command = malloc(sizeof(char) *
-												 (strlen(path)+strlen(program)+strlen(args)+3));
-
-	strcpy(command, path);
-	strcat(command, "/");
-	strcat(command, program);
-	strcat(command, " ");
-	strcat(command, args);
-
-	result = system(command);
-
-	free(command);
-
-	return result;
-}
-
-
-int
-copyfilebydir(char* srcdir, char* destdir, char* filename)
-{
-	int result;
-	char* srcname  = malloc(sizeof(char)*(strlen(srcdir) +strlen(filename)+2));
-	char* destname = malloc(sizeof(char)*(strlen(destdir)+strlen(filename)+2));
-
-	strcpy(srcname, srcdir);
-	strcat(srcname, "/");
-	strcat(srcname, filename);
-
-	strcpy(destname, destdir);
-	strcat(destname, "/");
-	strcat(destname, filename);
-
-	result = copyfile(srcname, destname);
-
-	free(destname);
-	free(srcname);
-
-	return result;
-}
-
-int
-copyfile(char* srcname, char* destname)
-{
-	FILE* src, * dest;
-	size_t readsize;
-	int* copybuffer;
-
-	/* Check for existence of destination file */
-	dest = fopen(destname, "rb");
-	if (dest != NULL) {
-		/* The destination file already exists */
-		fclose(dest);
-		return 0;
+		if (info.first != NULL)
+			return info;
 	}
 
-	/* Open the source file for reading */
-	src = fopen(srcname, "rb");
-	if (src == NULL) {
-		/* The source file cannot be opened! Error! */
-		fprintf(stderr, "Cannot open %s for reading.", srcname);
-		return 1;
-	}
-	
-	/* Open the destination file for writing */
-	dest = fopen(destname, "wb");
-	if (dest == NULL) {
-		/* Can't write to this file */
-		fprintf(stderr, "Cannot open %s for writing.", destname);
+	/* Try the default config file in the current directory */
+	info = filetosvector(DEFAULTCONFIG, 0, 0);
 
-		fclose(src);
-		return 1;
+	if (info.first != NULL)
+		return info;
+
+	/* Try the default config in the datapath */
+	filename = fullpath(datapath, DEFAULTCONFIG, SLASH_DEFAULT);
+	info = filetosvector(filename, 0, 0);
+
+	if (info.first != NULL) {
+		free(filename);
+		return info;
 	}
 
-	/* Copy src to dest */
-	copybuffer = (int*) malloc(sizeof(int) * CPBUFFERSIZE);
-	do {
-		readsize = fread(copybuffer, sizeof(int), CPBUFFERSIZE, src);
-		fwrite(copybuffer, sizeof(int), readsize, dest);
-	} while (readsize == CPBUFFERSIZE);
-	free(copybuffer);
+	/* Get the defaults */
+	info = defaultzlinfo();
 
-	/* Close everything down */
-	fclose(src);
-	fclose(dest);
+	/* Create a file containing the default info */
+	svectortofile(&info, filename);
 
-	return 0;
+	free(filename);
+	return info;
 }
 
-#define CWDMAXLEN 4096
-/* Returns a malloc()ed string bearing the location of this program based
- * on main's argv[0]. Not useful for much else. */
-char*
-locateself(char* argv0)
+
+void zlaunchact(zlaunchinfo* zli)
 {
-	char* path = (char*) malloc(sizeof(char) * (strlen(argv0) + 1));
-	char* cwd = NULL;
-	char* fullpathname = NULL;
+	zlaunchaction* curaction = zli->actions;
 
-	pathof(path, argv0, strlen(argv0));
+	while (curaction != NULL) {
+		int cmsize = strlen(curaction->command);
+		int i = 0, j = 0;
+		char* command;
 
-	/* If we find a ':' in the path of this program, it's probably a
-	 * DOS full path (anyone know of an exception to this???) */
-	if (strchr(path, ':') != NULL)
-		return path;
+		/* prevent options not in the perform list from running */
+		if (curaction->optional) {
+			int perform = 0;
+			for (svmovetofirst(&(zli->actionstoperform));
+					 zli->actionstoperform.cur != NULL;
+					 zli->actionstoperform.cur = zli->actionstoperform.cur->next) {
+				if (str_equ(zli->actionstoperform.cur->s, curaction->name,
+										STREQU_UNCASE))
+					perform = 1;
+			}
+			svmovetofirst(&(zli->actionstoperform));
+			if (!perform) {
+				curaction = curaction->next;
+				continue;
+			}
+		}
 
-	/* path is a relative path, so we need to prepend the current dir */
+		/* parse the command for %1, %2 etc */
+		command = str_dupmin("", cmsize);
+		while (i < strlen(curaction->command) && j < cmsize) {
+			switch (curaction->command[i]) {
+				case '%':
+					{
+						int pos = curaction->command[++i] - 0x31;
+						svmovetofirst(&(zli->paramlist));
+						if (svmoveby(&(zli->paramlist), pos) == pos) {
+							/* Grow the command to hold the param */
+							char* oldcm = command;
+							cmsize += strlen(zli->paramlist.cur->s);
+							command = str_dupmin(command, cmsize);
+							free(oldcm);
+							strcat(command, zli->paramlist.cur->s);
+							j += strlen(zli->paramlist.cur->s);
+						}
+						i++;
+					}
+				default:
+					command[j++] = curaction->command[i++];
+			}
+		}
+		command[j] = '\x0';
 
-	cwd = getcwd(NULL, CWDMAXLEN + 1);
-	if (cwd == NULL)
-		return path;
+		switch (curaction->type) {
+			case ZL_RUN:
+				run(zli->bindir, command, "");
+				break;
+			case ZL_KEYSTROKES:
+				performkeystrokes(command);
+				break;
+			case ZL_COPY:
+				copyfilepatternbydir(zli->datadir, ".", command, COPY_NOOVERWRITE,
+														 &(zli->filestoremove));
+				break;
+			case ZL_PERMCOPY:
+				copyfilepatternbydir(zli->datadir, ".", command, COPY_NOOVERWRITE, NULL);
+				break;
+			case ZL_PERMCOPYOVER:
+				copyfilepatternbydir(zli->datadir, ".", command, COPY_OVERWRITE, NULL);
+				break;
+		}
 
-	fullpathname = (char*) malloc(sizeof(char) * (strlen(path)+strlen(cwd)+2));
-	strcpy(fullpathname, cwd);
-	strcat(fullpathname, "/");
-	strcat(fullpathname, path);
-
-	free(path);
-	free(cwd);
-	return fullpathname;
+		/* Advance and take another spin */
+		curaction = curaction->next;
+		free(command);
+	}
 }
 
-/* Extracts the local filename from filename given by fullpath */
-char*
-fileof(char* buffer, char* fullpath, int buflen)
+void zlaunchcleanup(zlaunchinfo* zli)
 {
-	char* lastslash, * lastbackslash, * start;
-	int i;
+	stringvector* files = &(zli->filestoremove);
 
-	lastslash     = strrchr(fullpath, '/');
-	lastbackslash = strrchr(fullpath, '\\');
+	/* Start from the top */
+	svmovetofirst(files);
 
-	if (lastslash == NULL && lastbackslash == NULL)
-		start = fullpath;
-	else if (lastslash > lastbackslash)
-		start = lastslash + 1;
-	else
-		start = lastbackslash + 1;
+	while (files->cur != NULL) {
+		/* Delete the file */
+		remove(files->cur->s);
 
-	for (i = 0; start[i] != '\0' && i < buflen; i++)
-		buffer[i] = start[i];
-	buffer[i] = '\0';
-
-	return buffer;
-}
-
-/* Extracts the path from filename given by fullpath */
-char*
-pathof(char* buffer, char* fullpath, int buflen)
-{
-	char* lastslash, * lastbackslash;
-	int end;
-	int i;
-
-	lastslash     = strrchr(fullpath, '/');
-	lastbackslash = strrchr(fullpath, '\\');
-
-	if (lastslash == NULL && lastbackslash == NULL) {
-		strcpy(buffer, ".");
-		return buffer;
-	} else if (lastslash > lastbackslash)
-		end = lastslash - fullpath;
-	else
-		end = lastbackslash - fullpath;
-
-	for (i = 0; i < end && i < buflen; i++)
-		buffer[i] = fullpath[i];
-	buffer[i] = '\0';
-
-	return buffer;
-}
-
-char*
-fullpath(char* path, char* file, int slashtype)
-{
-	char* fullpath = (char*) malloc(sizeof(char)*(strlen(path)+strlen(file)+2));
-	strcpy(fullpath, path);
-	strcat(fullpath, (slashtype == SLASH_FORWARD ? "/" : "\\"));
-	strcat(fullpath, file);
-
-	return fullpath;
+		/* Delete the string */
+		deletestring(files);
+	}
 }
 
 
@@ -289,8 +366,12 @@ performkeystrokes(char* keystrokes)
 
 	for (i = 0; i < strlen(keystrokes); i++) {
 		if (keystrokes[i] == '<') {
-			/* TODO: don't assume they used ENTER */
-			stuffkbdbuffer(0, '\x0D');
+			if (str_equ(keystrokes + i + 1, "enter", STREQU_FRONT | STREQU_UNCASE))
+				stuffkbdbuffer(0, '\x0D');
+			if (str_equ(keystrokes + i + 1, "esc", STREQU_FRONT | STREQU_UNCASE))
+				stuffkbdbuffer(0x01, '\x1B');
+			if (str_equ(keystrokes + i + 1, "left", STREQU_FRONT | STREQU_UNCASE))
+				stuffkbdbuffer(0x4B, 0);
 			/* Advance to closing bracket */
 			while (keystrokes[i] != '>' && keystrokes[i] != '\x0')
 				i++;
