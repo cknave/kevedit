@@ -13,4 +13,4 @@ CFLAGS =
 LDFLAGS =
 
 # Makefile rules
-include libzzt2.make
+include synth.make

@@ -6,9 +6,12 @@ AR = ar cqs
 
 RM = rm -f
 
+# Compiling with SDL
+SDL = ON
+
 # Compile and link flags
 CFLAGS =
 LDFLAGS =
 
 # Makefile rules
-include libzzt2.make
+include synth.make

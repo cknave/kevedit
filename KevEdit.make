@@ -7,7 +7,7 @@ include kevedit.optimize
 # Set up display settings
 ifeq ($(SDL),ON)
   SDL = -DSDL `sdl-config --cflags`
-  SDLOBJ = display_sdl.o synth/notes.o
+  SDLOBJ = display_sdl.o
   LDFLAGS += `sdl-config --libs`
 endif
 
@@ -34,7 +34,7 @@ CFLAGS += $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(VERSIONFLAG) $(PATHS)
 # Objects
 
 CENTRALOBJS = misc.o menu.o editbox.o screen.o
-LIBRARYOBJS = libzzt2/libzzt2.a svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
+LIBRARYOBJS = libzzt2/libzzt2.a synth/synth.a svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
 MISCOBJS    = patbuffer.o help.o dialog.o infobox.o paramed.o register.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o panel_bd.o panel_sd.o panel_ti.o scroll.o tbox.o cbox.o tdialog.o
 DISPLAYOBJS = display.o $(SDLOBJ) $(VCSAOBJ) $(DOSOBJ)
@@ -76,15 +76,19 @@ uninstall:
 clean:
 	rm -f *.o kevedit kevedit.exe kevedit.zml synth/*.o
 	make -C libzzt2 clean
+	make -C synth clean
 	make -C glob clean
 
 # Sometimes permissions are not stored correctly
 permissions:
-	chmod a+x `find | grep .sh$$`
+	chmod a+x docs/makehelp.sh
 
 # Libraries
 libzzt2/libzzt2.a: libzzt2/*.c libzzt2/*.h
-	make -C libzzt2 -f $(MAKEFILE_NAME) DOS=$(DOS)
+	make libzzt2.a -C libzzt2 -f $(MAKEFILE_NAME)
+
+synth/synth.a: synth/*.c synth/*.h
+	make synth.a   -C synth   -f $(MAKEFILE_NAME)
 
 # Build libglob
 ifeq ($(BUILDGLOB),ON)

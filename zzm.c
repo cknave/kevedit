@@ -1,5 +1,5 @@
 /* zzm.c  -- zzm file routines
- * $Id: zzm.c,v 1.8 2002/06/07 02:03:11 bitman Exp $
+ * $Id: zzm.c,v 1.9 2002/08/23 21:34:12 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#if 0
 #ifdef DOS
 #include <dos.h>
 #endif
@@ -93,6 +94,7 @@ static short drums[10][DRUMCYCLES]= {
 		{ 400, 380, 360, 340, 320, 300, 280, 260, 250, 240},  /* 8 */
 		{ 150, 100, 140,  90, 130,  80, 120,  70, 110,  60}}; /* 9 */
 
+#endif
 
 stringvector zzmpullsong(stringvector * zzmv, int songnum)
 {
@@ -223,6 +225,7 @@ int zzmpicksong(stringvector * zzmv, displaymethod * d)
 	return i;
 }
 
+#if 0
 /* resetzzmplaystate() - clears state to default settings */
 void resetzzmplaystate(zzmplaystate * s)
 {
@@ -469,6 +472,7 @@ void zzmCloseaudio()
 #endif
 }
 
+#endif
 
 #if 0
 void playline(char* tune)

@@ -23,7 +23,7 @@ test: libzzt2.a test.c
 	$(CC) -o $@ test.c libzzt2.a $(CFLAGS) -g
 
 clean:
-	$(RM) *.o libzzt2.a test
+	$(RM) *.o libzzt2.a test test.exe
 
 # Deps
 board.o: board.c zzt.h

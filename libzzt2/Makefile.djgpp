@@ -1,12 +1,13 @@
-# Makefile for libzzt2
+# Makefile for libzzt2 in DJGPP
 
 # Choose your compiler & archiver
-CC = i586-pc-msdosdjgpp-gcc
-AR = i586-pc-msdosdjgpp-ar cqs
+CC = gcc
+AR = ar cqs
 
 RM = rm -f
 
-CFLAGS = $(OPTIMIZE) $(DOS)
+# Compiling from DOS
+DOS = -DDOS
 
 # Compile and link flags
 CFLAGS =

@@ -1,5 +1,5 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.6 2002/06/07 02:03:12 bitman Exp $
+ * $Id: notes.c,v 1.7 2002/08/23 21:34:15 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,183 +20,127 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "SDL.h"
 
 #include "notes.h"
 
-Uint8 *masterplaybuffer = NULL;
-static size_t playbuffersize = 0, playbufferloc = 0, playbuffermax = 0;
+short drums[DRUMCOUNT][DRUMCYCLES] = {
+		{   0,   0, 175, 175, 100,  90,  80,  70,  60,  50},  /* 0 */
+		{ 500, 300, 520, 320, 540, 340, 550, 350, 540, 340},  /* 1 */
+		{1000,1200,1250,1400,1100,1150,1300,1000,1200, 500},  /* 2 */
+		{   0,   0,   0,   0,   0,   0,   0,   0,   0,   0},  /* 3 (not a sound) */
+		{ 950,1950, 750,1750, 550,1550, 350,1350, 150,1150},  /* 4 */
+		{ 200, 210, 220, 230, 240, 250, 260, 270, 280, 600},  /* 5 */
+		{ 900, 800, 700, 600, 500, 400, 300, 200, 100,   0},  /* 6 */
+		{ 300, 200, 290, 190, 280, 180, 270, 170, 260, 160},  /* 7 */
+		{ 400, 380, 360, 340, 320, 300, 280, 260, 250, 240},  /* 8 */
+		{ 150, 100, 140,  90, 130,  80, 120,  70, 110,  60}   /* 9 */
+};
 
-int OpenSynth(SDL_AudioSpec * spec)
+/* Frequency notation (makes it easier to compute frequency):
+	C   -3
+	C#  -4
+	D   -5
+	D#  -6
+	E   -7
+	F   -8
+	F#  -9
+	G  -10
+	G# -11
+	A    0
+	A#   1
+	B    2
+*/
+
+/* Translate a note index to frequency notation (above) */
+int frequencyNotation(int index)
 {
-	SDL_AudioSpec desired, obtained;
-
-	if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
-		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
-		return 1;
-	}
-
-	/* Set desired sound opts */
-	desired.freq = 44100;
-	desired.format = AUDIO_U16SYS;
-	desired.channels = 1;
-	desired.samples = 4096;
-	desired.callback = AudioCallback;
-	desired.userdata = &obtained;
-
-	/* Open audio device */
-	if(SDL_OpenAudio(&desired, &obtained) < 0) {
-		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
-		exit(1);
-	}
-	SDL_PauseAudio(0);
-
-	(*spec) = obtained;
-
-	return 0;
+	/* If the note is A or above */
+	if (index >= 9)
+		return index - 9;
+	else
+		return -(index + 3);
 }
 
-void CloseSynth(void)
+float noteFrequency(musicalNote mnote, musicSettings settings)
 {
-	SDL_CloseAudio();
-	AudioCleanUp();
-}
-
-/* Return the frequency of the given note, "octave" octaves from middle */
-float NoteFreq(int note, int octave)
-{
-	double retval;
+	double freq;
 	float fraction;
+	float basePitch = settings.basePitch;
+
+	int note = frequencyNotation(mnote.index);
+	int octave = mnote.octave;
+
+	if (mnote.type != NOTETYPE_NOTE)
+		return 0.0;
 
 	/* Multiply or divide the base frequency to get to the correct octave
 	   relative to A */
 	if(octave > 0)
-		retval = (float)BASE_PITCH*pow(2, octave);
+		freq = basePitch*pow(2, octave);
+	else if (octave < 0)
+		freq = basePitch/pow(2, octave*(-1));
 	else
-		retval = (float)BASE_PITCH/pow(2, octave*(-1));
-	if(note < NOTE_A)
-		retval /= 2;
+		freq = basePitch;
+
+	if(note < 0)
+		freq /= 2;
 
 	/* Find the size of a half step */
-	fraction = (log(retval*2) - log(retval))/12;
+	fraction = (log(freq*2) - log(freq))/12;
 
 	/* Move base freq to log */
-	retval = log(retval);
+	freq = log(freq);
 
 	/* Add half-steps to reach the desired note)
 	   desired note */
-	if(note < NOTE_A)
-		retval += (note*(-1))*fraction;
-	else if(note > NOTE_A)
-		retval += note*fraction;
+	if(note < 0)
+		freq += (note*(-1))*fraction;
+	else if(note > 0)
+		freq += note*fraction;
 
 	/* Get out of log */
-	retval = exp(retval);
+	freq = exp(freq);
 
 	/* Return the frequency */
-	return retval;
+	return freq;
 }
 
-void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
+float noteDuration(musicalNote note, musicSettings settings)
 {
-	size_t notesize = seconds * spec.freq; /* Bytes of sound */
-	size_t wordsize;
-	size_t i, j;
+	float wholeDuration = settings.wholeDuration;
+	float duration;
 
-	int osc = 1;
+	/* Omit the triplet flag from the note length */
+	int length = note.length & ~NOTELEN_TRIPLET;
 
-	Uint16 uon = U16_1, uoff = U16_0;
-	Sint16 son = S16_1, soff = S16_0;
+	if (length <= 0) return 0;
+ 
+	/* Divide the whole duration by the length */
+	duration = wholeDuration / (float)length;
 
-	/* Don't let the callback function access the playbuffer while we're editing it! */
-	SDL_LockAudio();
+	/* Adjust duration for dotted notes */
+	duration = duration * (2 - (1 / (float)(1 << note.dots)));
 
-	if(spec.format == AUDIO_U8 || spec.format == AUDIO_S8)
-		wordsize = 1;
-	else
-		wordsize = 2;
+	/* Note is a triplet: divide by 3 */
+	if (note.length & NOTELEN_TRIPLET)
+		duration /= 3;
 
-	if(playbuffersize != 0 && playbufferloc != 0) {
-		/* Shift buffer back to zero */
-		memcpy(masterplaybuffer,
-			&masterplaybuffer[playbufferloc],
-			playbuffersize-playbufferloc);
-		playbuffermax -= playbufferloc;
-		playbufferloc = 0;
-	}
-	if(playbuffersize == 0) {
-		/* Create buffer */
-		masterplaybuffer = malloc(notesize*wordsize);
-		playbuffersize   = notesize*wordsize;
-	}
-	if((notesize*wordsize) > (playbuffersize-playbuffermax)) {
-		/* Make bigger buffer */
-		masterplaybuffer = realloc(masterplaybuffer,
-				playbuffersize+notesize*wordsize);
+	/* Leave room for note spacing (except rests) */
+	if (!note.slur && note.type != NOTETYPE_REST)
+		duration -= settings.noteSpacing;
 
-		playbuffersize += notesize*wordsize;
-	}
+	/* duration must be at least zero */
+	if (duration < 0) duration = 0;
 
-	if(freq == 0) {
-		/* Rest */
-		memset(&masterplaybuffer[playbuffermax],
-				spec.silence,
-				notesize*wordsize);
-		playbuffermax += notesize*wordsize;
-	} else {
-		/* Tone */
-		float hfreq = (spec.freq/freq/2.0);
-		for(i = 0, j = 0; i < notesize; i++, j++) {
-			if(j >= hfreq) {
-				osc ^= 1;
-				j = 0;
-			}
-			if(spec.format == AUDIO_U8) {
-				if(osc)
-					masterplaybuffer[playbuffermax] = U8_1;
-				else
-					masterplaybuffer[playbuffermax] = U8_0;
-			} else if(spec.format == AUDIO_S8) {
-				if(osc)
-					masterplaybuffer[playbuffermax] = S8_1;
-				else
-					masterplaybuffer[playbuffermax] = S8_0;
-			} else if(spec.format == AUDIO_U16) {
-				if(osc)
-					memcpy(&masterplaybuffer[playbuffermax], &uon, 2);
-				else
-					memcpy(&masterplaybuffer[playbuffermax], &uoff, 2);
-			} else if(spec.format == AUDIO_S16) {
-				if(osc)
-					memcpy(&masterplaybuffer[playbuffermax], &son, 2);
-				else
-					memcpy(&masterplaybuffer[playbuffermax], &soff, 2);
-			}
-			playbuffermax += wordsize;
-		}
-	}
-
-	/* Now let AudioCallback do its work */
-	SDL_UnlockAudio();
+	return duration;
 }
 
-void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len)
+float noteSpacing(musicalNote note, musicSettings settings)
 {
-	int i;
-	for(i = 0; i < len && playbufferloc < playbuffermax; i++) {
-		stream[i] = masterplaybuffer[playbufferloc];
-		playbufferloc++;
-	}
-	for(; i < len; i++)
-		stream[i] = ((SDL_AudioSpec *) spec)->silence;
-}
+	/* No break when slurring or for rests */
+	if (note.slur || note.type == NOTETYPE_REST)
+		return 0.0;
 
-void AudioCleanUp()
-{
-	if(playbuffersize != 0) {
-		free(masterplaybuffer);
-		playbuffersize = 0;
-		playbufferloc = 0;
-		playbuffermax = 0;
-	}
+	/* Otherwise return the noteSpacing setting. */
+	return settings.noteSpacing;
 }

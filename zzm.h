@@ -1,5 +1,5 @@
 /* zzm.h  -- zzm file routines
- * $Id: zzm.h,v 1.6 2002/06/07 02:03:11 bitman Exp $
+ * $Id: zzm.h,v 1.7 2002/08/23 21:34:12 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 #include "svector.h"
 #include "display.h"
 
+#if 0
 typedef struct zzmplaystate {
 	int octave;     /* Current octave */
 	int duration;   /* Current note duration */
@@ -39,14 +40,7 @@ typedef struct zzmplaystate {
 /* ZZM octave bounds */
 #define ZZM_MAXOCTAVE 6
 #define ZZM_MINOCTAVE 1
-
-typedef struct zzmnote {
-	int type;       /* Type of note */
-	int duration;   /* Millisecond duration */
-	int index;      /* Frequency index or drum index */
-	int octave;     /* Octave of note below MAXOCTAVE */
-	int slur;       /* TRUE if note is to slur with the next */
-} zzmnote;
+#endif
 
 /* zzmpullsong() - pulls song #songnum out of zzmv and returns it */
 stringvector zzmpullsong(stringvector * zzmv, int songnum);
@@ -54,6 +48,7 @@ stringvector zzmpullsong(stringvector * zzmv, int songnum);
 /* zzmpicksong() - presents a dialog to choose a song based on title */
 int zzmpicksong(stringvector * zzmv, displaymethod * d);
 
+#if 0
 /* resetzzmplaystate() - clears state to default settings */
 void resetzzmplaystate(zzmplaystate * s);
 
@@ -71,5 +66,6 @@ void zzmPlaynote(zzmnote note);
 
 /* zzmCloseaudio() - close the audio device */
 void zzmCloseaudio();
+#endif
 
 #endif

@@ -1,4 +1,4 @@
-# Makefile for libzzt2 in Linux
+# Makefile for libzzt2 in DJGPP
 
 # Choose your compiler & archiver
 CC = gcc
@@ -6,9 +6,12 @@ AR = ar cqs
 
 RM = rm -f
 
+# Compiling from DOS
+DOS = ON
+
 # Compile and link flags
 CFLAGS =
 LDFLAGS =
 
 # Makefile rules
-include libzzt2.make
+include synth.make

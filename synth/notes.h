@@ -1,5 +1,5 @@
 /* notes.h	-- Generate musical notes in chromatic scale
- * $Id: notes.h,v 1.5 2002/06/07 02:03:12 bitman Exp $
+ * $Id: notes.h,v 1.6 2002/08/23 21:34:15 bitman Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,64 +20,73 @@
 #ifndef _NOTES_H
 #define _NOTES_H 1
 
-#include "SDL.h"
+/* Note types */
+#define NOTETYPE_NONE 0   /* Usually end-of-input */
+#define NOTETYPE_NOTE 1   /* Just a note */
+#define NOTETYPE_REST 2   /* Rest for a moment */
+#define NOTETYPE_DRUM 3   /* Tick-tock */
 
-/* Notes in relation to A */
-#define NOTE_C	-3
-#define NOTE_Cs	-4
-#define NOTE_D	-5
-#define NOTE_Ds	-6
-#define NOTE_E	-7
-#define NOTE_F	-8
-#define NOTE_Fs	-9
-#define NOTE_G	-10
-#define NOTE_Gs	-11
-#define NOTE_A	 0
-#define NOTE_As	 1
-#define NOTE_B	 2
+/* Note lengths */
+#define NOTELEN_WHOLE        0x01
+#define NOTELEN_HALF         0x02
+#define NOTELEN_QUARTER      0x04
+#define NOTELEN_EIGHTH       0x08
+#define NOTELEN_SIXTEENTH    0x10
+#define NOTELEN_THIRTYSECOND 0x20
+#define NOTELEN_TRIPLET      0x100  /* Flag: divide duration by 3 */
 
-/* Note length in seconds */
-#define LEN_T	0.05
-#define LEN_S	0.11
-#define LEN_I   0.22
-#define LEN_Q	0.44
-#define LEN_H	0.88
-#define LEN_W	1.76
+/* Note indexes */
+#define NOTE_C   0
+#define NOTE_Cs  1
+#define NOTE_D   2
+#define NOTE_Ds  3
+#define NOTE_E   4
+#define NOTE_F   5
+#define NOTE_Fs  6
+#define NOTE_G   7
+#define NOTE_Gs  8
+#define NOTE_A   9
+#define NOTE_As 10
+#define NOTE_B  11
 
 /* Pitch of A in octave 0 (where middle C is) */
-/* In real music, this is 440. */
-/* In ZZT, it seems to be 432. */
-//#define BASE_PITCH	432
-#define BASE_PITCH	440
+#define BASE_PITCH  440
 
-/* On/off value for various states of signedness and bits */
-#define U8_0		112
-#define U8_1		142
-#define S8_0		-15
-#define S8_1		15
-#define U16_0		28927
-#define U16_1		36607
-#define S16_0		-3840
-#define S16_1		3840
+/* Drum information */
+#define DRUMBREAK  2  /* 2 millisecond delay between drum changes */ 
+#define DRUMCOUNT  10 /* 10 drums in all */
+#define DRUMCYCLES 10 /* 10 cycles per drum */
+extern short drums[DRUMCOUNT][DRUMCYCLES];
 
-/* Open the synthesizer and store audio spec in "spec" (true on error) */
-int OpenSynth(SDL_AudioSpec * spec);
+typedef struct musicalNote {
+	int type;       /* Type of note */
+	int length;     /* Note length */
+	int dots;       /* Number of times a note length is dotted */
+	int index;      /* Frequency index or drum index */
+	int octave;     /* Octave of note (0 is middle octave) */
+	int slur;       /* TRUE if note is to slur/tie with the next */
 
-/* Close the synthesizer */
-void CloseSynth(void);
+	int src_pos;    /* Position of next note in source string */
+} musicalNote;
 
-/* Return the frequency of a given note the
- * given octaves away from middle */
-float NoteFreq(int note, int octave);	
+typedef struct musicSettings {
+	/* Frequency of A in octave 0 (where middle C is) */
+	float basePitch;
 
-/* Add a frequency and duration to the SDL audio
- * buffer */
-void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds);
+	/* Duration of a whole note, in milliseconds */
+	float wholeDuration;
 
-/* Internal audio callback function (don't call manually!) */
-void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len);
+	/* Spacing between notes, in milliseconds */
+	float noteSpacing;
+} musicSettings;
 
-/* Cleanup memory used by audio system */
-void AudioCleanUp();
+/* Return the frequency of a given musical note. */
+float noteFrequency(musicalNote mnote, musicSettings settings);
+
+/* Return the duration of a note. */
+float noteDuration(musicalNote note, musicSettings settings);
+
+/* Return the spacing expected after a note (when not sluring) */
+float noteSpacing(musicalNote note, musicSettings settings);
 
 #endif	/* _NOTES_H */

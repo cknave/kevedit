@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.43 2002/06/08 01:49:33 bitman Exp $
+ * $Id: editbox.c,v 1.44 2002/08/23 21:34:11 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,9 @@
 
 #include "scroll.h"
 #include "panel_ed.h"
+
+#include "synth/synth.h"
+#include "synth/zzm.h"
 
 #include "display.h"
 
@@ -1090,50 +1093,68 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymethod* d)
 {
-	/* Open the zzm audio device */
-	zzmOpenaudio();
+#ifdef SDL
+	SDL_AudioSpec spec;
+
+	SDL_Init(SDL_INIT_AUDIO);
+	OpenSynth(&spec);
+#endif
 
 	/* Loop through the stringvector looking for #play statements */
 	while (sv->cur != NULL && !d->kbhit()) {
 		char* tune = strstr(sv->cur->s, "#");
 		if (tune != NULL && str_equ(tune, "#play ", STREQU_UNCASE | STREQU_RFRONT)) {
-			zzmplaystate s;
+			/* Current note and settings */
+			musicalNote note = zzmGetDefaultNote();
+			musicSettings settings = zzmGetDefaultSettings();
+
 			int xoff = tune - sv->cur->s;
 			tune += 6;  /* Advance to notes! */
 
-			/* Get ready to parse that play line */
-			resetzzmplaystate(&s);
-			s.slur = slur;
+			/* Change the slur setting */
+			note.slur = slur;
 
 			/* Update everything because we have likely shifted to a new line. */
 			updateditbox(d, sv, U_EDITAREA, editwidth, flags, "", 1);
 
-			while (s.pos < strlen(tune) && !d->kbhit()) {
-				int oldpos = s.pos;
+			while (note.src_pos < strlen(tune) && !d->kbhit()) {
+				int oldpos = note.src_pos;
 				char* strpart;
 
-				zzmnote note = zzmgetnote(tune, &s);
+				note = zzmGetNote(tune, note);
 
+#ifdef DOS
+				/* In DOS, display everything as we go along */
 				/* Display the whole line */
 				updateditbox(d, sv, U_CENTER, editwidth, flags, "", 1);
 
 				/* Display the part of the string which will be played now */
-				strpart = str_duplen(tune + oldpos, s.pos - oldpos);
+				strpart = str_duplen(tune + oldpos, note.src_pos - oldpos);
 				d->print(oldpos + 15 + xoff, 13, ZOC_MPLAY_COLOUR, strpart);
 				free(strpart);
 				d->cursorgo(oldpos + 15 + xoff, 13);
 
-				zzmPlaynote(note);
+				pcSpeakerPlayNote(note, settings);
+#elif defined SDL
+				SynthPlayNote(spec, note, settings);
+#endif
 			}
 		}
 		sv->cur = sv->cur->next;
 	}
 
+#ifdef SDL
+	/* TODO: instead of just sitting here, display the progress of playback */
+	/* Wait until the user presses a key */
+	d->getch();
+
+	CloseSynth();
+#elif defined DOS
+	pcSpeakerFinish();
+#endif
+
 	if (d->kbhit())
 		d->getch();
-
-	/* Close audio */
-	zzmCloseaudio();
 }
 
 /***************************************************************************/
