@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.21 2001/10/09 01:14:36 bitman Exp $
+ * $Id: editbox.c,v 1.22 2001/10/11 05:45:26 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -851,35 +851,62 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 									if (sv->cur->prev != NULL)
 										sv->cur = sv->cur->prev;
 								}
+								/* Change centerstr to reflect the top of the selection */
+								centerstr = sv->cur;
 							} else {
 								selStartPos = pos;
 								selEndPos = selPos;
 							}
-							centerstr = sv->cur;
-							sv->cur = sv->cur->next;
-							for (i = 0; i + 1 < offset; i++) {
-								deletestring(sv);
-							}
-							/* Remove the string at the end of the cut */
-							sv->cur = centerstr->next;
-							tmpstr = removestring(sv);
-							/* Remove first selEndPos chars from end string */
-							for (i = 0; i < (strlen(tmpstr) - selEndPos); i++)
-								tmpstr[i] = tmpstr[i+selEndPos];
-							tmpstr[i] = 0;
+							if (offset == 0) {
+								/* Only one line to work with */
+								int deltaPos;
 
-							/* Truncate the string at the start of the cut */
-							sv->cur = centerstr;
-							sv->cur->s[selStartPos] = 0;
-							/* Wordwrap the end string onto this one */
-							/* The -1 tells wordwrap to track the cursor position at
-							 * the beginning of tmpstr. Negative tracking values should
-							 * be used only by wordwrap for internal purposes, but
-							 * necessity warrents in this case.     vv    */
-							pos = wordwrap(sv, tmpstr, selStartPos, -1, wrapwidth, editwidth);
-							centerstr = sv->cur;  /* Follow cursor */
-							/* tmpstr is our responsability */
-							free(tmpstr);
+								/* Reverse selStartPos and selEndPos if start is bigger */
+								if (selStartPos > selEndPos) {
+									int swapPos = selStartPos;
+									selStartPos = selEndPos;
+									selEndPos = swapPos;
+								}
+								
+								/* Remove everything between selStartPos and selEndPos */
+								deltaPos = selEndPos - selStartPos;
+								for (i = selEndPos; i < strlen(centerstr->s); i++) {
+									centerstr->s[i - deltaPos] = centerstr->s[i];
+								}
+								centerstr->s[i - deltaPos] = '\0';
+								
+								/* Move the cursor to the starting position of the cut */
+								pos = selStartPos;
+							} else {
+								/* Multiple lines were involved */
+
+								/* Remove lines following the first line of the block */
+								sv->cur = centerstr->next;
+								for (i = 0; i + 1 < offset; i++) {
+									deletestring(sv);
+								}
+
+								/* Remove the string at the end of the cut */
+								sv->cur = centerstr->next;
+								tmpstr = removestring(sv);
+								/* Remove first selEndPos chars from end string */
+								for (i = 0; i < (strlen(tmpstr) - selEndPos); i++)
+									tmpstr[i] = tmpstr[i+selEndPos];
+								tmpstr[i] = 0;
+
+								/* Truncate the string at the start of the cut */
+								sv->cur = centerstr;
+								sv->cur->s[selStartPos] = '\0';
+								/* Wordwrap the end string onto this one */
+								/* The -1 tells wordwrap to track the cursor position at
+								 * the beginning of tmpstr. Negative tracking values should
+								 * be used only by wordwrap for internal purposes, but
+								 * necessity warrents in this case.     vv    */
+								pos = wordwrap(sv, tmpstr, selStartPos, -1, wrapwidth, editwidth);
+								centerstr = sv->cur;  /* Follow cursor */
+								/* tmpstr is our responsability */
+								free(tmpstr);
+							}
 							updateflags = U_EDITAREA;
 						}
 						break;
