@@ -1,5 +1,5 @@
 /* help.c  -- hypertext help system
- * $Id: help.c,v 1.3 2001/11/10 22:06:07 bitman Exp $
+ * $Id: help.c,v 1.4 2002/01/08 23:39:42 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -71,20 +71,42 @@ void helploadmetafile(void)
 }
 
 /* function local to this file! */
-void helploadfile(char* filename)
+stringvector helploadfile(char* filename)
+{
+	stringvector
+		file = filetosvector(filename, EDITBOX_NOEDIT, EDITBOX_NOEDIT);
+
+	if (file.first == NULL) {
+		/* Try adding a .hlp extension */
+		char* fullname = str_duplen(filename, strlen(filename) + 5);
+		strcat(fullname, ".hlp");
+		file = filetosvector(fullname, EDITBOX_NOEDIT, EDITBOX_NOEDIT);
+		free(fullname);
+	}
+
+	return file;
+}
+
+/* Load a help topic if it isn't already available */
+void helploadtopic(char* topic)
 {
 	helploadmetafile();  /* Make sure the metafile is loaded */
 
-	/* Make sure the file isn't already available */
-	if (findsection(&helplist, filename) == NULL) {
-		stringvector
-			file = filetosvector(filename, EDITBOX_NOEDIT, EDITBOX_NOEDIT);
+	if (findsection(&helplist, topic) == NULL) {
+		stringvector file = helploadfile(topic);
 
 		if (file.first == NULL) {
-			/* Try adding a .hlp extension */
-			char* fullname = str_duplen(filename, strlen(filename) + 5);
-			strcat(fullname, ".hlp");
-			file = filetosvector(fullname, EDITBOX_NOEDIT, EDITBOX_NOEDIT);
+			/* Try loading from the data directory */
+			char* fullname = fullpath(helpdatapath, topic, SLASH_DEFAULT);
+			file = helploadfile(fullname);
+			free(fullname);
+		}
+		if (file.first == NULL) {
+			/* Try loading from the docs subdirectory */
+			char* midname = fullpath("docs", topic, SLASH_DEFAULT);
+			char* fullname = fullpath(helpdatapath, midname, SLASH_DEFAULT);
+			file = helploadfile(fullname);
+			free(midname);
 			free(fullname);
 		}
 
@@ -92,14 +114,13 @@ void helploadfile(char* filename)
 		if (file.first != NULL) {
 			helpsection* section = (helpsection*) malloc(sizeof(helpsection));
 			inithelpsection(section);
-			section->title = str_dup(filename);
+			section->title = str_dup(topic);
 			section->sv = file;
 
 			appendsection(&helplist, section);
 		}
 	}
 }
-
 
 void help(displaymethod* d)
 {
@@ -179,7 +200,7 @@ helpsectiontopic(char* sectiontitle, char* topic, displaymethod* d)
 	helpsection* sectionnode;
 	stringvector section;
 
-	helploadfile(sectiontitle);
+	helploadtopic(sectiontitle);
 
 	sectionnode = findsection(&helplist, sectiontitle);
 	if (sectionnode != NULL) {
