@@ -10,9 +10,10 @@ kevedit_SOURCES = \
 
 if HAVE_WINDRES
 kevedit_SOURCES += resources.rc
+MOSTLYCLEANFILES = resources.rc
 endif
 
-kevedit_LDADD = ../zlaunch/libzlaunch.a ../dialogs/libdialogs.a ../help/libhelp.a ../texteditor/libtexteditor.a ../themes/rusty/librusty.a ../synth/libsynth.a ../display/libdisplay.a ../structures/libstructures.a ../libzzt2/libzzt2.a $(GLOBLIB)
+kevedit_LDADD = ../zlaunch/libzlaunch.a ../texteditor/libtexteditor.a ../dialogs/libdialogs.a ../help/libhelp.a ../themes/rusty/librusty.a ../synth/libsynth.a ../display/libdisplay.a ../structures/libstructures.a ../libzzt2/libzzt2.a $(GLOBLIB)
 
 .rc.o:
 	$(WINDRES) -o $@ $<
