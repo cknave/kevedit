@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.11 2002/09/17 06:00:44 bitman Exp $
+ * $Id: display_sdl.c,v 1.12 2002/09/17 17:42:18 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -858,7 +858,7 @@ void display_curse_inactive(int x, int y)
 int display_sdl_init()
 {
 	/* Start up SDL */
-	if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) < 0) {
+	if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER) < 0) {
 		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
 		return 0;
 	}

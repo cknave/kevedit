@@ -1,5 +1,5 @@
 /* sdl_synth.c	-- SDL music synthesizer
- * $Id: sdl_synth.c,v 1.4 2002/09/17 06:12:38 bitman Exp $
+ * $Id: sdl_synth.c,v 1.5 2002/09/17 17:42:19 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -62,7 +62,11 @@ int OpenSynth(SDL_AudioSpec * spec)
 
 void CloseSynth(void)
 {
-	SDL_CloseAudio();
+	/* Don't actually close audio. SDL doesn't seem to like starting it
+	 * back up in Linux. A good dose of silence and an empty buffer should
+	 * do the trick, though. */
+	SDL_PauseAudio(1);
+
 	AudioCleanUp();
 }
 
@@ -204,6 +208,7 @@ void AudioCleanUp()
 {
 	if(playbuffersize != 0) {
 		free(masterplaybuffer);
+		masterplaybuffer = NULL;
 		playbuffersize = 0;
 		playbufferloc = 0;
 		playbuffermax = 0;
