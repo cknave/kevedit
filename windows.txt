@@ -9,7 +9,12 @@ Getting Started With KevEdit
 ----------------------------
 Follow the instructions in the Windows installer to install KevEdit.
 
-To learn more about using KevEdit, activate its on-line help by pressing 'H' in the editor.
+To learn more about using KevEdit, activate its on-line help by pressing 'H' in
+the editor.
+
+Remember: You can open zzt files and saved games by right clicking them and
+selecting "KevEdit" from the menu, or possibly even by simply double-clicking
+on them. This will work in any directory!
 
 New Features / Bug Fixes
 ------------------------
