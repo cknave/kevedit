@@ -1,5 +1,5 @@
 /* dialog.h - general dialog tools
- * $Id: dialog.h,v 1.1 2002/02/19 03:32:28 bitman Exp $
+ * $Id: dialog.h,v 1.2 2002/02/19 09:41:36 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -80,6 +80,11 @@ void dialogAddCompList(dialog * dia, dialogComponent * complist, int size);
  * Draw a dialog to the given display
  */
 void dialogDraw(displaymethod * mydisplay, dialog dia);
+
+/* dialogComponentEdit(display, component, editwidth, linedflags)
+ * Edit the current component in the line_editor
+ * using the given flags and editwidth */
+int dialogComponentEdit(displaymethod * mydisplay, dialogComponent * comp, int editwidth, int linedflags);
 
 /* dialogGetCurOption(dialog)
  * Returns a pointer to the current option

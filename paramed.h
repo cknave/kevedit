@@ -1,5 +1,5 @@
 /* paramed.h  -- Parameter editor
- * $Id: paramed.h,v 1.1 2002/02/18 08:04:40 bitman Exp $
+ * $Id: paramed.h,v 1.2 2002/02/19 09:41:36 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,8 +22,16 @@
 
 #include "libzzt2/zzt.h"
 #include "svector.h"
+#include "dialog.h"
 
 #include "display.h"
+
+
+/* Direction flags */
+#define DIR_NORTH 0x01
+#define DIR_SOUTH 0x02
+#define DIR_EAST  0x04
+#define DIR_WEST  0x08
 
 /* modifyparam(display, world, x, y)
  * Modify the parameter for the given tile
@@ -45,5 +53,38 @@ stringvector programtosvector(ZZTparam * p, int editwidth);
  * param. Only the program and length variables are used!
  */
 ZZTparam svectortoprogram(stringvector sv);
+
+/* getdirection(xstep, ystep)
+ * Get a direction based on x and y step values
+ */
+int getdirection(char xstep, char ystep);
+
+/* getxystep(xstep, ystep, dir)
+ * Determines xstep and ystep from given direction
+ */
+void getxystep(char * xstep, char * ystep, int dir);
+
+/* nextdirection(dir)
+ * Returns the next direction after that given
+ */
+int nextdirection(int dir);
+
+/* paramdatavaluestring(buffer, tile, which, world)
+ * store to the buffer a string representing the
+ * value of tile.param->data[which]
+ */
+char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w);
+
+/* buildparamdialog(world, x, y)
+ * Builds and returns a param dialog based on the tile
+ * at (x, y) in the given world
+ */
+dialog buildparamdialog(ZZTworld * w, int x, int y);
+
+/* parameditoption(display, world, x, y, option)
+ * Edit the params for the tile at (x, y) in
+ * the context of the given option
+ */
+void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComponent * opt);
 
 #endif

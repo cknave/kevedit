@@ -1,8 +1,8 @@
 -----------------------------------------
-KevEdit 0.3.4
-     A world file editor for the game ZZT
+KevEdit 0.4.0
+                     Powerful ZZT Editing
 -----------------------------------------
-Copyright (C) 2000-2001 Kev Vance  <kev@kvance.com>
+Copyright (C) 2000-2002 Kev Vance  <kev@kvance.com>
 With many contributions by bitman  <bitman@users.sf.net>
 
 Getting Started With KevEdit
@@ -20,34 +20,53 @@ will be created.
 
 To learn more about using KevEdit, activate its on-line help by pressing 'H'.
 
-The "ZZT Documentation" category of online help does not accompany KevEdit. If
-you install any extended help files to either the same directory as KevEdit or
-the "docs" subfolder, then you can browse them as in ZZT. "About ZZT" will load
-the opening about file, "Playing ZZT" will load the help file accessed by the
-'H' key in ZZT, and "ZZT Editor" will load the editor help file. Note that for
-Chronos' ZZTWeb these files will all be the same.
+NOTE: The "ZZT Documentation" category of online help does not accompany
+KevEdit. If you install any extended help files to either the same directory as
+KevEdit or the "docs" subfolder, then you can browse them as in ZZT. "About
+ZZT" will load the opening about file, "Playing ZZT" will load the help file
+accessed by the 'H' key in ZZT, and "ZZT Editor" will load the editor help
+file. Note that for Chronos' ZZTWeb these files will all be the same.
 
 New Features / Bug Fixes
 ------------------------
-New features in 0.3.5
-  * ZZT Music Testing
-	* Support for extended help when running ZZT
-Bugs fixed in 0.3.5
+New features in 0.4.0
+  *  Libzzt2 - greater stability
+  *  Board Movement and Deletion
+  *  All uncommon tiles now available
+  *  Creature Editing
+  *  Board Transfer
+  *  Testing ZZT Music
+  *  Improved gradient draw tool
+  *  Backbuffer locking
+  *  Backbuffer quick keys 0-9
+  *  More useful quick key reference
+  *  Extended help when running ZZT
 
-Blatant Plug of ZZT Under Windows
----------------------------------
+Bugs fixed in 0.4.0
+  *  Terrain under creatures remains
+  *  Paste w/o copy first does not crash
+
+KevEdit 0.4.0 represents a major milestone in the development of KevEdit. The
+internal structure of the program has been completely redesigned for maximum
+stability and extendability. This release is both a long-over due end in itself
+and also a jumping-off point for further extensions and features. What more
+could possibly be in store? You shall have to wait to find out...
+
+Blatant Plug of ZZTUnder Project
+--------------------------------
 To associate KevEdit with ZZT files anywhere on your hard-drive, install "ZZT
 Under Windows" with KevEdit support and then extract the KevEdit distribution
 into the ZZT Under Windows folder. If extended help is installed in ZZTUWin, it
 will also be available in KevEdit. ZZT Under Windows can be aquired in the
-Utilities section of zzt2.com.
+Utilities section of zzt2.com or from http://zztunder.tk/ .
 
 Post Script
 -----------
 Technical support for KevEdit is not guaranteed. However, you are encouraged to
 send an email to bitman <bitman@users.sf.net> if you have any questions,
 problems, or praise. Also consider posting to the "ZZT Editors" forum on
-zzt2.com if you have a general question. For announcements and technical discussion of KevEdit, join the kevedit-talk mailing list by visiting:
+zzt2.com if you have a general question. For announcements and technical
+discussion of KevEdit, join the kevedit-talk mailing list by visiting:
 
 https://lists.sourceforge.net/lists/listinfo/kevedit-talk
 
@@ -61,4 +80,4 @@ the CVS code, post bug reports, etc.
 
     Kev Vance <kev@kvance.com>
     Ryan Phillips <bitman@users.sf.net>
-    January 8, 2002
+    February 19, 2002

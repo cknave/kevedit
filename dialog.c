@@ -1,5 +1,5 @@
 /* dialog.c - general dialog tools
- * $Id: dialog.c,v 1.1 2002/02/19 03:32:28 bitman Exp $
+ * $Id: dialog.c,v 1.2 2002/02/19 09:41:36 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -71,25 +71,37 @@ dialogComponent * dialogCompListGrow(dialogComponent * complist, int size)
  */
 void dialogComponentDraw(displaymethod * mydisplay, dialogComponent component)
 {
+	char * buffer;
 	/* Don't display options out of bounds */
 	if (START_Y + component.y > END_Y)
 		return;
+	if (component.text == NULL)
+		return;
 
-	/* TODO: protect against writing beyond the x bound */
+	/* Protect against writing past right boundry */
+	buffer = str_duplen(component.text, END_X - (START_X + component.x) + 1);
+	if (strlen(component.text) > strlen(buffer)) {
+		int i;
+		for (i = 0; i < 3 && strlen(buffer) - 1 - i >= 0; i++)
+			buffer[strlen(buffer) - 1 - i] = '.';
+	}
 
 	switch (component.type) {
 		case DIALOG_COMP_TITLE:
 			/* Display title in title-bar */
-			mydisplay->print(30 - (strlen(component.text) / 2), TITLE_Y, component.color, component.text);
+			mydisplay->print(30 - (strlen(buffer) / 2), TITLE_Y, component.color, buffer);
 			break;
 		case DIALOG_COMP_HEADING:
-			mydisplay->print(30 - (strlen(component.text) / 2), START_Y + component.y, component.color, component.text);
+			mydisplay->print(30 - (strlen(buffer) / 2), START_Y + component.y, component.color, buffer);
 			break;
 		default:
 			mydisplay->print(START_X + component.x, START_Y + component.y,
-											 component.color, component.text);
+											 component.color, buffer);
 	}
+
+	free(buffer);
 }
+
 
 void dialogInit(dialog * dia)
 {
@@ -174,6 +186,23 @@ void dialogDraw(displaymethod * mydisplay, dialog dia)
 		mydisplay->putch(END_X + 2,   START_Y + curopt.y, '\xAE', 0x02);
 		mydisplay->cursorgo(START_X + curopt.x, START_Y + curopt.y);
 	}
+}
+
+int dialogComponentEdit(displaymethod * mydisplay, dialogComponent * comp, int editwidth, int linedflags)
+{
+	int result;
+	char * buffer = str_duplen(comp->text, editwidth);
+
+	result = line_editor(START_X + comp->x, START_Y + comp->y, comp->color, buffer, editwidth, linedflags, mydisplay);
+
+	if (result == LINED_OK) {
+		free(comp->text);
+		comp->text = buffer;
+	} else {
+		free(buffer);
+	}
+
+	return result;
 }
 
 dialogComponent * dialogGetCurOption(dialog dia)

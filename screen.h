@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.23 2002/02/19 03:32:28 bitman Exp $
+ * $Id: screen.h,v 1.24 2002/02/19 09:41:36 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,8 +36,12 @@
 #define LINED_NOPUNCT  0x08
 #define LINED_NOSPACES 0x10
 #define LINED_NOPERIOD 0x20
+
 #define LINED_FILENAME 0x40
 #define LINED_NOPATH   0x80
+
+#define LINED_NUMBER   LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES
+#define LINED_SNUMBER  LINED_NOALPHA | LINED_NOSPACES | LINED_NOPERIOD
 
 /* line_editor responses */
 #define LINED_CANCEL 1

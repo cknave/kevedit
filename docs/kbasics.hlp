@@ -167,9 +167,8 @@ not used as much as the nice gradient on
 the pattern selector.  To choose among
 items, creatures, and terrains, press F1,
 F2, or F3.  If you want to plot any of
-these, press its corresponding letter (it
-will be displayed on the sidebar).  Many
-of these are not implemented yet. Sorry :(
+these, press its corresponding letter
+(which will be displayed on the sidebar).
 
 :creatures;Editing Creatures & Objects
 !zzl;Object Libraries
@@ -253,17 +252,23 @@ To aid in testing a game, pressing 'r'
 will run ZZT on the current world, jumping
 directly to the title screen.
 
-For this to work, zzt.exe and zzt.dat must
-be either in the current directory, the
-same directory as kevedit.exe, or, for
-zzt.exe only, on the path.
+For this to work, zzt.exe must be in the
+same directory as kevedit.exe. zzt.dat and
+any other .hlp files should be kept in
+either the same folder as kevedit.exe
+or in the docs subfolder.
 
 KevEdit now supports extended help
 systems when running ZZT. Simply extract
 an extended help package (such as
 Chronos's ZZTWeb) into the same folder as
 kevedit.exe and run the installation batch
-file. Be sure to delete any zzt.dat files
-on your hard-drive, EXCEPT the one in the
-KevEdit folder, as these may interfere
-with the process.
+file. Feel free to delete any zzt.dat
+files from your hard drive except the one
+in the same directory as kevedit.exe (or
+the docs subdirectory).
+
+For the truly lazy, the ZZTUnder project
+does an excellent job of handling all of
+the above for you, plus more. Visit
+http://zztunder.tk/ for more information.

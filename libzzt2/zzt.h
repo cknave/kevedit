@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.8 2002/02/19 03:32:28 bitman Exp $
+ * $Id: zzt.h,v 1.9 2002/02/19 09:41:36 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -423,6 +423,10 @@ int zztParamDatauseGet(ZZTtile tile, int which);
  * Get a description of the data represented by data[which]
  */
 const char *zztParamDatauseGetName(ZZTtile tile, int which);
+/* zztParamDatauseLocate(datause)
+ * Determine which data[] element a given datause represents
+ */
+int zztParamDatauseLocate(int datause);
 
 /***** TILE MANIPULATORS ******/
 /* zztTilePlot(block, x, y, tile)

@@ -16,7 +16,7 @@ VCSA =
 # Set DOS to ON to enable DOS display
 DOS = ON
 
-CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.4.0beta1\"
+CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.4.0\"
 
 # No more modifications below this line
 # -------------------------------------
@@ -93,9 +93,9 @@ gradient.o: gradient.c gradient.h
 # Misc
 patbuffer.o: patbuffer.c kevedit.h libzzt2/zzt.h display.h
 help.o: help.c help.h svector.h editbox.h hypertxt.h panel_hl.h helplist.h
-dialog.o: dialog.c display.h
+dialog.o: dialog.c display.h svector.h
 infobox.o: infobox.c infobox.h libzzt2/zzt.h display.h
-paramed.o: paramed.c paramed.h libzzt2/zzt.h display.h
+paramed.o: paramed.c paramed.h libzzt2/zzt.h display.h dialog.h
 register.o: register.c register.h editbox.h
 
 # Draw data structures
