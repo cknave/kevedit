@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.1 2002/01/30 07:20:57 kvance Exp $
+ * $Id: zzt.h,v 1.2 2002/02/02 05:19:51 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,22 @@
 
 #ifndef __ZZT_H
 #define __ZZT_H
+
+/* Perhaps we can put these type defines in another file?
+ * "types.h" seems okay, but something like "sizetypes.h" would be more
+ * appropriate. This only seems to be needed by the DOS version of DJGPP */
+
+/* Also, this used to use #ifdef DOS, but that was setup by the KevEdit
+ * makefile. Should we do the same thing here, or find another way
+ * of determining the necessity of these typdefs? */
+
+/* If you're running DOS, you'll need these defined */
+typedef char int8_t;
+typedef short int int16_t;
+typedef int int32_t;
+typedef unsigned char u_int8_t;
+typedef unsigned short int u_int16_t;
+typedef unsigned int u_int32_t;
 
 /***** CONSTANTS *****/
 /* Board size constants */
