@@ -11,8 +11,8 @@ AppUpdatesURL=http://kevedit.sourceforge.net/download.html
 DefaultDirName={pf}\KevEdit
 DefaultGroupName=Games\ZZT
 AlwaysCreateUninstallIcon=yes
-LicenseFile=..\Copying
-InfoBeforeFile=..\windows.txt
+LicenseFile=..\COPYING.txt
+InfoBeforeFile=..\README.txt
 OutputDir=..
 ; Cosmetics
 WindowVisible=no
@@ -20,21 +20,19 @@ WizardImageFile=install-big.bmp
 WizardSmallImageFile=install-small.bmp
 
 [Files]
+Source: "..\AUTHORS.txt";  DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\ChangeLog.txt"; DestDir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\COPYING.txt";  DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\kevedit.exe";  DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\kevedit.zml";  DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\windows.txt";  DestDir: "{app}"; CopyMode: alwaysoverwrite; Flags: isreadme
-Source: "..\copying.txt";  DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\README";       Destdir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\TODO";         Destdir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\AUTHORS";      Destdir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\ChangeLog";    Destdir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\SDL.dll";      Destdir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\README.txt";   DestDir: "{app}"; CopyMode: alwaysoverwrite; Flags: isreadme
 Source: "..\README-SDL.txt"; Destdir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\SDL.dll";      Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\default.zln";  Destdir: "{app}"; CopyMode: alwaysoverwrite
 
 [Icons]
 Name: "{group}\KevEdit"; Filename: "{app}\kevedit.exe"
-Name: "{group}\KevEdit Readme";  Filename: "{app}\windows.txt"
+Name: "{group}\KevEdit Readme";  Filename: "{app}\README.txt"
 
 [Run]
 Filename: "{app}\kevedit.exe"; Description: "Launch kevedit"; Flags: nowait postinstall skipifsilent
