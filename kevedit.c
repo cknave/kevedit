@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.3 2002/09/13 17:51:20 bitman Exp $
+ * $Id: kevedit.c,v 1.4 2002/09/13 18:01:37 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -472,6 +472,9 @@ void keveditHandleKeypress(keveditor * myeditor)
 			
 			/* restart display from scratch */
 			myeditor->mydisplay->init();
+			/* flush the keystroke buffer just in case */
+			while (myeditor->mydisplay->kbhit())
+				myeditor->mydisplay->getch();
 
 			myeditor->updateflags |= UD_ALL | UD_BOARDTITLE | UD_WORLDTITLE;
 			break;
