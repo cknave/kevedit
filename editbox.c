@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.1 2000/08/18 04:36:26 bitman Exp $
+ * $Id: editbox.c,v 1.2 2000/08/18 18:01:30 kvance Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -184,7 +184,7 @@ editbox(displaymethod* d, char* title, stringvector* sv, int editwidth, int zoch
 	centerstr = sv->cur;
 
 	drawscrollbox(0, 0, d);
-	d->print(25,4, 0x0a, title);
+	d->print(23,4, 0x0a, title);
 
 	d->cursorgo(10,13);
 	updateflags = U_ALL;
