@@ -1,5 +1,5 @@
 /* play.c	-- Play ZZT music from the commandline
- * $Id: play.c,v 1.4 2002/04/05 04:44:38 kvance Exp $
+ * $Id: play.c,v 1.5 2002/04/05 04:47:38 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -123,6 +123,29 @@ int PlayZZTMusic(char *string)
 			time /= 3;
 		} else if(c == '.') {
 			time += (time/2);
+		} else if(pos+1 < len && string[pos+1] == '!') {
+			if(c == 'a') {
+				AddToBuffer(obtained, NoteFreq(NOTE_Gs, octave), time);
+				delaytime += time * 1000;
+			} else if(c == 'b') {
+				AddToBuffer(obtained, NoteFreq(NOTE_As, octave), time);
+				delaytime += time * 1000;
+			} else if(c == 'c') {
+				AddToBuffer(obtained, NoteFreq(NOTE_B, octave-1), time);
+				delaytime += time * 1000;
+			} else if(c == 'd') {
+				AddToBuffer(obtained, NoteFreq(NOTE_Cs, octave), time);
+				delaytime += time * 1000;
+			} else if(c == 'e') {
+				AddToBuffer(obtained, NoteFreq(NOTE_Ds, octave), time);
+				delaytime += time * 1000;
+			} else if(c == 'f') {
+				AddToBuffer(obtained, NoteFreq(NOTE_E, octave), time);
+				delaytime += time * 1000;
+			} else if(c == 'g') {
+				AddToBuffer(obtained, NoteFreq(NOTE_Fs, octave), time);
+				delaytime += time * 1000;
+			}
 		} else if(pos+1 < len && string[pos+1] == '#') {
 			if(c == 'a') {
 				AddToBuffer(obtained, NoteFreq(NOTE_As, octave), time);
