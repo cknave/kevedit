@@ -1,5 +1,5 @@
-/**@file linkedlist.h   An abstract linked list.
- * $Id: linkedlist.h,v 1.3 2003/11/21 18:52:28 bitman Exp $
+/**@file structures/linkedlist.h   An abstract linked list.
+ * $Id: linkedlist.h,v 1.4 2003/12/20 09:12:21 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2002 Ryan Phillips <bitman@users.sourceforge.net>

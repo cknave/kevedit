@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: misc.c,v 1.2 2003/12/20 09:12:20 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 
 #include "kevedit.h"
 #include "texteditor/editbox.h"
+#include "texteditor/texteditor.h"
 #include "screen.h"
 
 #include "structures/svector.h"
@@ -154,7 +155,8 @@ int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcse
 		}
 		/* If the loop stopped short of using every column in src, advance
 		 * the srcpos index to ignore these columns */
-		while (col < src->width + x) { col++; srcpos++; }
+		srcpos += (src->width + x) - col;
+		col = src->width + x;
 	}
 
 	/* Success! */
@@ -264,24 +266,25 @@ void runzzt(char* path, char* world)
 }
 
 
-void texteditor(displaymethod * mydisplay)
+void texteditordialog(displaymethod * mydisplay)
 {
 	/* open text file for edit */
-	char buffer[14];
-	stringvector editvector;
+	texteditor * editor;
 
-	strcpy(buffer, "");
-	initstringvector(&editvector);
+	editor = createtexteditor("Text Editor", NULL, mydisplay);
 	
 	/* Load the ! register for editing */
-	regput('!', &editvector, 0, EDITBOX_ZZTWIDTH, EDITBOX_ZZTWIDTH);
+	regput('!', editor->text, 0, EDITBOX_ZZTWIDTH, EDITBOX_ZZTWIDTH);
 
 	/* Edit */
-	editbox("Text Editor", &editvector, 42, EDITBOX_ZOCMODE, mydisplay);
+	textedit(editor);
 
 	/* Store result to the ! register */
-	regstore('!', editvector);
-	deletestringvector(&editvector);
+	regstore('!', *(editor->text));
+
+	/* Free the text editor and text. */
+	deletetexteditortext(editor);
+	deletetexteditor(editor);
 }
 
 void clearboard(ZZTworld * myworld)

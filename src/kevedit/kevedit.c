@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: kevedit.c,v 1.2 2003/12/20 09:12:20 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -612,7 +612,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 			break;
 		case '!':
 			/* Open text editor */
-			texteditor(myeditor->mydisplay);
+			texteditordialog(myeditor->mydisplay);
 
 			myeditor->updateflags |= UD_ALL;
 			break;
