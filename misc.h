@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.2 2001/05/12 21:15:28 bitman Exp $
+ * $Id: misc.h,v 1.3 2001/05/20 15:43:08 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,9 @@
 #define _MISC_H 1
 
 #include "display.h"
+
+displaymethod * pickdisplay(displaymethod * rootdisplay);
+void initeditorinfo(editorinfo * myinfo);
 
 void runzzt(char *args);
 void help(displaymethod* d);

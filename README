@@ -1,5 +1,5 @@
 $-----------------------------------------
-KevEdit 0.3.1
+KevEdit 0.3.2
      A world file editor for the game ZZT
 $-----------------------------------------
 Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
@@ -21,6 +21,16 @@ C> kevedit town.zzt
 
 This will load town.zzt into the editor if it exists.  Otherwise, a new world
 will be created.
+
+$---------------------
+$New in Version 0.3.2!
+$---------------------
+
+ * Resizable backbuffers
+ * Advanced tile editing
+ * Helpful help dialog
+ * More creatures
+ * Copy and paste!
 
 $---------------------------
 $Basic Movement and Plotting
@@ -175,6 +185,14 @@ device, etc.
 For this to work, zzt.exe and zzt.dat must be in the current directory.
 
 $---------------------
+$Resizable Backbuffers
+$---------------------
+The backbuffer may  be  resized  using  the '<' and '>' keys. Some gradients
+may not fit in the default ten-tile backbuffer, so this may prove useful. Only
+ten tiles will be visible at once, but the backbuffer will scroll
+automatically.
+
+$---------------------
 $Advanced Tile Editing
 $---------------------
 KevEdit includes several advanced tile editting features, including gradient
@@ -182,13 +200,11 @@ draw mode, get mode, and random flood fill.
 
 Gradient draw mode works much the same as drawing mode (activated by the TAB
 key), except that KevEdit cycles through the backbuffer with each cursor
-movement. This can be used to easily plot cool gradients or other patterns. Use
-SHIFT-TAB to activate gradient mode and TAB to turn it off. KevEdit will cycle
-through the backbuffer backward, using only the current tile and those before
-it. The cycle moves backward so that tiles are laid down in the same order
-they enter the buffer. To cycle forward instead, press SHIFT-TAB a second time
-while in gradient mode. This can be useful when "painting" a gradient from
-right to left, then backward left to right across several lines.
+movement. This can be used to easily plot gradients or other patterns. Use
+SHIFT-TAB to activate gradient mode and TAB to turn it off. When gradient mode
+is on, KevEdit will cycle through the backbuffer backward so that tiles are laid
+down in the same order they enter the buffer. To cycle forward, press SHIFT-TAB
+a second time.
 
 Get mode acts exactly in the opposite manner as drawing mode, lifting tiles into
 the backbuffer as the cursor moves. By using get mode, one can load a large
@@ -196,19 +212,20 @@ gradient or line of objects into the backbuffer with relatively few keystrokes.
 Press 'g' to toggle get mode. The 'g' next to the backbuffer will indicate
 whether get mode is on.
 
-Random flood fill works much like normal flood fill except that tiles are
-chosen at random from the backbuffer when filling. Use capitalized 'F' to
-random flood fill a region. Only tiles at or before the current tile will be
-used in the random flood fill (much like in gradient mode). IMPORTANT: the type
-of tile you flood fill onto should not be present in the portion of the
-backbuffer being used. Because of the way flood fill is implemented, this would
-result in instability, and so such cases are treated as a normal floodfill by
-KevEdit. BEWARE: once an area is flood filled with random tiles, it is
+Random flood fill works much like normal flood fill except that tiles are chosen
+at random from the backbuffer when filling. Use capitalized 'F' to random
+flood fill a region. IMPORTANT: the type of tile you flood fill onto should not
+be present in the backbuffer. Because of the way flood fill is implemented, this
+would result in instability, and so such cases are treated as a normal floodfill
+by KevEdit. BEWARE: once an area is flood filled with random tiles, it is
 difficult to undo.
 
 In a random flood fill, all tiles used are given equal probability. To increase
 the occurance of a certain kind of tile, put more than one copy in the
 backbuffer to increase the likelyhood that it will be used.
+
+Both gradient draw mode and random flood fill use the ENTIRE backbuffer, so feel
+free to resize the backbuffer as necessary using '<' and '>'.
 
 $-----
 $Help!

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.33 2001/05/12 21:15:27 bitman Exp $
+ * $Id: main.c,v 1.34 2001/05/20 15:43:08 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,10 +38,9 @@ int main(int argc, char **argv)
 	int i, x, t;
 	int c, e;
 	int quit = 0;
-	displaymethod *mydisplay = (displaymethod *) malloc(sizeof(displaymethod));
-	editorinfo *myinfo = (editorinfo *) malloc(sizeof(editorinfo));
-	char *string = (char *) malloc(sizeof(char) * 256);
-	char *bigboard = (char *) malloc(BOARD_MAX * 2);
+	displaymethod *mydisplay;
+	editorinfo *myinfo;
+	char *bigboard;
 	char buffer[255];
 	unsigned char paramlist[60][25];
 
@@ -49,74 +48,21 @@ int main(int argc, char **argv)
 	param *pm;
 
 	RegisterDisplays();
-	mydisplay = &display;
-
-	/* How many display methods? */
-	for (x = 1; x < 9; x++) {
-		if (mydisplay->next == NULL) {
-			break;
-		}
-		mydisplay = mydisplay->next;
-	}
-
-	if (x > 1) {
-		/* More than 1 display method available, user must choose */
-		printf("Hi.  This seems to be your first time running KevEdit.  What display method\n"
-		       "works best on your platform?\n\n");
-
-		mydisplay = &display;
-		for (i = 0; i < x; i++) {
-			printf("[%d] %s\n", i + 1, mydisplay->name);
-			if (mydisplay->next != NULL)
-				mydisplay = mydisplay->next;
-		}
-		do {
-			printf("\nSelect [1-%i]: ", x);
-			fgets(string, 255, stdin);
-			i = string[0];
-		}
-		while (i > 49 && i < 51);
-		i -= '1';
-		printf("\n%d SELECT\n", i);
-		mydisplay = &display;
-		for (x = 0; x < i; x++) {
-			mydisplay = mydisplay->next;
-		}
-	} else {
-		mydisplay = &display;
-	}
+	mydisplay = pickdisplay(&display);
 
 	printf("Initializing %s version %s...\n", mydisplay->name, mydisplay->version);
 	if (!mydisplay->init()) {
 		printf("\nDisplay initialization failed.  Exiting.\n");
-		free(mydisplay);
-		free(myinfo);
-		free(string);
-		free(bigboard);
 		return 1;
 	}
+
+	/* Allocate space for various data */
+
+	myinfo = (editorinfo *) malloc(sizeof(editorinfo));
+	bigboard = (char *) malloc(BOARD_MAX * 2);
+
 	/* Set up initial info */
-
-	myinfo->cursorx = myinfo->playerx = 0;
-	myinfo->cursory = myinfo->playery = 0;
-	myinfo->drawmode = 0;
-	myinfo->gradmode = 0;
-	myinfo->getmode = 0;
-	myinfo->blinkmode = 0;
-	myinfo->textentrymode = 0;
-	myinfo->defc = 1;
-	myinfo->forec = 0x0f;
-	myinfo->backc = 0x00;
-	myinfo->standard_patterns = patbuffer_create(6);
-	myinfo->backbuffer = patbuffer_create(10);
-	myinfo->pbuf = myinfo->standard_patterns;
-
-	myinfo->currenttitle = (char *) malloc(21);
-	strcpy(myinfo->currenttitle, "UNTITLED");
-	myinfo->currentfile = (char *) malloc(14);
-	strcpy(myinfo->currentfile, "untitled.zzt");
-
-	myinfo->curboard = 0;
+	initeditorinfo(myinfo);
 
 	/* Did we get a world on the command line? */
 	/* TODO: strip full path if given (as Windows would give it to us)
@@ -157,14 +103,6 @@ int main(int argc, char **argv)
 			for (x = 0; x < 60; x++)
 				paramlist[x][i] = 0;
 	}
-	/* Initialize pattern definitions */
-	myinfo->standard_patterns->patterns[0].type = Z_SOLID;
-	myinfo->standard_patterns->patterns[1].type = Z_NORMAL;
-	myinfo->standard_patterns->patterns[2].type = Z_BREAKABLE;
-	myinfo->standard_patterns->patterns[3].type = Z_WATER;
-	myinfo->standard_patterns->patterns[4].type = Z_EMPTY;
-	myinfo->standard_patterns->patterns[5].type = Z_LINE;
-	pat_applycolordata(myinfo->standard_patterns, myinfo);
 
 	/* Draw */
 
@@ -968,7 +906,6 @@ int main(int argc, char **argv)
 
 	/* Free everything! Free! Free! Free! Let freedom ring! */
 	free(myinfo);
-	free(string);
 	free(bigboard);
 	z_delete(myworld);
 

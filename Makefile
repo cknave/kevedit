@@ -6,9 +6,8 @@ CC = gcc
 
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
-#OPTIMIZE = -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-OPTIMIZE = -ggdb -Wall
-#OPTIMIZE =
+#OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+OPTIMIZE = -g -Wall
 
 # Set CGI to ON to enable GGI display
 GGI =
@@ -33,7 +32,7 @@ ifeq ($(DOS),ON)
 	DOSOBJ = display_dos.o
 endif
 
-CFLAGS = -s $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.1\"
+CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.1\"
 
 # No more modifications below this line
 # -------------------------------------
@@ -54,7 +53,7 @@ display.o: display.c display.h
 	$(CC) -o $@ display.c $(CFLAGS) -c
 main.o: main.c display.h screen.h scroll.h kevedit.h zzt.h editbox.h register.h patbuffer.h misc.h
 	$(CC) -o $@ main.c $(CFLAGS) -c
-misc.o: misc.c misc.h
+misc.o: misc.c misc.h patbuffer.h
 	$(CC) -o $@ misc.c $(CFLAGS) -c
 screen.o: screen.c panel.h kevedit.h display.h zzt.h panel_f1.h panel_f2.h panel_f3.h tbox.h cbox.h editbox.h
 	$(CC) -o $@ screen.c $(CFLAGS) -c

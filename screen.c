@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.21 2001/05/12 21:15:28 bitman Exp $
+ * $Id: screen.c,v 1.22 2001/05/20 15:43:08 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,7 @@
 
 /* The following define tells updatepanel to draw the standard patterns
  * in the current colour, rather than plain ol' white */
-#define STDPATFOLLOWCOLOR
+/* #define STDPATFOLLOWCOLOR */
 
 /* Backbuffer scroll start - where in the backbuffer to start scrolling
  * when bb is larger than visible width */

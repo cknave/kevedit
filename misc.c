@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.2 2001/05/12 21:15:28 bitman Exp $
+ * $Id: misc.c,v 1.3 2001/05/20 15:43:08 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,93 @@
 #include "svector.h"
 #include "editbox.h"
 #include "screen.h"
+#include "patbuffer.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+
+displaymethod * pickdisplay(displaymethod * rootdisplay)
+{
+	int x, i;
+	displaymethod* mydisplay = rootdisplay;
+	char *string = (char *) malloc(sizeof(char) * 256);
+
+	/* How many display methods? */
+	for (x = 1; x < 9; x++) {
+		if (mydisplay->next == NULL) {
+			break;
+		}
+		mydisplay = mydisplay->next;
+	}
+
+	if (x > 1) {
+		/* More than 1 display method available, user must choose */
+		printf("Hi.  This seems to be your first time running KevEdit.  What display method\n"
+		       "works best on your platform?\n\n");
+
+		mydisplay = rootdisplay;
+		for (i = 0; i < x; i++) {
+			printf("[%d] %s\n", i + 1, mydisplay->name);
+			if (mydisplay->next != NULL)
+				mydisplay = mydisplay->next;
+		}
+		do {
+			printf("\nSelect [1-%i]: ", x);
+			fgets(string, 255, stdin);
+			i = string[0];
+		}
+		while (i > 49 && i < 51);
+		i -= '1';
+		printf("\n%d SELECT\n", i);
+		mydisplay = rootdisplay;
+		for (x = 0; x < i; x++) {
+			mydisplay = mydisplay->next;
+		}
+	} else {
+		mydisplay = rootdisplay;
+	}
+
+	free(string);
+	return mydisplay;
+}
+
+
+void initeditorinfo(editorinfo * myinfo)
+{
+	/* Clear info to default values */
+
+	myinfo->cursorx = myinfo->playerx = 0;
+	myinfo->cursory = myinfo->playery = 0;
+	myinfo->drawmode = 0;
+	myinfo->gradmode = 0;
+	myinfo->getmode = 0;
+	myinfo->blinkmode = 0;
+	myinfo->textentrymode = 0;
+	myinfo->defc = 1;
+	myinfo->forec = 0x0f;
+	myinfo->backc = 0x00;
+	myinfo->standard_patterns = patbuffer_create(6);
+	myinfo->backbuffer = patbuffer_create(10);
+	myinfo->pbuf = myinfo->standard_patterns;
+
+	myinfo->currenttitle = (char *) malloc(21);
+	strcpy(myinfo->currenttitle, "UNTITLED");
+	myinfo->currentfile = (char *) malloc(14);
+	strcpy(myinfo->currentfile, "untitled.zzt");
+
+	myinfo->curboard = 0;
+
+	/* Initialize pattern definitions */
+	myinfo->standard_patterns->patterns[0].type = Z_SOLID;
+	myinfo->standard_patterns->patterns[1].type = Z_NORMAL;
+	myinfo->standard_patterns->patterns[2].type = Z_BREAKABLE;
+	myinfo->standard_patterns->patterns[3].type = Z_WATER;
+	myinfo->standard_patterns->patterns[4].type = Z_EMPTY;
+	myinfo->standard_patterns->patterns[5].type = Z_LINE;
+	pat_applycolordata(myinfo->standard_patterns, myinfo);
+}
 
 
 void runzzt(char *args)
