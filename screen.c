@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.59 2002/12/14 02:46:20 bitman Exp $
+ * $Id: screen.c,v 1.60 2002/12/27 08:19:08 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1099,10 +1099,10 @@ int dothepanel_f3(keveditor * e)
 			return ZZT_MONITOR;
 		case 'V':
 		case 'v':
-			return ZZT_BLINKHORIZ;
+			return ZZT_BLINKVERT;
 		case 'H':
 		case 'h':
-			return ZZT_BLINKVERT;
+			return ZZT_BLINKHORIZ;
 		case 'D':
 		case 'd':
 			return ZZT_PLAYER;

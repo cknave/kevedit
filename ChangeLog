@@ -7,6 +7,7 @@ Bug fixed: duplicator cycle speed
 Bug fixed: params created for items on F3 menu
 Bug fixed: Stats editor panel updated after editing object code or passage dest
 Bug fixed: Reenter coordinates don't decrease every time a board is saved
+Bug fixed: Horizonal and vertical blink walls were reversed in F3 menu
 
 0.5.0
 -----
