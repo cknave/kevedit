@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.21 2002/01/12 06:31:58 bitman Exp $
+ * $Id: misc.c,v 1.22 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,116 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <time.h>
+
+stringvector programtosvector(ZZTparam * p, int editwidth)
+{
+	stringvector sv;    /* list of strings */
+	char *str = NULL;   /* temporary string */
+	int strpos = 0;     /* position in str */
+	int i;
+
+	initstringvector(&sv);
+
+	/* load the vector */
+	if ((p->program == NULL) | (p->length <= 0)) {
+		/* No data! We need to create an empty node */
+		pushstring(&sv, str_dupmin("", editwidth + 1));
+		return sv;
+	}
+
+	/* Let's fill the node from program! */
+	strpos = 0;
+	str = (char *) malloc(sizeof(char) * (editwidth + 1));
+
+	for (i = 0; i < p->length; i++) {
+		if (p->program[i] == 0x0d) {
+			/* end of the line (heh); push the string and start over */
+			str[strpos] = 0;
+			pushstring(&sv, str);
+			strpos = 0;
+			str = (char *) malloc(sizeof(char) * (editwidth + 1));
+		} else if (strpos > editwidth) {
+			/* hmmm... really long line; must not have been made in ZZT... */
+			/* let's truncate! */
+			str[strpos] = 0;
+			pushstring(&sv, str);
+			strpos = 0;
+			str = (char *) malloc(sizeof(char) * (editwidth + 1));
+			/* move to next 0x0d */
+			do i++; while (i < p->length && p->program[i] != 0x0d);
+		} else {
+			/* just your everyday copying... */
+			str[strpos++] = p->program[i];
+		}
+	}
+
+	if (strpos > 0) {
+		/* strange... we seem to have an extra line with no CR at the end... */
+		str[strpos] = 0;
+		pushstring(&sv, str);
+	} else {
+		/* we grabbed all that RAM for nothing. Darn! */
+		free(str);
+	}
+
+	return sv;
+}
+
+ZZTparam svectortoprogram(stringvector sv)
+{
+	ZZTparam p;
+	int pos;
+
+	/* find out how much space we need */
+	p.length = 0;
+	/* and now for a wierdo for loop... */
+	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next)
+		p.length += strlen(sv.cur->s) + 1;		/* + 1 for CR */
+
+	if (p.length <= 1) {
+		/* sv holds one empty string (it can happen) */
+		p.program = NULL;
+		p.length = 0;
+		return p;
+	}
+
+	/* lets make room for all that program */
+	pos = 0;
+	p.program = (char *) malloc(sizeof(char) * p.length);
+
+	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next) {
+		int i;
+		int linelen = strlen(sv.cur->s);	/* I feel efficient today */
+		for (i = 0; i < linelen; i++) {
+			p.program[pos++] = sv.cur->s[i];
+		}
+		p.program[pos++] = 0x0d;
+	}
+
+	return p;
+}
+
+void editprogram(displaymethod * d, ZZTparam * p)
+{
+	stringvector sv;
+	ZZTparam newparam;
+
+	sv = programtosvector(p, EDITBOX_ZZTWIDTH);
+
+	/* Now that the node is full, we can edit it. */
+	sv.cur = sv.first;	/* This is redundant, but hey. */
+	editbox("Program Editor", &sv, EDITBOX_ZZTWIDTH, 1, d);
+
+	/* Okay, let's put the vector back in program */
+	newparam = svectortoprogram(sv);
+
+	deletestringvector(&sv);
+	if (p->program != NULL)
+		free(p->program);
+
+	p->length = newparam.length;
+	p->program = newparam.program;
+}
 
 void runzzt(char* path, char* world)
 {
@@ -126,8 +236,8 @@ void initeditorinfo(editorinfo * myinfo)
 {
 	/* Clear info to default values */
 
-	myinfo->cursorx = myinfo->playerx = 0;
-	myinfo->cursory = myinfo->playery = 0;
+	myinfo->cursorx = 0;
+	myinfo->cursory = 0;
 	myinfo->drawmode = 0;
 	myinfo->gradmode = 0;
 	myinfo->aqumode = 0;
@@ -140,65 +250,14 @@ void initeditorinfo(editorinfo * myinfo)
 	myinfo->backbuffer = patbuffer_create(10);
 	myinfo->pbuf = myinfo->standard_patterns;
 
-	myinfo->currenttitle = (char *) malloc(21);
-	strcpy(myinfo->currenttitle, "UNTITLED");
-	myinfo->currentfile = (char *) malloc(14);
-	strcpy(myinfo->currentfile, "untitled.zzt");
-
-	myinfo->curboard = 0;
-
 	/* Initialize pattern definitions */
-	myinfo->standard_patterns->patterns[0].type = Z_SOLID;
-	myinfo->standard_patterns->patterns[1].type = Z_NORMAL;
-	myinfo->standard_patterns->patterns[2].type = Z_BREAKABLE;
-	myinfo->standard_patterns->patterns[3].type = Z_WATER;
-	myinfo->standard_patterns->patterns[4].type = Z_EMPTY;
-	myinfo->standard_patterns->patterns[5].type = Z_LINE;
+	myinfo->standard_patterns->patterns[0].type = ZZT_SOLID;
+	myinfo->standard_patterns->patterns[1].type = ZZT_NORMAL;
+	myinfo->standard_patterns->patterns[2].type = ZZT_BREAKABLE;
+	myinfo->standard_patterns->patterns[3].type = ZZT_WATER;
+	myinfo->standard_patterns->patterns[4].type = ZZT_EMPTY;
+	myinfo->standard_patterns->patterns[5].type = ZZT_LINE;
 	pat_applycolordata(myinfo->standard_patterns, myinfo);
-}
-
-
-void showParamData(param * p, int paramNumber, displaymethod * d)
-{
-	char buffer[50];
-	stringvector data;
-	initstringvector(&data);
-
-	pushstring(&data, str_dup("$Param Data"));
-	pushstring(&data, str_dup(""));
-
-	sprintf(buffer, "param#:      %d / 150", paramNumber);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "x:           %d", p->x);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "y:           %d", p->y);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "xstep:       %d", p->xstep);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "ystep:       %d", p->ystep);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "cycle:       %d", p->cycle);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "data1:       %d", p->data1);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "data2:       %d", p->data2);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "data3:       %d", p->data3);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "magic:       %d", p->magic);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "undert:      0x%X", p->undert);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "underc:      0x%X", p->underc);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "instruction: %d", p->instruction);
-	pushstring(&data, str_dup(buffer));
-	sprintf(buffer, "length:      %d", p->length);
-	pushstring(&data, str_dup(buffer));
-
-	editbox("Param Data", &data, 0, 1, d);
-
-	deletestringvector(&data);
 }
 
 
@@ -222,7 +281,18 @@ void texteditor(displaymethod * mydisplay)
 	deletestringvector(&editvector);
 }
 
+void clearboard(ZZTworld * myworld)
+{
+	/* TODO: how? */
+}
 
+ZZTworld * clearworld(ZZTworld * myworld)
+{
+	/* TODO: how? */
+	return myworld;
+}
+
+#if 0
 void clearboard(world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
 {
 	int i, x;
@@ -277,6 +347,8 @@ world * clearworld(world * myworld, editorinfo * myinfo, char * bigboard, unsign
 	return myworld;
 }
 
+#endif
+
 
 int toggledrawmode(editorinfo * myinfo)
 {
@@ -326,46 +398,16 @@ int togglegradientmode(editorinfo * myinfo)
 	}
 }
 
-
-void changeboard(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
-{
-	int i, x;
-
-	/* Switch boards */
-	i = switchboard(myworld, myinfo, mydisplay);
-	if (i == -1 || i == myinfo->curboard)
-		return;
-
-	/* It may become useful to put the following code in another function for
-	 * greater flexibility in the future. Presently, such provides no gains. */
-	free(myworld->board[myinfo->curboard]->data);
-	myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
-	myinfo->curboard = i;
-	if (myinfo->curboard > myworld->zhead->boardcount)
-		myinfo->curboard = 0;
-	rle_decode(myworld->board[myinfo->curboard]->data, bigboard);
-	for (i = 0; i < 25; i++)
-		for (x = 0; x < 60; x++)
-			paramlist[x][i] = 0;
-	for (i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-		if (myworld->board[myinfo->curboard]->params[i]->x > 0 && myworld->board[myinfo->curboard]->params[i]->x < 61 && myworld->board[myinfo->curboard]->params[i]->y > 0 && myworld->board[myinfo->curboard]->params[i]->y < 26)
-			paramlist[myworld->board[myinfo->curboard]->params[i]->x - 1][myworld->board[myinfo->curboard]->params[i]->y - 1] = i;
-	}
-
-	myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
-	myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
-}
-
-
-void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard)
+void saveworldprompt(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
 {
 	/* Save World after prompting user for filename */
-	int i;
 	char* filename;
 	char* path, * file;
+	char* oldfilenamebase;    /* Old filename without extension */
+	char* dotptr;             /* General pointer */
 
 	filename =
-		filenamedialog(myinfo->currentfile, "zzt", "Save World As", 1, mydisplay);
+		filenamedialog(zztWorldGetFilename(myworld), "zzt", "Save World As", 1, mydisplay);
 
 	if (filename == NULL)
 		return;
@@ -376,29 +418,39 @@ void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * my
 	fileof(file, filename, strlen(filename) + 1);
 	pathof(path, filename, strlen(filename) + 1);
 
-	/* Update board data to reflect bigboard */
-	free(myworld->board[myinfo->curboard]->data);
-	myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
-
-	/* Copy filename w/o ext onto world's title */
-	for (i = 0; i < 9 && file[i] != '.' && file[i] != '\0'; i++) {
-		myinfo->currenttitle[i] = file[i];
-	}
-	myinfo->currenttitle[i] = '\0';
-
-	/* Change internal name of world only on first use of save */
-	if (!strcmp(myworld->zhead->title, "UNTITLED")) {
-		strcpy(myworld->zhead->title, myinfo->currenttitle);
-		myworld->zhead->titlelength = strlen(myworld->zhead->title);
-	}
-
-	strcpy(myinfo->currentfile, file);
-
-	myworld->zhead->startboard = myinfo->curboard;
-	saveworld(filename, myworld);
-
-	/* Switch the current directory to the same location as the file */
+	/* Change to the selected path */
 	chdir(path);
+
+	/* Update the title of the world to reflect the new filename if
+	 * the filename and title were the same previously.
+	 * That is, if they started out the same, keep them the same. */
+
+	/* Grab the base part of the original filename */
+	oldfilenamebase = str_dup(zztWorldGetFilename(myworld));
+	dotptr = strrchr(oldfilenamebase, '.');
+	if (dotptr != NULL)
+		*dotptr = '\0';
+
+	if (!str_equ(zztWorldGetFilename(myworld), file, STREQU_UNCASE) &&
+			str_equ(oldfilenamebase, zztWorldGetTitle(myworld), STREQU_UNCASE)) {
+		char* newtitle = str_dup(file);
+		dotptr = strrchr(newtitle, '.');
+		if (dotptr != NULL)
+			*dotptr = '\0';
+		zztWorldSetTitle(myworld, newtitle);
+		free(newtitle);
+	}
+
+	/* Update the filename used by the world */
+	zztWorldSetFilename(myworld, file);
+
+	/* Set the current board as the starting board */
+	zztWorldSetStartboard(myworld, zztBoardGetCurrent(myworld));
+
+	zztWorldSave(myworld);
+
+	free(oldfilenamebase);
+	oldfilenamebase = NULL;
 
 	free(filename);
 	free(path);
@@ -408,36 +460,6 @@ void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * my
 	mydisplay->cursorgo(69, 5);
 	mydisplay->getch();
 }
-
-
-void updateparamlist(world * myworld, editorinfo * myinfo, unsigned char paramlist[60][25])
-{
-	int i, x;
-	board* curboard = myworld->board[myinfo->curboard];
-
-	for (i = 0; i < 25; i++)
-		for (x = 0; x < 60; x++)
-			paramlist[x][i] = 0;
-
-	for (i = 0; i < curboard->info->objectcount + 1; i++) {
-		if (curboard->params[i]->x > 0 && curboard->params[i]->x < 61 && curboard->params[i]->y > 0 && curboard->params[i]->y < 26)
-			paramlist[curboard->params[i]->x - 1][curboard->params[i]->y - 1] = i;
-	}
-
-	myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
-	myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
-}
-
-
-void updateinfo(world * myworld, editorinfo * myinfo, char * bigboard)
-{
-	/* TODO: Should the current title be filename based or "title" based */
-	strncpy(myinfo->currenttitle, myworld->zhead->title, 20);
-	myinfo->currenttitle[myworld->zhead->titlelength] = '\0';
-	myinfo->curboard = myworld->zhead->startboard;
-	rle_decode(myworld->board[myworld->zhead->startboard]->data, bigboard);
-}
-
 
 void previouspattern(editorinfo * myinfo)
 {
@@ -469,11 +491,11 @@ patbuffer* createfillpatterns(editorinfo* myinfo)
 	patbuffer* fillpatterns;
 
 	fillpatterns = patbuffer_create(5);
-	fillpatterns->patterns[0].type = Z_SOLID;
-	fillpatterns->patterns[1].type = Z_NORMAL;
-	fillpatterns->patterns[2].type = Z_BREAKABLE;
-	fillpatterns->patterns[3].type = Z_WATER;
-	fillpatterns->patterns[4].type = Z_SOLID;
+	fillpatterns->patterns[0].type = ZZT_SOLID;
+	fillpatterns->patterns[1].type = ZZT_NORMAL;
+	fillpatterns->patterns[2].type = ZZT_BREAKABLE;
+	fillpatterns->patterns[3].type = ZZT_WATER;
+	fillpatterns->patterns[4].type = ZZT_SOLID;
 
 	pat_applycolordata(fillpatterns, myinfo);
 
@@ -484,7 +506,7 @@ patbuffer* createfillpatterns(editorinfo* myinfo)
 	return fillpatterns;
 }
 
-void floodselect(selection fillsel, int x, int y, char* bigboard, int brdwidth, int brdheight)
+void floodselect(ZZTblock* block, selection fillsel, int x, int y)
 {
 	/* If we've already been selected, go back a level */
 	if (isselected(fillsel, x, y))
@@ -495,41 +517,41 @@ void floodselect(selection fillsel, int x, int y, char* bigboard, int brdwidth, 
 
 	/* A little to the left */
 	if (x > 0) {
-		if ( tiletype (bigboard, x - 1, y) == tiletype (bigboard, x, y) &&
-				(tilecolor(bigboard, x - 1, y) == tilecolor(bigboard, x, y) ||
-				 tiletype (bigboard, x, y) == Z_EMPTY))
-			floodselect(fillsel, x - 1, y, bigboard, brdwidth, brdheight);
+		if ( zztTileAt(block, x - 1, y).type  == zztTileAt(block, x, y).type &&
+		    (zztTileAt(block, x - 1, y).color == zztTileAt(block, x, y).color ||
+				 zztTileAt(block, x, y).type == ZZT_EMPTY))
+			floodselect(block, fillsel, x - 1, y);
 	}
 
 	/* A little to the right */
-	if (x < brdwidth - 1) {
-		if ( tiletype (bigboard, x + 1, y) == tiletype (bigboard, x, y) &&
-				(tilecolor(bigboard, x + 1, y) == tilecolor(bigboard, x, y) ||
-				 tiletype (bigboard, x, y) == Z_EMPTY))
-			floodselect(fillsel, x + 1, y, bigboard, brdwidth, brdheight);
+	if (x < block->width - 1) {
+		if ( zztTileAt(block, x + 1, y).type  == zztTileAt(block, x, y).type &&
+		    (zztTileAt(block, x + 1, y).color == zztTileAt(block, x, y).color ||
+				 zztTileAt(block, x, y).type == ZZT_EMPTY))
+			floodselect(block, fillsel, x + 1, y);
 	}
 
 	/* A little to the north */
 	if (y > 0) {
-		if ( tiletype (bigboard, x, y - 1) == tiletype (bigboard, x, y) &&
-				(tilecolor(bigboard, x, y - 1) == tilecolor(bigboard, x, y) ||
-				 tiletype (bigboard, x, y) == Z_EMPTY))
-			floodselect(fillsel, x, y - 1, bigboard, brdwidth, brdheight);
+		if ( zztTileAt(block, x, y - 1).type  == zztTileAt(block, x, y).type &&
+		    (zztTileAt(block, x, y - 1).color == zztTileAt(block, x, y).color ||
+				 zztTileAt(block, x, y).type == ZZT_EMPTY))
+			floodselect(block, fillsel, x, y - 1);
 	}
 
 	/* A little to the south */
-	if (y < brdheight - 1) {
-		if ( tiletype (bigboard, x, y + 1) == tiletype (bigboard, x, y) &&
-				(tilecolor(bigboard, x, y + 1) == tilecolor(bigboard, x, y) ||
-				 tiletype (bigboard, x, y) == Z_EMPTY))
-			floodselect(fillsel, x, y + 1, bigboard, brdwidth, brdheight);
+	if (y < block->height - 1) {
+		if ( zztTileAt(block, x, y + 1).type  == zztTileAt(block, x, y).type &&
+		    (zztTileAt(block, x, y + 1).color == zztTileAt(block, x, y).color ||
+				 zztTileAt(block, x, y).type == ZZT_EMPTY))
+			floodselect(block, fillsel, x, y + 1);
 	}
 }
 
-void fillbyselection(selection fillsel, patbuffer pbuf, int randomflag, board* destbrd, char* bigboard, unsigned char paramlist[60][25])
+void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag)
 {
 	int x = -1, y = 0;
-	patdef pattern = pbuf.patterns[pbuf.pos];
+	ZZTtile pattern = pbuf.patterns[pbuf.pos];
 
 	if (randomflag)
 		srand(time(0));
@@ -539,19 +561,32 @@ void fillbyselection(selection fillsel, patbuffer pbuf, int randomflag, board* d
 		if (randomflag)
 			pattern = pbuf.patterns[rand() % pbuf.size];
 
-		/* Check for object overflow if we have params & aren't overwriting some */
-		if (destbrd->info->objectcount >= 150 && pattern.patparam != NULL &&
-		    paramlist[x][y] == 0)
-			return;
-
-		pat_plot(destbrd, pattern, x, y, bigboard, paramlist);
+		zztTilePlot(block, x, y, pattern);
 	}
 }
 
-void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25], int randomflag)
+void fillbyselection(ZZTworld* world, selection fillsel, patbuffer pbuf, int randomflag)
+{
+	int x = -1, y = 0;
+	ZZTtile pattern = pbuf.patterns[pbuf.pos];
+
+	if (randomflag)
+		srand(time(0));
+
+	/* Plot the patterns */
+	while (!nextselected(fillsel, &x, &y)) {
+		if (randomflag)
+			pattern = pbuf.patterns[rand() % pbuf.size];
+
+		zztPlot(world, x, y, pattern);
+	}
+}
+
+void dofloodfill(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo, int randomflag)
 {
 	selection fillsel;
 	patbuffer* fillbuffer;
+	ZZTblock* block = myworld->boards[zztBoardGetCurrent(myworld)].bigboard;
 
 	/* Set up the fill buffer */
 	fillbuffer = myinfo->pbuf;
@@ -559,16 +594,16 @@ void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo
 		fillbuffer = createfillpatterns(myinfo);
 
 	/* Don't floodfill onto the player! It's not nice! */
-	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
+	if (myinfo->cursorx == zztBoardGetCurPtr(myworld)->plx &&
+			myinfo->cursory == zztBoardGetCurPtr(myworld)->ply)
 		return;
 
 	/* New selection as large as the board */
-	initselection(&fillsel, 60, 25);
+	initselection(&fillsel, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
 
 	/* Flood select then fill using the selection */
-	floodselect(fillsel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
-	fillbyselection(fillsel, *fillbuffer,
-									randomflag, myworld->board[myinfo->curboard], bigboard, paramlist);
+	floodselect(block, fillsel, myinfo->cursorx, myinfo->cursory);
+	fillbyselection(myworld, fillsel, *fillbuffer, randomflag);
 
 	/* Delete the fill buffer if we created it above */
 	if (randomflag && myinfo->pbuf == myinfo->standard_patterns) {
@@ -598,10 +633,11 @@ void movebykeystroke(int key, int* x, int* y, int minx, int miny,
 }
 
 
-int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, char* bigboard, displaymethod * mydisplay)
+int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, ZZTworld * myworld, displaymethod * mydisplay)
 {
 	int i, j;   /* Counters */
 	int key;
+	ZZTblock* block = myworld->boards[zztBoardGetCurrent(myworld)].bigboard;
 
 	do {
 		mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
@@ -612,7 +648,7 @@ int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, char*
 		if (key == DKEY_ESC) return 1;
 		/* Check for flood selection */
 		if (key == 'f' || key == 'F' || key == 'm') {
-			floodselect(sel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
+			floodselect(block, sel, myinfo->cursorx, myinfo->cursory);
 			/* Set the gradient endpoints to the current position */
 			grad->x1 = grad->x2 = myinfo->cursorx;
 			grad->y1 = grad->y2 = myinfo->cursory;
@@ -632,7 +668,7 @@ int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, char*
 		if (key == DKEY_ESC) return 1;
 		/* Check for flood selection */
 		if (key == 'f' || key == 'F' || key == 'm') {
-			floodselect(sel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
+			floodselect(block, sel, myinfo->cursorx, myinfo->cursory);
 			/* Set the gradient endpoints to the current position */
 			grad->x2 = myinfo->cursorx;
 			grad->y2 = myinfo->cursory;
@@ -650,10 +686,7 @@ int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, char*
 	return 0;
 }
 
-
-void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay);
-
-int pickgradientpoint(int* x, int* y, selection fillsel, patbuffer pbuf, gradline * grad, int randomseed, board* destbrd, world* myworld, editorinfo* myinfo, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay)
+int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, patbuffer pbuf, gradline * grad, int randomseed, displaymethod* mydisplay)
 {
 	int key;
 
@@ -661,15 +694,12 @@ int pickgradientpoint(int* x, int* y, selection fillsel, patbuffer pbuf, gradlin
 		mydisplay->cursorgo(*x, *y);
 
 		/* Preview the gradient */
-		gradientfillbyselection(fillsel, pbuf, *grad, randomseed, 1,
-									destbrd, bigboard, paramlist, mydisplay);
+		gradientfillbyselection(myworld, fillsel, pbuf, *grad, randomseed, 1, mydisplay);
 		mydisplay->putch(*x, *y, '*', 0x0F);
 
 		key = mydisplay->getch();
 
-		/* Refress the cursor location */
-		myinfo->cursorx = *x; myinfo->cursory = *y;
-		drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+		drawblocktile(mydisplay, zztBoardGetCurPtr(myworld)->bigboard, *x, *y, 0, 0);
 
 		movebykeystroke(key, x, y, 0, 0, 59, 24, mydisplay);
 
@@ -693,10 +723,11 @@ int pickgradientpoint(int* x, int* y, selection fillsel, patbuffer pbuf, gradlin
 	return key;
 }
 
-void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay)
+//void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay)
+void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, displaymethod * mydisplay)
 {
 	int x = -1, y = 0;
-	patdef pattern = pbuf.patterns[pbuf.pos];
+	ZZTtile pattern = pbuf.patterns[pbuf.pos];
 
 	if (randomseed != 0)
 		srand(randomseed);
@@ -705,25 +736,18 @@ void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, i
 	while (!nextselected(fillsel, &x, &y)) {
 		pattern = pbuf.patterns[gradientscaledistance(grad, x, y, pbuf.size-1)];
 
-		/* Check for object overflow if we have params & aren't overwriting some */
-		if (destbrd->info->objectcount >= 150 && pattern.patparam != NULL &&
-		    paramlist[x][y] == 0)
-			return;
-
 		if (!preview) {
-			pat_plot(destbrd, pattern, x, y, bigboard, paramlist);
+			zztPlot(myworld, x, y, pattern);
 		} else {
 			/* This is kinda sloppy for types which need to know who is next to
 			 * them, such as line-walls */
-			mydisplay->putch(x, y,
-							 z_getchar(pattern.type, pattern.color, pattern.patparam, bigboard, x, y),
-							 z_getcolour(pattern.type, pattern.color, pattern.patparam)
-							 );
+			/* TODO: consider writing to a temporary area to achieve previews */
+			mydisplay->putch(x, y, zztLoneTileGetDisplayChar(pattern), zztLoneTileGetDisplayColor(pattern));
 		}
 	}
 }
 
-void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
+void dogradient(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
 {
 	int key;
 	int randomseed;
@@ -749,12 +773,13 @@ void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo,
 	/* Draw the first panel */
 	drawsidepanel(mydisplay, PANEL_GRADTOOL1);
 
-	if (promptforselection(sel, &grad, myinfo, bigboard, mydisplay)) {
+	if (promptforselection(sel, &grad, myinfo, myworld, mydisplay)) {
 		/* Escape was pressed */
 		deleteselection(&sel);
 		return;
 	}
-	unselectpos(sel, myinfo->playerx, myinfo->playery);
+	unselectpos(sel, myworld->boards[zztBoardGetCurrent(myworld)].plx,
+							myworld->boards[zztBoardGetCurrent(myworld)].ply);
 
 	/************ Build the gradient **************/
 
@@ -765,8 +790,7 @@ void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo,
 	do {
 		/* Pick the ending point */
 		key = 
-		pickgradientpoint(&grad.x2, &grad.y2, sel, *fillbuffer, &grad, randomseed,
-						myworld->board[myinfo->curboard], myworld, myinfo, bigboard, paramlist, mydisplay);
+		pickgradientpoint(myworld, &grad.x2, &grad.y2, sel, *fillbuffer, &grad, randomseed, mydisplay);
 		myinfo->cursorx = grad.x2; myinfo->cursory = grad.y2;
 
 		if (key == DKEY_ESC) { deleteselection(&sel); return; }
@@ -774,16 +798,14 @@ void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo,
 
 		/* Pick the starting point */
 		key = 
-		pickgradientpoint(&grad.x1, &grad.y1, sel, *fillbuffer, &grad, randomseed,
-						myworld->board[myinfo->curboard], myworld, myinfo, bigboard, paramlist, mydisplay);
+		pickgradientpoint(myworld, &grad.x1, &grad.y1, sel, *fillbuffer, &grad, randomseed, mydisplay);
 		myinfo->cursorx = grad.x1; myinfo->cursory = grad.y1;
 
 		if (key == DKEY_ESC) { deleteselection(&sel); return; }
 	} while (key == DKEY_TAB || key == ' ');
 
 	/* Fill the selection by the gradient line */
-	gradientfillbyselection(sel, *fillbuffer, grad, randomseed, 0,
-						myworld->board[myinfo->curboard], bigboard, paramlist, mydisplay);
+	gradientfillbyselection(myworld, sel, *fillbuffer, grad, randomseed, 0, mydisplay);
 
 	/* Delete the fillbuffer if we createded it custom */
 	if (myinfo->pbuf == myinfo->standard_patterns) {

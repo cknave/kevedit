@@ -4,6 +4,9 @@
 
 #include "svector.h"
 
+#ifndef _ZLAUNCH_H
+#define _ZLAUNCH_H 1
+
 /* Default config file to use */
 #define ZL_DEFAULTCONFIG "default.zln"
 #define ZL_RMFILENAME "rmlist.tmp"
@@ -56,3 +59,5 @@ void zlaunchcleanup(zlaunchinfo* zli);
 /* Keboard buffer stuffing routines */
 void performkeystrokes(char* keystrokes);
 void stuffkbdbuffer(unsigned char scancode, unsigned char ch);
+
+#endif

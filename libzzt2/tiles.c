@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.3 2002/02/15 07:13:12 bitman Exp $
+ * $Id: tiles.c,v 1.4 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -71,6 +71,26 @@ const u_int8_t _zzt_display_char_table[] = {
 	233, /* ZZT_CENTHEAD       */
 	'O', /* ZZT_CENTBODY       */
 	/* Text must be handled specially */
+};
+
+/* Look-up table for line characters */
+const u_int8_t _zzt_display_char_line_table[] = {
+	249, /*  (none) */
+	208, /* n       */
+	210, /*   s     */
+	186, /* n s     */
+	181, /*     w   */
+	188, /* n   w   */
+	187, /*   s w   */
+	185, /* n s w   */
+	198, /*       e */
+	200, /* n     e */
+	201, /*   s   e */
+	204, /* n s   e */
+	205, /*     w e */
+	202, /* n   w e */
+	203, /*   s w e */
+	206, /* n s w e */
 };
 
 ZZTblock *zztBlockCreate(int width, int height)
@@ -184,15 +204,23 @@ ZZTparam *zztParamDuplicate(ZZTparam *param)
 
 int zztTilePlot(ZZTblock * block, int x, int y, ZZTtile tile)
 {
+	ZZTtile undertile;
+
 	/* Destination must be within bounds */
 	if (x < 0 || x >= block->width || y < 0 || y >= block->height)
 		return 0;
+
+	/* Remember the old tile in case we are plotting a param tile */
+	undertile = zztTileAt(block, x, y);
 
 	zztTileAt(block, x, y).type = tile.type;
 	zztTileAt(block, x, y).color = tile.color;
 	
 	/* Remove any existing param */
 	if (zztTileAt(block, x, y).param != NULL) {
+		/* Remeber the under type/color in case of plotting param */
+		undertile.type = undertile.param->utype;
+		undertile.color = undertile.param->ucolor;
 		zztParamFree(zztTileAt(block, x, y).param);
 		zztTileAt(block, x, y).param = NULL;
 	}
@@ -202,8 +230,11 @@ int zztTilePlot(ZZTblock * block, int x, int y, ZZTtile tile)
 		/* Tell the param where it now lives */
 		zztTileAt(block, x, y).param->x = x;
 		zztTileAt(block, x, y).param->y = y;
-		/* TODO: consider terrain underneath, also terrain beneath
-		 * object being overwritten */
+		if (undertile.type == ZZT_EMPTY || undertile.type == ZZT_FAKE ||
+				undertile.type == ZZT_WATER) {
+			zztTileAt(block, x, y).param->utype = undertile.type;
+			zztTileAt(block, x, y).param->ucolor = undertile.color;
+		}
 	}
 
 	/* Success! */
@@ -212,7 +243,7 @@ int zztTilePlot(ZZTblock * block, int x, int y, ZZTtile tile)
 
 int zztPlot(ZZTworld * world, int x, int y, ZZTtile tile)
 {
-	ZZTboard* brd = &(world->boards[zztBoardGetCurrent(world)]);
+	ZZTboard* brd = zztBoardGetCurPtr(world);
 
 	/* Error if board cannot be decompressed */
 	if (!zztBoardDecompress(brd))
@@ -222,6 +253,16 @@ int zztPlot(ZZTworld * world, int x, int y, ZZTtile tile)
 	if (x == brd->plx && y == brd->ply)
 		return 0;
 
+	/* Determine whether we are adding a param to the list */
+	if (tile.param != NULL && zztTileAt(brd->bigboard, x, y).param == NULL) {
+		/* No exceeding max params */
+		if (zztBoardGetParamcount(world) >= ZZT_BOARD_MAX_PARAMS)
+			return 0;
+		zztBoardSetParamcount(world, zztBoardGetParamcount(world) + 1);
+	} else if (zztTileAt(brd->bigboard, x, y).param != NULL && tile.param == NULL) {
+		zztBoardSetParamcount(world, zztBoardGetParamcount(world) - 1);
+	}
+
 	zztTilePlot(brd->bigboard, x, y, tile);
 	
 	return 1;
@@ -229,7 +270,7 @@ int zztPlot(ZZTworld * world, int x, int y, ZZTtile tile)
 
 int zztPlotPlayer(ZZTworld * world, int x, int y)
 {
-	ZZTboard* brd = &(world->boards[zztBoardGetCurrent(world)]);
+	ZZTboard* brd = zztBoardGetCurPtr(world);
 	ZZTtile player;
 
 	/* Simple case */
@@ -257,14 +298,21 @@ int zztPlotPlayer(ZZTworld * world, int x, int y)
 
 int zztTileErase(ZZTblock * block, int x, int y)
 {
-	ZZTtile empty = { ZZT_EMPTY, 0x07, NULL };
-	/* TODO: actually consider terrain underneath */
-	return zztTilePlot(block, x, y, empty);
+	/* Erase a tile, bringing whatever is underneath to the top */
+	ZZTtile over = zztTileAt(block, x, y);
+	ZZTtile under = { ZZT_EMPTY, 0x07, NULL };
+
+	if (over.param != NULL) {
+		under.type = over.param->utype;
+		under.color = over.param->ucolor;
+	}
+
+	return zztTilePlot(block, x, y, under);
 }
 
 int zztErase(ZZTworld * world, int x, int y)
 {
-	ZZTboard* brd = &(world->boards[zztBoardGetCurrent(world)]);
+	ZZTboard* brd = zztBoardGetCurPtr(world);
 
 	/* Error if board cannot be decompressed */
 	if (!zztBoardDecompress(brd))
@@ -281,7 +329,7 @@ int zztErase(ZZTworld * world, int x, int y)
 
 ZZTtile zztTileGet(ZZTworld * world, int x, int y)
 {
-	ZZTboard* brd = &(world->boards[zztBoardGetCurrent(world)]);
+	ZZTboard* brd = zztBoardGetCurPtr(world);
 	ZZTtile empty = { ZZT_EMPTY, 0x07, NULL };
 
 	/* Error if board cannot be decompressed */
@@ -294,10 +342,27 @@ ZZTtile zztTileGet(ZZTworld * world, int x, int y)
 	return zztTileAt(brd->bigboard, x, y);
 }
 
-u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y)
+/* Helper function for zztTileGetDisplayChar */
+u_int8_t _zzt_display_char_line(ZZTblock * block, int x, int y)
 {
-	ZZTtile tile = zztTileAt(block, x, y);
+	u_int8_t flags;
 
+	flags = 0;
+
+	if (y == 0 || (zztTileAt(block, x, y - 1).type == ZZT_LINE))
+		flags |= 1;
+	if (y == block->height - 1 || (zztTileAt(block, x, y + 1).type == ZZT_LINE))
+		flags |= 2;
+	if (x == 0 || (zztTileAt(block, x - 1, y).type == ZZT_LINE))
+		flags |= 4;
+	if (x == block->width - 1 || (zztTileAt(block, x + 1, y).type == ZZT_LINE))
+		flags |= 8;
+
+	return _zzt_display_char_line_table[flags];
+}
+
+u_int8_t zztLoneTileGetDisplayChar(ZZTtile tile)
+{
 	if (tile.type > ZZT_BWHITETEXT)
 		return '?';
 	if (tile.type >= ZZT_BLUETEXT)
@@ -310,9 +375,6 @@ u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y)
 			if (tile.param->xstep == 0x0001) return '>';
 			if (tile.param->ystep == 0xFFFF) return '^';
 			return 'v';
-		case ZZT_LINE:
-			/* TODO: line case */
-			break;
 		case ZZT_OBJECT:
 			if (tile.param == NULL) break;
 			return tile.param->data[0];
@@ -328,10 +390,8 @@ u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y)
 	return _zzt_display_char_table[tile.type];
 }
 
-u_int8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y)
+u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile)
 {
-	ZZTtile tile = zztTileAt(block, x, y);
-
 	switch (tile.type) {
 		case ZZT_EMPTY:  return 0x07;
 		case ZZT_EDGE:   return 0x4C;
@@ -372,12 +432,30 @@ u_int8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y)
 		case ZZT_BWHITETEXT:  return 0xff;
 	}
 
-	/* Returt the color by default */
+	/* Return the color by default */
 	return tile.color;
 }
 
+u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y)
+{
+	ZZTtile tile = zztTileAt(block, x, y);
+
+	/* Only the line type is dependant on position */
+	if (tile.type == ZZT_LINE)
+		return _zzt_display_char_line(block, x, y);
+
+	return zztLoneTileGetDisplayChar(tile);
+}
+
+u_int8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y)
+{
+	ZZTtile tile = zztTileAt(block, x, y);
+
+	return zztLoneTileGetDisplayColor(tile);
+}
+
 u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y) {
-	ZZTboard* brd = &(world->boards[zztBoardGetCurrent(world)]);
+	ZZTboard* brd = zztBoardGetCurPtr(world);
 
 	/* Error if board cannot be decompressed */
 	if (!zztBoardDecompress(brd))
@@ -387,7 +465,7 @@ u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y) {
 }
 
 u_int8_t zztGetDisplayColor(ZZTworld * world, int x, int y) {
-	ZZTboard* brd = &(world->boards[zztBoardGetCurrent(world)]);
+	ZZTboard* brd = zztBoardGetCurPtr(world);
 
 	/* Error if board cannot be decompressed */
 	if (!zztBoardDecompress(brd))

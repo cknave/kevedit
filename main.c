@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.51 2001/12/12 22:08:02 bitman Exp $
+ * $Id: main.c,v 1.52 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@
 #include "editbox.h"
 #include "screen.h"
 
-#include "zzt.h"
+#include "libzzt2/zzt.h"
 
 #include "patbuffer.h"
 #include "help.h"
@@ -48,17 +48,14 @@ void sigInt(int i)
 
 int main(int argc, char **argv)
 {
-	int i, x;             /* General counters */
 	int key;              /* Keypress */
 	int quit = 0;
 	displaymethod *mydisplay;
 	editorinfo *myinfo;
-	char *bigboard;
 	char *datapath;       /* Location of help file, zzt.exe, and zzt.dat */
 	char buffer[MAIN_BUFLEN];
-	unsigned char paramlist[60][25];
 
-	world *myworld;
+	ZZTworld *myworld;
 
 	RegisterDisplays();
 	mydisplay = pickdisplay(&display);
@@ -72,7 +69,6 @@ int main(int argc, char **argv)
 	/* Allocate space for various data */
 
 	myinfo = (editorinfo *) malloc(sizeof(editorinfo));
-	bigboard = (char *) malloc(BOARD_MAX * 2);
 
 	/* Set up initial info */
 	initeditorinfo(myinfo);
@@ -90,27 +86,16 @@ int main(int argc, char **argv)
 
 		/* Open the file */
 		fileof(buffer, argv[1], MAIN_BUFLEN - 5);
-		myworld = loadworld(buffer);
+		myworld = zztWorldLoad(buffer);
 		if (myworld == NULL) {
 			/* Maybe they left off the .zzt extension? */
 			strcat(buffer, ".zzt");
-			myworld = loadworld(buffer);
-		}
-		if (myworld != NULL) {
-			strncpy(myinfo->currentfile, buffer, 13);
-
-			updateinfo(myworld, myinfo, bigboard);
-			updateparamlist(myworld, myinfo, paramlist);
+			myworld = zztWorldLoad(buffer);
 		}
 	}
 	/* Create the blank world */
 	if (myworld == NULL) {
-		myworld = z_newworld();
-		myworld->board[0] = z_newboard("KevEdit World");
-		rle_decode(myworld->board[0]->data, bigboard);
-		for (i = 0; i < 25; i++)
-			for (x = 0; x < 60; x++)
-				paramlist[x][i] = 0;
+		myworld = zztWorldCreate(NULL, NULL);
 	}
 
 	/* Trap ctrl+c */
@@ -119,24 +104,22 @@ int main(int argc, char **argv)
 	/* Draw */
 	drawpanel(mydisplay);
 	updatepanel(mydisplay, myinfo, myworld);
-	drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+	drawscreen(mydisplay, myworld, myinfo);
 	mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-	mydisplay->print(30 - strlen(myworld->board[myinfo->curboard]->title) / 2, 0, 0x70, myworld->board[myinfo->curboard]->title);
+	mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
 
 	/* Main loop begins */
 
 	while (quit == 0) {
 		/* Draw the tile under the cursor as such */
-		cursorspace(mydisplay, myworld, myinfo, bigboard, paramlist);
+		cursorspace(mydisplay, myworld, myinfo);
+		mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory); /* Why not? */
 
 		/* Get the key */
 		key = mydisplay->getch();
 
 		/* Undo the cursorspace (draw as a normal tile) */
-		i = (myinfo->cursorx + myinfo->cursory * 60) * 2;
-		mydisplay->putch(myinfo->cursorx, myinfo->cursory,
-				 z_getchar(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], bigboard, myinfo->cursorx, myinfo->cursory),
-				 z_getcolour(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]));
+		drawspot(mydisplay, myworld, myinfo);
 
 		/* Check for text entry */
 		if (myinfo->textentrymode == 1) {
@@ -146,46 +129,34 @@ int main(int argc, char **argv)
 			} else if (key == DKEY_BACKSPACE && myinfo->cursorx > 0) {
 				/* Backspace */
 				myinfo->cursorx--;
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-					/* We're overwriting a parameter */
-					param_remove(myworld->board[myinfo->curboard], paramlist, myinfo->cursorx, myinfo->cursory);
-				}
-				bigboard[(myinfo->cursorx+myinfo->cursory*60)*2] = Z_EMPTY;
-				bigboard[(myinfo->cursorx+myinfo->cursory*60)*2+1] = 0x07;
+				zztErase(myworld, myinfo->cursorx, myinfo->cursory);
 				updatepanel(mydisplay, myinfo, myworld);
 			} else if ((key < 0x80 && key >= 0x20) || key == DKEY_CTRL_A) {
 				/* Insert the current keystroke as text */
+				ZZTtile textTile = { ZZT_BLUETEXT, 0x00, NULL };
 
 				if (key == DKEY_CTRL_A) { /* ASCII selection */
 					key = charselect(mydisplay, -1);
 					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+					drawscreen(mydisplay, myworld, myinfo);
 				}
 
-				/* Plot the text character */
-				if ((myinfo->cursorx != myinfo->playerx || myinfo->cursory != myinfo->playery) && (key != -1)) {
-					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-						/* We're overwriting a parameter */
-						param_remove(myworld->board[myinfo->curboard], paramlist, myinfo->cursorx, myinfo->cursory);
-					}
-					/* Determine the text code based on the FG colour */
-					if (myinfo->forec == 0 || myinfo->forec == 8 || myinfo->forec == 15)
-						i = 6;
-					else if (myinfo->forec > 8)
-						i = myinfo->forec - 9;
-					else
-						i = myinfo->forec - 1;
-					/* XXX FIXME Was I mistaken about blinking text?
-					   if(myinfo->blinkmode)
-					   i += 8; */
+				/* Determine the text code based on the FG colour */
+				if (myinfo->forec == 0 || myinfo->forec == 8 || myinfo->forec == 15)
+					textTile.color += 6;
+				else if (myinfo->forec > 8)
+					textTile.type += myinfo->forec - 9;
+				else
+					textTile.type += myinfo->forec - 1;
 
-					tiletype (bigboard, myinfo->cursorx, myinfo->cursory) = Z_BLUETEXT + i;
-					tilecolor(bigboard, myinfo->cursorx, myinfo->cursory) = key;
-					/* Move right now */
-					key = DKEY_RIGHT;
-				} else 
-					key = DKEY_NONE;
+				/* Determine color based on keypress */
+				textTile.color = key;
+
+				/* Plot the text character */
+				zztPlot(myworld, myinfo->cursorx, myinfo->cursory, textTile);
+
+				/* Now move right */
+				key = DKEY_RIGHT;
 			}
 		}
 
@@ -245,9 +216,9 @@ int main(int argc, char **argv)
 		case 'n':
 		case 'N':
 			if (confirmprompt(mydisplay, "Make new world?") == CONFIRM_YES) {
-				myworld = clearworld(myworld, myinfo, bigboard, paramlist);
+				myworld = clearworld(myworld);
 
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawscreen(mydisplay, myworld, myinfo);
 			}
 
 			drawpanel(mydisplay);
@@ -256,9 +227,10 @@ int main(int argc, char **argv)
 		case 'z':
 		case 'Z':
 			if (confirmprompt(mydisplay, "Clear board?") == CONFIRM_YES) {
-				clearboard(myworld, myinfo, bigboard, paramlist);
+				clearboard(myworld);
+				/* TODO: clear board */
 
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawscreen(mydisplay, myworld, myinfo);
 			}
 
 			drawpanel(mydisplay);
@@ -267,21 +239,21 @@ int main(int argc, char **argv)
 
 		case 'b':
 		case 'B':
-			changeboard(mydisplay, myworld, myinfo, bigboard, paramlist);
+			switchboard(myworld, myinfo, mydisplay);
 
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-			mydisplay->print(30 - strlen(myworld->board[myinfo->curboard]->title) / 2, 0, 0x70, myworld->board[myinfo->curboard]->title);
+			drawscreen(mydisplay, myworld, myinfo);
+			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
 			break;
 		case 'i':
 		case 'I':
 			/* Board Info */
-			editboardinfo(myworld, myinfo->curboard, mydisplay);
+			editboardinfo(myworld, mydisplay);
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case 'w':
@@ -291,7 +263,7 @@ int main(int argc, char **argv)
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 
@@ -299,10 +271,11 @@ int main(int argc, char **argv)
 
 		case 's':
 		case 'S':
-				saveworldprompt(mydisplay, myworld, myinfo, bigboard);
+				saveworldprompt(mydisplay, myworld, myinfo);
+
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawscreen(mydisplay, myworld, myinfo);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 				break;
 		case 'L':
@@ -312,41 +285,46 @@ int main(int argc, char **argv)
 				char* filename =
 					filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
 				if (filename) {
-					world* newworld = loadworld(filename);
+					ZZTworld* newworld = zztWorldLoad(filename);
 					if (newworld != NULL) {
 						char* newpath = (char*) malloc(sizeof(char)*(strlen(filename)+1));
+						char* newfile = (char*) malloc(sizeof(char)*(strlen(filename)+1));
 
 						/* Out with the old and in with the new */
-						z_delete(myworld);
+						zztWorldFree(myworld);
 						myworld = newworld;
 
 						/* Change directory */
 						pathof(newpath, filename, strlen(filename) + 1);
 						chdir(newpath);
-						free(newpath);
 
-						/* Copy the file portion of the filename */
-						fileof(myinfo->currentfile, filename, 14);
-						updateinfo(myworld, myinfo, bigboard);
-						updateparamlist(myworld, myinfo, paramlist);
+						/* Change filename */
+						fileof(newfile, filename, strlen(filename) + 1);
+						zztWorldSetFilename(myworld, newfile);
+
+						/* Select the starting board */
+						zztBoardSelect(myworld, zztWorldGetStartboard(myworld));
+
+						free(newpath);
+						free(newfile);
 					}
 					free(filename);
 				}
 			}
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			mydisplay->print(30 - strlen(myworld->board[myinfo->curboard]->title) / 2, 0, 0x70, myworld->board[myinfo->curboard]->title);
+			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
 			break;
 		case 'o':
 		case 'O':
 			/* Load object from library */
-			objectlibrarymenu(mydisplay, myworld, myinfo, bigboard, paramlist);
+			objectlibrarymenu(mydisplay, myworld, myinfo);
 			
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 
@@ -376,7 +354,7 @@ int main(int argc, char **argv)
 
 			pat_applycolordata(myinfo->standard_patterns, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'v':
@@ -403,7 +381,7 @@ int main(int argc, char **argv)
 			/* Update everything */
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case 'r':
@@ -411,12 +389,12 @@ int main(int argc, char **argv)
 			/* run zzt */
 			/* Load current world into zzt */
 			mydisplay->end();
-			runzzt(datapath, myinfo->currentfile);
+			runzzt(datapath, zztWorldGetFilename(myworld));
 			
 			/* restart display from scratch */
 			mydisplay->init();
 			drawpanel(mydisplay);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 
 			/* Redraw */
 			drawpanel(mydisplay);
@@ -428,7 +406,7 @@ int main(int argc, char **argv)
 			texteditor(mydisplay);
 
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
@@ -437,15 +415,15 @@ int main(int argc, char **argv)
 
 		case ' ':
 			/* Plot */
-			plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+			plot(myworld, myinfo, mydisplay);
+			drawspot(mydisplay, myworld, myinfo);
 			break;
 		case DKEY_TAB:
 			/* Toggle draw mode */
 			if (toggledrawmode(myinfo) != 0) {
 				/* Update changes and start plotting if we entered draw mode */
-				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+				plot(myworld, myinfo, mydisplay);
+				drawspot(mydisplay, myworld, myinfo);
 			}
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
@@ -453,36 +431,26 @@ int main(int argc, char **argv)
 			/* Shift-tab */
 			if (togglegradientmode(myinfo) != 0) {
 				/* Plot only when first turning gradmode on */
-				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+				plot(myworld, myinfo, mydisplay);
+				drawspot(mydisplay, myworld, myinfo);
 			}
 
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case DKEY_BACKSPACE:
 		case DKEY_DELETE:
-			/* Plot an empty */
-			{
-				patbuffer* prevbuf = myinfo->pbuf;
-				myinfo->pbuf = myinfo->standard_patterns;
-				x = myinfo->pbuf->pos;
-				myinfo->pbuf->pos = 4;	/* That's an empty */
-				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-				myinfo->pbuf->pos = x;
-				myinfo->pbuf = prevbuf;
-				updatepanel(mydisplay, myinfo, myworld);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
-			}
+			zztErase(myworld, myinfo->cursorx, myinfo->cursory);
 			break;
 		case 'f':
 		case 'F':
-			dofloodfill(mydisplay, myworld, myinfo, bigboard, paramlist, key == 'F');
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			dofloodfill(mydisplay, myworld, myinfo, key == 'F');
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo);
 			break;
 		case 'g':
 		case 'G':
-			dogradient(mydisplay, myworld, myinfo, bigboard, paramlist);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			dogradient(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld, myinfo);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
@@ -524,16 +492,7 @@ int main(int argc, char **argv)
 
 			if (myinfo->aqumode != 0) {
 				/* Grab if aqumode is on */
-				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(myinfo->backbuffer,
-							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-							 myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-				else
-					push(myinfo->backbuffer,
-							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-							 NULL);
+				push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
 			}
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
@@ -542,28 +501,28 @@ int main(int argc, char **argv)
 
 		case DKEY_F1:
 			/* F1 panel */
-			itemmenu(mydisplay, myworld, myinfo, bigboard, paramlist);
+			itemmenu(mydisplay, myworld, myinfo);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case DKEY_F2:
 			/* F2 panel */
-			creaturemenu(mydisplay, myworld, myinfo, bigboard, paramlist);
+			creaturemenu(mydisplay, myworld, myinfo);
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case DKEY_F3:
 			/* F3 panel */
-			terrainmenu(mydisplay, myworld, myinfo, bigboard, paramlist);
+			terrainmenu(mydisplay, myworld, myinfo);
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawscreen(mydisplay, myworld, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case DKEY_F4:
@@ -573,72 +532,44 @@ int main(int argc, char **argv)
 			break;
 		case DKEY_ENTER:
 			/* Modify / Grab */
-			if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-				if (myworld->board[myinfo->curboard]->
-							params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
-					/* we have params; lets edit them! */
-					if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
-						int csel
-							= charselect(mydisplay, myworld->board[myinfo->curboard]->
-													 params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1);
+			/* TODO: This deserves its own function */
+			{
+				ZZTtile tile = zztTileGet(myworld, myinfo->cursorx, myinfo->cursory);
+				if (tile.param != NULL) {
+					/* We have params; have at 'em! */
+					if (tile.type == ZZT_OBJECT) {
+						/* Modify object char */
+						int csel = charselect(mydisplay, tile.param->data[0]);
 						if (csel != -1)
-							myworld->board[myinfo->curboard]->
-								params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1
-									= csel;
+							tile.param->data[0] = csel;
 					}
-					if (tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_SCROLL ||
-							tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
-						/* Load editor on current moredata */
-						editmoredata(myworld->board[myinfo->curboard]->
-												 params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);
+
+					if (tile.type == ZZT_OBJECT || tile.type == ZZT_SCROLL) {
+						/* Edit the program/text */
+						editprogram(mydisplay, tile.param);
 					}
-					if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_PASSAGE) {
-						param* p = myworld->board[myinfo->curboard]->
-							params[paramlist[myinfo->cursorx][myinfo->cursory]];
-						/* Choose passage destination */
-						p->data3 = boarddialog(myworld, p->data3, 0, "Passage Destination", mydisplay);
+
+					if (tile.type == ZZT_PASSAGE) {
+						/* Change the passage's destination */
+						tile.param->data[2] = boarddialog(myworld, tile.param->data[2], "Passage Destination", 0, mydisplay);
 					}
 					/* TODO: modify other params */
+
 					/* redraw everything */
 					drawpanel(mydisplay);
 					updatepanel(mydisplay, myinfo, myworld);
 					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+					drawscreen(mydisplay, myworld, myinfo);
 				}
 			}
+
 			/* Don't break here! When we modify, we grab too! */
 		case DKEY_INSERT:
 			/* Insert */
 			/* Grab */
-			if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-				push(myinfo->backbuffer,
-						 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-						 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-						 myworld->board[myinfo->curboard]->
-							 params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-			else
-				push(myinfo->backbuffer,
-						 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-						 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-						 NULL);
+			push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
 
 			updatepanel(mydisplay, myinfo, myworld);
-			break;
-
-		case '?':
-			/* display param data (for developement purposes and debugging) */
-			if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-				if (myworld->board[myinfo->curboard]->
-						  params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
-					/* we have params; lets show them! */
-					showParamData(myworld->board[myinfo->curboard]->
-												  params[paramlist[myinfo->cursorx][myinfo->cursory]],
-												paramlist[myinfo->cursorx][myinfo->cursory], mydisplay);
-
-					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				}
-			}
 			break;
 		}
 
@@ -680,16 +611,7 @@ int main(int argc, char **argv)
 				/* Act on keystrokes */
 				if (myinfo->aqumode != 0) {
 					/* Get if aquire mode is on */
-					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-						push(myinfo->backbuffer,
-								 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-								 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-								 myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-					else
-						push(myinfo->backbuffer,
-								 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-								 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-								 NULL);
+					push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
 					updatepanel(mydisplay, myinfo, myworld);
 				}
 				/* If gradmode is on, cycle through the pattern buffer.
@@ -703,11 +625,11 @@ int main(int argc, char **argv)
 				}
 				/* If drawmode is on, plot */
 				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+					plot(myworld, myinfo, mydisplay);
 				}
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 				updatepanel(mydisplay, myinfo, myworld);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawspot(mydisplay, myworld, myinfo);
 			} while (repeat);
 		}
 	}
@@ -728,14 +650,9 @@ int main(int argc, char **argv)
 	free(myinfo->standard_patterns);
 	free(myinfo->backbuffer);
 
-	/* Free myinfo stuff */
-	free(myinfo->currentfile);
-	free(myinfo->currenttitle);
-
 	/* Free everything! Free! Free! Free! Let freedom ring! */
 	free(myinfo);
-	free(bigboard);
-	z_delete(myworld);
+	zztWorldFree(myworld);
 
 	return 0;
 }

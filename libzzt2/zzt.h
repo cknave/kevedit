@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.3 2002/02/15 07:13:12 bitman Exp $
+ * $Id: zzt.h,v 1.4 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -239,6 +239,10 @@ void zztBoardCommit(ZZTworld *world);
  * Return the number of the currently selected board
  */
 int zztBoardGetCurrent(ZZTworld *world);
+/* zztBoardGetCurPtr(world)
+ * Return the currently selected board itself -- be careful
+ */
+ZZTboard * zztBoardGetCurPtr(ZZTworld *world);
 
 /***** BOARD MANIPULATORS *****/
 /* zztWorldAddBoard(world, title)
@@ -379,21 +383,25 @@ int zztErase(ZZTworld * world, int x, int y);
 /* zztTileAt(block, x, y)
  * Macro to find the tile at a given coordinate in a block
  */
-#define zztTileAt(block, x, y) (block->tiles[block->width*y + x])
+#define zztTileAt(block, x, y) (block->tiles[(block->width)*(y) + (x)])
 /* zztTileGet(world, x, y)
  * Gets the tile at (x, y), but DOES NOT COPY PARAM DATA
  */
 ZZTtile zztTileGet(ZZTworld * world, int x, int y);
-/* zztTileGetDisplayChar(block, x, y)
+/* zztLoneTileGetDisplayChar(tile)
+ * zztTileGetDisplayChar(block, x, y)
  * zztGetDisplayChar(world, x, y)
  * Gets the display character of the tile at (x, y)
  */
+u_int8_t zztLoneTileGetDisplayChar(ZZTtile tile);
 u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y);
 u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y);
-/* zztTileGetDisplayColor(block, x, y)
+/* zztLoneTileGetDisplayChar(tile)
+ * zztTileGetDisplayColor(block, x, y)
  * zztGetDisplayColor(world, x, y)
  * Gets the display colour of the tile at (x, y)
  */
+u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile);
 u_int8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y);
 u_int8_t zztGetDisplayColor(ZZTworld * world, int x, int y);
 

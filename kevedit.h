@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.9 2001/10/27 19:30:42 kvance Exp $
+ * $Id: kevedit.h,v 1.10 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,19 +20,20 @@
 #ifndef _KEVEDIT_H
 #define _KEVEDIT_H 1
 
-#include "zzt.h"
+#include "libzzt2/zzt.h"
 
 #define MAX_BACKBUF 128
 
+#if 0
 typedef struct patdef {
 	int type;
 	int color;
-	param* patparam;
+	ZZTparam* patparam;
 } patdef;
-
+#endif
 
 typedef struct patbuffer {
-	patdef* patterns;
+	ZZTtile* patterns;
 	int size;
 	int pos;
 } patbuffer;
@@ -51,12 +52,15 @@ typedef struct editorinfo {
 	patbuffer* standard_patterns;
 	patbuffer* backbuffer;
 
+	/* Now taken care of by libzzt2 */
+#if 0
 	int playerx, playery;
 
 	char *currentfile;
 	char *currenttitle;
 
 	int curboard;
+#endif
 } editorinfo;
 
 /* The all-powerful min/max macros */

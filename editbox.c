@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.33 2001/12/15 00:54:53 bitman Exp $
+ * $Id: editbox.c,v 1.34 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -263,94 +263,7 @@ void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,
 	}
 }
 
-stringvector moredatatosvector(param * p, int editwidth)
-{
-	stringvector sv;    /* list of strings */
-	char *str = NULL;   /* temporary string */
-	int strpos = 0;     /* position in str */
-	int i;
-
-	initstringvector(&sv);
-
-	/* load the vector */
-	if ((p->moredata == NULL) | (p->length <= 0)) {
-		/* No data! We need to create an empty node */
-		pushstring(&sv, str_dupmin("", editwidth + 1));
-		return sv;
-	}
-
-	/* Let's fill the node from moredata! */
-	strpos = 0;
-	str = (char *) malloc(sizeof(char) * (editwidth + 1));
-
-	for (i = 0; i < p->length; i++) {
-		if (p->moredata[i] == 0x0d) {
-			/* end of the line (heh); push the string and start over */
-			str[strpos] = 0;
-			pushstring(&sv, str);
-			strpos = 0;
-			str = (char *) malloc(sizeof(char) * (editwidth + 1));
-		} else if (strpos > editwidth) {
-			/* hmmm... really long line; must not have been made in ZZT... */
-			/* let's truncate! */
-			str[strpos] = 0;
-			pushstring(&sv, str);
-			strpos = 0;
-			str = (char *) malloc(sizeof(char) * (editwidth + 1));
-			/* move to next 0x0d */
-			do i++; while (i < p->length && p->moredata[i] != 0x0d);
-		} else {
-			/* just your everyday copying... */
-			str[strpos++] = p->moredata[i];
-		}
-	}
-
-	if (strpos > 0) {
-		/* strange... we seem to have an extra line with no CR at the end... */
-		str[strpos] = 0;
-		pushstring(&sv, str);
-	} else {
-		/* we grabbed all that RAM for nothing. Darn! */
-		free(str);
-	}
-
-	return sv;
-}
-
-param svectortomoredata(stringvector sv)
-{
-	param p;
-	int pos;
-
-	/* find out how much space we need */
-	p.length = 0;
-	/* and now for a wierdo for loop... */
-	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next)
-		p.length += strlen(sv.cur->s) + 1;		/* + 1 for CR */
-
-	if (p.length <= 1) {
-		/* sv holds one empty string (it can happen) */
-		p.moredata = NULL;
-		p.length = 0;
-		return p;
-	}
-
-	/* lets make room for all that moredata */
-	pos = 0;
-	p.moredata = (char *) malloc(sizeof(char) * p.length);
-
-	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next) {
-		int i;
-		int linelen = strlen(sv.cur->s);	/* I feel efficient today */
-		for (i = 0; i < linelen; i++) {
-			p.moredata[pos++] = sv.cur->s[i];
-		}
-		p.moredata[pos++] = 0x0d;
-	}
-
-	return p;
-}
-
+#if 0
 /***** editmoredata() *********/
 
 void editmoredata(param * p, displaymethod * d)
@@ -374,6 +287,7 @@ void editmoredata(param * p, displaymethod * d)
 	p->length = newparam.length;
 	p->moredata = newparam.moredata;
 }
+#endif
 
 
 /* Space to reserve for the saved file name */

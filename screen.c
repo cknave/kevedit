@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.33 2001/11/14 01:46:50 bitman Exp $
+ * $Id: screen.c,v 1.34 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,9 +22,10 @@
 #include "kevedit.h"
 #include "editbox.h"
 
-#include "zzt.h"
+#include "libzzt2/zzt.h"
 #include "hypertxt.h"
 #include "zlaunch.h"
+#include "selection.h"
 
 #include "panel.h"
 #include "panel_f1.h"
@@ -373,17 +374,18 @@ void drawsidepanel(displaymethod * d, unsigned char panel[])
 	}
 }
 
-void updatepanel(displaymethod * d, editorinfo * e, world * w)
+void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 {
 	int i, x;
 	char s[255];
+	char * title = zztWorldGetTitle(w);
 
 	/* (x, y) position */
 	d->putch(62, 0, ' ', 0x1f);
 	d->putch(63, 0, ' ', 0x1f);
 	d->putch(76, 0, ' ', 0x1f);
 	d->putch(77, 0, ' ', 0x1f);
-	sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, w->board[e->curboard]->info->objectcount);
+	sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w));
 	i = 70 - strlen(s) / 2;
 	for (x = 0; x < strlen(s); x++) {
 		d->putch(i + x, 0, s[x], 0x1c);
@@ -438,20 +440,20 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 		d->putch(78, 21, 'a', 0x18);
 
 	/* Too long title */
-	if (strlen(e->currenttitle) > 8) {
+	if (strlen(title) > 8) {
 		for (x = 0; x < 5; x++) {
-			d->putch(71 + x, 1, e->currenttitle[x], 0x17);
+			d->putch(71 + x, 1, title[x], 0x17);
 		}
 		for (x = 0; x < 3; x++) {
 			d->putch(76 + x, 1, '.', 0x1f);
 		}
 	} else {
 		/* Regular title */
-		d->print(71, 1, 0x17, e->currenttitle);
+		d->print(71, 1, 0x17, title);
 	}
 
 	strcpy(s, "KevEdit - ");
-	strncpy(&s[10], e->currenttitle, 244);
+	strncpy(&s[10], title, 244);
 	d->titlebar(s);
 
 #ifdef STDPATFOLLOWCOLOR
@@ -478,11 +480,10 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 
 	/* Draw pattern stack */
 	for (i = 0; i < BBVWIDTH && i + x < e->backbuffer->size; i++) {
-		patdef pattern = e->backbuffer->patterns[i + x];
+		ZZTtile pattern = e->backbuffer->patterns[i + x];
 		d->putch(68 + i, 21,
-						 z_getchar(pattern.type, pattern.color, pattern.patparam,
-											 NULL, 0, 0),
-						 z_getcolour(pattern.type, pattern.color, pattern.patparam));
+						 zztLoneTileGetDisplayChar(pattern),
+						 zztLoneTileGetDisplayColor(pattern));
 	}
 	/* Start where we left off and fill the rest w/ blue solids */
 	for (; i < BBVWIDTH; i++) {
@@ -490,27 +491,23 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 	}
 }
 
-void drawscreen(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25])
+/* TODO: remove e from params */
+void drawscreen(displaymethod * d, ZZTworld * w, editorinfo * e)
 {
-	int x, y, i = 0;
+	int x, y;
 
 	for (y = 0; y < 25; y++) {
 		for (x = 0; x < 60; x++) {
-			d->putch(x, y,
-							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]], bigboard, x, y),
-							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]])
-							);
-			i += 2;
+			d->putch(x, y, zztGetDisplayChar(w, x, y), zztGetDisplayColor(w, x, y));
 		}
 	}
 }
 
 /* Make the cursor more visible */
-void cursorspace(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25])
+void cursorspace(displaymethod * d, ZZTworld * w, editorinfo * e)
 {
 	char c, b, f;
-	int i = (e->cursorx + e->cursory * 60) * 2;
-	c = z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[e->cursorx][e->cursory]]);
+	c = zztGetDisplayColor(w, e->cursorx, e->cursory);
 	f = c & 0x0f;
 	b = (c & 0xf0) >> 4;
 	if (f < 8)
@@ -521,75 +518,110 @@ void cursorspace(displaymethod * d, world * w, editorinfo * e, char *bigboard, u
 		c = 7;
 	else
 		c = (b << 4) + f;
-	d->putch(e->cursorx, e->cursory, z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[e->cursorx][e->cursory]], bigboard, e->cursorx, e->cursory), c);
+
+	/* Print the char */
+	d->putch(e->cursorx, e->cursory, zztGetDisplayChar(w, e->cursorx, e->cursory), c);
 }
 
 /* Update a spot around the cursor */
-void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25])
+void drawspot(displaymethod * d, ZZTworld * w, editorinfo * e)
 {
-	int x, y, i;
+	int x, y;
 	x = e->cursorx;
 	y = e->cursory;
 
 	if (y - 1 >= 0) {
 		if (x - 1 >= 0) {
-			i = ((x - 1) + (y - 1) * 60) * 2;
-			d->putch(x - 1, y - 1,
-							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y - 1]], bigboard, x - 1, y - 1),
-							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y - 1]])
-							);
+			d->putch(x - 1, y - 1, zztGetDisplayChar(w, x - 1, y - 1), zztGetDisplayColor(w, x - 1, y - 1));
 		}
-		i = (x + (y - 1) * 60) * 2;
-		d->putch(x, y - 1,
-						 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y - 1]], bigboard, x, y - 1),
-						 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y - 1]])
-						);
-		if (x + 1 < 60) {
-			i = ((x + 1) + (y - 1) * 60) * 2;
-			d->putch(x + 1, y - 1,
-							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y - 1]], bigboard, x + 1, y - 1),
-							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y - 1]])
-							);
+		d->putch(x, y - 1, zztGetDisplayChar(w, x, y - 1), zztGetDisplayColor(w, x, y - 1));
+		if (x + 1 < ZZT_BOARD_X_SIZE) {
+			d->putch(x + 1, y - 1, zztGetDisplayChar(w, x + 1, y - 1), zztGetDisplayColor(w, x + 1, y - 1));
 		}
 	}
 	if (x - 1 >= 0) {
-		i = ((x - 1) + y * 60) * 2;
-		d->putch(x - 1, y,
-						 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y]], bigboard, x - 1, y),
-						 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y]])
-						);
+		d->putch(x - 1, y, zztGetDisplayChar(w, x - 1, y), zztGetDisplayColor(w, x - 1, y));
 	}
-	i = (x + y * 60) * 2;
-	d->putch(x, y,
-					 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]], bigboard, x, y),
-					 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]])
-					);
-	if (x + 1 < 60) {
-		i = ((x + 1) + y * 60) * 2;
-		d->putch(x + 1, y,
-						 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y]], bigboard, x + 1, y),
-						 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y]])
-						);
+
+	d->putch(x, y, zztGetDisplayChar(w, x, y), zztGetDisplayColor(w, x, y));
+	if (x + 1 < ZZT_BOARD_X_SIZE) {
+		d->putch(x + 1, y, zztGetDisplayChar(w, x + 1, y), zztGetDisplayColor(w, x + 1, y));
 	}
-	if (y + 1 < 25) {
+	if (y + 1 < ZZT_BOARD_Y_SIZE) {
 		if (x - 1 >= 0) {
-			i = ((x - 1) + (y + 1) * 60) * 2;
-			d->putch(x - 1, y + 1,
-							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y + 1]], bigboard, x - 1, y + 1),
-							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y + 1]])
-							);
+			d->putch(x - 1, y + 1, zztGetDisplayChar(w, x - 1, y + 1), zztGetDisplayColor(w, x - 1, y + 1));
 		}
-		i = (x + (y + 1) * 60) * 2;
-		d->putch(x, y + 1,
-						 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y + 1]], bigboard, x, y + 1),
-						 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y + 1]])
-						);
+		d->putch(x, y + 1, zztGetDisplayChar(w, x, y + 1), zztGetDisplayColor(w, x, y + 1));
 		if (x + 1 < 60) {
-			i = ((x + 1) + (y + 1) * 60) * 2;
-			d->putch(x + 1, y + 1,
-							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y + 1]], bigboard, x + 1, y + 1),
-							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y + 1]])
-							);
+			d->putch(x + 1, y + 1, zztGetDisplayChar(w, x + 1, y + 1), zztGetDisplayColor(w, x + 1, y + 1));
+		}
+	}
+}
+
+void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
+{
+	/* TODO: protect drawing region */
+	d->putch(x + offx, y + offy, zztTileGetDisplayChar(b, x, y), zztTileGetDisplayColor(b, x, y));
+}
+
+void drawblock(displaymethod * d, ZZTblock * b, selection alpha, int offx, int offy)
+{
+	int x, y;
+
+	for (x = 0; x < b->width; x++) {
+		for (y = 0; y < b->height; y++) {
+			if (isselected(alpha, x, y)) {
+				drawblocktile(d, b, x, y, offx, offy);
+			}
+		}
+	}
+}
+
+void cursorspaceblock(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
+{
+	char c, back, f;
+	c = zztTileGetDisplayColor(b, x, y);
+	f = c & 0x0f;
+	back = (c & 0xf0) >> 4;
+	if (f < 8)
+		f += 8;
+	else
+		f -= 8;
+	if (f == back)
+		c = 7;
+	else
+		c = (back << 4) + f;
+
+	/* Print the char */
+	d->putch(x + offx, y + offy, zztTileGetDisplayChar(b, x, y), c);
+}
+
+void drawblockspot(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
+{
+	drawblocktile(d, b, x, y, offx, offy);
+
+	if (y - 1 >= 0) {
+		if (x - 1 >= 0) {
+			drawblocktile(d, b, x - 1, y - 1, offx, offy);
+		}
+		drawblocktile(d, b, x, y - 1, offx, offy);
+		if (x + 1 < ZZT_BOARD_X_SIZE) {
+			drawblocktile(d, b, x + 1, y - 1, offx, offy);
+		}
+	}
+	if (x - 1 >= 0) {
+		drawblocktile(d, b, x - 1, y, offx, offy);
+	}
+	if (x + 1 < ZZT_BOARD_X_SIZE) {
+		drawblocktile(d, b, x + 1, y, offx, offy);
+	}
+	if (y + 1 < ZZT_BOARD_Y_SIZE) {
+		if (x - 1 >= 0) {
+			drawblocktile(d, b, x - 1, y + 1, offx, offy);
+		}
+		drawblocktile(d, b, x, y + 1, offx, offy);
+		if (x + 1 < 60) {
+			drawblocktile(d, b, x + 1, y + 1, offx, offy);
 		}
 	}
 }
@@ -669,6 +701,8 @@ char *titledialog(char* prompt, displaymethod * d)
 	char *t;
 	int x, y, i = 0;
 
+	/* TODO: Use the actual title string length limit */
+
 	/* Display the title box */
 	for (y = 12; y < 12 + TITLE_BOX_DEPTH; y++) {
 		for (x = 10; x < 10 + TITLE_BOX_WIDTH; x++) {
@@ -690,50 +724,94 @@ char *titledialog(char* prompt, displaymethod * d)
 	return t;
 }
 
-int boarddialog(world * w, int curboard, int firstnone, char * title,
-										 displaymethod * mydisplay)
+stringvector buildboardlist(ZZTworld * w, int firstnone)
 {
 	stringvector boardlist;
-	int response;
+	int boardcount = zztWorldGetBoardcount(w);
 	int i = 0;
 
 	initstringvector(&boardlist);
 
 	if (firstnone) {
-		pushstring(&boardlist, "(none)");
+		pushstring(&boardlist, str_dup("(none)"));
 		i = 1;
 	} else {
 		i = 0;
 	}
 
-	for (; i <= w->zhead->boardcount; i++)
-		pushstring(&boardlist, w->board[i]->title);
+	/* Retrive the list of titles */
+	for (; i < boardcount; i++)
+		pushstring(&boardlist, str_dup(w->boards[i].title));
 
-	if (w->zhead->boardcount < 255)
-		pushstring(&boardlist, "!;Add New Board");
+	pushstring(&boardlist, str_dup("!;Add New Board"));
 
 	svmovetofirst(&boardlist);
+
+	return boardlist;
+}
+
+int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, displaymethod * mydisplay)
+{
+	stringvector boardlist;
+	int boardcount = zztWorldGetBoardcount(w);
+	int response;
+
+	/* Build the list of boards */
+	boardlist = buildboardlist(w, firstnone);
 	svmoveby(&boardlist, curboard);
 
-	response = scrolldialog(title, &boardlist, mydisplay);
+	do {
+		response = browsedialog(title, &boardlist, mydisplay);
+
+		if (response == EDITBOX_FORWARD ||  /* Move board forward */
+				response == EDITBOX_BACKWARD ||     /* Move board backward */
+				response == EDITBOX_BACK) { /* Delete board */
+			/* Reorganize the boards!!!! */
+			int src = svgetposition(&boardlist);
+
+			if (src != 0 && src != boardcount &&
+					!(src == 1 && response == EDITBOX_BACKWARD) &&
+					!(src == boardcount - 1 && response == EDITBOX_FORWARD)) {
+				if (response == EDITBOX_BACK) {
+					/* Delete selected board */
+					if (zztWorldDeleteBoard(w, src, 1)) {
+						boardcount = zztWorldGetBoardcount(w);
+						curboard = (boardcount == src ? src - 1 : src);
+					}
+				} else {
+					/* Move selected board */
+					int dest = src + (response == EDITBOX_FORWARD ? 1 : -1);
+					zztWorldMoveBoard(w, src, dest);
+					curboard = dest;
+				}
+				/* Rebuild the board list */
+				deletestringvector(&boardlist);
+				boardlist = buildboardlist(w, firstnone);
+				svmoveby(&boardlist, curboard);
+			}
+		}
+	} while (response != EDITBOX_OK && response != EDITBOX_CANCEL);
+
 	if (response == EDITBOX_OK) {
-		if (boardlist.cur == boardlist.last && w->zhead->boardcount < 255) {
-			w->zhead->boardcount++;
-			w->board[w->zhead->boardcount] = z_newboard(titledialog("Enter Title", mydisplay));
+		if (boardlist.cur == boardlist.last) {
+			zztWorldAddBoard(w, titledialog("Enter Title", mydisplay));
 		}
 
 		curboard = svgetposition(&boardlist);
 	}
 
 	/* No dynamic data in this list */
-	removestringvector(&boardlist);
+	deletestringvector(&boardlist);
 
 	return curboard;
 }
 
-int switchboard(world * w, editorinfo * e, displaymethod * mydisplay)
+int switchboard(ZZTworld * w, editorinfo * e, displaymethod * mydisplay)
 {
-	return boarddialog(w, e->curboard, 0, "Switch Boards", mydisplay);
+	int newboard = boarddialog(w, zztBoardGetCurrent(w), "Switch Boards", 0, mydisplay);
+
+	zztBoardSelect(w, newboard);
+	return newboard;
 }
 
 
@@ -775,41 +853,41 @@ int dothepanel_f1(displaymethod * d, editorinfo * e)
 			return -1;
 		case 'Z':
 		case 'z':
-			return Z_PLAYER;
+			return ZZT_PLAYER;
 		case 'A':
 		case 'a':
-			return Z_AMMO;
+			return ZZT_AMMO;
 		case 'T':
 		case 't':
-			return Z_TORCH;
+			return ZZT_TORCH;
 		case 'G':
 		case 'g':
-			return Z_GEM;
+			return ZZT_GEM;
 		case 'K':
 		case 'k':
-			return Z_KEY;
+			return ZZT_KEY;
 		case 'D':
 		case 'd':
-			return Z_DOOR;
+			return ZZT_DOOR;
 		case 'S':
 		case 's':
-			return Z_SCROLL;
+			return ZZT_SCROLL;
 		case 'P':
 		case 'p':
-			return Z_PASSAGE;
+			return ZZT_PASSAGE;
 		case 'U':
 		case 'u':
-			return Z_DUPLICATOR;
+			return ZZT_DUPLICATOR;
 		case 'B':
 		case 'b':
-			return Z_BOMB;
+			return ZZT_BOMB;
 		case 'E':
 		case 'e':
-			return Z_ENERGIZER;
+			return ZZT_ENERGIZER;
 		case '1':
-			return Z_CWCONV;
+			return ZZT_CWCONV;
 		case '2':
-			return Z_CCWCONV;
+			return ZZT_CCWCONV;
 		}
 	}
 }
@@ -838,19 +916,19 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 			return -1;
 		case 'O':
 		case 'o':
-			return Z_OBJECT;
+			return ZZT_OBJECT;
 		case 'b':
 		case 'B':
-			return Z_BEAR;
+			return ZZT_BEAR;
 		case 'R':
 		case 'r':
-			return Z_RUFFIAN;
+			return ZZT_RUFFIAN;
 		case 'V':
 		case 'v':
-			return Z_SLIME;
+			return ZZT_SLIME;
 		case 'Y':
 		case 'y':
-			return Z_SHARK;
+			return ZZT_SHARK;
 		}
 	}
 }
@@ -885,38 +963,38 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 			return -1;
 		case 'W':
 		case 'w':
-			return Z_WATER;
+			return ZZT_WATER;
 		case 'F':
 		case 'f':
-			return Z_FOREST;
+			return ZZT_FOREST;
 		case 'S':
 		case 's':
-			return Z_SOLID;
+			return ZZT_SOLID;
 		case 'N':
 		case 'n':
-			return Z_NORMAL;
+			return ZZT_NORMAL;
 		case 'B':
 		case 'b':
-			return Z_BREAKABLE;
+			return ZZT_BREAKABLE;
 		case 'O':
 		case 'o':
-			return Z_BOULDER;
+			return ZZT_BOULDER;
 		case '1':
-			return Z_NSSLIDER;
+			return ZZT_NSSLIDER;
 		case '2':
-			return Z_EWSLIDER;
+			return ZZT_EWSLIDER;
 		case 'A':
 		case 'a':
-			return Z_FAKE;
+			return ZZT_FAKE;
 		case 'I':
 		case 'i':
-			return Z_INVISIBLE;
+			return ZZT_INVISIBLE;
 		case 'R':
 		case 'r':
-			return Z_RICOCHET;
+			return ZZT_RICOCHET;
 		case 'E':
 		case 'e':
-			return Z_EDGE;
+			return ZZT_EDGE;
 		}
 	}
 }

@@ -2,12 +2,12 @@
 
 # Choose your compiler
 CC = i586-pc-msdosdjgpp-gcc
-#CC = gcc
+CC = gcc
 
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
 OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-#OPTIMIZE = -g -Wall
+OPTIMIZE = -g -Wall
 
 # Set CGI to ON to enable GGI display
 GGI =
@@ -16,7 +16,7 @@ VCSA =
 # Set DOS to ON to enable DOS display
 DOS = ON
 
-CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.5\"
+CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.4.0beta1\"
 
 # No more modifications below this line
 # -------------------------------------
@@ -40,7 +40,7 @@ endif
 # Objects
 
 CENTRALOBJS = misc.o menu.o editbox.o screen.o
-LIBRARYOBJS = libzzt.o svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
+LIBRARYOBJS = libzzt2/libzzt2.a svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
 MISCOBJS    = patbuffer.o help.o infobox.o register.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o scroll.o tbox.o cbox.o
 DISPLAYOBJS = display.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
@@ -61,17 +61,23 @@ kevedit: $(OBJECTS) main.o
 clean:
 	rm -f *.o kevedit
 
+# Libraries
+libzzt2/libzzt2.a:
+	cd libzzt2
+	make libzzt2.a
+	cd ..
+
 # Dependancies
 
 # Central KevEditing routines
-main.o: main.c kevedit.h misc.h menu.h editbox.h screen.h zzt.h patbuffer.h help.h register.h infobox.h display.h
+main.o: main.c kevedit.h misc.h menu.h editbox.h screen.h libzzt2/zzt.h patbuffer.h help.h register.h infobox.h display.h
 misc.o: misc.c misc.h kevedit.h editbox.h screen.h svector.h hypertxt.h selection.h gradient.h patbuffer.h display.h
-menu.o: menu.c menu.h kevedit.h screen.h editbox.h zzt.h svector.h files.h zzl.h hypertxt.h patbuffer.h display.h
+menu.o: menu.c menu.h kevedit.h screen.h editbox.h libzzt2/zzt.h svector.h files.h zzl.h hypertxt.h patbuffer.h display.h
 editbox.o: editbox.c editbox.h screen.h svector.h zzm.h colours.h register.h help.h scroll.h panel_ed.h display.h
-screen.o: screen.c screen.h kevedit.h editbox.h zzt.h hypertxt.h zlaunch.h panel.h panel_f1.h panel_f2.h panel_f3.h scroll.h tbox.h cbox.h
+screen.o: screen.c screen.h kevedit.h editbox.h libzzt2/zzt.h hypertxt.h zlaunch.h panel.h panel_f1.h panel_f2.h panel_f3.h scroll.h tbox.h cbox.h
 
 # libzzt
-libzzt.o: libzzt.c zzt.h
+libzzt.o: libzzt.c libzzt2/zzt.h
 
 # Other libraries
 svector.o: svector.c svector.h
@@ -85,9 +91,9 @@ hypertxt.o: hypertxt.c hypertxt.h svector.h
 gradient.o: gradient.c gradient.h
 
 # Misc
-patbuffer.o: patbuffer.c kevedit.h zzt.h display.h
+patbuffer.o: patbuffer.c kevedit.h libzzt2/zzt.h display.h
 help.o: help.c help.h svector.h editbox.h hypertxt.h panel_hl.h helplist.h
-infobox.o: infobox.c infobox.h zzt.h display.h
+infobox.o: infobox.c infobox.h libzzt2/zzt.h display.h
 register.o: register.c register.h editbox.h
 
 # Draw data structures

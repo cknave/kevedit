@@ -1,5 +1,5 @@
 /* zlaunch - zzt launching library (everything necessary to run zzt smoothly) */
-/* $id$ */
+/* $Id: zlaunch.c,v 1.6 2002/02/16 10:25:22 bitman Exp $ */
 /* Copyright (c) 2001 Ryan Phillips <bitman@users.sf.net> */
 
 #include "zlaunch.h"

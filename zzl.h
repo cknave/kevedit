@@ -1,5 +1,5 @@
 /* zzl.c  -- ZZT Object Library file routines
- * $Id: zzl.h,v 1.1 2001/10/22 02:48:23 bitman Exp $
+ * $Id: zzl.h,v 1.2 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,9 +30,9 @@ int zzlpickobject(stringvector * zzlv, displaymethod * d);
 
 /* zzlpullobject() - pulls the object who's zzl definition starts on the
  *                   currentt line. */
-patdef zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc);
+ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc);
 
 /* zzlappendobject() - appends an object to a zzl with given title */
-int zzlappendobject(stringvector * zzlv, patdef obj, char* title, int editwidth);
+int zzlappendobject(stringvector * zzlv, ZZTtile obj, char* title, int editwidth);
 
 #endif

@@ -20,14 +20,14 @@
 #ifndef __INFOBOX_H
 #define __INFOBOX_H
 
-#include "zzt.h"
+#include "libzzt2/zzt.h"
 #include "display.h"
 #include "kevedit.h"
 
 /* editboardinfo() - brings up dialog box for editing board info */
-void editboardinfo(world* myworld, int curboard, displaymethod* d);
+void editboardinfo(ZZTworld* myworld, displaymethod* d);
 
 /* editworldinfo() - brings up dialog box for editing world info */
-void editworldinfo(world* myworld, displaymethod* d);
+void editworldinfo(ZZTworld* myworld, displaymethod* d);
 
 #endif

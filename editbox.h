@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.13 2001/12/15 00:54:53 bitman Exp $
+ * $Id: editbox.h,v 1.14 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 #ifndef __EDITBOX_H
 #define __EDITBOX_H 1
 
-#include "zzt.h"
+#include "libzzt2/zzt.h"
 #include "display.h"
 #include "svector.h"
 
@@ -49,16 +49,6 @@ int editbox(char* title, stringvector * sv, int editwidth, int flags, displaymet
 /* Special instances of editbox() */
 #define scrolldialog(title, sv, d) editbox((title), (sv), EDITBOX_NOEDIT, EDITBOX_ZOCMODE, (d))
 #define browsedialog(title, sv, d) editbox((title), (sv), EDITBOX_NOEDIT, EDITBOX_ZOCMODE | EDITBOX_MOVEMENT, (d))
-
-/* editmoredata() - edits p->moredata in a scroll box */
-void editmoredata(param * p, displaymethod * d);
-
-/* moredatatosvector() - creates a string vector from the given param */
-stringvector moredatatosvector(param * p, int editwidth);
-
-/* svectortomoredata() - copies the contents of the given svector into a new
- *              parameter. Only the moredata and length variables are used! */
-param svectortomoredata(stringvector sv);
 
 /* displayzoc() - display a string with zoc highlighting. If firstline is true,
  * "@" will be allowed to denote object name. */

@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.20 2001/11/11 06:38:07 bitman Exp $
+ * $Id: screen.h,v 1.21 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,10 +21,11 @@
 #define _SCREEN_H 1
 
 #include "display.h"
-#include "zzt.h"
+#include "libzzt2/zzt.h"
 #include "kevedit.h"
 #include "svector.h"
 #include "files.h"
+#include "selection.h"
 
 /* line_editor flags */
 #define LINED_NORMAL   0x00
@@ -47,7 +48,6 @@
 #define CONFIRM_NO     1
 #define CONFIRM_CANCEL 2
 
-
 /* line_editor() - edit a string of characters on a single line 
  * 	str:       buffer to be edited
  * 	editwidth: maximum length string in buffer
@@ -69,16 +69,19 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 										int* position, int flags, displaymethod* d);
 
 /* Drawing functions */
-extern void drawsidepanel(displaymethod * d, unsigned char panel[]);
-extern void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay);
-extern void drawpanel(displaymethod * d);
-extern void updatepanel(displaymethod * d, editorinfo * e, world * w);
-extern void drawscreen(displaymethod * d, world * w, editorinfo * e,
-											 char *bigboard, unsigned char paramlist[60][25]);
-extern void cursorspace(displaymethod * d, world * w, editorinfo * e,
-												char *bigboard, unsigned char paramlist[60][25]);
-extern void drawspot(displaymethod * d, world * w, editorinfo * e,
-										 char *bigboard, unsigned char paramlist[60][25]);
+void drawsidepanel(displaymethod * d, unsigned char panel[]);
+void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay);
+void drawpanel(displaymethod * d);
+void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w);
+void drawscreen(displaymethod * d, ZZTworld * w, editorinfo * e);
+void cursorspace(displaymethod * d, ZZTworld * w, editorinfo * e);
+void drawspot(displaymethod * d, ZZTworld * w, editorinfo * e);
+
+/* Block drawing functions */
+void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
+void drawblock(displaymethod * d, ZZTblock * b, selection alpha, int offx, int offy);
+void cursorspaceblock(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
+void drawblockspot(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
 
 /* file dialogs */
 char * filedialog(char * dir, char * extension, char * title, int filetypes,
@@ -88,18 +91,17 @@ char* filenamedialog(char* initname, char* extension, char* prompt,
 
 
 /* board dialogs */
-extern int boarddialog(world * w, int curboard, int firstnone, char * title,
-											 displaymethod * mydisplay);
-extern int switchboard(world * w, editorinfo * e, displaymethod * mydisplay);
-extern char *titledialog(char* prompt, displaymethod * d);
+int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, displaymethod * mydisplay);
+int switchboard(ZZTworld * w, editorinfo * e, displaymethod * mydisplay);
+char *titledialog(char* prompt, displaymethod * d);
 
 /* panels */
-extern int dothepanel_f1(displaymethod * d, editorinfo * e);
-extern int dothepanel_f2(displaymethod * d, editorinfo * e);
-extern int dothepanel_f3(displaymethod * d, editorinfo * e);
+int dothepanel_f1(displaymethod * d, editorinfo * e);
+int dothepanel_f2(displaymethod * d, editorinfo * e);
+int dothepanel_f3(displaymethod * d, editorinfo * e);
 
 /* Prompts the user to select a char */
-extern int charselect(displaymethod * d, int c);
+int charselect(displaymethod * d, int c);
 
 /* Prompts the user to select a color */
 int colorselector(displaymethod * d, int * bg, int * fg, int * blink);

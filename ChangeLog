@@ -1,8 +1,9 @@
-0.3.5:
+0.4.0:
 ------
+Migration to libzzt2
 Music testing
 Better running of ZZT
-Text editor loads and stores to registers
+Text editor loads from and stores to registers
 
 0.3.4: November 14, 2001
 ------------------------

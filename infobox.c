@@ -1,5 +1,5 @@
 /* infobox.c  -- 
- * $Id: infobox.c,v 1.8 2001/11/11 06:38:07 bitman Exp $
+ * $Id: infobox.c,v 1.9 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 
 #include "screen.h"
 
-#include "zzt.h"
+#include "libzzt2/zzt.h"
 #include "help.h"
 
 #include "panel_bi.h"
@@ -51,22 +51,22 @@
 
 /* Functions used by editboardinfo */
 void drawstaticboardinfo(displaymethod* d);
-void drawboardinfo(world* myworld, int curboard, displaymethod* d);
-int boardinfoeditoption(int curoption, world* myworld, int curboard,
+void drawboardinfo(ZZTworld* myworld, displaymethod* d);
+int boardinfoeditoption(int curoption, ZZTworld* myworld,
 												int cursorx, int cursory, displaymethod* d);
-int boardinfodirectionoption(int curoption, world* myworld, int curboard,
+int boardinfodirectionoption(int curoption, ZZTworld* myworld,
 												int cursorx, int cursory, int dir, displaymethod* d);
-void boardinfostaroption(int curoption, world* myworld, int curboard);
+void boardinfostaroption(int curoption, ZZTworld* myworld);
 
 /* editboardinfo() - brings up dialog box for editing board info */
-void editboardinfo(world* myworld, int curboard, displaymethod* d)
+void editboardinfo(ZZTworld* myworld, displaymethod* d)
 {
 	int curoption = BRDINFO_TITLE;
 	int cursorx, cursory;
 	int done = 0;
 	drawstaticboardinfo(d);
 
-	drawboardinfo(myworld, curboard, d);
+	drawboardinfo(myworld, d);
 
 	do {
 		int key;
@@ -79,7 +79,7 @@ void editboardinfo(world* myworld, int curboard, displaymethod* d)
 			cursory += 2;
 
 		if (curoption == BRDINFO_TITLE)
-			cursorx = 30 - (strlen(myworld->board[curboard]->title) / 2);
+			cursorx = 30 - (strlen(zztBoardGetTitle(myworld)) / 2);
 		else if (curoption >= BRDINFO_BRDNORTH)
 			cursorx = 14;
 		else
@@ -111,41 +111,41 @@ void editboardinfo(world* myworld, int curboard, displaymethod* d)
 				break;
 
 			case DKEY_ENTER:
-				if (boardinfoeditoption(curoption, myworld, curboard,
+				if (boardinfoeditoption(curoption, myworld,
 																cursorx, cursory, d)) {
 					drawstaticboardinfo(d);
-					drawboardinfo(myworld, curboard, d);
+					drawboardinfo(myworld, d);
 				}
 				break;
 
 			case DKEY_LEFT:
 			case '-':
-				if (boardinfodirectionoption(curoption, myworld, curboard,
+				if (boardinfodirectionoption(curoption, myworld,
 																		 cursorx, cursory, -1, d)) {
 					drawstaticboardinfo(d);
-					drawboardinfo(myworld, curboard, d);
+					drawboardinfo(myworld, d);
 				}
 				break;
 
 			case DKEY_RIGHT:
 			case '+':
-				if (boardinfodirectionoption(curoption, myworld, curboard,
+				if (boardinfodirectionoption(curoption, myworld,
 																		 cursorx, cursory, 1, d)) {
 					drawstaticboardinfo(d);
-					drawboardinfo(myworld, curboard, d);
+					drawboardinfo(myworld, d);
 				}
 				break;
 
 			case '*':
-				boardinfostaroption(curoption, myworld, curboard);
+				boardinfostaroption(curoption, myworld);
 				drawstaticboardinfo(d);
-				drawboardinfo(myworld, curboard, d);
+				drawboardinfo(myworld, d);
 				break;
 
 			case DKEY_F1:
 				helpsectiontopic("kbrdinfo", NULL, d);
 				drawstaticboardinfo(d);
-				drawboardinfo(myworld, curboard, d);
+				drawboardinfo(myworld, d);
 				break;
 		}
 	} while (!done);
@@ -178,67 +178,66 @@ void drawstaticboardinfo(displaymethod* d)
 	d->print(11, 18, 0x0a, "\x1B:");
 }
 
-void drawboardinfo(world* myworld, int curboard, displaymethod* d)
+void drawboardinfo(ZZTworld* myworld, displaymethod* d)
 {
 	char buffer[10];    /* Buffer for translating numbers to strings */
-	board* brd = myworld->board[curboard];
-	boardinfo* info = brd->info;
+	int curboard = zztBoardGetCurrent(myworld);
 
 	/* Title */
-	d->print(30 - (strlen(brd->title) / 2), 7, 0x0B, brd->title);
+	d->print(30 - (strlen(zztBoardGetTitle(myworld)) / 2), 7, 0x0B, zztBoardGetTitle(myworld));
 
 	/* Boolean */
-	d->print(36,  9, 0x0B, (info->darkness  ? "Yes" : "No"));
-	d->print(36, 10, 0x0B, (info->reenter   ? "Yes" : "No"));
+	d->print(36,  9, 0x0B, (zztBoardGetDarkness(myworld)  ? "Yes" : "No"));
+	d->print(36, 10, 0x0B, (zztBoardGetReenter(myworld)   ? "Yes" : "No"));
 
 	/* Numerical */
 	/* Time Limit */
-	if (info->timelimit > 0)
-		sprintf(buffer, "%d", info->timelimit);
+	if (zztBoardGetTimelimit(myworld) > 0)
+		sprintf(buffer, "%d", zztBoardGetTimelimit(myworld));
 	else
 		strcpy(buffer, "Infinite");
 	d->print(36, 11, 0x0B, buffer);
 
 	/* Maximum shots */
-	sprintf(buffer, "%d", info->maxshots);
+	sprintf(buffer, "%d", zztBoardGetMaxshots(myworld));
 	d->print(36, 12, 0x0B, buffer);
 
 	/* Board links */
 	/* North */
-	if (info->board_n > 0) {
-		d->print(14, 15, 0x0B, myworld->board[info->board_n]->title);
+	if (zztBoardGetBoard_n (myworld)> 0) {
+		d->print(14, 15, 0x0B, myworld->boards[zztBoardGetBoard_n(myworld)].title);
 		if (curboard > 0 &&
-				myworld->board[info->board_n]->info->board_s == curboard)
+				myworld->boards[zztBoardGetBoard_n(myworld)].info.board_s == curboard)
 			d->putch(9, 15, '*', 0x0B);
 	} else {
 		d->print(14, 15, 0x03, "(None)");
 	}
 
 	/* South */
-	if (info->board_s > 0) {
-		d->print(14, 16, 0x0B, myworld->board[info->board_s]->title);
+	if (zztBoardGetBoard_s (myworld)> 0) {
+		d->print(14, 16, 0x0B, myworld->boards[zztBoardGetBoard_s(myworld)].title);
 		if (curboard > 0 &&
-				myworld->board[info->board_s]->info->board_n == curboard)
+				myworld->boards[zztBoardGetBoard_s(myworld)].info.board_n == curboard)
 			d->putch(9, 16, '*', 0x0B);
 	} else {
 		d->print(14, 16, 0x03, "(None)");
 	}
 
 	/* East */
-	if (info->board_e > 0) {
-		d->print(14, 17, 0x0B, myworld->board[info->board_e]->title);
+	if (zztBoardGetBoard_e (myworld)> 0) {
+		d->print(14, 17, 0x0B, myworld->boards[zztBoardGetBoard_e(myworld)].title);
 		if (curboard > 0 &&
-				myworld->board[info->board_e]->info->board_w == curboard)
+				myworld->boards[zztBoardGetBoard_e(myworld)].info.board_w == curboard)
 			d->putch(9, 17, '*', 0x0B);
 	} else {
 		d->print(14, 17, 0x03, "(None)");
 	}
 
 	/* West */
-	if (info->board_w > 0) {
-		d->print(14, 18, 0x0B, myworld->board[info->board_w]->title);
+	if (zztBoardGetBoard_w (myworld)> 0) {
+		d->print(14, 18, 0x0B, myworld->boards[zztBoardGetBoard_w(myworld)].title);
 		if (curboard > 0 &&
-				myworld->board[info->board_w]->info->board_e == curboard)
+				myworld->boards[zztBoardGetBoard_w(myworld)].info.board_e == curboard)
 			d->putch(9, 18, '*', 0x0B);
 	} else {
 		d->print(14, 18, 0x03, "(None)");
@@ -246,62 +245,58 @@ void drawboardinfo(world* myworld, int curboard, displaymethod* d)
 }
 
 
-int boardinfoeditoption(int curoption, world* myworld, int curboard,
+int boardinfoeditoption(int curoption, ZZTworld* myworld,
 												int cursorx, int cursory, displaymethod* d)
 {
 	int i;
 	char buffer[35];
-	board* brd = myworld->board[curboard];
 
 	switch (curoption) {
 		case BRDINFO_TITLE:
 			/* Change the title of the board */
-			strcpy(buffer, brd->title);
+			strcpy(buffer, zztBoardGetTitle(myworld));
 			if (line_editor(13, cursory, 0x0f, buffer, 34, LINED_NORMAL, d)
 					== LINED_OK) {
-				/* Success! Reserve enough space and copy the buffer over */
-				free(brd->title);
-				brd->title = (u_int8_t*) malloc(sizeof(u_int8_t) * (strlen(buffer)+1));
-				strcpy(brd->title, buffer);
+				zztBoardSetTitle(myworld, buffer);
 			}
 			/* Update */
 			return 1;
 
 		case BRDINFO_BRDNORTH:
-			brd->info->board_n = boarddialog(myworld, brd->info->board_n, 1, "Board to the North", d);
+			zztBoardSetBoard_n(myworld, boarddialog(myworld, zztBoardGetBoard_n(myworld), "Board to the North", 1, d));
 			return 2;
 
 		case BRDINFO_BRDSOUTH:
-			brd->info->board_s = boarddialog(myworld, brd->info->board_s, 1, "Board to the South", d);
+			zztBoardSetBoard_s(myworld, boarddialog(myworld, zztBoardGetBoard_s(myworld), "Board to the South", 1, d));
 			return 2;
 
 		case BRDINFO_BRDEAST:
-			brd->info->board_e = boarddialog(myworld, brd->info->board_e, 1, "Board to the East", d);
+			zztBoardSetBoard_e(myworld, boarddialog(myworld, zztBoardGetBoard_e(myworld), "Board to the East", 1, d));
 			return 2;
 
 		case BRDINFO_BRDWEST:
-			brd->info->board_w = boarddialog(myworld, brd->info->board_w, 1, "Board to the West", d);
+			zztBoardSetBoard_w(myworld, boarddialog(myworld, zztBoardGetBoard_w(myworld), "Board to the West", 1, d));
 			return 2;
 
 		case BRDINFO_DARKNESS:
-			brd->info->darkness = !brd->info->darkness;
+			zztBoardSetDarkness(myworld, !zztBoardGetDarkness(myworld));
 			return 1;
 
 		case BRDINFO_REENTER:
-			brd->info->reenter = !brd->info->reenter;
+			zztBoardSetReenter(myworld, !zztBoardGetReenter(myworld));
 			return 1;
 
 		case BRDINFO_MAXSHOTS:
-			sprintf(buffer, "%d", brd->info->maxshots);
+			sprintf(buffer, "%d", zztBoardGetMaxshots(myworld));
 			if (line_editor(cursorx, cursory, 0x0f, buffer, 3,
 											LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)
 					== LINED_OK) {
 				int maxshots;
 				sscanf(buffer, "%d", &maxshots);
 				if (maxshots > 255)
-					brd->info->maxshots = 255;
+					zztBoardSetMaxshots(myworld, 255);
 				else
-					brd->info->maxshots = (u_int8_t) maxshots;
+					zztBoardSetMaxshots(myworld, (u_int8_t) maxshots);
 			}
 			return 1;
 
@@ -311,8 +306,8 @@ int boardinfoeditoption(int curoption, world* myworld, int curboard,
 				d->putch(cursorx + i, cursory, ' ', 0x00);
 
 			/* Load the timelimit into the buffer */
-			if (brd->info->timelimit != 0)
-				sprintf(buffer, "%d", brd->info->timelimit);
+			if (zztBoardGetTimelimit(myworld) != 0)
+				sprintf(buffer, "%d", zztBoardGetTimelimit(myworld));
 			else
 				strcpy(buffer, "");
 
@@ -322,22 +317,22 @@ int boardinfoeditoption(int curoption, world* myworld, int curboard,
 				long int timelimit;
 				sscanf(buffer, "%ld", &timelimit);
 				if (strlen(buffer) == 0)
-					brd->info->timelimit = 0;
+					zztBoardSetTimelimit(myworld, 0);
 				else if (timelimit > 32767)
-					brd->info->timelimit = 32767;
+					zztBoardSetTimelimit(myworld, 32767);
 				else
-					brd->info->timelimit = timelimit;
+					zztBoardSetTimelimit(myworld, timelimit);
 			}
 			return 1;
 	}
 	return 0;
 }
 
-int boardinfodirectionoption(int curoption, world* myworld, int curboard,
+int boardinfodirectionoption(int curoption, ZZTworld* myworld,
 												int cursorx, int cursory, int dir, displaymethod* d)
 {
-	board* brd = myworld->board[curboard];
-	boardinfo* info = brd->info;
+	/* It's easier this way */
+	ZZTboardinfo* info = &(myworld->boards[zztBoardGetCurrent(myworld)].info);
 
 	switch (curoption) {
 		case BRDINFO_TIMELIM:
@@ -352,39 +347,39 @@ int boardinfodirectionoption(int curoption, world* myworld, int curboard,
 			return 1;
 
 		case BRDINFO_BRDNORTH:
-			if (info->board_n + dir <= myworld->zhead->boardcount &&
+			if (info->board_n + dir <= zztWorldGetBoardcount(myworld) &&
 					info->board_n + dir >= 0)
 				info->board_n += dir;
 			return 1;
 
 		case BRDINFO_BRDSOUTH:
-			if (info->board_s + dir <= myworld->zhead->boardcount &&
+			if (info->board_s + dir <= zztWorldGetBoardcount(myworld) &&
 					info->board_s + dir >= 0)
 				info->board_s += dir;
 			return 1;
 
 		case BRDINFO_BRDEAST:
-			if (info->board_e + dir <= myworld->zhead->boardcount &&
+			if (info->board_e + dir <= zztWorldGetBoardcount(myworld) &&
 					info->board_e + dir >= 0)
 				info->board_e += dir;
 			return 1;
 
 		case BRDINFO_BRDWEST:
-			if (info->board_w + dir <= myworld->zhead->boardcount &&
+			if (info->board_w + dir <= zztWorldGetBoardcount(myworld) &&
 					info->board_w + dir >= 0)
 				info->board_w += dir;
 			return 1;
 
 		default:
-			return boardinfoeditoption(curoption, myworld, curboard,
+			return boardinfoeditoption(curoption, myworld,
 																 cursorx, cursory, d);
 	}
 }
 
-void boardinfostaroption(int curoption, world* myworld, int curboard)
+void boardinfostaroption(int curoption, ZZTworld* myworld)
 {
-	board* brd = myworld->board[curboard];
-	boardinfo* info = brd->info;
+	int curboard = zztBoardGetCurrent(myworld);
+	ZZTboardinfo* info = &(myworld->boards[zztBoardGetCurrent(myworld)].info);
 
 	if (curboard == 0)
 		return;
@@ -392,22 +387,22 @@ void boardinfostaroption(int curoption, world* myworld, int curboard)
 	switch (curoption) {
 		case BRDINFO_BRDNORTH:
 			if (info->board_n > 0)
-				myworld->board[info->board_n]->info->board_s = curboard;
+				myworld->boards[info->board_n].info.board_s = curboard;
 			break;
 
 		case BRDINFO_BRDSOUTH:
 			if (info->board_s > 0)
-				myworld->board[info->board_s]->info->board_n = curboard;
+				myworld->boards[info->board_s].info.board_n = curboard;
 			break;
 
 		case BRDINFO_BRDEAST:
 			if (info->board_e > 0)
-				myworld->board[info->board_e]->info->board_w = curboard;
+				myworld->boards[info->board_e].info.board_w = curboard;
 			break;
 
 		case BRDINFO_BRDWEST:
 			if (info->board_w > 0)
-				myworld->board[info->board_w]->info->board_e = curboard;
+				myworld->boards[info->board_w].info.board_e = curboard;
 			break;
 	}
 }
@@ -429,26 +424,17 @@ void boardinfostaroption(int curoption, world* myworld, int curboard)
 #define WLDINFO_ISSAVED    10
 #define WLDINFO_FLAGS      11
 
-/* Order of the keys */
-#define WLDKEY_BLUE        0
-#define WLDKEY_GREEN       1
-#define WLDKEY_CYAN        2
-#define WLDKEY_RED         3
-#define WLDKEY_PURPLE      4
-#define WLDKEY_YELLOW      5
-#define WLDKEY_WHITE       6
-
 void drawstaticworldinfo(displaymethod* d);
-void drawworldinfo(world* myworld, displaymethod* d);
-int worldinfoeditoption(int curoption, world* myworld,
+void drawworldinfo(ZZTworld* myworld, displaymethod* d);
+int worldinfoeditoption(int curoption, ZZTworld* myworld,
 												int cursorx, int cursory, displaymethod* d);
-int worldinfodirectionoption(int curoption, world* myworld,
+int worldinfodirectionoption(int curoption, ZZTworld* myworld,
 												int cursorx, int cursory, int dir, displaymethod* d);
-void worldinfotogglekey(world* myworld, int whichkey);
-void editworldflags(world* myworld, displaymethod* d);
+void worldinfotogglekey(ZZTworld* myworld, int whichkey);
+void editworldflags(ZZTworld* myworld, displaymethod* d);
 
 /* editworldinfo() - brings up dialog box for editing world info */
-void editworldinfo(world* myworld, displaymethod* d)
+void editworldinfo(ZZTworld* myworld, displaymethod* d)
 {
 	int curoption = WLDINFO_NAME;
 	int cursorx, cursory;
@@ -557,8 +543,8 @@ void editworldinfo(world* myworld, displaymethod* d)
 
 			switch (key) {
 				case DKEY_LEFT:  if (cursorx > 31) cursorx--;
-													 else cursorx = 31 + WLDKEY_WHITE; break;
-				case DKEY_RIGHT: if (cursorx < 31 + WLDKEY_WHITE) cursorx++;
+													 else cursorx = 31 + ZZT_KEY_WHITE; break;
+				case DKEY_RIGHT: if (cursorx < 31 + ZZT_KEY_WHITE) cursorx++;
 													 else cursorx = 31; break;
 
 				case DKEY_ENTER:
@@ -601,63 +587,59 @@ void drawstaticworldinfo(displaymethod* d)
 	d->print(23, 20, 0x0F, "Set/Clear Flags");
 }
 
+/* TODO: These can probably be unmacro'ed now */
 #define drawkey(which)  d->putch(31 + (which), 8, '\x0C', 0x08 +  (which) + 1)
 #define drawdoor(which) d->putch(31 + (which), 8, '\x0A', 0x0F + (((which) + 1) << 4))
 
-void drawworldinfo(world* myworld, displaymethod* d)
+void drawworldinfo(ZZTworld* myworld, displaymethod* d)
 {
 	char buffer[10];    /* Buffer for translating numbers to strings */
-	zztheader* zhead = myworld->zhead;
+	int i;
 
 	/* Start at the top */
-	d->print(31,  6, 0x0B, zhead->title);
+	d->print(31,  6, 0x0B, zztWorldGetTitle(myworld));
 
 	/* List the keys */
-	if (zhead->bluekey) drawkey(WLDKEY_BLUE); else drawdoor(WLDKEY_BLUE);
-	if (zhead->greenkey) drawkey(WLDKEY_GREEN); else drawdoor(WLDKEY_GREEN);
-	if (zhead->cyankey) drawkey(WLDKEY_CYAN); else drawdoor(WLDKEY_CYAN);
-	if (zhead->redkey) drawkey(WLDKEY_RED); else drawdoor(WLDKEY_RED);
-	if (zhead->purplekey) drawkey(WLDKEY_PURPLE); else drawdoor(WLDKEY_PURPLE);
-	if (zhead->yellowkey) drawkey(WLDKEY_YELLOW); else drawdoor(WLDKEY_YELLOW);
-	if (zhead->whitekey) drawkey(WLDKEY_WHITE); else drawdoor(WLDKEY_WHITE);
+	for (i = ZZT_KEY_BLUE; i <= ZZT_KEY_WHITE; i++) {
+		if (zztWorldGetKey(myworld, i) != 0) drawkey(i); else drawdoor(i);
+	}
 
 	/* Inventory */
-	sprintf(buffer, "%d", zhead->ammo);     d->print(31,  9, 0x0B, buffer);
-	sprintf(buffer, "%d", zhead->gems);     d->print(31, 10, 0x0B, buffer);
-	sprintf(buffer, "%d", zhead->health);   d->print(31, 11, 0x0B, buffer);
-	sprintf(buffer, "%d", zhead->torches);  d->print(31, 12, 0x0B, buffer);
-	sprintf(buffer, "%d", zhead->score);    d->print(31, 13, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetAmmo(myworld));     d->print(31,  9, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetGems(myworld));     d->print(31, 10, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetHealth(myworld));   d->print(31, 11, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTorches(myworld));  d->print(31, 12, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetScore(myworld));    d->print(31, 13, 0x0B, buffer);
 
 	/* Misc */
-	sprintf(buffer, "%d", zhead->torchcycles);    d->print(31, 15, 0x0B, buffer);
-	sprintf(buffer, "%d", zhead->energizercycles);d->print(31, 16, 0x0B, buffer);
-	sprintf(buffer, "%d", zhead->timepassed);     d->print(31, 17, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTorchcycles(myworld));    d->print(31, 15, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetEnergizercycles(myworld));d->print(31, 16, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTimepassed(myworld));     d->print(31, 17, 0x0B, buffer);
 
 	/* Saved Game boolean */
-	d->print(31, 18, 0x0B, zhead->savebyte ? "Yes" : "No");
+	d->print(31, 18, 0x0B, zztWorldGetSavegame(myworld) ? "Yes" : "No");
 }
 
-int worldinfoeditoption(int curoption, world* myworld,
+int worldinfoeditoption(int curoption, ZZTworld* myworld,
 												int cursorx, int cursory, displaymethod* d)
 {
 	int tempnum;
 	char buffer[35];
+	ZZTworldinfo * header = myworld->header;
 
 	switch (curoption) {
 		case WLDINFO_NAME:
 			/* Change the title of the board */
-			strcpy(buffer, myworld->zhead->title);
+			strcpy(buffer, header->title);
 			if (line_editor(cursorx, cursory, 0x0f, buffer, 19, LINED_NORMAL, d)
 					== LINED_OK) {
-				/* Success! Copy the thing! */
-				strcpy(myworld->zhead->title, buffer);
-				myworld->zhead->titlelength = strlen(myworld->zhead->title);
+				zztWorldSetTitle(myworld, buffer);
 			}
 			/* Update */
 			return 1;
 
 		case WLDINFO_ISSAVED:
-			myworld->zhead->savebyte = !myworld->zhead->savebyte;
+			header->savegame = !header->savegame;
 			return 1;
 
 		case WLDINFO_FLAGS:
@@ -665,107 +647,109 @@ int worldinfoeditoption(int curoption, world* myworld,
 			return 1;
 
 		case WLDINFO_AMMO:
-			tempnum = myworld->zhead->ammo;
+			tempnum = header->ammo;
 			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
-			myworld->zhead->ammo = tempnum;
+			header->ammo = tempnum;
 			return 1;
 
 		case WLDINFO_GEMS:
-			tempnum = myworld->zhead->gems;
+			tempnum = header->gems;
 			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
-			myworld->zhead->gems = tempnum;
+			header->gems = tempnum;
 			return 1;
 
 		case WLDINFO_HEALTH:
-			tempnum = myworld->zhead->health;
+			tempnum = header->health;
 			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
-			myworld->zhead->health = tempnum;
+			header->health = tempnum;
 			return 1;
 
 		case WLDINFO_TORCHES:
-			tempnum = myworld->zhead->torches;
+			tempnum = header->torches;
 			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
-			myworld->zhead->torches = tempnum;
+			header->torches = tempnum;
 			return 1;
 
 		case WLDINFO_SCORE:
-			tempnum = myworld->zhead->score;
+			tempnum = header->score;
 			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
-			myworld->zhead->score = tempnum;
+			header->score = tempnum;
 			return 1;
 
 		case WLDINFO_TCYCLES:
-			tempnum = myworld->zhead->torchcycles;
+			tempnum = header->torchcycles;
 			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
-			myworld->zhead->torchcycles = tempnum;
+			header->torchcycles = tempnum;
 			return 1;
 
 		case WLDINFO_ECYCLES:
-			tempnum = myworld->zhead->energizercycles;
+			tempnum = header->energizercycles;
 			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
-			myworld->zhead->energizercycles = tempnum;
+			header->energizercycles = tempnum;
 			return 1;
 
 		case WLDINFO_TIMEPASSED:
-			tempnum = myworld->zhead->timepassed;
+			tempnum = header->timepassed;
 			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
-			myworld->zhead->timepassed = tempnum;
+			header->timepassed = tempnum;
 			return 1;
 	}
 
 	return 0;
 }
 
-int worldinfodirectionoption(int curoption, world* myworld, int cursorx,
+int worldinfodirectionoption(int curoption, ZZTworld* myworld, int cursorx,
 														 int cursory, int dir, displaymethod* d)
 {
+	ZZTworldinfo * header = myworld->header;
+
 	switch (curoption) {
 		case WLDINFO_AMMO:
-			if (myworld->zhead->ammo + dir <= 32767 &&
-					myworld->zhead->ammo + dir >= 0)
-				myworld->zhead->ammo += dir;
+			if (header->ammo + dir <= 32767 &&
+					header->ammo + dir >= 0)
+				header->ammo += dir;
 			return 1;
 
 		case WLDINFO_GEMS:
-			if (myworld->zhead->gems + dir <= 32767 &&
-					myworld->zhead->gems + dir >= 0)
-				myworld->zhead->gems += dir;
+			if (header->gems + dir <= 32767 &&
+					header->gems + dir >= 0)
+				header->gems += dir;
 			return 1;
 
 		case WLDINFO_HEALTH:
-			if (myworld->zhead->health + dir <= 32767 &&
-					myworld->zhead->health + dir >= 0)
-				myworld->zhead->health += dir;
+			if (header->health + dir <= 32767 &&
+					header->health + dir >= 0)
+				header->health += dir;
 			return 1;
 
 		case WLDINFO_TORCHES:
-			if (myworld->zhead->torches + dir <= 32767 &&
-					myworld->zhead->torches + dir >= 0)
-				myworld->zhead->torches += dir;
+			if (header->torches + dir <= 32767 &&
+					header->torches + dir >= 0)
+				header->torches += dir;
 			return 1;
 
 		case WLDINFO_SCORE:
-			if (myworld->zhead->score + dir <= 32767 &&
-					myworld->zhead->score + dir >= 0)
-				myworld->zhead->score += dir;
+			if (header->score + dir <= 32767 &&
+					header->score + dir >= 0)
+				header->score += dir;
 			return 1;
 
 		case WLDINFO_TCYCLES:
-			if (myworld->zhead->torchcycles + dir <= 32767 &&
-					myworld->zhead->torchcycles + dir >= 0)
-				myworld->zhead->torchcycles += dir;
+			if (header->torchcycles + dir <= 32767 &&
+					header->torchcycles + dir >= 0)
+				header->torchcycles += dir;
 			return 1;
 
 		case WLDINFO_ECYCLES:
-			if (myworld->zhead->energizercycles + dir <= 32767 &&
-					myworld->zhead->energizercycles + dir >= 0)
-				myworld->zhead->energizercycles += dir;
+			if (header->energizercycles + dir <= 32767 &&
+					header->energizercycles + dir >= 0)
+				header->energizercycles += dir;
 			return 1;
 
 		case WLDINFO_TIMEPASSED:
-			if (myworld->zhead->timepassed + dir <= 32767 &&
-					myworld->zhead->timepassed + dir >= 0)
-				myworld->zhead->timepassed += dir;
+			if (header->timepassed + dir <= 32767 &&
+					header->timepassed + dir >= 0)
+				header->timepassed += dir;
 			return 1;
 
 		default:
@@ -773,48 +757,20 @@ int worldinfodirectionoption(int curoption, world* myworld, int cursorx,
 	}
 }
 
-void worldinfotogglekey(world* myworld, int whichkey)
+void worldinfotogglekey(ZZTworld* myworld, int whichkey)
 {
-	switch (whichkey) {
-		case WLDKEY_BLUE:
-			myworld->zhead->bluekey = !myworld->zhead->bluekey;
-			break;
-
-		case WLDKEY_GREEN:
-			myworld->zhead->greenkey = !myworld->zhead->greenkey;
-			break;
-
-		case WLDKEY_CYAN:
-			myworld->zhead->cyankey = !myworld->zhead->cyankey;
-			break;
-
-		case WLDKEY_RED:
-			myworld->zhead->redkey = !myworld->zhead->redkey;
-			break;
-
-		case WLDKEY_PURPLE:
-			myworld->zhead->purplekey = !myworld->zhead->purplekey;
-			break;
-
-		case WLDKEY_YELLOW:
-			myworld->zhead->yellowkey = !myworld->zhead->yellowkey;
-			break;
-
-		case WLDKEY_WHITE:
-			myworld->zhead->whitekey = !myworld->zhead->whitekey;
-			break;
-	}
+	zztWorldSetKey(myworld, whichkey, !zztWorldGetKey(myworld, whichkey));
 }
 
 /* World Info Flags */
 
 void drawstaticflags(displaymethod * d);
-void drawflags(world * myworld, displaymethod * d);
-void worldflagedit(int curoption, world* myworld,
+void drawflags(ZZTworld * myworld, displaymethod * d);
+void worldflagedit(int curoption, ZZTworld* myworld,
 									 int cursorx, int cursory, displaymethod* d);
-void worldflagclear(int curoption, world* myworld);
+void worldflagclear(int curoption, ZZTworld* myworld);
 
-void editworldflags(world* myworld, displaymethod* d)
+void editworldflags(ZZTworld* myworld, displaymethod* d)
 {
 	int curoption = 0;
 	int cursorx, cursory;
@@ -895,141 +851,30 @@ void drawstaticflags(displaymethod * d)
 	d->print(22, 9+9, 0x0A, "Flag 10:");
 }
 
-#define copyflag(buffer, flag, len) strncpy((buffer), (flag), (len)); buffer[(len)] = 0
-#define printflag(buffer, num, flag, len) copyflag((buffer), (flag), (len)); d->print(31, 9+(num), 0x0B, (buffer))
-
-void drawflags(world * myworld, displaymethod * d)
+void drawflags(ZZTworld * myworld, displaymethod * d)
 {
-	char buffer[21];
-	zztheader * zhead = myworld->zhead;
+	int i;
 
-	printflag(buffer, 0, zhead->flag1, zhead->flag1len);
-	printflag(buffer, 1, zhead->flag2, zhead->flag2len);
-	printflag(buffer, 2, zhead->flag3, zhead->flag3len);
-	printflag(buffer, 3, zhead->flag4, zhead->flag4len);
-	printflag(buffer, 4, zhead->flag5, zhead->flag5len);
-	printflag(buffer, 5, zhead->flag6, zhead->flag6len);
-	printflag(buffer, 6, zhead->flag7, zhead->flag7len);
-	printflag(buffer, 7, zhead->flag8, zhead->flag8len);
-	printflag(buffer, 8, zhead->flag9, zhead->flag9len);
-	printflag(buffer, 9, zhead->flag10, zhead->flag10len);
+	for (i = 0; i < ZZT_MAX_FLAGS; i++) {
+		d->print(31, 9 + i, 0x0B, zztWorldGetFlag(myworld, i));
+	}
 }
 
-#define copytoflag(flag, buffer, i) for (i = 0; i < strlen(buffer); i++) (flag)[i] = (buffer)[i]; for (; i < 20; i++) (flag)[i] = 0
-
-void worldflagedit(int curoption, world* myworld,
+void worldflagedit(int curoption, ZZTworld* myworld,
 									 int cursorx, int cursory, displaymethod* d)
 {
-	zztheader * zhead = myworld->zhead;
-	char buffer[21];
-	int i;
+	char buffer[ZZT_FLAG_SIZE + 1];
 
-	switch (curoption) {
-		case 0:
-			copyflag(buffer, zhead->flag1, zhead->flag1len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag1, buffer, i);
-				zhead->flag1len = strlen(buffer);
-			}
-			break;
-
-		case 1:
-			copyflag(buffer, zhead->flag2, zhead->flag2len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag2, buffer, i);
-				zhead->flag2len = strlen(buffer);
-			}
-			break;
-
-		case 2:
-			copyflag(buffer, zhead->flag3, zhead->flag3len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag3, buffer, i);
-				zhead->flag3len = strlen(buffer);
-			}
-			break;
-
-		case 3:
-			copyflag(buffer, zhead->flag4, zhead->flag4len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag4, buffer, i);
-				zhead->flag4len = strlen(buffer);
-			}
-			break;
-
-		case 4:
-			copyflag(buffer, zhead->flag5, zhead->flag5len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag5, buffer, i);
-				zhead->flag5len = strlen(buffer);
-			}
-			break;
-
-		case 5:
-			copyflag(buffer, zhead->flag6, zhead->flag6len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag6, buffer, i);
-				zhead->flag6len = strlen(buffer);
-			}
-			break;
-
-		case 6:
-			copyflag(buffer, zhead->flag7, zhead->flag7len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag7, buffer, i);
-				zhead->flag7len = strlen(buffer);
-			}
-			break;
-
-		case 7:
-			copyflag(buffer, zhead->flag8, zhead->flag8len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag8, buffer, i);
-				zhead->flag8len = strlen(buffer);
-			}
-			break;
-
-		case 8:
-			copyflag(buffer, zhead->flag9, zhead->flag9len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag9, buffer, i);
-				zhead->flag9len = strlen(buffer);
-			}
-			break;
-
-		case 9:
-			copyflag(buffer, zhead->flag10, zhead->flag10len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
-					== LINED_OK) {
-				copytoflag(zhead->flag10, buffer, i);
-				zhead->flag10len = strlen(buffer);
-			}
-			break;
+	strcpy(buffer, zztWorldGetFlag(myworld, curoption));
+	if (line_editor(cursorx, cursory, 0x0B, buffer, ZZT_FLAG_SIZE, LINED_NOLOWER, d) == LINED_OK) {
+		zztWorldSetFlag(myworld, curoption, buffer);
 	}
 }
 
-void worldflagclear(int curoption, world* myworld)
+void worldflagclear(int curoption, ZZTworld* myworld)
 {
-	zztheader * zhead = myworld->zhead;
-	char buffer[1] = "";
-	int i;
-
-	switch (curoption) {
-		case 0:
-			copytoflag(zhead->flag1, buffer, i);
-			zhead->flag1len = 0;
-			break;
-
-	}
+	/* Very nice */
+	zztWorldSetFlag(myworld, curoption, "");
 }
 
 

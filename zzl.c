@@ -1,5 +1,5 @@
 /* zzl.c  -- ZZT Object Library file routines
- * $Id: zzl.c,v 1.1 2001/10/22 02:48:23 bitman Exp $
+ * $Id: zzl.c,v 1.2 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,8 @@
 #include "editbox.h"
 #include "svector.h"
 #include "kevedit.h"
-#include "zzt.h"
+#include "libzzt2/zzt.h"
+#include "misc.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -88,11 +89,11 @@ int zzlpickobject(stringvector * zzlv, displaymethod * d)
 
 /* zzlpullobject() - pulls the object who's zzl definition starts on the
  *                   currentt line. */
-patdef zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
+ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 {
 	int lines, ch, fgcolour, bgcolour, xstep, ystep, cycle;
-	patdef result;
-	param objcodeparam;
+	ZZTtile result;
+	ZZTparam objcodeparam;
 	stringvector objectcode;
 	stringnode* curline;
 	int i;
@@ -117,30 +118,34 @@ patdef zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 		pushstring(&objectcode, str_dup(curline->s));
 	}
 
-	objcodeparam = svectortomoredata(objectcode);
+	objcodeparam = svectortoprogram(objectcode);
 
 	/* Create the new pattern definition */
-	result.type = Z_OBJECT;
+	result.type = ZZT_OBJECT;
 	result.color = fgcolour | (bgcolour << 4);
-	result.patparam = z_newparam_object(x, y, ch, undert, underc);
-	result.patparam->length   = objcodeparam.length;
-	result.patparam->moredata = objcodeparam.moredata;
+	result.param = NULL;
+	/* TODO: param (use most of below): */
+#if 0
+	result.param = z_newparam_object(x, y, ch, undert, underc);
+	result.param->length   = objcodeparam.length;
+	result.param->moredata = objcodeparam.moredata;
 
-	result.patparam->xstep = xstep;
-	result.patparam->ystep = ystep;
-	result.patparam->cycle = cycle;
+	result.param->xstep = xstep;
+	result.param->ystep = ystep;
+	result.param->cycle = cycle;
+#endif
 
 	return result;
 }
 
-int zzlappendobject(stringvector * zzlv, patdef obj, char* title, int editwidth)
+int zzlappendobject(stringvector * zzlv, ZZTtile obj, char* title, int editwidth)
 {
 	int lines, ch, fgcolour, bgcolour, xstep, ystep, cycle;
 	char buffer[256];
 	stringvector objcode;
 
 	/* Convert the moredata to a string vector */
-	objcode = moredatatosvector(obj.patparam, editwidth);
+	objcode = programtosvector(obj.param, editwidth);
 
 	/* Count the lines */
 	lines = 0;
@@ -154,10 +159,10 @@ int zzlappendobject(stringvector * zzlv, patdef obj, char* title, int editwidth)
 	bgcolour = (obj.color & 0xF0) >> 4;
 
 	/* Gather information to describe object */
-	ch = obj.patparam->data1;
-	xstep = obj.patparam->xstep;
-	ystep = obj.patparam->ystep;
-	cycle = obj.patparam->cycle;
+	ch = obj.param->data[0];
+	xstep = obj.param->xstep;
+	ystep = obj.param->ystep;
+	cycle = obj.param->cycle;
 
 	sprintf(buffer, "%d,%d,%d,%d,%d,%d,%d",
 				  lines, ch, fgcolour, bgcolour, xstep, ystep, cycle);

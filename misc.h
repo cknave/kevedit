@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.11 2001/12/12 22:08:03 bitman Exp $
+ * $Id: misc.h,v 1.12 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,10 @@
 
 #include "display.h"
 
+#include "selection.h"
+#include "gradient.h"
+#include "svector.h"
+
 /* Kevedit initialization routines */
 displaymethod * pickdisplay(displaymethod * rootdisplay);
 void initeditorinfo(editorinfo * myinfo);
@@ -31,26 +35,46 @@ void initeditorinfo(editorinfo * myinfo);
 /* TODO: Everything from this point on needs to be sorted
  * very thoroughly. Most should be moved to other files. */
 
+/* editprogram() - edit program in param p */
+void editprogram(displaymethod * d, ZZTparam * p);
+
+/* programtosvector() - creates a string vector from the given param */
+stringvector programtosvector(ZZTparam * p, int editwidth);
+
+/* svectortoprogram() - copies the contents of the given svector into a new
+ *              parameter. Only the moredata and length variables are used! */
+ZZTparam svectortoprogram(stringvector sv);
+
 /* Running zzt */
 void runzzt(char* path, char* world);
 
-void showParamData(param * p, int paramNumber, displaymethod * d);
 void texteditor(displaymethod * mydisplay);
 
-void clearboard(world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
-world * clearworld(world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
+void clearboard(ZZTworld * myworld);
+ZZTworld * clearworld(ZZTworld * myworld);
+
 int toggledrawmode(editorinfo * myinfo);
 int togglegradientmode(editorinfo * myinfo);
-void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard);
-void changeboard(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
 
-void updateparamlist(world * myworld, editorinfo * myinfo, unsigned char paramlist[60][25]);
-void updateinfo(world * myworld, editorinfo * myinfo, char * bigboard);
+void saveworldprompt(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo);
 
 void previouspattern(editorinfo * myinfo);
 void nextpattern(editorinfo * myinfo);
 
-void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25], int randomflag);
-void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
+void floodselect(ZZTblock* block, selection fillsel, int x, int y);
+void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag);
+void fillbyselection(ZZTworld* world, selection fillsel, patbuffer pbuf, int randomflag);
+
+void dofloodfill(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo, int randomflag);
+
+/* Gradient fill helpers */
+void movebykeystroke(int key, int* x, int* y, int minx, int miny, int maxx, int maxy, displaymethod * mydisplay);
+int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, ZZTworld * myworld, displaymethod * mydisplay);
+int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, patbuffer pbuf, gradline * grad, int randomseed, displaymethod* mydisplay);
+
+void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, displaymethod * mydisplay);
+
+/* Do the gradient */
+void dogradient(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo);
 
 #endif

@@ -1,5 +1,5 @@
 /* patbuffer.h    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.h,v 1.3 2001/11/11 06:38:07 bitman Exp $
+ * $Id: patbuffer.h,v 1.4 2002/02/16 10:25:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 #ifndef _PATBUFFER_H
 #define _PATBUFFER_H 1
 
-#include "zzt.h"
+#include "libzzt2/zzt.h"
 #include "kevedit.h"
 #include "display.h"
 
@@ -29,16 +29,9 @@ patbuffer* patbuffer_create(int size);
 void deletepatternbuffer(patbuffer* pbuf);
 void patbuffer_resize(patbuffer * pbuf, int delta);
 
-param* param_duplicate(param* p);
-void param_remove(board* b, unsigned char paramlist[60][25], int x, int y);
-
 void pat_applycolordata(patbuffer * pbuf, editorinfo * myinfo);
 
-int pat_plot(board* b, patdef pattern, int x, int y, u_int8_t * bigboard, unsigned char paramlist[60][25]);
-
-void push(patbuffer* pbuf, int type, int color, param * p);
-void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, unsigned char paramlist[60][25]);
-void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, unsigned char paramlist[60][25], int xpos, int ypos, char code, u_int8_t colour, int fillmethod);
-
+void push(patbuffer* pbuf, ZZTtile tile);
+void plot(ZZTworld * myworld, editorinfo * myinfo, displaymethod * mydisplay);
 
 #endif				/* _PATBUFFER_H */

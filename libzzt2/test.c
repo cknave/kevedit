@@ -61,13 +61,13 @@ int main(int argc, char * argv[])
 	zztPlot(w, 4, 11, foo);
 
 	/* Move the player */
-	zztPlotPlayer(w, 0, 0);
+	zztPlotPlayer(w, 4, 11);
 
 	/* Print the current board */
 	printboard(w);
 
 	/* Shuffle things up a bit */
-	shuffle(w);
+//	shuffle(w);
 
 	/* Save */
 	if(!zztWorldSave(w))
