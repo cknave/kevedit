@@ -1,0 +1,13 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\.zzt]
+@="zztfile"
+
+[HKEY_CLASSES_ROOT\zztfile]
+@="ZZT World"
+
+[HKEY_CLASSES_ROOT\zztfile\Shell\Kevedit]
+
+[HKEY_CLASSES_ROOT\zztfile\Shell\Kevedit\command]
+@="Kevedit.exe %1"
+
