@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.13 2002/09/12 22:05:48 bitman Exp $
+ * $Id: menu.c,v 1.14 2002/09/16 20:46:48 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -155,6 +155,21 @@ void terrainmenu(keveditor * myeditor)
 
 	/* Nothing has params, but why not? */
 	tile.param = zztParamCreate(tile);
+
+	/* Use default color if in default color mode */
+	if (myeditor->defcmode != 0) {
+		switch (choice) {
+			case ZZT_WATER:
+				tile.color = 0x9f;
+				break;
+			case ZZT_FOREST:
+				tile.color = 0x20;
+				break;
+			case ZZT_RICOCHET:
+				tile.color = 0x0a;
+				break;
+		}
+	}
 
 	/* Plot and push the created tile */
 	if (choice != -1) {
