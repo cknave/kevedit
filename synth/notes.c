@@ -1,5 +1,5 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.2 2002/04/04 21:13:25 kvance Exp $
+ * $Id: notes.c,v 1.3 2002/04/05 01:57:51 kvance Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,8 +18,13 @@
  */
 
 #include <math.h>
+#include <stdlib.h>
+#include "SDL.h"
 
 #include "notes.h"
+
+static Uint8 *masterplaybuffer = NULL;
+static size_t playbuffersize = 0, playbufferloc = 0, playbuffermax = 0;
 
 /* Return the frequency of the given note, "octave" octaves from middle */
 float NoteFreq(int note, int octave)
@@ -56,4 +61,60 @@ float NoteFreq(int note, int octave)
 	return retval;
 }
 
+void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
+{
+	size_t notesize = seconds * spec.freq; /* Bytes of sound */
+	size_t wordsize;
+	size_t i;
 
+	int hfreq = (spec.freq/freq)/2;
+	int osc = 1;
+
+	if(spec.format == AUDIO_U8 || spec.format == AUDIO_S8)
+		wordsize = 1;
+	else
+		wordsize = 2;
+
+	if(playbuffersize != 0 && playbufferloc != 0) {
+		/* Shift buffer back to zero */
+		memcpy(masterplaybuffer,
+			&masterplaybuffer[wordsize*playbufferloc],
+			wordsize*(playbuffersize-playbufferloc));
+		playbuffermax -= playbufferloc;
+		playbufferloc = 0;
+	}
+	if(notesize > (playbuffersize-playbuffermax)) {
+		/* Make bigger buffer */
+		masterplaybuffer = realloc(masterplaybuffer,
+				(playbuffersize+notesize)*wordsize);
+		playbuffersize += notesize;
+	}
+
+	for(i = 0; i < notesize; i += wordsize) {
+		if( (i/wordsize) % hfreq == 0)
+			osc ^= 1;
+		if(spec.format == AUDIO_U8) {
+			if(osc)
+				masterplaybuffer[playbuffermax] = U8_1;
+			else
+				masterplaybuffer[playbuffermax] = U8_0;
+		} else if(spec.format == AUDIO_S8) {
+			if(osc)
+				masterplaybuffer[playbuffermax] = S8_1;
+			else
+				masterplaybuffer[playbuffermax] = S8_0;
+		}
+		playbuffermax += wordsize;
+	}
+}
+
+void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len)
+{
+	int i;
+	for(i = 0; i < len && playbufferloc < playbuffermax; i++) {
+		stream[i] = masterplaybuffer[playbufferloc];
+		playbufferloc++;
+	}
+	for(; i < len; i++)
+		stream[i] = spec->silence;
+}

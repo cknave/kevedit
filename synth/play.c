@@ -1,5 +1,5 @@
 /* play.c	-- Play ZZT music from the commandline
- * $Id: play.c,v 1.2 2002/04/04 21:13:25 kvance Exp $
+ * $Id: play.c,v 1.3 2002/04/05 01:57:51 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -45,9 +45,12 @@ int PlayZZTMusic(char *string)
 
 	/* Set desired sound opts */
 	desired.freq = 44100;
-	desired.format = AUDIO_U16SYS;
+//	desired.format = AUDIO_U16SYS;
+	desired.format = AUDIO_S8;
 	desired.channels = 1;
 	desired.samples = 4096;
+	desired.callback = AudioCallback;
+	desired.userdata = &obtained;
 
 	/* Open audio device */
 	if(SDL_OpenAudio(&desired, &obtained) < 0) {
@@ -86,6 +89,19 @@ int PlayZZTMusic(char *string)
 			printf("UNKNOWN!!!\n");
 			break;
 	}
+
+//	AddToBuffer(obtained, NoteFreq(NOTE_C, 0), 1);
+//	AddToBuffer(obtained, NoteFreq(NOTE_D, 0), .4);
+//	AddToBuffer(obtained, NoteFreq(NOTE_E, 0), .4);
+//	AddToBuffer(obtained, NoteFreq(NOTE_F, 0), .4);
+//	AddToBuffer(obtained, NoteFreq(NOTE_G, 0), .4);
+//	AddToBuffer(obtained, NoteFreq(NOTE_A, 0), .4);
+//	AddToBuffer(obtained, NoteFreq(NOTE_B, 0), .4);
+	AddToBuffer(obtained, NoteFreq(NOTE_C, 1), 1);
+
+	SDL_PauseAudio(0);
+
+	SDL_Delay(4000);
 
 	SDL_Quit();
 }
