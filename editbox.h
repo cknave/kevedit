@@ -1,6 +1,6 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.9 2001/05/05 21:34:17 bitman Exp $
- * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
+ * $Id: editbox.h,v 1.10 2001/10/22 02:48:22 bitman Exp $
+ * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,51 +24,75 @@
 #include "display.h"
 #include "svector.h"
 
+/* Return codes */
+#define EDITBOX_OK       1     /* ENTER, ESC when editbox > EDITBOX_NOEDIT */
+#define EDITBOX_CANCEL   2     /* ESC */
+#define EDITBOX_FORWARD  3     /* RIGHT-ARROW */
+#define EDITBOX_BACK     4     /* BACKSPACE */
+#define EDITBOX_BACKWARD 4     /* LEFT-ARROW */
+
+/* Flags */
+#define EDITBOX_ZOCMODE  1     /* Use ZZT markup / syntax highlighting */
+#define EDITBOX_MOVEMENT 2     /* Forward and backward exit dialog (only
+																	effective with editwidth = EDITBOX_NOEDIT) */
+
+/* Editwidth */
+#define EDITBOX_ZZTWIDTH 42    /* ZZT's maximum text width */
+#define EDITBOX_NOEDIT   0     /* Width used to specify browse/scroll dialog */
+
+/* editbox() - edit/browse a string vector in a scroll box.
+ *   Browsing starts at sv->cur.
+ *   Editwidth determines maximum line width, zero for browse only.
+ *   Flags and return codes are listed above. */
+int editbox(char* title, stringvector * sv, int editwidth, int flags, displaymethod * d);
+
+/* Special instances of editbox() */
+#define scrolldialog(title, sv, d) editbox((title), (sv), EDITBOX_NOEDIT, EDITBOX_ZOCMODE, (d))
+#define browsedialog(title, sv, d) editbox((title), (sv), EDITBOX_NOEDIT, EDITBOX_ZOCMODE | EDITBOX_MOVEMENT, (d))
+
 /* editmoredata() - edits p->moredata in a scroll box */
-
-/* editbox() - display/edit a string vector in a scroll box, starting
- * at sv->cur. editwidth tells how long a line can be & how much memory to use
- * on new lines. If editwidth is zero, editsvector acts as a listbox and sets
- * sv->cur to selected node.  If zochighlight is nonzero, it does ZZT Object
- * Code (ZOC) highlighting.
- *
- * Return code: EDITBOX_OK on enter, EDITBOX_CANCEL on ESC */
-
 void editmoredata(param * p, displaymethod * d);
-int editbox(char* title, stringvector * sv, int editwidth, int zocformatting, displaymethod * d);
 
-#define scrolldialog(title, sv, d) editbox((title), (sv), 0, 1, (d))
-#define EDITBOX_OK     1
-#define EDITBOX_CANCEL 2
+/* moredatatosvector() - creates a string vector from the given param */
+stringvector moredatatosvector(param * p, int editwidth);
 
-/* Internal use functions */
+/* svectortomoredata() - copies the contents of the given svector into a new
+ *              parameter. Only the moredata and length variables are used! */
+param svectortomoredata(stringvector sv);
+
+/* filetosvector() - loads a textfile into a new stringvector */
+stringvector filetosvector(char* filename, int wrapwidth, int editwidth);
+
+/* svectortofile() = copies a stringvector into a file. sv is not changed */
+void svectortofile(stringvector * sv, char *filename);
+
+/* wordwrap() - wrap text in sv */
+int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth);
 
 /* displayzoc() - display a string with zoc highlighting. If firstline is true,
  * "@" will be allowed to denote object name. */
-/* displayzcommand() - displays highlighting for zzt #command arguments */
-/* wordwrap() - wrap text in sv */
-/* filetosvector() - loads a textfile into a new stringvector */
-/* svectortofile() = copies a stringvector into a file. sv is not changed */
-
 void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod * d);
+
+/* displaycommand() - displays highlighting for zzt #command arguments */
 void displaycommand(int x, int y, char *command, char *args, displaymethod * d);
-int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth);
-stringvector filetosvector(char* filename, int wrapwidth, int editwidth);
-void svectortofile(stringvector * sv, char *filename);
 
 
-/* REFERENCE -- editbox key actions
+/* EDITBOX REFERENCE -- editbox key actions
  * - standard keys -
  * up       : moves cursor up
  * down     : moves cursor down
  * pageup   : moves up 8 lines
  * pagedown : moves down 8 lines
- * escape   : exit editbox
+ * escape   : exit editbox with EDITBOX_CANCEL or EDITBOX_OK
  * 
- * - view only keys -
- * enter    : exit editbox
+ * - EDITBOX_NOEDIT -
+ * enter    : exit with EDITBOX_OK
+ * - (with EDITBOX_MOVEMENT set) -
+ * right    : exit with EDITBOX_FORWARD
+ * left     : exit with EDITBOX_BACKWARD
+ * backspace: exit with EDITBOX_BACK
  * 
- * - edit only keys -
+ * - editwidth > EDITBOX_NOEDIT -
  * left     : moves cursor left
  * right    : moves cursor right
  * insert   : toggle insert/replace modes
@@ -78,20 +102,21 @@ void svectortofile(stringvector * sv, char *filename);
  * tab      : inserts 4 spaces
  * enter    : inserts newline
  * backspace: deletes space before cursor, or blank lines
- * -        : decrease wordwrap width
- * +        : increase wordwrap width
+ *
+ * alt+'-'  : decrease wordwrap width
+ * alt+'+'  : increase wordwrap width
  * ctrl-y   : deletes the current line
  * ctrl-a   : inserts an ascii character (or a number on #char statements)
- * 
- * - coming soon from the desk of bitman -
+ *
  * alt-s   : save zoc to file
  * alt-o   : open zoc file (erases buffer)
  * alt-i   : insert zoc from file
  * alt-m   : insert zzm song from file
+ *
  * shift   : highlighting
- * alt-x   : cut
- * alt-c   : copy
- * alt-v   : paste
+ * ctrl-x   : cut
+ * ctrl-c   : copy
+ * ctrl-v   : paste
  * 
  */
 

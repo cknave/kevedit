@@ -1,0 +1,21 @@
+@New Features
+$New Features
+
+$New in Version 0.3.3
+!-kevedit:help;Hypertext help system!!!
+!-kbrdinfo;Board Info dialog
+!-kbasics:color;Kolor Dialog
+!-kbasics:zzl;ZZT Object Library Support
+!-kobjedit:copy;Copy & paste uses CTRL
+!-kadvance:randfill;Floodfill advancements
+
+$Bugs fixed in 0.3.3
+  * Escape cancels save operation
+  * Cut doesn't crash when used on last
+    line in text editor
+
+$New in Version 0.3.2
+!-kadvance:backbuffer;Resizable backbuffer
+!-kadvance;Advanced Editing Tools
+!-kbasics:creatures;More creatures
+!-kobjedit:copy;Copy and paste

@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.8 2001/10/20 03:05:49 bitman Exp $
+ * $Id: misc.c,v 1.9 2001/10/22 02:48:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,16 +24,144 @@
 #include "screen.h"
 #include "patbuffer.h"
 #include "hypertxt.h"
+#include "misc.h"
+#include "selection.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <malloc.h>
+#include <unistd.h>
+#include <time.h>
 
-#define HELPMESSAGEMAX 42
 
-char * getfilename(char* buffer, char* fullpath, int buflen)
+int
+runzztforworld(char* zztpath, char* worldname)
 {
-	char *lastslash, *lastbackslash, *start;
+	int result;
+	char* command = malloc(sizeof(char) * (strlen(zztpath)+strlen(worldname)+6));
+
+	if (strlen(zztpath) > 0) {
+		strcpy(command, zztpath);
+		strcat(command, "/zzt ");
+	} else {
+		strcpy(command, "zzt ");
+	}
+	strcat(command, worldname);
+
+	result = system(command);
+
+	free(command);
+	return result;
+}
+
+
+#define CPBUFFERSIZE 1024
+int
+copyzztdatfile(char* srcdir, char* destdir)
+{
+	FILE* src, * dest;
+	char* srcname  = malloc(sizeof(char) * (strlen(srcdir)  + 9));
+	char* destname = malloc(sizeof(char) * (strlen(destdir) + 9));
+
+	size_t readsize;
+	int* copybuffer;
+
+	strcpy(srcname, srcdir);
+	strcat(srcname, "/zzt.dat");
+
+	strcpy(destname, destdir);
+	strcat(destname, "/zzt.dat");
+
+	/* Check for existence of destination file */
+	dest = fopen(destname, "rb");
+	if (dest != NULL) {
+		/* The destination file already exists */
+		fclose(dest);
+		free(destname);
+		free(srcname);
+		return 0;
+	}
+
+	/* Open the source file for reading */
+	src = fopen(srcname, "rb");
+	if (src == NULL) {
+		/* The source file cannot be opened! Error! */
+		fprintf(stderr, "Cannot open %s for reading.", srcname);
+		free(destname);
+		free(srcname);
+		return 1;
+	}
+	
+	/* Open the destination file for writing */
+	dest = fopen(destname, "wb");
+	if (dest == NULL) {
+		/* Can't write to this file */
+		fprintf(stderr, "Cannot open %s for writing.", destname);
+
+		fclose(src);
+		free(destname);
+		free(srcname);
+		return 1;
+	}
+
+	/* Copy src to dest */
+	copybuffer = (int*) malloc(sizeof(int) * CPBUFFERSIZE);
+	do {
+		readsize = fread(copybuffer, sizeof(int), CPBUFFERSIZE, src);
+		fwrite(copybuffer, sizeof(int), readsize, dest);
+	} while (readsize == CPBUFFERSIZE);
+	free(copybuffer);
+
+	/* Close everything down */
+	fclose(src);
+	fclose(dest);
+
+	free(destname);
+	free(srcname);
+
+	return 0;
+}
+
+#define CWDMAXLEN 4096
+/* Returns a malloc()ed string bearing the location of this program based
+ * on main's argv[0]. Not useful for much else. */
+char*
+locateself(char* argv0)
+{
+	char* path = (char*) malloc(sizeof(char) * (strlen(argv0) + 1));
+	char* cwd = NULL;
+	char* fullpathname = NULL;
+
+	pathof(path, argv0, strlen(argv0));
+
+	/* If we find a ':' in the path of this program, it's probably a
+	 * DOS full path (anyone know of an exception to this???) */
+	if (strchr(path, ':') != NULL)
+		return path;
+
+	/* path is a relative path, so we need to prepend the current dir */
+
+	cwd = getcwd(NULL, CWDMAXLEN + 1);
+	if (cwd == NULL)
+		return path;
+
+	fullpathname = (char*) malloc(sizeof(char) * (strlen(path)+strlen(cwd)+2));
+	strcpy(fullpathname, cwd);
+	strcat(fullpathname, "/");
+	strcat(fullpathname, path);
+
+	free(path);
+	free(cwd);
+	return fullpathname;
+}
+
+/* Extracts the local filename from filename given by fullpath */
+char*
+fileof(char* buffer, char* fullpath, int buflen)
+{
+	char* lastslash, * lastbackslash, * start;
+	int i;
 
 	lastslash     = strrchr(fullpath, '/');
 	lastbackslash = strrchr(fullpath, '\\');
@@ -45,8 +173,35 @@ char * getfilename(char* buffer, char* fullpath, int buflen)
 	else
 		start = lastbackslash + 1;
 
-	strncpy(buffer, start, buflen);
-	buffer[buflen] = 0;
+	for (i = 0; start[i] != '\0' && i < buflen; i++)
+		buffer[i] = start[i];
+	buffer[i] = '\0';
+
+	return buffer;
+}
+
+/* Extracts the path from filename given by fullpath */
+char*
+pathof(char* buffer, char* fullpath, int buflen)
+{
+	char* lastslash, * lastbackslash;
+	int end;
+	int i;
+
+	lastslash     = strrchr(fullpath, '/');
+	lastbackslash = strrchr(fullpath, '\\');
+
+	if (lastslash == NULL && lastbackslash == NULL) {
+		strcpy(buffer, ".");
+		return buffer;
+	} else if (lastslash > lastbackslash)
+		end = lastslash - fullpath;
+	else
+		end = lastbackslash - fullpath;
+
+	for (i = 0; i < end && i < buflen; i++)
+		buffer[i] = fullpath[i];
+	buffer[i] = '\0';
 
 	return buffer;
 }
@@ -119,7 +274,7 @@ void initeditorinfo(editorinfo * myinfo)
 	myinfo->cursory = myinfo->playery = 0;
 	myinfo->drawmode = 0;
 	myinfo->gradmode = 0;
-	myinfo->getmode = 0;
+	myinfo->aqumode = 0;
 	myinfo->blinkmode = 0;
 	myinfo->textentrymode = 0;
 	myinfo->defc = 1;
@@ -147,59 +302,12 @@ void initeditorinfo(editorinfo * myinfo)
 }
 
 
-void runzzt(char *args)
+void runzzt(char* zztpath, char *world)
 {
-	char runcommand[256];	/* [12] should be enough, but... */
-
-	strcpy(runcommand, "zzt ");
-
-	/* Now now, no naughty overflowing the buffer */
-	strncpy(runcommand+4, args, 251);
-	runcommand[255] = '\0';
-
-	system(runcommand);
-}
-
-
-void help(displaymethod* d)
-{
-	int done = 0;
-	stringvector helpdialog, readmefile;
-
-	initstringvector(&helpdialog);
-	readmefile = filetosvector("readme", 42, 42);
-
-	/* Use copies because we destroy the vector later */
-	pushstring(&helpdialog, str_dup("KevEdit R5, Version " VERSION));
-	pushstring(&helpdialog, str_dup("Copyright (C) 2000 Kev Vance, et al."));
-	pushstring(&helpdialog, str_dup("Distribute under the terms of the GNU GPL"));
-
-	if (readmefile.first != NULL) {
-		pushstring(&helpdialog, str_dup(""));
-		pushstring(&helpdialog, str_dup("$=-=-=-=-=-=-=-=- README =-=-=-=-=-=-=-=-="));
-		pushstring(&helpdialog, str_dup(""));
-
-		/* Tack the readmefile onto the end of the helpdialog svector */
-		helpdialog.cur = helpdialog.last;
-		stringvectorcat(&helpdialog, &readmefile);
-		if (helpdialog.cur->next != NULL)
-			helpdialog.cur = helpdialog.cur->next;
-	}
-
-	/* Now that the helpfile is loaded, have some fun with it. */
-	do {
-		done = 1;  /* The most likely case is that this will be the last loop */
-		if (editbox("About KevEdit", &helpdialog, 0, 1, d) != EDITBOX_CANCEL) {
-			if (ishypermessage(&helpdialog)) {
-				char msg[HELPMESSAGEMAX];
-				gethypermessage(msg, &helpdialog, HELPMESSAGEMAX);
-				if (findhypermessage(msg, &helpdialog))
-					done = 0;  /* Only case where we keep looping */
-			}
-		}
-	} while (!done);
-
-	deletestringvector(&helpdialog);
+	copyzztdatfile(zztpath, ".");
+	if (runzztforworld(zztpath, world) == -1)
+		if (runzztforworld(".", world) == -1)
+			runzztforworld("", world);
 }
 
 
@@ -327,7 +435,7 @@ int toggledrawmode(editorinfo * myinfo)
 		myinfo->drawmode ^= 1;
 	}
 	/* Get mode should go off either way */
-	myinfo->getmode = 0;
+	myinfo->aqumode = 0;
 
 	return myinfo->drawmode;
 }
@@ -340,7 +448,7 @@ int togglegradientmode(editorinfo * myinfo)
 	if (myinfo->pbuf == myinfo->standard_patterns)
 		return 0;     /* Cycling through standard_patterns not yet supported */
 
-	myinfo->getmode = 0;
+	myinfo->aqumode = 0;
 	if (myinfo->gradmode != 0) {
 		/* Gradmode is already on, advance once and reverse it */
 		if (myinfo->gradmode < 0) {
@@ -484,5 +592,101 @@ void nextpattern(editorinfo * myinfo)
 	}
 }
 
+void floodselect(selection fillsel, int x, int y, char* bigboard, int brdwidth, int brdheight)
+{
+	/* If we've already been selected, go back a level */
+	if (isselected(fillsel, x, y))
+		return;
+
+	/* Select ourselves. That makes us special */
+	selectpos(fillsel, x, y);
+
+	/* A little to the left */
+	if (x > 0) {
+		if ( tiletype (bigboard, x - 1, y) == tiletype (bigboard, x, y) &&
+				(tilecolor(bigboard, x - 1, y) == tilecolor(bigboard, x, y) ||
+				 tiletype (bigboard, x, y) == Z_EMPTY))
+			floodselect(fillsel, x - 1, y, bigboard, brdwidth, brdheight);
+	}
+
+	/* A little to the right */
+	if (x < brdwidth - 1) {
+		if ( tiletype (bigboard, x + 1, y) == tiletype (bigboard, x, y) &&
+				(tilecolor(bigboard, x + 1, y) == tilecolor(bigboard, x, y) ||
+				 tiletype (bigboard, x, y) == Z_EMPTY))
+			floodselect(fillsel, x + 1, y, bigboard, brdwidth, brdheight);
+	}
+
+	/* A little to the north */
+	if (y > 0) {
+		if ( tiletype (bigboard, x, y - 1) == tiletype (bigboard, x, y) &&
+				(tilecolor(bigboard, x, y - 1) == tilecolor(bigboard, x, y) ||
+				 tiletype (bigboard, x, y) == Z_EMPTY))
+			floodselect(fillsel, x, y - 1, bigboard, brdwidth, brdheight);
+	}
+
+	/* A little to the south */
+	if (y < brdheight - 1) {
+		if ( tiletype (bigboard, x, y + 1) == tiletype (bigboard, x, y) &&
+				(tilecolor(bigboard, x, y + 1) == tilecolor(bigboard, x, y) ||
+				 tiletype (bigboard, x, y) == Z_EMPTY))
+			floodselect(fillsel, x, y + 1, bigboard, brdwidth, brdheight);
+	}
+}
+
+void fillbyselection(selection fillsel, patbuffer pbuf, int randomflag, board* destbrd, char* bigboard, unsigned char paramlist[60][25])
+{
+	int x = 0, y = 0;
+	patdef pattern = pbuf.patterns[pbuf.pos];
+
+	if (randomflag)
+		srand(time(0));
+
+	/* Plot the first pattern */
+	if (isselected(fillsel, x, y)) {
+		if (randomflag)
+			pattern = pbuf.patterns[rand() % pbuf.size];
+
+		/* Check for object overflow if we have params & aren't overwriting some */
+		if (destbrd->info->objectcount >= 150 && pattern.patparam != NULL &&
+		    paramlist[x][y] == 0)
+			return;
+
+		pat_plot(destbrd, pattern, x, y, bigboard, paramlist);
+	}
+
+	/* Plot remaining patterns */
+	while (!nextselected(fillsel, &x, &y)) {
+		if (randomflag)
+			pattern = pbuf.patterns[rand() % pbuf.size];
+
+		/* Check for object overflow if we have params & aren't overwriting some */
+		if (destbrd->info->objectcount >= 150 && pattern.patparam != NULL &&
+		    paramlist[x][y] == 0)
+			return;
+
+		pat_plot(destbrd, pattern, x, y, bigboard, paramlist);
+	}
+}
+
+void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25], int randomflag)
+{
+	selection fillsel;
+
+	/* Don't floodfill onto the player! It's not nice! */
+	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
+		return;
+
+	/* New selection as large as the board */
+	initselection(&fillsel, 60, 25);
+
+	/* Flood select then fill using the selection */
+	floodselect(fillsel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
+	fillbyselection(fillsel, (randomflag ? *myinfo->backbuffer : *myinfo->pbuf),
+									randomflag, myworld->board[myinfo->curboard], bigboard, paramlist);
+
+	/* Cleanup */
+	deleteselection(&fillsel);
+}
 
 

@@ -1,0 +1,225 @@
+@The Basics of Using KevEdit
+$The Basics of Using KevEdit
+
+!movement;Movement and Plotting
+!sidebar;Getting to Know the Sidebar
+!color;The Color Selector
+!defc;Default Color Mode
+!uncommon;Uncommon Tiles
+!creatures;Editing Creatures & Objects
+!zzl;  * Object Libraries
+!text;Placing Text on the Board
+!file;File Operations
+!zzt;Working with ZZT
+
+:movement;Movement and Plotting
+
+You control the blinking cursor which can
+be moved around the 60x25 board with the
+arrow keys.  Holding ALT with an arrow key
+will move faster.  Notice that the cursor
+changes the colour of the tile under it.
+This is to help you find it when it gets
+lost.
+
+If you press the SPACEBAR, a white solid
+will be plotted where the cursor is.  The
+TAB key will turn on or off drawing mode.
+In drawing mode, the cursor plots
+automatically when moved.
+!-kadvance:gradient;See Gradient Draw Mode
+
+To plot an empty on the current space,
+deleting the tile there, press the DELETE
+key.
+
+If you create an enclosed area and want to
+fill it in with one type of tile, place
+the cursor inside and press lowercase 'f'
+to flood fill the area.
+!-kadvance:randfill;See Random Flood Fill
+
+There are many boards in a ZZT world.
+Press 'b' to view the board list, where
+you can choose a different board to edit
+or create a new one.
+
+:sidebar;Getting to Know the Sidebar
+
+The blue bar to the right of the screen is
+the KEVEDIT SIDEBAR.  It displays
+information about the current state of the
+editor as well as keys for common
+actions.
+
+The top line of the sidebar looks
+something like this:
+(1, 1) 0/150
+
+The numbers in parenthesis are the
+coordinates of your cursor, ranging from
+(1, 1) to (60, 25).  The next numbers tell
+you how many PARAMETER RECORDS are stored
+on this board.  Parameter records store
+information for configurable things:
+objects, scrolls, and enemies all have
+parameter records.  ZZT has a limit of 150
+records per board.  Keep an eye on how
+many you have used so that you don't run
+out!
+
+The next line simply displays the title of
+the world.  Currently, the title is the
+same as the filename (it is case
+sensitive) but this will be configurable
+later.
+
+On the bottom of the sidebar are two
+horizontal bars.  The first one has a
+gradient of a solid block to empty space,
+a line, and more empty space.  This is the
+PATTERN SELECTOR.  Press 'p' to move the
+arrow forward along the selector and
+shift+'p' to move it backward.  In order,
+the tiles in the pattern selector are:
+
+        * Solid block
+        * Normal block
+        * Breakable block
+        * Water
+        * Empty space
+        * Line
+
+Press space to plot any of these common
+patterns that the arrow is over.  Next to
+the patterns is the BACKBUFFER.  When you
+plot an uncommon tile (not from the
+pattern selector), it will end up in the
+backbuffer.  To copy something from the
+board into the backbuffer, place your
+cursor over it and press ENTER or INSERT.
+It will appear in the backbuffer, where
+you can plot it like anything else in the
+pattern selector.
+
+:color;The Color Selector
+
+The horizontal bar below the pattern
+selector is the COLOR SELECTOR.  Every
+tile you plot has a foreground and
+background color.  The colors on the top
+are for the foreground, which you can
+switch between by pressing 'c'.  There are
+fewer colors available for the background,
+which you can select by pressing
+SHIFT+'c'.
+
+To make the foreground color blink on and
+off, press 'v' before you plot.
+
+The color can also be selected with 'k',
+which brings up a dialog box for
+(possibly) faster color selection.
+
+:defc;Default Color Mode
+
+Next to the color selector lies the
+letter D.  When it is bright and capital,
+DEFAULT COLOR MODE is on.  When it is
+lowercase and dim, it is off.  Default
+color mode (or DefC) is a great idea that
+I stole from MegaZeux 1.0.  When it is
+enabled, objects get plotted with their
+normal colors.  Ammo is dark cyan, torches
+are brown, objects in the backbuffer are
+their original color, etc.  When you turn
+DefC off, anything you plot will be the
+color chosen in the color selector.  This
+is a great way to customize game items and
+to change the color of objects.
+
+:uncommon;Uncommon Tiles
+
+Well, it's not that they're uncommon, just
+not used as much as the nice gradient on
+the pattern selector.  To choose among
+items, creatures, and terrains, press F1,
+F2, or F3.  If you want to plot any of
+these, press its corresponding letter (it
+will be displayed on the sidebar).  Many
+of these are not implemented yet. Sorry :(
+
+:creatures;Editing Creatures & Objects
+!zzl;Object Libraries
+
+If a tile has editable parameters, such as
+a built-in enemy, object, or scroll,
+pressing ENTER will allow you to modify
+them.  After you have done this, a copy
+will be placed in the backbufffer.
+
+To copy a tile to the backbuffer without
+editing it, press INSERT.
+
+Objects and scrolls are programmed in the
+ZZT-OOP language.  When you edit these
+types, you will be presented with the
+object editor.  This is a powerful editor
+tailored specifically for ZZT-OOP
+programming.
+!-langref;The ZZT-OOP Programming Language
+!-kobjedit;The KevEdit Object Editor
+
+:zzl;Object Libraries
+Pressing 'o' will bring up the ZZT Object
+Library Menu. You will have the option of
+loading an object from a ZZL library,
+saving to the end of an existing library,
+or saving to a new library. When saving an
+object, you must provide a (hopefully)
+unique name for that object.
+
+:text;Placing Text on the Board
+
+To add readable text tiles to the board,
+press F4 to activate text entry mode.
+Every character you type will be written
+on the board.  To add a non-typable
+character, press CTRL+'a' for the ASCII
+selection dialog box.  To leave text entry
+mode, press F4 again.
+
+:file;File Operations
+
+KevEdit can load and save normal (and
+abnormal) ZZT worlds.  To load a world,
+press 'l' and you will be presented with a
+list of all world files in the current
+directory.  To save your world, press 's'.
+You will be prompted for an 8 letter name.
+This will be the title and filename of
+your world.
+
+NOTE: The title of the game is only set
+the first time you save the world. If you
+save your world under a different file
+name, the title will not be changed. There
+are several uses for this feature. Use the
+World Info dialog to modify the title.
+
+:zzt;Working with ZZT
+
+To aid in testing a game, pressing 'r'
+will run ZZT on the current world.  It
+will not jump directly to the game; you
+still must choose your input device, etc.
+
+When you return to KevEdit, you will be
+asked if you want to reload the world, in
+case ZZT was used to edit the world in
+some way.
+
+For this to work, zzt.exe and zzt.dat must
+be either in the current directory, the
+same directory as kevedit.exe, or, for
+zzt.exe only, on the path.

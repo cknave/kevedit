@@ -1,5 +1,5 @@
 /* menu.h       -- Code for using the F1-3 panels
- * $Id: menu.h,v 1.1 2001/06/03 17:45:19 bitman Exp $
+ * $Id: menu.h,v 1.2 2001/10/22 02:48:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 void itemmenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
 void creaturemenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
 void terrainmenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
+void objectlibrarymenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
 
 
 #endif

@@ -32,12 +32,14 @@ ifeq ($(DOS),ON)
 	DOSOBJ = display_dos.o
 endif
 
-CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.2\"
+CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.3beta3\"
 
 # No more modifications below this line
 # -------------------------------------
 
-OBJECTS = display.o main.o menu.o misc.o register.o patbuffer.o hypertxt.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o infobox.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
+DRAWOBJS = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o tbox.o cbox.o
+
+OBJECTS = display.o main.o menu.o misc.o register.o patbuffer.o selection.o help.o helplist.o hypertxt.o zzm.o zzl.o svector.o editbox.o infobox.o screen.o scroll.o libzzt.o $(DRAWOBJS) $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
 
 all: kevedit
 
@@ -67,10 +69,18 @@ editbox.o: editbox.c editbox.h scroll.h colours.h svector.h panel_ed.h zzm.h reg
 	$(CC) -o $@ editbox.c $(CFLAGS) -c
 zzm.o: zzm.c zzm.h svector.h editbox.h kevedit.h
 	$(CC) -o $@ zzm.c $(CFLAGS) -c
+zzl.o: zzl.c zzl.h svector.h editbox.h kevedit.h
+	$(CC) -o $@ zzl.c $(CFLAGS) -c
 register.o: register.c register.h editbox.h
 	$(CC) -o $@ register.c $(CFLAGS) -c
 patbuffer.o: patbuffer.c kevedit.h zzt.h display.h
 	$(CC) -o $@ patbuffer.c $(CFLAGS) -c
+selection.o: selection.c
+	$(CC) -o $@ selection.c $(CFLAGS) -c
+help.o: help.c help.h svector.h editbox.h hypertxt.h panel_hl.h helplist.h
+	$(CC) -o $@ help.c $(CFLAGS) -c
+helplist.o: helplist.c helplist.h svector.h
+	$(CC) -o $@ helplist.c $(CFLAGS) -c
 hypertxt.o: hypertxt.c hypertxt.h svector.h
 	$(CC) -o $@ hypertxt.c $(CFLAGS) -c
 infobox.o: infobox.c infobox.h zzt.h display.h
@@ -86,6 +96,8 @@ panel_f3.o: panel_f3.c panel_f3.h
 	$(CC) -o $@ panel_f3.c $(CFLAGS) -c
 panel_ed.o: panel_ed.c panel_ed.h
 	$(CC) -o $@ panel_ed.c $(CFLAGS) -c
+panel_hl.o: panel_hl.c panel_hl.h
+	$(CC) -o $@ panel_hl.c $(CFLAGS) -c
 tbox.o: tbox.c tbox.h
 	$(CC) -o $@ tbox.c $(CFLAGS) -c
 cbox.o: cbox.c cbox.h

@@ -1,5 +1,5 @@
 /* zzm.h  -- zzm file routines
- * $Id: zzm.h,v 1.2 2001/01/07 23:55:42 bitman Exp $
+ * $Id: zzm.h,v 1.3 2001/10/22 02:48:23 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifndef __ZZM_H
+#define __ZZM_H
+
 #include "svector.h"
 #include "display.h"
 
@@ -25,3 +28,5 @@ stringvector zzmpullsong(stringvector * zzmv, int songnum);
 
 /* zzmpicksong() - presents a dialog to choose a song based on title */
 int zzmpicksong(stringvector * zzmv, displaymethod * d);
+
+#endif

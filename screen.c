@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.24 2001/10/20 03:05:49 bitman Exp $
+ * $Id: screen.c,v 1.25 2001/10/22 02:48:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -47,6 +47,7 @@
 #define BBVWIDTH      10
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
 
 /* Eventually these should go in DISPLAY_DOS */
 #define DDOSKEY_EXT      0x100
@@ -66,7 +67,7 @@
 #define DKEY_INSERT     0x52 | DDOSKEY_EXT
 #define DKEY_DELETE     0x53 | DDOSKEY_EXT
 
-int line_editor(int x, int y, int color, int erasecolor,
+int line_editor(int x, int y, int color,
 								char* str, int editwidth, int flags, displaymethod* d)
 {
 	int pos = strlen(str);   /* Position in str */
@@ -77,7 +78,7 @@ int line_editor(int x, int y, int color, int erasecolor,
 		/* Display the line */
 		d->print(x, y, color, str);
 		for (i = strlen(str); i <= editwidth; i++)
-			d->putch(x + i, y, ' ', erasecolor);
+			d->putch(x + i, y, ' ', color);
 
 		/* Move the cursor */
 		d->cursorgo(x + pos, y);
@@ -366,10 +367,10 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 		d->putch(78, 23, 'd', 0x18);
 
 	/* Get mode? */
-	if (e->getmode == 1)
-		d->putch(78, 21, 'G', 0x1e);
+	if (e->aqumode == 1)
+		d->putch(78, 21, 'A', 0x1e);
 	else
-		d->putch(78, 21, 'g', 0x18);
+		d->putch(78, 21, 'a', 0x18);
 
 	/* Too long title */
 	if (strlen(e->currenttitle) > 8) {
@@ -598,7 +599,7 @@ char *titledialog(displaymethod * d)
 			i += 2;
 		}
 	}
-	line_editor(12, 13, 0x0f, 0x00, t, 34, LINED_NORMAL, d);
+	line_editor(12, 13, 0x0f, t, 34, LINED_NORMAL, d);
 	return t;
 }
 
@@ -647,84 +648,6 @@ int switchboard(world * w, editorinfo * e, displaymethod * mydisplay)
 {
 	return boarddialog(w, e->curboard, 0, "Switch Boards", mydisplay);
 }
-#if 0
-{
-	int t, listpos, offset;
-	int subc, sube;
-
-	drawscrollbox(0, 0, mydisplay);
-	mydisplay->print(23, 4, 0x0a, "Switch Boards");
-
-	listpos = e->curboard;
-	offset = 7 - e->curboard;
-	subc = 0;
-	mydisplay->cursorgo(9, 13);
-	while (subc != 27) {
-		drawscrollbox(3, 0, mydisplay);
-		for (t = (offset >= 0) ? offset : 0; t < 15 && (t - offset) <= w->zhead->boardcount + 1; t++) {
-			if ((t - offset) == w->zhead->boardcount + 1)
-				mydisplay->print(9, t + 6, 0x0a, "Add new board");
-			else
-				mydisplay->print(9, t + 6, 0x0a, w->board[t - offset]->title);
-		}
-
-		sube = 0;
-		subc = mydisplay->getch();
-		if (!subc) {
-			sube = 1;
-			subc = mydisplay->getch();
-		}
-		if (sube == 1 && subc == 72) {
-			/* Up Arrow */
-			if (listpos > 0) {
-				listpos--;
-				offset++;
-			}
-		}
-		if (sube == 1 && subc == 80) {
-			/* Down Arrow */
-			if (listpos <= w->zhead->boardcount) {
-				listpos++;
-				offset--;
-			}
-		}
-		if (sube == 1 && subc == 73) {
-			/* Page Up */
-			listpos -= 7;
-			if (listpos < 0) {
-				offset += 7 + listpos;
-				listpos = 0;
-			} else
-				offset += 7;
-		}
-		if (sube == 1 && subc == 81) {
-			/* Page Down */
-			listpos += 7;
-			if (listpos >= w->zhead->boardcount + 1) {
-				offset -= 8 - (listpos - w->zhead->boardcount);
-				listpos = w->zhead->boardcount + 1;
-			} else
-				offset -= 7;
-		}
-		if (subc == 13) {
-			/* Enter */
-			if (listpos == w->zhead->boardcount + 1) {
-				/* We have to create a new one */
-				if (w->zhead->boardcount == 255) {
-					/* Oops, too many! */
-					subc = 255;
-				} else {
-					w->zhead->boardcount++;
-					w->board[w->zhead->boardcount] = z_newboard(titledialog(mydisplay));
-				}
-			}
-			if (subc != 255)
-				return listpos;
-		}
-	}
-	return -1;
-}
-#endif
 
 
 int dothepanel_f1(displaymethod * d, editorinfo * e)
@@ -982,6 +905,183 @@ unsigned char charselect(displaymethod * d, int c)
 	}
 
 	return i;
+}
+
+void colorselectdrawat(displaymethod* d, int x, int y, char ch)
+{
+	d->putch(x + 13, y + 8, ch, (y << 4) | (x & 0x0F) | ((x & 0x10) << 3));
+}
+
+void colorselectdraw(displaymethod* d)
+{
+	int x, y;
+
+	/* TODO: find a better place to get the cursor out of the way */
+	d->cursorgo(0, 0);
+
+	/* Draw the colors */
+	for (x = 0; x < 32; x++)
+		for (y = 0; y < 8; y++)
+			colorselectdrawat(d, x, y, '\xFE');
+
+	/* Draw the corners */
+	d->putch(12, 7,  '\xC9', 0x2A);
+	d->putch(12, 16, '\xC8', 0x2A);
+	d->putch(45, 7,  '\xBB', 0x2A);
+	d->putch(45, 16, '\xBC', 0x2A);
+
+	/* Draw the top and bottom borders */
+	for (x = 0; x < 32; x++) {
+		d->putch(x + 13, 7, '\xCD', 0x2A);
+		d->putch(x + 13, 16, '\xCD', 0x2A);
+	}
+
+	/* Draw the left and right borders */
+	for (y = 0; y < 8; y++) {
+		d->putch(12, y + 8, '\xBA', 0x2A);
+		d->putch(45, y + 8, '\xBA', 0x2A);
+	}
+}
+
+void colorselectremovecursor(displaymethod* d, int curx, int cury)
+{
+	int x, y;
+
+	/* Draw the corners */
+	d->putch(12, 7,  '\xC9', 0x2A);
+	d->putch(12, 16, '\xC8', 0x2A);
+	d->putch(45, 7,  '\xBB', 0x2A);
+	d->putch(45, 16, '\xBC', 0x2A);
+
+	/* Draw the top and bottom borders */
+	for (x = max(curx - 1, 0); x < 32 && x <= curx + 1; x++) {
+		d->putch(x + 13, 7, '\xCD', 0x2A);
+		d->putch(x + 13, 16, '\xCD', 0x2A);
+	}
+
+	/* Draw the left and right borders */
+	for (y = max(cury - 1, 0); y < 8 && y <= cury + 1; y++) {
+		d->putch(12, y + 8, '\xBA', 0x2A);
+		d->putch(45, y + 8, '\xBA', 0x2A);
+	}
+
+	for (x = max(curx - 1, 0); x < 32 && x <= curx + 1; x++)
+		for (y = max(cury - 1, 0); y < 8 && y <= cury + 1; y++)
+			colorselectdrawat(d, x, y, '\xFE');
+
+	for (x = 0; x < 32; x++)
+		colorselectdrawat(d, x, cury, '\xFE');
+	for (y = 0; y < 8; y++)
+		colorselectdrawat(d, curx, y, '\xFE');
+}
+
+void colorselectdrawcursorat(displaymethod* d, int x, int y, char ch)
+{
+	d->putch(x + 13, y + 8, ch, (y << 4) | (x & 0x0F));
+}
+
+void colorselectdrawcursor(displaymethod* d, int curx, int cury)
+{
+	int x, y;
+
+	/* Draw the arrows */
+	d->putch(curx + 13, 7,  '\xCB', 0x2A);
+	d->putch(curx + 13, 16, '\xCA', 0x2A);
+	d->putch(12, cury + 8,  '\xCC', 0x2A);
+	d->putch(45, cury + 8,  '\xB9', 0x2A);
+
+	/* Draw the cursor */
+	colorselectdrawcursorat(d, curx + 1, cury - 1, '\xBB');
+	colorselectdrawcursorat(d, curx + 1, cury,     '\xCC');
+	colorselectdrawcursorat(d, curx + 1, cury + 1, '\xBC');
+	colorselectdrawcursorat(d, curx,     cury - 1, '\xCA');
+	colorselectdrawcursorat(d, curx,     cury + 1, '\xCB');
+	colorselectdrawcursorat(d, curx - 1, cury - 1, '\xC9');
+	colorselectdrawcursorat(d, curx - 1, cury,     '\xB9');
+	colorselectdrawcursorat(d, curx - 1, cury + 1, '\xC8');
+
+	/* Draw the cross lines */
+	for (x = 0; x < curx - 1; x++)
+		colorselectdrawcursorat(d, x, cury, '\xCD');
+	for (x = curx + 2; x < 32; x++)
+		colorselectdrawcursorat(d, x, cury, '\xCD');
+	for (y = 0; y < cury - 1; y++)
+		colorselectdrawcursorat(d, curx, y, '\xBA');
+	for (y = cury + 2; y < 8; y++)
+		colorselectdrawcursorat(d, curx, y, '\xBA');
+
+	/* Draw overlaps with the boarders */
+	if (curx == 0) {   /* Left side */
+		d->putch(12, 8 + cury - 1, '\xCC', 0x2A);
+		d->putch(12, 8 + cury,     '\xBA', 0x2A);
+		d->putch(12, 8 + cury + 1, '\xCC', 0x2A);
+	}
+	if (curx == 31) {  /* Right side */
+		d->putch(45, 8 + cury - 1, '\xB9', 0x2A);
+		d->putch(45, 8 + cury,     '\xBA', 0x2A);
+		d->putch(45, 8 + cury + 1, '\xB9', 0x2A);
+	}
+	if (cury == 0) {   /* Top */
+		d->putch(13 + curx - 1, 7, '\xCB', 0x2A);
+		d->putch(13 + curx    , 7, '\xCD', 0x2A);
+		d->putch(13 + curx + 1, 7, '\xCB', 0x2A);
+	}
+	if (cury == 7) {   /* Bottom */
+		d->putch(13 + curx - 1, 16, '\xCA', 0x2A);
+		d->putch(13 + curx    , 16, '\xCD', 0x2A);
+		d->putch(13 + curx + 1, 16, '\xCA', 0x2A);
+	}
+
+	/* Draw the corners */
+	d->putch(12, 7,  '\xC9', 0x2A);
+	d->putch(12, 16, '\xC8', 0x2A);
+	d->putch(45, 7,  '\xBB', 0x2A);
+	d->putch(45, 16, '\xBC', 0x2A);
+
+}
+
+int colorselector(displaymethod * d, int * bg, int * fg, int * blink)
+{
+	int curx, cury;
+	int key;
+
+	curx = *fg | (*blink << 4);
+	cury = *bg;
+
+	colorselectdraw(d);
+
+	while (1) {
+		/* Draw the cursor */
+		colorselectdrawcursor(d, curx, cury);
+
+		/* Get the key */
+		key = d->getch();
+		if (key == 0)
+			key = d->getch() | DDOSKEY_EXT;
+
+		/* Hide the damage done by the cursor */
+		colorselectremovecursor(d, curx, cury);
+
+		switch (key) {
+			case DKEY_UP:
+				if (cury > 0)  cury--; else cury = 7;  break;
+			case DKEY_DOWN:
+				if (cury < 7)  cury++; else cury = 0;  break;
+			case DKEY_LEFT:
+				if (curx > 0)  curx--; else curx = 31; break;
+			case DKEY_RIGHT:
+				if (curx < 31) curx++; else curx = 0;  break;
+
+			case DKEY_ENTER:
+				*fg = curx & 0x0F;
+				*bg = cury;
+				*blink = curx >> 4;
+				return 0;
+
+			case DKEY_ESC:
+				return 1;
+		}
+	}
 }
 
 

@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.6 2001/09/23 19:59:10 bitman Exp $
+ * $Id: kevedit.h,v 1.7 2001/10/22 02:48:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@ typedef struct editorinfo {
 	int cursorx, cursory;
 	int drawmode;
 	int gradmode;
-	int getmode;
+	int aqumode;
 	int blinkmode;
 	int textentrymode;
 	int defc;
@@ -59,5 +59,8 @@ typedef struct editorinfo {
 	int curboard;
 } editorinfo;
 
+/* Very useful macros for looking at bigboards */
+#define tiletype(bigboard, x, y)  ((bigboard)[((x) + (y) * 60) * 2])
+#define tilecolor(bigboard, x, y) ((bigboard)[((x) + (y) * 60) * 2 + 1])
 
 #endif				/* _KEVEDIT_H */

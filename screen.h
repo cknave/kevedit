@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.12 2001/10/20 03:05:49 bitman Exp $
+ * $Id: screen.h,v 1.13 2001/10/22 02:48:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@
 #define LINED_CANCEL 0
 #define LINED_OK     1
 
-int line_editor(int x, int y, int color, int erasecolor,
+int line_editor(int x, int y, int color,
 								char* str, int editwidth, int flags, displaymethod* d);
 
 extern void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay);
@@ -55,6 +55,7 @@ extern char * filedialog(char * buffer, char * extention, char * title, displaym
 extern int boarddialog(world * w, int curboard, int firstnone, char * title, displaymethod * mydisplay);
 extern int switchboard(world * w, editorinfo * e, displaymethod * mydisplay);
 extern char * filenamedialog(char * filename, char * prompt, char * ext, int askoverwrite, displaymethod * mydisplay);
+extern char *titledialog(displaymethod * d);
 
 extern int dothepanel_f1(displaymethod * d, editorinfo * e);
 extern int dothepanel_f2(displaymethod * d, editorinfo * e);
@@ -62,6 +63,9 @@ extern int dothepanel_f3(displaymethod * d, editorinfo * e);
 
 /* Prompts the user to select a char */
 extern unsigned char charselect(displaymethod * d, int c);
+
+/* Prompts the user to select a color */
+int colorselector(displaymethod * d, int * bg, int * fg, int * blink);
 
 /* confirmprompt() return values */
 #define CONFIRM_YES    0

@@ -1,0 +1,85 @@
+@Advanced Editing Tools
+$Advanced Editing Tools
+
+!backbuffer;Resizable Backbuffer
+!gradient;Gradient Draw Mode
+!aquire;Aquire Mode
+!randfill;Random Flood Fill
+
+:backbuffer;Resizable Backbuffer
+
+The backbuffer may  be  resized  using
+the '<' and '>' keys. Some gradients may
+not fit in the default ten-tile
+backbuffer, so this may prove useful. Only
+ten tiles will be visible at once, but the
+backbuffer will scroll automatically.
+
+Both gradient draw mode and random flood
+fill use the ENTIRE backbuffer, so feel
+free to resize the backbuffer as necessary
+using '<' and '>'.
+
+:gradient;Gradient Draw Mode
+
+Gradient draw mode works much the same as
+draw mode (activated by the TAB key),
+except that KevEdit cycles through the
+backbuffer with each cursor movement. This
+can be used to easily plot gradients or
+other patterns. Use SHIFT-TAB to activate
+gradient mode and TAB to turn it off. When
+gradient mode is on, KevEdit will cycle
+through the backbuffer backward so that
+tiles are laid down in the same order they
+enter the buffer. To cycle forward, press
+SHIFT-TAB a second time.
+
+:aquire;Aquire Mode
+
+Aquire mode acts exactly in the opposite
+manner as drawing mode, lifting tiles into
+the backbuffer as the cursor moves. By
+using aquire mode, one can load a large
+gradient or line of objects into the
+backbuffer with relatively few keystrokes.
+Press 'a' to toggle get mode. The 'a' next
+to the backbuffer will indicate whether
+get mode is on.
+
+NOTE: Aquire mode was formerly "get mode"
+but the name didn't have much ring to it
+and I hope to use the 'g' key for
+something else in the future. The 'g' key
+will still work for now, but it may
+provide a different function in future
+versions. Sorry for the inconvenience.
+  --bitman
+
+:randfill;Random Flood Fill
+
+Random flood fill works much like normal
+flood fill except that tiles are chosen at
+random from the backbuffer when filling.
+Use capitalized 'F' to random flood fill a
+region.
+
+With version 0.3.3, the floodfill
+algorithm is completely new. Random
+floodfill can now fill onto tiles present
+in the backbuffer. Also, the standard
+patterns are never used for random
+floodfill.
+
+BEWARE: once an area is flood filled with
+random tiles, it is difficult to undo.
+Save beforehand if possible. An undo
+feature is in the works, but don't get
+your hopes up too high.
+
+In a random flood fill, all tiles used are
+given equal probability. To increase the
+occurance of a certain kind of tile, put
+more than one copy in the backbuffer to
+increase the likelyhood that it will be
+used.

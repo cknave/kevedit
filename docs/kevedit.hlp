@@ -1,0 +1,70 @@
+!contents;Table of Contents
+$-----------------------------------------
+KevEdit 0.3.2
+     A world file editor for the game ZZT
+$-----------------------------------------
+Copyright (C) 2000-2001
+        Kev Vance   <kvance@tekktonik.net>
+With many contributions by
+         bitman      <bitman@users.sf.net>
+
+:contents;Using Kevedit
+!-knew;* New features *
+!-kbasics;Basics of Using KevEdit
+!-kkeys;Keystroke Quick Reference
+!-kbrdinfo;Board Information
+!-kobjedit;The Object Code Editor
+!-kadvance;Advanced Editing Tools
+
+!help;The Help System
+!quit;Quitting
+!support;Support
+
+:help;Help!
+
+$******* NEW in 0.3.3 *******
+KevEdit now includes a fully functional
+help system, as you are very much aware
+since you are reading this.
+!-kobjedit:help;Object Editor Help
+
+:quit;Quitting
+
+For your safety, pressing 'q' will ask if
+you really want to quit.  If you answer in
+the affirmative, KevEdit will terminate.
+It will not ask you if you really /really/
+want to quit, or perhaps you would just
+like to save your work instead, because I
+hate it when programs doubt my quititude.
+
+:support;Support
+
+That concludes this monsterous text on the
+various usages of KevEdit. Though KevEdit
+is not supported at present, you can send
+an e-mail to <bitman_squared@hotmail.com>
+if you can't figure something out or just
+don't like it. Also, the kevedit-talk
+mailing list is a good source of updates
+on the development of KevEdit.
+
+If you find bugs, try to fix it and send
+in a patch :)  If you can't fix it, report
+it. For the overzelous, you can do what I
+(bitman) did join in on the development if
+you find sending in patches too tedious.
+CVS is great for that sort of thing.
+
+http://kevedit.sourceforge.net/ is where
+you can check for new releases, get the
+CVS code, post bug reports, etc.
+
+To join the mailing list, visit:
+http://lists.sourceforge.net
+      /lists/listinfo/kevedit-talk/
+(all one line)
+
+    Kev Vance <kvance@tekktonik.net>
+    Ryan Phillips <bitman@users.sf.net>
+    October 8, 2001

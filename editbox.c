@@ -1,6 +1,6 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.22 2001/10/11 05:45:26 bitman Exp $
- * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
+ * $Id: editbox.c,v 1.23 2001/10/22 02:48:22 bitman Exp $
+ * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "zzm.h"
 #include "register.h"
 #include "screen.h"
+#include "help.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -179,152 +180,152 @@ int iszztcolour(char *token);
 
 
 /***** draweditpanel() ***********/
-void draweditpanel(int insertflag, int wrapwidth, int zocformatting, displaymethod * d)
+void draweditpanel(int insertflag, int wrapwidth, int zocmode, displaymethod * d)
 {
 	int x, y, i = 0;
 	char buf[10] = "";
 
-	for (y = 3; y < PANEL_EDIT_DEPTH + 3; y++) {
+	for (y = 0; y < PANEL_EDIT_DEPTH; y++) {
 		for (x = 0; x < PANEL_EDIT_WIDTH; x++) {
-			d->putch(x + 60, y, PANEL_EDIT[i], PANEL_EDIT[i + 1]);
+			d->putch(x + 60, y + 3, PANEL_EDIT[i], PANEL_EDIT[i + 1]);
 			i += 2;
 		}
 	}
 	
-	d->print(76, 6,  YELLOW_F | BRIGHT_F | BLUE_B, (insertflag ? "on" : "off"));
-	d->print(76, 10, YELLOW_F | BRIGHT_F | BLUE_B, (zocformatting ? "on" : "off"));
+	d->print(76, 4,  YELLOW_F | BRIGHT_F | BLUE_B, (insertflag ? "on" : "off"));
+	d->print(76, 8, YELLOW_F | BRIGHT_F | BLUE_B, (zocmode ? "on" : "off"));
 
 	sprintf(buf, "%d", wrapwidth);
 
 	if (wrapwidth)
-		d->print(76, 8, YELLOW_F | BRIGHT_F | BLUE_B, buf);
+		d->print(76, 6, YELLOW_F | BRIGHT_F | BLUE_B, buf);
 	else
-		d->print(72, 8, YELLOW_F | BRIGHT_F | BLUE_B, "off");
+		d->print(72, 6, YELLOW_F | BRIGHT_F | BLUE_B, "off");
 }
 
-
-/***** editmoredata() *********/
-
-void editmoredata(param * p, displaymethod * d)
+stringvector moredatatosvector(param * p, int editwidth)
 {
-	stringvector sv;		/* list of strings */
-	char *str = NULL;	/* temporary string */
-	int strpos = 0;			/* position in str */
-	int newdatalength = 0;		/* when writing, size of moredata */
-	int i = 0, j = 0;		/* general counters */
-	const int editwidth = 42;	/* allowable width for editing */
+	stringvector sv;    /* list of strings */
+	char *str = NULL;   /* temporary string */
+	int strpos = 0;     /* position in str */
+	int i;
 
 	initstringvector(&sv);
 
 	/* load the vector */
 	if ((p->moredata == NULL) | (p->length <= 0)) {
-		/* We need to create an empty node */
-		str = (char *) malloc(editwidth + 2);
+		/* No data! We need to create an empty node */
+#if 0
+		str = (char *) malloc(editwidth + 1);
 		strcpy(str, "");
 		pushstring(&sv, str);
-	} else {
-		/* Let's fill the node from moredata! */
-		strpos = 0;
-		str = (char *) malloc(editwidth + 2);
+#endif
+		pushstring(&sv, str_dupmin("", editwidth + 1));
+		return sv;
+	}
 
-		for (i = 0; i < p->length; i++) {
-			if (p->moredata[i] == 0x0d) {
-				/* end of the line (heh); push the string and start over */
-				str[strpos] = 0;
-				pushstring(&sv, str);
-				strpos = 0;
-				str = (char *) malloc(editwidth + 2);
-			} else if (strpos > editwidth) {
-				/* hmmm... really long line; must not have been made in ZZT... */
-				/* let's truncate! */
-				str[strpos] = 0;
-				pushstring(&sv, str);
-				strpos = 0;
-				str = (char *) malloc(editwidth + 2);
-				/* move to next 0x0d */
-				do i++; while (i < p->length && p->moredata[i] != 0x0d);
+	/* Let's fill the node from moredata! */
+	strpos = 0;
+	str = (char *) malloc(sizeof(char) * (editwidth + 1));
 
-				/* code for splitting lines (not in use) */
-				/*
-				str[strpos] = p->moredata[i];
-				str[strpos + 1] = 0;
-				pushstring(&sv, str);
-				strpos = 0;
-				str = (char *) malloc(editwidth + 2);
-				*/
-
-			} else {
-				/* just your everyday copying... */
-				str[strpos++] = p->moredata[i];
-			}
-		}
-
-		if (strpos > 0) {
-			/* strange... we seem to have an extra line with no CR at the end... */
+	for (i = 0; i < p->length; i++) {
+		if (p->moredata[i] == 0x0d) {
+			/* end of the line (heh); push the string and start over */
 			str[strpos] = 0;
 			pushstring(&sv, str);
+			strpos = 0;
+			str = (char *) malloc(sizeof(char) * (editwidth + 1));
+		} else if (strpos > editwidth) {
+			/* hmmm... really long line; must not have been made in ZZT... */
+			/* let's truncate! */
+			str[strpos] = 0;
+			pushstring(&sv, str);
+			strpos = 0;
+			str = (char *) malloc(sizeof(char) * (editwidth + 1));
+			/* move to next 0x0d */
+			do i++; while (i < p->length && p->moredata[i] != 0x0d);
 		} else {
-			/* we grabbed all that RAM for nothing. Darn! */
-			free(str);
+			/* just your everyday copying... */
+			str[strpos++] = p->moredata[i];
 		}
 	}
+
+	if (strpos > 0) {
+		/* strange... we seem to have an extra line with no CR at the end... */
+		str[strpos] = 0;
+		pushstring(&sv, str);
+	} else {
+		/* we grabbed all that RAM for nothing. Darn! */
+		free(str);
+	}
+
+	return sv;
+}
+
+param svectortomoredata(stringvector sv)
+{
+	param p;
+	int pos;
+
+	/* find out how much space we need */
+	p.length = 0;
+	/* and now for a wierdo for loop... */
+	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next)
+		p.length += strlen(sv.cur->s) + 1;		/* + 1 for CR */
+
+	if (p.length <= 1) {
+		/* sv holds one empty string (it can happen) */
+		p.moredata = NULL;
+		p.length = 0;
+		return p;
+	}
+
+	/* lets make room for all that moredata */
+	pos = 0;
+	p.moredata = (char *) malloc(sizeof(char) * p.length);
+
+	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next) {
+		int i;
+		int linelen = strlen(sv.cur->s);	/* I feel efficient today */
+		for (i = 0; i < linelen; i++) {
+			p.moredata[pos++] = sv.cur->s[i];
+		}
+		p.moredata[pos++] = 0x0d;
+	}
+
+	return p;
+}
+
+/***** editmoredata() *********/
+
+void editmoredata(param * p, displaymethod * d)
+{
+	stringvector sv;
+	param newparam;
+
+	sv = moredatatosvector(p, EDITBOX_ZZTWIDTH);
 
 	/* Now that the node is full, we can edit it. */
 	sv.cur = sv.first;	/* This is redundant, but hey. */
-	editbox("Object Editor", &sv, editwidth, 1, d);
+	editbox("Object Editor", &sv, EDITBOX_ZZTWIDTH, 1, d);
 
 	/* Okay, let's put the vector back in moredata */
+	newparam = svectortomoredata(sv);
 
-	/* find out how much space we need */
-	newdatalength = 0;
-	/* and now for a wierdo for loop... */
-	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next)
-		newdatalength += strlen(sv.cur->s) + 1;		/* + 1 for CR */
-
-	if (newdatalength == 1) {
-		/* sv holds one empty string (it can happen) */
-		p->moredata = NULL;
-		p->length = 0;
-		return;
-	}
-	/* lets make room for all that moredata */
-	strpos = 0;
-	str = (char *) malloc(newdatalength);
-
-	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next) {
-		j = strlen(sv.cur->s);	/* I feel efficient today */
-		for (i = 0; i < j; i++) {
-			str[strpos++] = sv.cur->s[i];
-		}
-		str[strpos++] = 0x0d;
-	}
-
-	/* Okay, now lets get rid of sv */
 	deletestringvector(&sv);
+	if (p->moredata != NULL)
+		free(p->moredata);
 
-	/* Yea! Data translated. Now we can put it in moredata */
-	free(p->moredata);
-	p->length = newdatalength;
-	p->moredata = str;
-	/* and the crowd goes wild! */
+	p->length = newparam.length;
+	p->moredata = newparam.moredata;
 }
 
 
-/*
- * if not zocformatting
- *   d->print in green
- * else
- *   if editmode
- *     displayzoc without format
- *   else
- *     displayzoc with format
- */
-
-/* how to display a line of text */
-#define displayline(x, y, s, edit, format, firstline, d) ((format) ? displayzoc((x), (y), (s), !(edit), (firstline), (d)) : d->print((x), (y), ZOC_TEXT_COLOUR, (s)))
+/* how to display a line of text in editbox */
+#define displayline(x, y, s, edit, flags, firstline, d) ((flags & EDITBOX_ZOCMODE) ? displayzoc((x), (y), (s), !(edit), (firstline), (d)) : d->print((x), (y), ZOC_TEXT_COLOUR, (s)))
 
 
-int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, displaymethod * d)
+int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymethod * d)
 {
 	int c = 0, e = 0;       /* Char & ext flag */
 	int i, j;               /* general counters */
@@ -359,9 +360,10 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 
 	centerstr = sv->cur;
 
-	if (!editwidth) {
+	if (editwidth == EDITBOX_NOEDIT) {
 		d->cursorgo(9, 13);
-		if (zocformatting && sv->first != NULL && sv->first->s[0] == '@') {
+		/* Look for @title on first line */
+		if ((flags & EDITBOX_ZOCMODE) && sv->first != NULL && sv->first->s[0] == '@') {
 			/* Display the first line as the title, not in the box itself */
 			if (sv->first->s[1] != '\x0')
 				title = sv->first->s + 1; /* What's the harm? We're only looking. */
@@ -370,6 +372,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 		}
 	}
 	
+	/* Check for NULL after advancing past @title, if we did so */
 	if (centerstr == NULL)
 		return 0;
 
@@ -390,7 +393,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 			d->print(30 - (strlen(title) / 2), 4, 0x0a, title);
 		}
 		if (updateflags & U_PANEL && editwidth)
-			draweditpanel(insertflag, wrapwidth, zocformatting, d);
+			draweditpanel(insertflag, wrapwidth, flags & EDITBOX_ZOCMODE, d);
 
 		/* clear the scrollbox */
 		if (updateflags & U_TOP)
@@ -402,14 +405,14 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 
 		if (updateflags & (U_CENTER)) {
 			/* Draw the center */
-			displayline(9, 13, centerstr->s, editwidth, zocformatting, centerstr->prev == NULL, d);
+			displayline(9, 13, centerstr->s, editwidth, flags, centerstr->prev == NULL, d);
 		}
 
 		if (updateflags & (U_BOTTOM)) {
 			/* Draw bottom half */
 			loopstr = centerstr->next;
 			for (i = 1; i < 8 && loopstr != NULL; i++, loopstr = loopstr->next)
-				displayline(9, i + 13, loopstr->s, editwidth, zocformatting, 0, d);
+				displayline(9, i + 13, loopstr->s, editwidth, flags, 0, d);
 
 			if (i < 8)
 				d->print(9, i + 13, 0x07, SLEADER);
@@ -418,7 +421,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 			/* Draw top half */
 			loopstr = centerstr->prev;
 			for (i = -1; i > -8 && loopstr != NULL; i--, loopstr = loopstr->prev)
-				displayline(9, i + 13, loopstr->s, editwidth, zocformatting, loopstr->prev == NULL, d);
+				displayline(9, i + 13, loopstr->s, editwidth, flags, loopstr->prev == NULL, d);
 
 			if (!editwidth && loopstr == NULL && sv->first->s[0] == '@')
 				i++;
@@ -586,18 +589,24 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 				default:
 					e = 1;
 			}
+		/* e is 0 */
 		} else if (c == 27) {
 			e = -1;
-			if (editwidth)
+			if (editwidth > EDITBOX_NOEDIT)
 				done = EDITBOX_OK;
 			else
 				done = EDITBOX_CANCEL;
-		} else if (!editwidth && c == 13) {
-			e = -1;
-			done = EDITBOX_OK;
+		} else if (editwidth == EDITBOX_NOEDIT) {
+			if (c == 13) {
+				e = -1;
+				done = EDITBOX_OK;
+			} else if (c == '\b') {
+				e = -1;
+				done = EDITBOX_BACK;
+			}
 		}
 
-		if (editwidth) {
+		if (editwidth > EDITBOX_NOEDIT) {
 			/* We are edititing! Yea! Fun time! */
 			
 			if (e == 1) {
@@ -692,7 +701,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								pos = wordwrap(sv, tmpstr, i, -1, wrapwidth, editwidth);
 								centerstr = sv->cur;
 								free(tmpstr);
-								updateflags = U_CENTER | U_BOTTOM;
+								updateflags = U_CENTER | U_BOTTOM | U_TOP;
 							}
 						}
 						break;
@@ -701,13 +710,13 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 					
 					case 44:
 						/* alt-z - toggle ZOC mode */
-						zocformatting = !zocformatting;
+						flags ^= EDITBOX_ZOCMODE;
 						updateflags = U_PANEL | U_EDITAREA;
 						break;
 
 					case 130:
 						/* alt - */
-						if (wrapwidth > 0)
+						if (wrapwidth > 10)
 							wrapwidth--;
 						else
 							wrapwidth = editwidth;
@@ -719,9 +728,40 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						if (wrapwidth < editwidth)
 							wrapwidth++;
 						else
-							wrapwidth = 0;
+							wrapwidth = 10;
 						updateflags = U_PANEL;
 						break;
+
+				/****** Help dialog ******/
+				case 0x3B:    /* F1: help dialog */
+					/* Look for #command on current line for lookup in help */
+					i = pos;
+					while (i > 0 && centerstr->s[i] != '#')
+						i--;
+
+					if (centerstr->s[i] == '#') {
+						/* Copy the command onto tmpstr */
+						tmpstr = str_dup(centerstr->s + i + 1);
+						for (i = 0; tmpstr[i] != ' ' && tmpstr[i] != '\0'; i++)
+							;
+						tmpstr[i] = '\0';
+
+						if (!iszztcommand(tmpstr)) {
+							/* If it's not a valid command, don't bother looking for it */
+							tmpstr[0] = '\0';
+						}
+
+						/* Display the help file with the command as the topic */
+						helpsectiontopic("langref", tmpstr, d);
+						
+						free(tmpstr);
+					} else {
+						/* Display the oop help file */
+						helpsectiontopic("langref", NULL, d);
+					}
+
+					updateflags = U_ALL;
+					break;
 
 					/********* File access operations *********/
 
@@ -754,9 +794,9 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 									if (c == 24) {
 										strcpy(savefilename, strbuf);
 										if (str_equ(filetypelist.cur->s, "*.zoc", 0))
-											zocformatting = 1;
+											flags &= EDITBOX_ZOCMODE;  /* Set ZOCMODE */
 										else
-											zocformatting = 0;
+											flags |= ~EDITBOX_ZOCMODE; /* Clear ZOCMODE */
 										/* erase & replace sv */
 										deletestringvector(sv);
 										*sv = newsvector;
@@ -814,7 +854,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 										for (song.cur = song.first; song.cur != NULL; song.cur = song.cur->next) {
 											tmpstr = (char*) malloc(editwidth + 2);
 
-											if (zocformatting) {
+											if (flags & EDITBOX_ZOCMODE) {
 												strcpy(tmpstr, "#play ");
 												strncat(tmpstr, song.cur->s, editwidth - 6);
 											} else {
@@ -1747,7 +1787,7 @@ stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
 		if (c == 0x0d)
 			fgetc(fp);
 
-		str = (char *) malloc(editwidth + 2);
+		str = (char *) malloc(sizeof(char) * (editwidth + 1));
 		if (str == NULL) {
 			fclose(fp);
 			return v;
@@ -1758,6 +1798,7 @@ stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
 			strcpy(str, buffer);
 			pushstring(&v, str);
 		} else {
+			/* Push an empty string and wordwrap the buffer onto it */
 			str[0] = 0;
 			pushstring(&v, str);
 			v.cur = v.last;

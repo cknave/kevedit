@@ -1,5 +1,5 @@
 /* hypertxt.h  -- hypertext link system
- * $Id: hypertxt.h,v 1.1 2001/10/09 01:14:36 bitman Exp $
+ * $Id: hypertxt.h,v 1.2 2001/10/22 02:48:22 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,12 +22,22 @@
 
 #include "svector.h"
 
-/* Both following functions inspect the current line of sv for a !message;text,
- * the first returning true in this case, the second returning the message
- * part, loaded into buffer. !;text is considered no message */
-int   ishypermessage(stringvector* sv);
-char* gethypermessage(char* buffer, stringvector* sv, int buflen);
+/* Test for !message;text on current line of sv. !;text returns true */
+int   ishypermessage(stringvector sv);
 
+/* Retrieve message from sv->cur if hyperline into malloc()ed string */
+char* gethypermessage(stringvector sv);
+
+/* Move sv->cur to first instance of message msg in sv */
 int   findhypermessage(char* msg, stringvector* sv);
+
+/* Determines whether a message refers to a section as well */
+int   ishypersection(char* msg);
+
+/* Retrieve the section component of msg into malloc()ed string */
+char* gethypersection(char* msg);
+
+/* Retrieve the msg component of msg into malloc()ed string */
+char* gethypersectionmessage(char* msg);
 
 #endif

@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.6 2001/10/20 03:05:49 bitman Exp $
+ * $Id: misc.h,v 1.7 2001/10/22 02:48:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,8 +22,16 @@
 
 #include "display.h"
 
-// Filename parsing from full path
-char * getfilename(char* buffer, char* fullpath, int buflen);
+/* Running zzt */
+int runzztforworld(char* zztpath, char* worldname);
+int copyzztdatfile(char* srcdir, char* destdir);
+
+/* Finds location of executable based on main()'s argv[0] and cwd() */
+char* locateself(char* argv0);
+
+/* Filename parsing */
+char* fileof(char* buffer, char* fullpath, int buflen);
+char* pathof(char* buffer, char* fullpath, int buflen);
 
 /* Confirms that a file exists */
 int fileexists(char* filename);
@@ -35,8 +43,7 @@ void initeditorinfo(editorinfo * myinfo);
 /* TODO: Everything from this point on needs to be sorted
  * very thoroughly. Most should be moved to other files. */
 
-void runzzt(char *args);
-void help(displaymethod* d);
+void runzzt(char* zztpath, char *world);
 void showParamData(param * p, int paramNumber, displaymethod * d);
 void texteditor(displaymethod * mydisplay);
 
@@ -52,5 +59,7 @@ void updateinfo(world * myworld, editorinfo * myinfo, char * bigboard);
 
 void previouspattern(editorinfo * myinfo);
 void nextpattern(editorinfo * myinfo);
+
+void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25], int randomflag);
 
 #endif

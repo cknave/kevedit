@@ -1,0 +1,68 @@
+@Keystroke Quick Reference
+$Keystroke Quick Reference
+
+!general;General Keys
+!function;Function Keys
+!letter;Alphabet Keys
+!punct;Punctuation Keys
+
+:general;General Keys
+CURSOR KEYS
+  Move the cursor.
+ALT+CURSOR KEYS
+  Move the cursor faster.
+ENTER
+  Modifies the tile under the cursor and
+  copies it to the backbuffer.
+INSERT
+  Copies the tile under the cursor to the
+  backbuffer.
+SPACEBAR
+  Plots the currently selected pattern in
+  the backbuffer.
+TAB
+  Continuously plots with cursor movement.
+SHIFT-TAB
+  Continuously plots with cursor movement
+  while cycling through the backbuffer.
+BACKSPACE
+  Plots an empty.
+DELETE
+  Plots an empty.
+
+:function;Function Keys
+F1 - Item Menu
+F2 - Creature Menu
+F3 - Terrain Menu
+F4 - Text Entry
+
+:letter;Alphabet Keys
+q - Quits KevEdit
+s - Saves the world
+l - Loads a world
+n - Creates a new world
+z - Clears the current board
+
+b - Switches to another board
+i - Board Info
+r - Runs zzt
+h - Help
+
+p - Cycles through backbuffer
+P - Cycles backward through backbuffer
+c - Cycles through foreground colors
+C - Cycles through background colors
+k - Kolor dialog
+v - Toggles blinking colors
+d - Toggles default color mode
+a - Aquires tiles to the backbuffer
+f - Floodfills the current tile
+F - Randomly floodfills the current tile
+o - Object Library load/save
+
+:punct;Punctuation Keys
+ < - Reduces size of backbuffer
+ > - Increases size of backbuffer
+ ! - Loads text editor
+ ? - Displays creature information
+

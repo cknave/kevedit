@@ -2,8 +2,14 @@
 -----
 Bug fixed in save dialog
 Bug fixed when cutting on a single line
-Hypertext help system implemented
+Fixed small memory leak when storing objects with truncated object code
+Board Info implemented
 CTRL used instead of ALT in copy/paste
+Hypertext help system implemented using help metafile
+Better path awareness -- ZZT worlds can be in any directory
+Improved floodfill system using selections
+Kolor selector
+ZZL support
 
 0.3.2: October 4, 2001
 ----------------------

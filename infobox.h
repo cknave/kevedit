@@ -26,4 +26,7 @@
 /* editboardinfo() - brings up dialog box for editing board info */
 void editboardinfo(world* myworld, int curboard, displaymethod* d);
 
+/* editworldinfo() - brings up dialog box for editing world info */
+void editworldinfo(world* myworld, displaymethod* d);
+
 #endif

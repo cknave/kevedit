@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.2 2001/10/20 03:05:49 bitman Exp $
+ * $Id: menu.c,v 1.3 2001/10/22 02:48:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,9 +22,28 @@
 #include "display.h"
 #include "screen.h"
 #include "patbuffer.h"
+#include "svector.h"
+#include "zzl.h"
+#include "editbox.h"
+#include "hypertxt.h"
 
 #include <stdlib.h>
 
+void plotbackbufferfirstslot(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
+{
+	int oldpos;
+	patbuffer* prevbuf = myinfo->pbuf;
+
+	myinfo->pbuf = myinfo->backbuffer;
+	oldpos = myinfo->pbuf->pos;
+	myinfo->pbuf->pos = 0;
+
+	plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+
+	myinfo->pbuf->pos = oldpos;
+	myinfo->pbuf = prevbuf;
+}
+		
 void itemmenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
 {
 	int i, x, t;
@@ -136,13 +155,7 @@ void itemmenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, c
 			break;
 		}
 		if (i != -1 && i != Z_PLAYER) {
-			patbuffer* prevbuf = myinfo->pbuf;
-			myinfo->pbuf = myinfo->backbuffer;
-			x = myinfo->pbuf->pos;
-			myinfo->pbuf->pos = 0;
-			plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-			myinfo->pbuf->pos = x;
-			myinfo->pbuf = prevbuf;
+			plotbackbufferfirstslot(mydisplay, myworld, myinfo, bigboard, paramlist);
 		}
 	}
 }
@@ -213,13 +226,7 @@ void creaturemenu(displaymethod * mydisplay, world * myworld, editorinfo * myinf
 		break;
 	}
 	if (i != -1) {
-		patbuffer* prevbuf = myinfo->pbuf;
-		myinfo->pbuf = myinfo->backbuffer;
-		x = myinfo->pbuf->pos;
-		myinfo->pbuf->pos = 0;
-		plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-		myinfo->pbuf->pos = x;
-		myinfo->pbuf = prevbuf;
+		plotbackbufferfirstslot(mydisplay, myworld, myinfo, bigboard, paramlist);
 	}
 }
 
@@ -266,14 +273,154 @@ void terrainmenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo
 	}
 
 	if (i != -1) {
-		patbuffer* prevbuf = myinfo->pbuf;
-		myinfo->pbuf = myinfo->backbuffer;
-		x = myinfo->pbuf->pos;
-		myinfo->pbuf->pos = 0;
-		plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-		myinfo->pbuf->pos = x;
-		myinfo->pbuf = prevbuf;
+		plotbackbufferfirstslot(mydisplay, myworld, myinfo, bigboard, paramlist);
 	}
 }
 
 
+void loadobjectlibrary(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
+{
+	char filename[256];
+	stringvector zzlv;
+	patdef pd;
+
+	/* No fair drawing over the player */
+	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
+		return;
+
+	/* Prompt for a file and load it */
+	if (filedialog(filename, "zzl", "Select an Object Library", mydisplay)
+			== NULL)
+		return;
+	zzlv = filetosvector(filename, EDITBOX_ZZTWIDTH*2, EDITBOX_ZZTWIDTH*2);
+
+	/* Have the user select an object */
+	if (zzlpickobject(&zzlv, mydisplay) != EDITBOX_OK) {
+		deletestringvector(&zzlv);
+		return;
+	}
+
+	/* Put the object into the backbuffer and plot it to the screen */
+	pd = zzlpullobject(zzlv, 0, 0, 0, 0);
+	if (pd.type != -1) {
+		push(myinfo->backbuffer, pd.type, pd.color, pd.patparam);
+		plotbackbufferfirstslot(mydisplay, myworld, myinfo, bigboard, paramlist);
+	}
+
+	/* Finish */
+	deletestringvector(&zzlv);
+}
+
+void saveobjecttolibrary(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
+{
+	char filename[256];
+	char* title;
+	stringvector zzlv;
+	patdef obj;
+
+	/* Can't save what's under the cursor unless it's an object */
+	if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] != Z_OBJECT)
+		return;
+
+	/* Prompt for and load a file */
+	filedialog(filename, "zzl", "Save to Which Object Library?", mydisplay);
+	zzlv = filetosvector(filename, EDITBOX_ZZTWIDTH*2, EDITBOX_ZZTWIDTH*2);
+
+	/* Prompt for a title */
+	title = titledialog(mydisplay);
+
+	/* Copy the object under the cursor onto obj */
+	obj.type  = Z_OBJECT;
+	obj.color = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1];
+	obj.patparam = myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]];
+
+	/* Append the object to the library */
+	if (!zzlappendobject(&zzlv, obj, title, EDITBOX_ZZTWIDTH)) {
+		/* If append was successful, save the file */
+		svectortofile(&zzlv, filename);
+	}
+
+	deletestringvector(&zzlv);
+	free(title);
+}
+
+void saveobjecttonewlibrary(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
+{
+	char filename[256];
+	char* title;
+	stringvector zzlv;
+	patdef obj;
+
+	initstringvector(&zzlv);
+
+	/* Can't save what's under the cursor unless it's an object */
+	if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] != Z_OBJECT)
+		return;
+
+	/* Prompt for file name */
+	strcpy(filename, "");
+	if (filenamedialog(filename, "New Object Library", "zzl", 1, mydisplay)
+			== NULL)
+		return;
+
+	/* Prompt for a title */
+	title = titledialog(mydisplay);
+
+	/* Generate the zzl header */
+	pushstring(&zzlv, str_dup("KevEdit Generated Library"));
+	pushstring(&zzlv, str_dup("*"));
+	pushstring(&zzlv, str_dup("* Format (by CyQ):"));
+	pushstring(&zzlv, str_dup("* "));
+	pushstring(&zzlv, str_dup("* library name"));
+	pushstring(&zzlv, str_dup("* comments, starting with *"));
+	pushstring(&zzlv, str_dup("* per object:"));
+	pushstring(&zzlv, str_dup("* object name"));
+	pushstring(&zzlv, str_dup("* lines in program, char,forground color,"
+														"background color,x step,y step,cycle"));
+	pushstring(&zzlv, str_dup("* program"));
+	pushstring(&zzlv, str_dup("* "));
+
+	/* Copy the object under the cursor onto obj */
+	obj.type  = Z_OBJECT;
+	obj.color = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1];
+	obj.patparam = myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]];
+
+	/* Append the object to the library */
+	if (!zzlappendobject(&zzlv, obj, title, EDITBOX_ZZTWIDTH)) {
+		/* If append was successful, save the file */
+		svectortofile(&zzlv, filename);
+	}
+
+	deletestringvector(&zzlv);
+	free(title);
+}
+
+void objectlibrarymenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
+{
+	stringvector menu;
+	char* choice;
+
+	initstringvector(&menu);
+
+	pushstring(&menu, "!load;Load Object from Library");
+	pushstring(&menu, "!save;Save Object to Existing Library");
+	pushstring(&menu, "!new;Save Object to New Library");
+
+	do {
+		if (scrolldialog("Object Library Menu", &menu, mydisplay) != EDITBOX_OK) {
+			removestringvector(&menu);
+			return;
+		}
+	} while (!ishypermessage(menu));
+
+	choice = gethypermessage(menu);
+
+	if (str_equ(choice, "load", 0))
+		loadobjectlibrary(mydisplay, myworld, myinfo, bigboard, paramlist);
+	else if (str_equ(choice, "save", 0))
+		saveobjecttolibrary(mydisplay, myworld, myinfo, bigboard, paramlist);
+	else if (str_equ(choice, "new", 0))
+		saveobjecttonewlibrary(mydisplay, myworld, myinfo, bigboard, paramlist);
+
+	removestringvector(&menu);
+}

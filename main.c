@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.37 2001/10/20 03:05:49 bitman Exp $
+ * $Id: main.c,v 1.38 2001/10/22 02:48:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "display.h"
 #include "kevedit.h"
@@ -32,6 +33,7 @@
 #include "patbuffer.h"
 #include "misc.h"
 #include "menu.h"
+#include "help.h"
 #include "infobox.h"
 
 #define MAIN_BUFLEN 255
@@ -44,6 +46,7 @@ int main(int argc, char **argv)
 	displaymethod *mydisplay;
 	editorinfo *myinfo;
 	char *bigboard;
+	char *datapath;       /* Location of help file, zzt.exe, and zzt.dat */
 	char buffer[MAIN_BUFLEN];
 	unsigned char paramlist[60][25];
 
@@ -66,12 +69,19 @@ int main(int argc, char **argv)
 	/* Set up initial info */
 	initeditorinfo(myinfo);
 
+	/* Assume DOS model of keeping program data the same dir as kevedit.exe */
+	datapath = locateself(argv[0]);  
+	inithelpsystem(datapath);
+
 	/* Did we get a world on the command line? */
 	myworld = NULL;
 	if (argc > 1) {
-		/* Ignore anything but the actual file name */
-		/* TODO: Check for a given path and chdir there if we can */
-		getfilename(buffer, argv[1], MAIN_BUFLEN - 5);
+		/* Switch to the directory given within the filename */
+		pathof(buffer, argv[1], MAIN_BUFLEN);
+		chdir(buffer);
+
+		/* Open the file */
+		fileof(buffer, argv[1], MAIN_BUFLEN - 5);
 		myworld = loadworld(buffer);
 		if (myworld == NULL) {
 			/* Maybe they left off the .zzt extension? */
@@ -156,8 +166,9 @@ int main(int argc, char **argv)
 					/* XXX FIXME Was I mistaken about blinking text?
 					   if(myinfo->blinkmode)
 					   i += 8; */
-					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = Z_BLUETEXT + i;
-					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = c;
+
+					tiletype (bigboard, myinfo->cursorx, myinfo->cursory) = Z_BLUETEXT + i;
+					tilecolor(bigboard, myinfo->cursorx, myinfo->cursory) = c;
 					c = 77;
 					e = 1;
 				} else
@@ -186,7 +197,6 @@ int main(int argc, char **argv)
 					e = 1;
 					c = 77;
 				break;
-			/* perhaps bitman will someday add jump movement for these keys as well? */
 			}
 		}
 
@@ -256,19 +266,27 @@ int main(int argc, char **argv)
 			break;
 		case 'g':
 		case 'G':
-			/* Toggle get mode - cursor movement loads pattern buffer automatically */
-			myinfo->getmode ^= 1;
+		case 'a':
+		case 'A':
+			/* Toggle aqu mode - cursor movement loads pattern buffer automatically */
+			myinfo->aqumode ^= 1;
 
-			/* drawmode & gradmode can't be on while in getmode */
+			/* drawmode & gradmode can't be on while in aqumode */
 			myinfo->drawmode = 0;
 			myinfo->gradmode = 0;
 
-			if (myinfo->getmode != 0) {
-				/* Grab if getmode is on */
+			if (myinfo->aqumode != 0) {
+				/* Grab if aqumode is on */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					push(myinfo->backbuffer,
+							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+							 myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
 				else
-					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+					push(myinfo->backbuffer,
+							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+							 NULL);
 			}
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
@@ -347,41 +365,10 @@ int main(int argc, char **argv)
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
-		case 'f':
 		case 'F':
-			/* Flood fill */
-			{
-				patdef curpattern = myinfo->pbuf->patterns[myinfo->pbuf->pos];
-				if (myinfo->defc == 0) {
-					i = (myinfo->backc << 4) + myinfo->forec;
-					if (myinfo->blinkmode == 1)
-						i += 0x80;
-					x = i;
-				} else
-					x = curpattern.color;
-
-				if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == curpattern.type && (curpattern.type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == x))
-					break;
-				{
-					int randflag = 0;
-					if (c == 'F') {
-						/* Set randflag to a negative number for bitman's patented
-						 * cycle fill (it almost generates even patterns). For the
-						 * moment, no keys are mapped to do this. */
-						randflag = 1;
-						for (i = 0; i < myinfo->pbuf->size; i++)
-							/* Break randomization if target type is in pattern buffer */
-							if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == myinfo->pbuf->patterns[i].type && (myinfo->pbuf->patterns[i].type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == myinfo->pbuf->patterns[i].color)) {
-								randflag = 0;
-								break;
-							}
-						srand(time(0));
-					}
-					floodfill(myworld, myinfo, mydisplay, bigboard, paramlist, myinfo->cursorx, myinfo->cursory, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], randflag);
-				}
-				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-			}
+		case 'f':
+			dofloodfill(mydisplay, myworld, myinfo, bigboard, paramlist, c == 'F');
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			break;
 		case 'L':
 		case 'l':
@@ -403,11 +390,21 @@ int main(int argc, char **argv)
 			break;
 		/* Code common to all movement keys can be found after this switch statement */
 		case 75:
+		case 'k':
 			/* Left arrow */
 			if (e == 1) {
 				if (myinfo->cursorx > 0) {
 					myinfo->cursorx--;
 				}
+			} else {
+				/* Kolor selector */
+				colorselector(mydisplay, &myinfo->backc, &myinfo->forec,
+											&myinfo->blinkmode);
+
+				pat_applycolordata(myinfo->standard_patterns, myinfo);
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				updatepanel(mydisplay, myinfo, myworld);
 			}
 			break;
 		case 155:
@@ -445,6 +442,10 @@ int main(int argc, char **argv)
 			} else {
 				/* Help */
 				help(mydisplay);
+
+				/* Update everything */
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			}
@@ -533,11 +534,35 @@ int main(int argc, char **argv)
 				}
 			}
 			break;
+		case 'o':
+		case 'O':
+			/* Load object from library */
+			if (e == 0) {
+				objectlibrarymenu(mydisplay, myworld, myinfo, bigboard, paramlist);
+				
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			}
+			break;
 		case 'i':
 		case 'I':
 			/* Board Info */
 			editboardinfo(myworld, myinfo->curboard, mydisplay);
 
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+		case 'w':
+		case 'W':
+			/* World Info */
+			editworldinfo(myworld, mydisplay);
+
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
@@ -545,17 +570,24 @@ int main(int argc, char **argv)
 			/* Modify / Grab */
 			if (e == 0) {
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-					if (myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
+					if (myworld->board[myinfo->curboard]->
+							  params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
 						/* we have params; lets edit them! */
-						if(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_OBJECT) {
-							myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1 = charselect(mydisplay, myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1);
+						if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
+							myworld->board[myinfo->curboard]->
+								params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1
+								= charselect(mydisplay, myworld->board[myinfo->curboard]->
+														 params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1);
 						}
-						if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_SCROLL || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_OBJECT) {
+						if (tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_SCROLL ||
+								tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
 							/* Load editor on current moredata */
-							editmoredata(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);
+							editmoredata(myworld->board[myinfo->curboard]->
+													 params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);
 						}
-						if(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_PASSAGE) {
-							param* p = myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]];
+						if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_PASSAGE) {
+							param* p = myworld->board[myinfo->curboard]->
+								params[paramlist[myinfo->cursorx][myinfo->cursory]];
 							/* Choose passage destination */
 							p->data3 = boarddialog(myworld, p->data3, 1, "Passage Destination", mydisplay);
 						}
@@ -576,9 +608,17 @@ int main(int argc, char **argv)
 			if (e == 1) {
 				/* Grab */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					push(myinfo->backbuffer,
+							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+							 myworld->board[myinfo->curboard]->
+							   params[paramlist[myinfo->cursorx][myinfo->cursory]]);
 				else
-					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+					push(myinfo->backbuffer,
+							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+							 NULL);
+
 				updatepanel(mydisplay, myinfo, myworld);
 				break;
 			} else {
@@ -586,7 +626,7 @@ int main(int argc, char **argv)
 				/* Load current world into zzt */
 				if (e == 0) {
 					mydisplay->end();
-					runzzt(myinfo->currentfile);
+					runzzt(datapath, myinfo->currentfile);
 					
 					/* restart display from scratch */
 					mydisplay->init();
@@ -617,9 +657,13 @@ int main(int argc, char **argv)
 		case '?':
 			/* display param data (for developement purposes and debugging) */
 			if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-				if (myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
+				if (myworld->board[myinfo->curboard]->
+						  params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
 					/* we have params; lets show them! */
-					showParamData(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], paramlist[myinfo->cursorx][myinfo->cursory], mydisplay);
+					showParamData(myworld->board[myinfo->curboard]->
+												  params[paramlist[myinfo->cursorx][myinfo->cursory]],
+												paramlist[myinfo->cursorx][myinfo->cursory], mydisplay);
+
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 				}
@@ -630,12 +674,18 @@ int main(int argc, char **argv)
 		if ((e == 1) && (c == 75  || c == 77 || c == 72 || c == 80 ||
 										 c == 155 || c == 157 || c == 152 || c == 160)) {
 			/* Common code for all movement actions */
-			if (myinfo->getmode != 0) {
-				/* Get if getmode is on */
+			if (myinfo->aqumode != 0) {
+				/* Get if aquire mode is on */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					push(myinfo->backbuffer,
+							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+							 myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
 				else
-					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+					push(myinfo->backbuffer,
+							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+							 NULL);
 				updatepanel(mydisplay, myinfo, myworld);
 			}
 			/* If gradmode is on, cycle through the pattern buffer.
@@ -661,6 +711,11 @@ int main(int argc, char **argv)
 
 	/* Free the registers used by copy & paste in the ZOC editor */
 	deleteregisters();
+
+	/* Free the loaded help system */
+	deletehelpsystem();
+	if (datapath != NULL)
+		free(datapath);
 
 	/* Free pattern buffers */
 	free(myinfo->standard_patterns);

@@ -1,0 +1,93 @@
+@The All-Powerful Object Code Editor
+$The Object Code Editor
+
+!copy;Copy & Paste
+!wordwrap;Word Wrap
+!ascii;ASCII Charater Insertion
+!files;Loading and Saving Text Files
+!zzm;Importing ZZT Music
+!zoc;ZOC Mode
+!help;Context Sensitive Help
+
+Objects and scrolls are programmed in the
+ZZT-OOP language.  When you edit these
+types, you will be presented with the
+object editor.  This is a simple text
+editor with features specific to ZZT
+programming.  ARROW KEYS move the cursor,
+ESCAPE quits, ctrl+'y' deletes a line, et
+cetera. A text editor may also be accessed
+by pressing '!' on the main screen, a la
+zzt.
+
+:copy;Copy & Paste
+
+The Object editor features copy and paste.
+Use SHIFT to select a region of text, then
+press CTRL+'c' to copy. CTRL-'v' may then
+be used to paste the copied text later.
+CTRL-'x' will cut the selected text while
+CTRL-DELETE simply clears without copying.
+
+:wordwrap;Word Wrap
+
+On by default, word wrap allows text to
+spill over onto the next line when typing
+paragraphs. The editor is just intelligent
+enough to identify zzt commands and avoid
+word-wrapping them improperly. Use ALT+'-'
+and ALT+'+' (or ALT+'=') to increase or
+decrease the maximum length of a line.
+Between 42 and 1, word wrap is set to off,
+which prevents wrapping of any kind.
+
+:ascii;ASCII Charater Insertion
+
+Arbitrary ASCII may be inserted characters
+into your program by pressing ctrl+'a'.
+If the cursor is on the same line as a
+#char command, it will place the number of
+the character into the program.
+
+:files;Loading and Saving Text Files
+
+The Object Code Editor can be used to load
+and save text files. ALT+'s' will save the
+program to a file and ALT+'o' will load a
+previously saved file, replacing any text
+already in the editor. ALT+'i' will insert
+a file without destroying existing work.
+
+:zzm;Importing ZZT Music
+Music stored in ZZM formatted files can be
+loaded into the Object Editor quite
+easily. Simply press ALT+'m', select a ZZM
+file and a song to load. When ZOC mode is
+on, #play statements will be inserted at
+the beginning of each line of music.
+!zoc;ZOC Mode
+
+NOTE: Due to extreme laziness and the
+complexities of programming, KevEdit will
+only recognize songs for which titles are
+provided. The music ripper does not
+provide titles, so ripped files will have
+to be editted before using. See the
+included file soundfx.zzm for an example
+of how to do this.
+
+:zoc;ZOC Mode
+It may be useful to turn ZOC mode off when
+editing files which are not ZZT Object
+Code. All it does is turn of syntax
+highlighting and prevent #play statements
+from being inserted with ZZM music. If you
+use the editor to copy music from one ZZM
+file to another.
+
+:help;Context Sensitive Help
+Pressing F1 will bring up the ZZT-OOP
+Programming Reference. If the cursor is on
+the same line as a #command, it will look
+that command up in the help.
+
