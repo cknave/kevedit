@@ -1,0 +1,46 @@
+--------------------------------------------
+KevEdit 0.1
+	A world file editor for the game ZZT
+--------------------------------------------
+Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+
+ * This is nowhere near finished.  The main purpose of 0.1 is to create art
+   for the 24AHoZ compo.
+
+Things that are implemented so far:
+
+ * MOVING - arrows to move, alt+arrows to move faster
+ * QUITTING - press 'q' to quit.  No confirmation, hope you saved.
+ * DEFC - Default colour mode.  Press 'd' to toggle this, KevEdit is lots more
+   fun with this turned off.
+ * DRAWING - Press tab to toggle draw mode
+ * BLINKING - Press 'v' to toggle blinking
+ * PLOTTING - Press space to plot
+ * COLOURS - Lots of colours are available.  'c' to change foreground colours,
+   shift+'c' to change background colours.
+ * PATTERNS - A full gradient of patterns along with lines and a large
+   backbuffer (bigger than ZZT's 1 block only :) are available.  'p' to change
+ * BOARDS - 'b' will bring up the board scroll where you can switch boards
+   or create new ones.
+ * SAVING - 's' to save the world file
+ * LOADING - 'l' to load a world file
+ * HELP - 'h' for help, which is just the About box now
+ * THINGS - Some things, like keys and doors can go in.  Lots of others are
+   not coded in yet.
+ * OBJECTS - Object support is in, but just for making custom chars.  There is
+   no program editor yet (but you'll dig the superior char-picker :)
+ * GRABBING - Press enter to grab something to the backbuffer.  Gotta love
+   the big backbuffer.
+--------------------------------------------
+
+That's all I can think of.  This is not supported at this time, please do not
+send me email asking how to use it.
+
+If you find bugs, try to fix it and send me a patch :)  If you can't fix it,
+report it.
+
+http://www.sourceforge.net/projects/kevedit/ is where you can check for new
+releases, get the CVS code, post bug reports, etc.
+
+    Kev Vance <kvance@tekktonik.net>
+    June 14, 2000
