@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.13 2002/08/24 22:59:08 bitman Exp $
+ * $Id: tiles.c,v 1.14 2002/09/18 04:21:43 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -558,7 +558,7 @@ u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile)
 {
 	switch (tile.type) {
 		case ZZT_EMPTY:  return 0x0F;
-		case ZZT_PLAYER: return 0x1F;
+		case ZZT_PLAYER: return tile.param != NULL ? 0x1F : tile.color;
 		case ZZT_BLUETEXT:    return 0x1f;
 		case ZZT_GREENTEXT:   return 0x2f;
 		case ZZT_CYANTEXT:    return 0x3f;
