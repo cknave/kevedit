@@ -187,6 +187,8 @@ will be placed in the backbufffer.
 To copy a tile to the backbuffer without
 editing it, press INSERT.
 
+To reveal hidden objects press CTRL-O.
+
 :zzl;Object Libraries
 Pressing 'o' will bring up the ZZT Object
 Library Menu. You will have the option of

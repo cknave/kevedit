@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.16 2002/03/24 08:39:54 bitman Exp $
+ * $Id: misc.h,v 1.17 2002/08/24 00:48:40 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,9 @@ void keveditUpdateInterface(displaymethod * mydisplay, editorinfo * myinfo, ZZTw
 
 /* TODO: Everything from this point on needs to be sorted
  * very thoroughly. Most should be moved to other files. */
+
+/* Make objects more obvious */
+void showObjects(displaymethod * mydisplay, editorinfo * myinfo, ZZTworld * myworld);
 
 /* Running zzt */
 void runzzt(char* path, char* world);

@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.31 2002/05/08 21:25:05 bitman Exp $
+ * $Id: misc.c,v 1.32 2002/08/24 00:48:40 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,8 @@
 #include "panel_g2.h"
 #include "tdialog.h"
 
+#include "colours.h"
+
 #include "display.h"
 
 #include <stdlib.h>
@@ -44,6 +46,36 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <time.h>
+
+void showObjects(displaymethod * mydisplay, editorinfo * myinfo, ZZTworld * myworld)
+{
+	int x, y;
+	ZZTboard * board = zztBoardGetCurPtr(myworld);
+
+	for (x = 0; x < board->bigboard->width; x++) {
+		for (y = 0; y < board->bigboard->height; y++) {
+			u_int8_t ch, color;
+			ZZTtile tile = zztTileGet(myworld, x, y);
+			if (tile.type != ZZT_OBJECT)
+				continue;
+
+			ch    = zztLoneTileGetDisplayChar(tile);
+			color = zztLoneTileGetDisplayColor(tile);
+
+			/* Make invisible chars smile */
+			ch = 0x02;
+
+			/* Make same-colored tiles ugly */
+			if (colorfg(color) == colorbg(color))
+				color ^= 0x07;
+
+			mydisplay->putch_discrete(x, y, ch, color);
+		}
+	}
+
+	mydisplay->update(0, 0, board->bigboard->width, board->bigboard->height);
+	mydisplay->getch();
+}
 
 void runzzt(char* path, char* world)
 {

@@ -20,6 +20,7 @@ zztParam.magic2 renamed to just magic (it's all alone now)
 Objects may be #lock-ed and #unlock-ed
 Time remaining available for bombs
 ALT-T also runs zzt for testing (by popular demand)
+Monitor and blink rays added to F3 menu
 
 0.4.0: February 19, 2002
 ------------------------

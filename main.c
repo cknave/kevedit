@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.69 2002/06/02 03:55:01 bitman Exp $
+ * $Id: main.c,v 1.70 2002/08/24 00:48:40 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -410,6 +410,12 @@ int main(int argc, char **argv)
 			texteditor(mydisplay);
 
 			myinfo->updateflags |= UD_ALL;
+			break;
+		case DKEY_CTRL_O:
+			/* Show all objects */
+			showObjects(mydisplay, myinfo, myworld);
+
+			myinfo->updateflags |= UD_BOARD;
 			break;
 
 		/***************** Drawing *****************/

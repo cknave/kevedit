@@ -25,6 +25,8 @@ INSERT
  r or ALT-T - Runs zzt
  h - Help
  ! - Loads text editor
+CTRL-O
+  Reveal hidden objects
 
 :move;Movement
 

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.49 2002/05/04 04:17:43 bitman Exp $
+ * $Id: screen.c,v 1.50 2002/08/24 00:48:40 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1059,9 +1059,9 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 	int x, y, i = 0;
 	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
 
-	for (y = 3; y < 20; y++) {
-		for (x = 0; x < 20; x++) {
-			d->putch_discrete(x + 60, y, PANEL_F3[i], PANEL_F3[i + 1]);
+	for (y = 0; y < PANEL_F3_DEPTH; y++) {
+		for (x = 0; x < PANEL_F3_WIDTH; x++) {
+			d->putch_discrete(x + 60, y + 3, PANEL_F3[i], PANEL_F3[i + 1]);
 			i += 2;
 		}
 	}
@@ -1079,6 +1079,9 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 	d->putch_discrete(78, 15, '<', color);
 	d->putch_discrete(78, 16, '*', e->defc ? 0x0a : color);
 	d->putch_discrete(78, 18, 'E', color);
+	d->putch_discrete(78, 19, 'M', color);
+	d->putch_discrete(78, 20, 205, color);
+	d->putch_discrete(78, 21, 186, color);
 	d->update(60, 3, 20, 22);
 	while (1) {
 		i = d->getch();

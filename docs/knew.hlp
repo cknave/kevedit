@@ -12,6 +12,7 @@ $New in Version 0.5.0
 !-kstats:bind;Bind Index in Stats Editor
 !-kbasics:zzt;ALT-T runs zzt for testing
 :;  *  CTRL-K selects color (for F4 mode)
+:;  *  CTRL-O reveals hidden objects
 
 $Bugs fixed in 0.5.0
 :;  *  Monitor recognized as valid type

@@ -21,6 +21,24 @@ To learn more about using KevEdit, activate its on-line help by pressing 'H'.
 
 New Features / Bug Fixes
 ------------------------
+Native Linux and Windows support
+Stats Editor documentation
+Tile Info
+Items documentation
+Creatures documentation
+Terrain documentation
+Aquire Mode grows backbuffer
+Bind Index in Stats Editor
+ALT-T runs zzt for testing
+CTRL-K selects color (for F4 mode)
+CTRL-O reveals hidden objects
+
+Bugs Fixed:
+Monitor recognized as valid type
+Object Editor panel updated
+Saved games using #bind now load
+Object #lock-ing supported
+Time remaining available for bombs
 
 Blatant Plug of ZZTUnder Project
 --------------------------------
