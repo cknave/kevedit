@@ -1,6 +1,6 @@
 # Autoconf macros for KevEdit
 
-AC_DEFUN(AC_PROG_GNU_GLOB,
+AC_DEFUN([AC_PROG_GNU_GLOB],
 [dnl
 dnl Check the system to see if it provides GNU glob.  If not, use
 dnl the implementation we stole from GNU make. :-)
@@ -43,7 +43,7 @@ esac
 dnl AM_PATH_SDL([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for SDL, and define SDL_CFLAGS and SDL_LIBS
 dnl
-AC_DEFUN(AM_PATH_SDL,
+AC_DEFUN([AM_PATH_SDL],
 [dnl 
 dnl Get the cflags and libraries from the sdl-config script
 dnl
