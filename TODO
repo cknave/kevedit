@@ -1,8 +1,6 @@
 For the 0.5.x release:
 ----------------------
-Fix: paste may exceed object limit
-Change pattern of current tile
-  ENTER changes char of TEXT under cursor
+ENTER changes char of TEXT under cursor
 Retain color mode added to defc toggle
 Quickly switch to adjacent board
 Quick key for quick key reference (and mention on panel)
