@@ -43,7 +43,7 @@ OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS) $
 
 # Documents
 
-DOCS = README AUTHORS TODO COPYING ChangeLog *.txt
+DOCS = README AUTHORS TODO COPYING ChangeLog copying.txt windows.txt
 
 .SUFFIXES: .o .c .h .rc
 
