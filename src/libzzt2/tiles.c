@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.1 2003/11/01 23:45:57 bitman Exp $
+ * $Id: tiles.c,v 1.2 2003/11/21 21:29:58 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -377,7 +377,7 @@ ZZTblock *zztBlockDuplicate(ZZTblock *block)
 ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2)
 {
 	int row;          /* Current row in source */
-	int destx;      /* Current column in the destination block */
+	int destx;        /* Current column in the destination block */
 	ZZTblock * dest;  /* Destination block */
 
 	/* Make sure (x1, y1) is upper left corner and (x2, y2) is lower right */
@@ -442,7 +442,8 @@ int zztBlockPaste(ZZTblock *dest, ZZTblock *src,
 		}
 		/* If the loop stopped short of using every column in src, advance
 		 * the srcpos index to ignore these columns */
-		while (col < src->width + x) { col++; srcpos++; }
+		srcpos += (src->width + x) - col;
+		col = src->width + x;
 	}
 
 	/* Success! */
