@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.12 2002/12/13 00:30:52 bitman Exp $
+ * $Id: kevedit.c,v 1.13 2002/12/13 00:39:19 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -316,10 +316,20 @@ void keveditHandleTextEntry(keveditor * myeditor)
 		/* Leave text entry mode */
 		myeditor->textentrymode ^= 1;
 		myeditor->updateflags |= UD_TEXTMODE;
-	} else if (key == DKEY_BACKSPACE && myeditor->cursorx > 0) {
+	} else if (key == DKEY_BACKSPACE) {
 		/* Backspace */
-		myeditor->cursorx--;
-		zztErase(myeditor->myworld, myeditor->cursorx, myeditor->cursory);
+		if (myeditor->cursorx > 0) {
+			/* Move back on this line */
+			myeditor->cursorx--;
+			zztErase(myeditor->myworld, myeditor->cursorx, myeditor->cursory);
+		} else {
+			if (myeditor->cursory > 0) {
+				/* Move back to previous line */
+				myeditor->cursorx = myeditor->width - 1;
+				myeditor->cursory--;
+				zztErase(myeditor->myworld, myeditor->cursorx, myeditor->cursory);
+			}
+		}
 		myeditor->updateflags |= UD_CURSOR;
 	} else if ((key < 0x80 && key >= 0x20) || key == DKEY_CTRL_A) {
 		/* Insert the current keystroke as text */
