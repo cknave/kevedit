@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.20 2002/12/05 17:17:24 kvance Exp $
+ * $Id: display_sdl.c,v 1.21 2002/12/13 00:27:29 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -887,6 +887,12 @@ int display_sdl_init()
 	display_load_default_charset(info.char_set);
 	display_load_default_palette(info.palette);
 
+	/* If in fullscreen mode, don't show the mouse */
+	if(info.vflags & SDL_FULLSCREEN)
+		SDL_ShowCursor(SDL_DISABLE);
+	else
+		SDL_ShowCursor(SDL_ENABLE);
+
 	xstart = ((info.video->w) - 640) / 2;
 	ystart = ((info.video->h) - 350) / 2;
 
@@ -1072,6 +1078,12 @@ int display_sdl_getkey()
 			break;
 		case SDLK_F10:
 			event.key.keysym.sym = DKEY_F10;
+			break;
+		case SDLK_F11:
+			event.key.keysym.sym = DKEY_F11;
+			break;
+		case SDLK_F12:
+			event.key.keysym.sym = DKEY_F12;
 			break;
 		default:
 			break;
