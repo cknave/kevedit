@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.10 2002/02/16 23:42:28 bitman Exp $
+ * $Id: patbuffer.c,v 1.11 2002/02/19 23:50:06 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -150,6 +150,12 @@ void push(patbuffer* pbuf, ZZTtile pattern)
 	pbuf->patterns[0].type = pattern.type;
 	pbuf->patterns[0].color = pattern.color;
 	pbuf->patterns[0].param = zztParamDuplicate(pattern.param);
+
+	/* Reset utype and ucolor */
+	if (pbuf->patterns[0].param != NULL) {
+		pbuf->patterns[0].param->utype  = ZZT_EMPTY;
+		pbuf->patterns[0].param->ucolor = 0x0F;
+	}
 }
 
 void patreplace(patbuffer * pbuf, ZZTtile pattern)
@@ -170,6 +176,12 @@ void patreplace(patbuffer * pbuf, ZZTtile pattern)
 	pbuf->patterns[pbuf->pos].type = pattern.type;
 	pbuf->patterns[pbuf->pos].color = pattern.color;
 	pbuf->patterns[pbuf->pos].param = zztParamDuplicate(pattern.param);
+
+	/* Reset utype and ucolor */
+	if (pbuf->patterns[pbuf->pos].param != NULL) {
+		pbuf->patterns[pbuf->pos].param->utype  = ZZT_EMPTY;
+		pbuf->patterns[pbuf->pos].param->ucolor = 0x0F;
+	}
 }
 
 void plot(ZZTworld * myworld, editorinfo * myinfo, displaymethod * mydisplay)
