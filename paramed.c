@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.4 2002/02/19 22:38:02 bitman Exp $
+ * $Id: paramed.c,v 1.5 2002/02/20 00:37:27 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,7 @@
 
 /* Label colorings */
 #define LABEL_COLOR  0x0A
-#define OPTION_COLOR 0x03
+#define OPTION_COLOR 0x0B
 
 /* Option ID's used in the dialog */
 #define ID_NONE         0x0100
