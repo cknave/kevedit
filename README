@@ -20,8 +20,12 @@ will be created.
 
 To learn more about using KevEdit, activate its on-line help by pressing 'H'.
 
-For even more extended help, download the ZZTWeb from Chronos' website at
-http://members.aol.com/chronos30/ and unzip the .hlp files into the same folder as KEVEDIT.HLP. Do not, at this time, run the installation batch file.
+The "ZZT Documentation" category of online help does not accompany KevEdit. If
+you install any extended help files to either the same directory as KevEdit or
+the "docs" subfolder, then you can browse them as in ZZT. "About ZZT" will load
+the opening about file, "Playing ZZT" will load the help file accessed by the
+'H' key in ZZT, and "ZZT Editor" will load the editor help file. Note that for
+Chronos' ZZTWeb these files will all be the same.
 
 New Features / Bug Fixes
 ------------------------
@@ -34,15 +38,17 @@ Blatant Plug of ZZT Under Windows
 ---------------------------------
 To associate KevEdit with ZZT files anywhere on your hard-drive, install "ZZT
 Under Windows" with KevEdit support and then extract the KevEdit distribution
-into the ZZT Under Windows folder. ZZT Under Windows can be aquired in the
-Utilities section of zzt.org.
+into the ZZT Under Windows folder. If extended help is installed in ZZTUWin, it
+will also be available in KevEdit. ZZT Under Windows can be aquired in the
+Utilities section of zzt2.com.
 
 Post Script
 -----------
-Though KevEdit is not supported at present, you can send emails to bitman
-<bitman_squared@hotmail.com> if you can't figure something out or just don't
-like it. Also, the kevedit-talk mailing list is a good source of updates on the
-development of KevEdit. To join the mailing list, visit
+Technical support for KevEdit is not guaranteed. However, you are encouraged to
+send an email to bitman <bitman@users.sf.net> if you have any questions,
+problems, or praise. Also consider posting to the "ZZT Editors" forum on
+zzt2.com if you have a general question. For announcements and technical discussion of KevEdit, join the kevedit-talk mailing list by visiting:
+
 https://lists.sourceforge.net/lists/listinfo/kevedit-talk
 
 If you find bugs, try to fix it and send in a patch :)  If you can't fix it,
@@ -55,4 +61,4 @@ the CVS code, post bug reports, etc.
 
     Kev Vance <kev@kvance.com>
     Ryan Phillips <bitman@users.sf.net>
-    November 14, 2001
+    January 8, 2002
