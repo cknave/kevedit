@@ -1,0 +1,101 @@
+@Stats Editor
+$Stats Editor
+
+!stats;Stats
+!cycle;Cycle
+!obj;Objects and Scrolls
+!passage;Passages
+!adv;Advanced Tweaking
+
+:stats;Stats
+
+Many ZZT tiles, especially creatures, have
+additional information, commonly called
+"stats," "attributes," or "params," which
+controls the behavior of those tiles. The
+Stats Editor, accessed by pressing ENTER
+over a tile with stats, allows you to
+modify the stats for that tile.
+
+The UP and DOWN arrow keys may be used to
+select which stat to modify. ENTER often
+allows you to enter a specific value for a
+stat, while LEFT and RIGHT can be used to
+increase and decrease a stat's value.
+
+:cycle;Cycle
+
+Most creatures have a cycle speed. A cycle
+of 1 is the fastest speed possible in ZZT.
+Higher values make creatures move more
+slowly. A cycle of 0 causes a creature to
+not move at all, though it can still
+inflict damage on the player when touched.
+
+:obj;Objects and Scrolls
+
+Objects are special creatures programmed
+in the very simple ZZT-OOP (Object
+Oriented Programming) language.
+Scrolls use a small subset of this
+language to display a message to the
+player. When you edit the program or text
+of either type, you will be presented with
+the Object Editor, a powerful text editor
+tailored specifically to ZZT-OOP
+programming.
+
+!-langref;The ZZT-OOP Programming Language
+!-kobjedit;The KevEdit Object Editor
+!-creature:objects;More on Objects
+!-item:scrolls;More on Scrolls
+
+:passage;Passages
+
+Passages allow the player to travel from
+one board to another. The "passage
+destination" determines which board the
+player will end up on when he or she steps
+into the passage.
+
+!-item:pass;More on Passages
+
+:adv;Advanced Tweaking
+
+Advanced tweaking allows you to finely
+control a tile's stats. Modifying these
+values may potentially crash ZZT.
+
+X Step and Y Step are used to store a
+direction for some tiles: pushers,
+duplicators, transporters, objects, etc.
+Usually only the values -1, 0, and 1 are
+used, and other values can be dangerous.
+For example, a pusher with an X Step of 2
+and a Y Step of 0 will move two steps to
+the right every cycle, traveling through
+walls or other tiles without touching
+them. Be careful: such a pusher can even
+travel beyond the edge of the board and
+cause ZZT to crash!
+
+The three Data stats have different
+meanings for each creature. Some are
+usually ignored while others may represent
+intelligence, duration, or something
+similar. There will usually be no need to
+modify these values unless you need a very
+smart Tiger or Ruffian.
+
+Objects and scrolls have a Program
+Instruction stat which controls where
+program execution will begin. This is
+especially useful in saved games, but can
+be used in regular ZZT worlds as well. A
+value of zero represents the beginning of
+an object's program. A value of -1 is used
+for objects which have #end-ed and are not
+currently executing code. Other values
+represent a character offset from the
+beginning of the object's program.
+

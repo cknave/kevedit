@@ -1,0 +1,188 @@
+$Items
+:top;
+The following items are available:
+
+!ammo;Ammunition
+!torches;Torches
+!bombs;Bombs
+!conv;Conveyors
+!doors;Doors
+!dupes;Duplicators
+!energ;Energizers
+!gems;Gems
+!keys;Keys
+!pass;Passages
+!scrolls;Scrolls
+
+:ammo;Ammunition
+
+     When the player touches a unit of
+ammo, he receives ten bullets.
+
+:torches;Torches
+ 
+     Torches can be collected, and allow
+the player to see a small area in a dark
+room by pressing T.  Torches cannot be
+pushed, and neither can energizers, but
+every other item can.
+     
+:gems;Gems.
+
+     Gems are bonus points for a player.
+Touching a gem awards the player ten bonus
+points and one unit of health.
+
+     By using ZZT-OOP's "GIVE" and "TAKE"
+commands, you can create objects that
+trade supplies or just about anything in
+exchange for gems.
+
+:keys;Keys.
+
+     Keys are used to unlock doors.  They
+are color-coded, so there are seven colors
+of keys.  To unlock a door, the player
+must posess a key of the same color.
+
+     The player can not hold two keys of
+the same color, though he can hold all
+seven different-colored keys at the same
+time.
+
+     Black keys give the player 255 gems
+instead of a key.
+
+:doors;Doors.
+
+     Doors prevent the player from
+entering a region.  To get through a door,
+the player must be holding a matching key.
+If this is the case, then the door will
+open and the player will lose posession of
+the key.  The color of a door is
+determined by its background color. Doors
+with a black background need 255 gems to
+open.
+
+:scrolls;Scrolls.
+
+     Scrolls contain text messages, such
+as hints, dialog, and puzzles.  When the
+player touches a scroll, the message
+appears for the player to read.
+
+     If the scroll contains one or two
+lines of text, the message will be flashed
+on the bottom of the screen.  Otherwise,
+a window will pop up and the player may
+browse through the text.
+
+     Scrolls can also execute ZZT-OOP
+programming.  !-langref;ZZT-OOP Reference
+Manual #put, #restart, and even #shoot,
+works!  But whatever you do, do NOT use
+the following commands:
+
+/
+?
+#become      <- Runtime error!
+#char
+#cycle
+#die         <- Runtime error!
+#go
+#idle
+#lock
+#unlock
+#walk
+#try
+
+Almost all of these do not work because of
+two rules:
+
+*  The only thing that can interact with a
+scroll's program is the player.  It starts
+at the beginning of the program when the
+player touches it.
+*  After printing out the text, the scroll
+has to die. To disappear.
+
+:pass;Passages.
+
+     A passage is a gateway to another
+board.  When you place a passage on the
+board, you must specify which board is
+through the passage.
+
+     Whenever the player touches a
+passage, he is transported to a new board.
+The player will be placed in the new board
+as follows:
+
+*  If there is a matching pas-
+sage in the new board, the player will
+enter the destination board through it.
+To match, the exit and entrance passages
+must be the same color.
+ 
+*  Otherwise, the player will
+either arrive in the destination board
+on the spot where he appears in the board
+editor, or to where he was last on that
+board.
+
+:dupes;Duplicators.
+
+     A duplicator slowly replicates an
+object placed next to it.
+
+     First, put a creature somewhere on
+the board.  Next, place a duplicator
+adjacent to it, and specify the direction
+pointing to the creature.  Finally, put
+walls around the original creature so that
+it remains next to the duplicator.
+Duplicators can be used to fill up a board
+with creatures as a game progresses.
+Note: Never try to duplicate a boulder,
+slider, or anything else pushable, onto a
+player clone, as it causes a run-time
+error.  This will never be a problem for a
+beginning programmer, but it may be for an
+experienced one.
+
+:bombs;Bombs.
+
+     The player activates a bomb by
+touching it.  The bomb begins counting
+down from 9, exploding when it reaches 1.
+While a bomb is ticking, the player can
+move it around by pushing it.
+
+     When a bomb explodes, it will zap all
+Creatures and Breakable Walls in close
+proximity.
+
+:energ;Energizers.
+
+     Touching an energizer gives the
+player a brief taste of invincibility.
+During this time, the player changes
+colors and is free to come into contact
+with normally harmful creatures.
+Energizers cannot be pushed, and neither
+can torches, but every other item can.
+Also, the direction of SEEK is inversed
+when you are energized.
+
+:conv;Conveyors.
+
+     Conveyors cause adjacent objects to
+move.  Both clockwise and
+counter-clockwise rotating conveyors
+exist.
+
+     By placing several conveyors
+together, objects can be made to circulate
+in nearly any desired pattern.
+
