@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.17 2002/11/11 13:18:02 bitman Exp $
+ * $Id: paramed.c,v 1.18 2002/11/17 05:54:36 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 /* Label colorings */
 #define LABEL_COLOR  0x0A
@@ -991,5 +992,144 @@ int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComp
 		default:
 			return 0;
 	}
+}
+
+
+/* Paramlist dialog */
+
+char * getobjectname(ZZTtile object)
+{
+	char * program;
+	char * endpos;
+
+	if (object.param == NULL)
+		return NULL;
+
+	program = (char *) object.param->program;
+
+	if (program == NULL)
+		return NULL;
+
+	/* If the first line doesn't start with an @, then the obj
+	 * has no name */
+	if (program[0] != '@')
+		return NULL;
+
+	/* Find the end of the first line */
+	endpos = strchr(program, '\x0d');
+
+	if (endpos == NULL)
+		return NULL;
+
+	return str_duplen(program + 1, endpos - program - 1);
+}
+
+char * buildparamdescription(ZZTblock * block, int index)
+{
+	ZZTparam * param = block->params[index];
+	char * tileName    = NULL;
+	char * description = NULL;
+
+	if (param->x < block->width && param->y < block->height) {
+		ZZTtile tile = zztTileAt(block, param->x, param->y);
+
+		/* If it's an object, try getting its name */
+		if (tile.type == ZZT_OBJECT)
+			tileName = getobjectname(tile);
+
+		/* Fall back on the general name of the tile */
+		if (tileName == NULL)
+			tileName = str_dup((char *) zztTileGetName(tile));
+
+	} else {
+		/* This tile's not on the board (it's probably a messenger) */
+		tileName = str_dup("(no type)");
+	}
+
+	description = str_create(strlen(tileName) + 20);
+
+	sprintf(description, "(%2d, %2d): ", (char) param->x, (char) param->y);
+	strcat(description, tileName);
+
+	/* QUICKHACK: if the name is too long, truncate */
+	if (strlen(description) > 42)
+		strcpy(description + 39, "...");
+
+	free(tileName);
+	return description;
+}
+
+stringvector buildparamlist(ZZTblock * block)
+{
+	stringvector list;
+	int i;
+
+	/* Create an empty list */
+	initstringvector(&list);
+
+	if (block == NULL || block->params == NULL)
+		return list;
+
+	for (i = 0; i < block->paramcount; i++)
+	{
+		pushstring(&list, buildparamdescription(block, i));
+	}
+
+	return list;
+}
+
+int paramlistdialog(displaymethod * d, ZZTblock * block, int curparam, char * title)
+{
+	stringvector paramlist;
+	int response;
+
+	/* Build the param list and move to the beginning */
+	paramlist = buildparamlist(block);
+	svmovetofirst(&paramlist);
+	preinsertstring(&paramlist, "(none)");
+	
+	/* Move to the current param */
+	svmoveby(&paramlist, curparam);
+
+	/* Scrool through the params */
+	response = scrolldialog(title, &paramlist, d);
+
+	/* Change the current param if the user okay */
+	if (response == EDITBOX_OK) {
+		curparam = svgetposition(&paramlist) - 1;
+	}
+
+	/* Free up all that memory we used */
+	deletestringvector(&paramlist);
+
+	return curparam;
+}
+
+void statsinfo(displaymethod * d, ZZTworld * w)
+{
+	ZZTblock * block = zztBoardGetBlock(w);
+	stringvector paramlist;
+	int response;
+
+	/* Build the param list */
+	paramlist = buildparamlist(block);
+
+	do {
+		response = scrolldialog("Stats Info", &paramlist, d);
+
+		if (response == EDITBOX_OK && block->params != NULL) {
+			int curparam = svgetposition(&paramlist);
+			ZZTparam * param = block->params[curparam];
+
+			if (param == NULL)
+				continue;
+
+			/* Modify the param */
+			modifyparam(d, w, param->x, param->y);
+		}
+	} while (response != EDITBOX_CANCEL);
+
+	/* Free up all that memory we used */
+	deletestringvector(&paramlist);
 }
 

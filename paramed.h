@@ -1,5 +1,5 @@
 /* paramed.h  -- Parameter editor
- * $Id: paramed.h,v 1.5 2002/05/04 04:17:43 bitman Exp $
+ * $Id: paramed.h,v 1.6 2002/11/17 05:54:36 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -94,6 +94,7 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
  */
 int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComponent * opt, int delta);
 
+
 /* tileinfo(display, world, x, y)
  * Display/edit info for the current tile
  */
@@ -107,5 +108,26 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y);
 /* tileinfoeditoption(display, world, x, y, option)
  * Edit a tile info option */
 int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComponent * opt);
+
+
+/* getobjectname(objectparam)
+ * Allocates a name for an object, NULL if it's nameless */
+char * getobjectname(ZZTtile tile);
+
+/* buildparamdescription(block, index)
+ * Allocate a description of the indexed param */
+char * buildparamdescription(ZZTblock * block, int index);
+
+/* buildparamlist(block)
+ * Build a stringvector list of the params in a block */
+stringvector buildparamlist(ZZTblock * block);
+
+/* paramlistdialog(display, block, curparam, title)
+ * Browse the list of params in a block */
+int paramlistdialog(displaymethod * d, ZZTblock * block, int curparam, char * title);
+
+/* statsinfo(display, world)
+ * Browse through and edit the stats on the current board */
+void statsinfo(displaymethod * d, ZZTworld * w);
 
 #endif

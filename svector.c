@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.19 2002/11/14 06:54:56 bitman Exp $
+ * $Id: svector.c,v 1.20 2002/11/17 05:54:36 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -451,7 +451,7 @@ char * str_dup(char * s)
 	return copy;
 }
 
-char * str_dupmin(char * s, int min)
+char * str_dupmin(char * s, unsigned int min)
 {
 	char* copy;
 	int duplen = strlen(s);
@@ -466,7 +466,7 @@ char * str_dupmin(char * s, int min)
 	return copy;
 }
 
-char * str_dupmax(char * s, int max)
+char * str_dupmax(char * s, unsigned int max)
 {
 	char* copy;
 	int duplen = strlen(s);
@@ -481,7 +481,7 @@ char * str_dupmax(char * s, int max)
 	return copy;
 }
 
-char * str_duplen(char * s, int len)
+char * str_duplen(char * s, unsigned int len)
 {
 	char* copy = (char *) malloc(sizeof(char) * (len + 1));
 	if (copy == NULL)
@@ -492,7 +492,7 @@ char * str_duplen(char * s, int len)
 	return copy;
 }
 
-char * str_dupadd(char * s, int add)
+char * str_dupadd(char * s, unsigned int add)
 {
 	char* copy;
 	int duplen = strlen(s) + add;
@@ -507,6 +507,16 @@ char * str_dupadd(char * s, int add)
 	strncpy(copy, s, duplen);
 	copy[duplen] = '\0';
 	return copy;
+}
+
+char * str_create(unsigned int len)
+{
+	char* string = (char *) malloc(sizeof(char) * (len + 1));
+	if (string == NULL)
+		return NULL;
+
+	string[0] = '\0';
+	return string;
 }
 
 

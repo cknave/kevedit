@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.15 2002/01/12 06:31:58 bitman Exp $
+ * $Id: svector.h,v 1.16 2002/11/17 05:54:36 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -108,10 +108,13 @@ int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, i
  * str_dupat()  - reserves  exactly len+1 space
  */
 char * str_dup   (char * s);
-char * str_dupmin(char * s, int min);
-char * str_dupmax(char * s, int max);
-char * str_duplen(char * s, int len);
-char * str_dupadd(char * s, int add);
+char * str_dupmin(char * s, unsigned int min);
+char * str_dupmax(char * s, unsigned int max);
+char * str_duplen(char * s, unsigned int len);
+char * str_dupadd(char * s, unsigned int add);
+
+/* Create an empty string of given length using malloc */
+char * str_create(unsigned int len);
 
 /* str_lowercase - changes string to lowercase and returns it */
 char* str_lowercase(char* string);

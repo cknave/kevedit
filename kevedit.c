@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.9 2002/11/11 13:18:02 bitman Exp $
+ * $Id: kevedit.c,v 1.10 2002/11/17 05:54:36 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -483,6 +483,13 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case DKEY_CTRL_T:
 			/* Tile Info */
 			tileinfo(myeditor->mydisplay, myeditor->myworld, myeditor->cursorx, myeditor->cursory);
+
+			myeditor->updateflags |= UD_ALL;
+			break;
+
+		case DKEY_CTRL_S:
+			/* Stats Info */
+			statsinfo(myeditor->mydisplay, myeditor->myworld);
 
 			myeditor->updateflags |= UD_ALL;
 			break;
