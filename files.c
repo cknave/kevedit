@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.1 2001/11/10 07:42:39 bitman Exp $
+ * $Id: files.c,v 1.2 2001/11/10 20:03:43 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -121,6 +121,19 @@ void svectortofile(stringvector * sv, char *filename)
 }
 
 
+/* filecomp() - compare two file names, considering directories greater */
+int filecomp(const char* s1, const char* s2)
+{
+	if (s1[0] == '!') {
+		if (s2[0] == '!')
+			return strcmp(s1, s2);
+		return 1;         /* s1 is a dir, s2 is not. s1 is greater */
+	}
+	if (s2[0] == '!')
+		return -1;        /* s2 is a dir, s1 is not. s2 is greater */
+	return strcmp(s1, s2);
+}
+
 /* readdirectorytosvector() - reads a directory listing into an svector */
 stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 {
@@ -173,7 +186,7 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 	}
 	closedir(dp);
 
-	inssortstringvector(&files, strcmp);
+	inssortstringvector(&files, filecomp);
 
 	return files;
 }
