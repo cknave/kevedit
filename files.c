@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.5 2002/01/05 22:00:59 bitman Exp $
+ * $Id: files.c,v 1.6 2002/02/16 23:42:28 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -202,7 +202,14 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 							 == '.' &&
 						str_equ(dirent->d_name + strlen(dirent->d_name) - strlen(extension),
 										extension, STREQU_UNCASE))) {
-					pushstring(&files, str_dup(dirent->d_name));
+					/* Advance past special character '!' if necessary */
+					/* TODO: less quick & dirty fix? */
+					if (dirent->d_name[0] == '!') {
+						char* dest = str_duplen(" ", strlen(dirent->d_name) + 1);
+						strcat(dest, dirent->d_name);
+						pushstring(&files, dest);
+					} else
+						pushstring(&files, str_dup(dirent->d_name));
 				}
 			}
 		} else if (!str_equ(dirent->d_name, ".", 0)) {

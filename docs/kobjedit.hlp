@@ -49,7 +49,7 @@ which prevents wrapping of any kind.
 Arbitrary ASCII may be inserted characters
 into your program by pressing ctrl+'a'.
 If the cursor is on the same line as a
-#char command, it will place the number of
+ #char command, it will place the number of
 the character into the program.
 
 :files;Loading and Saving Text Files

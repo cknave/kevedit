@@ -1,9 +1,14 @@
 @New Features
 $New Features
 
-$New in Version 0.3.5
-!-kobject:play;Testing ZZT Music
+$New in Version 0.4.0
+:;  *  Libzzt2 - greater stability
+!-kbasics:brdselect;Board Movement and Deletion
+!-kobjedit:play;Testing ZZT Music
 !-kbasics:zzt;Extended help in ZZT
+!-kadvance:gradient;Improved gradient draw tool
+!-kadvance:buflock;Backbuffer locking
+:;  *  Terrain remains under creatures
 
 $New in Version 0.3.4
 !-kadvance:gradtool;Gradient Tool

@@ -1,5 +1,5 @@
 /* patbuffer.h    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.h,v 1.4 2002/02/16 10:25:22 bitman Exp $
+ * $Id: patbuffer.h,v 1.5 2002/02/16 23:42:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ void patbuffer_resize(patbuffer * pbuf, int delta);
 void pat_applycolordata(patbuffer * pbuf, editorinfo * myinfo);
 
 void push(patbuffer* pbuf, ZZTtile tile);
+void patreplace(patbuffer * pbuf, ZZTtile pattern);
 void plot(ZZTworld * myworld, editorinfo * myinfo, displaymethod * mydisplay);
 
 #endif				/* _PATBUFFER_H */

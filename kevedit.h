@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.11 2002/02/16 21:12:12 bitman Exp $
+ * $Id: kevedit.h,v 1.12 2002/02/16 23:42:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,12 +24,19 @@
 
 #define MAX_BACKBUF 1024
 
+/* Various levels of patbuffer locking */
+#define PATBUF_UNLOCK    0x00
+#define PATBUF_NOPUSH    0x01
+#define PATBUF_NOREPLACE 0x02
+#define PATBUF_LOCK      0xFF
+
 typedef struct patbuffer {
 	ZZTtile* patterns;
 	int size;
 	int pos;
-} patbuffer;
 
+	int lock;
+} patbuffer;
 
 typedef struct editorinfo {
 	int cursorx, cursory;

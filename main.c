@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.53 2002/02/16 21:12:12 bitman Exp $
+ * $Id: main.c,v 1.54 2002/02/16 23:42:28 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -172,8 +172,29 @@ int main(int argc, char **argv)
 			}
 		}
 
+		/* Check for number key */
+		if (key >= '0' && key <= '9') {
+			/* Change to appropriate backbuffer position */
+			if (key == '0') {
+				/* First slot in standard patterns */
+				myinfo->pbuf = myinfo->standard_patterns;
+				myinfo->pbuf->pos = 0;
+			} else {
+				/* Change to backbuffer slot */
+				if (key - '1' < myinfo->backbuffer->size) {
+					/* Only if backbuffer position exists */
+					myinfo->pbuf = myinfo->backbuffer;
+					myinfo->pbuf->pos = key - '1';
+				}
+			}
+			updatepanel(mydisplay, myinfo, myworld);
+			key = DKEY_NONE;
+		}
+
 		/* Act on key pressed */
 		switch (key) {
+		case DKEY_NONE:
+			break;
 
 			/**************** Movement Keys *****************/
 
@@ -246,6 +267,23 @@ int main(int argc, char **argv)
 			drawscreen(mydisplay, myworld, myinfo);
 			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
 			break;
+		case DKEY_PAGEDOWN:
+			/* Switch to next board (bounds checking is automatic) */
+			zztBoardSelect(myworld, zztBoardGetCurrent(myworld) + 1);
+
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo);
+			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+			break;
+		case DKEY_PAGEUP:
+			/* Switch to previous board (bounds checking is automatic) */
+			zztBoardSelect(myworld, zztBoardGetCurrent(myworld) - 1);
+
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo);
+			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+			break;
+
 		case 'i':
 		case 'I':
 			/* Board Info */
@@ -481,6 +519,14 @@ int main(int argc, char **argv)
 				updatepanel(mydisplay, myinfo, myworld);
 			}
 			break;
+		case '/':
+			/* Toggle backbuffer push locking */
+			if (myinfo->backbuffer->lock == PATBUF_UNLOCK)
+				myinfo->backbuffer->lock = PATBUF_NOPUSH;
+			else
+				myinfo->backbuffer->lock = PATBUF_UNLOCK;
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
 		case 'a':
 		case 'A':
 			/* Toggle aqu mode - cursor movement loads pattern buffer automatically */
@@ -554,19 +600,30 @@ int main(int argc, char **argv)
 					}
 					/* TODO: modify other params */
 
-					/* redraw everything */
-					drawpanel(mydisplay);
-					updatepanel(mydisplay, myinfo, myworld);
-					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					drawscreen(mydisplay, myworld, myinfo);
 				}
-			}
+				
+				/* When all is said and done, push the tile */
+				push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
 
-			/* Don't break here! When we modify, we grab too! */
+				/* redraw everything */
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				drawscreen(mydisplay, myworld, myinfo);
+			}
+			break;
+
 		case DKEY_INSERT:
 			/* Insert */
-			/* Grab */
-			push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
+			/* Grab tile */
+			if (myinfo->backbuffer->lock == PATBUF_UNLOCK) {
+				/* Push if backbuffer is completely unlocked */
+				push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
+			} else {
+				/* Otherwise attempt to replace if backbuffer is selected */
+				if (myinfo->pbuf == myinfo->backbuffer)
+					patreplace(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
+			}
 
 			updatepanel(mydisplay, myinfo, myworld);
 			break;

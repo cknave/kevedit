@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.9 2002/02/16 21:12:12 bitman Exp $
+ * $Id: patbuffer.c,v 1.10 2002/02/16 23:42:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,9 @@ patbuffer* patbuffer_create(int size)
 		pbuf->patterns[i].color = 0x07;
 		pbuf->patterns[i].param = NULL;
 	}
+
+	/* Unlocked by default */
+	pbuf->lock = PATBUF_UNLOCK;
 
 	return pbuf;
 }
@@ -125,11 +128,15 @@ void pat_applycolordata(patbuffer * pbuf, editorinfo * myinfo)
 }
 
 
-/* Push the given pattern attributes into a pattern buffer */
 void push(patbuffer* pbuf, ZZTtile pattern)
 {
+	/* Push the given pattern attributes into a pattern buffer */
 	int i;
 	ZZTtile lastpat = pbuf->patterns[pbuf->size-1];
+
+	/* No fair pushing onto a locked buffer */
+	if (pbuf->lock & PATBUF_NOPUSH)
+		return;
 
 	if (lastpat.param != NULL) {
 		zztParamFree(lastpat.param);
@@ -145,6 +152,25 @@ void push(patbuffer* pbuf, ZZTtile pattern)
 	pbuf->patterns[0].param = zztParamDuplicate(pattern.param);
 }
 
+void patreplace(patbuffer * pbuf, ZZTtile pattern)
+{
+	/* Replace the current buffer pattern with the given pattern */
+
+	/* No fair replacing in a locked buffer */
+	if (pbuf->lock & PATBUF_NOREPLACE)
+		return;
+
+	/* Remain within bounds */
+	if (pbuf->pos < 0 || pbuf->pos >= pbuf->size)
+		return;
+
+	if (pbuf->patterns[pbuf->pos].param != NULL)
+		zztParamFree(pbuf->patterns[pbuf->pos].param);
+
+	pbuf->patterns[pbuf->pos].type = pattern.type;
+	pbuf->patterns[pbuf->pos].color = pattern.color;
+	pbuf->patterns[pbuf->pos].param = zztParamDuplicate(pattern.param);
+}
 
 void plot(ZZTworld * myworld, editorinfo * myinfo, displaymethod * mydisplay)
 {

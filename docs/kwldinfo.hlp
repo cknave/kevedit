@@ -13,23 +13,32 @@ match the filename of the world, although
 it usually should (minus the .zzt
 extension).
 
+If you do not modify the world name and
+you save your world under a new name, the
+world name will be changed to match. If,
+however, you either change the world name,
+or rename the file outside of KevEdit (so
+that the two do not match before a save
+occurs), then KevEdit will leave the world
+name as-is when saving.
+
 If a different name is used, that name
 will appear under the word "World" on the
 title screen menu in ZZT.  When a user
 quits from the world, then presses 'p' to
 play again, a different world will be
-loaded! Simply use a filename for the
-second world based on the name of the
-first world.
+loaded! Simply use a "file name" for the
+second world based on the "world name" of
+the first world.
 
 Example:
 
 The player loads "test.zzt" which has the
-name "newworld". After the player dies in
-"test.zzt", they press 'p' to play again,
-but instead of starting in "test.zzt", zzt
-loads them into "newworld.zzt". Consult
-the ZZT Encyclopedia Online for an
+world name "newworld". After the player
+dies in "test.zzt", he/she presses 'p' to
+play again, but instead of starting in
+"test.zzt", zzt loads "newworld.zzt".
+Consult the ZZT Encyclopedia Online for an
 example.
 
 :keys;Keys

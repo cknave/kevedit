@@ -29,9 +29,10 @@ In drawing mode, the cursor plots
 automatically when moved.
 !-kadvance:gradient;See Gradient Draw Mode
 
-To plot an empty on the current space,
-deleting the tile there, press the DELETE
-key.
+To remove the tile under the cursor, press
+DELETE. If the tile is a creature with
+terrain beneath it, then the terrain will
+remain.
 
 If you create an enclosed area and want to
 fill it in with one type of tile, place
@@ -39,10 +40,20 @@ the cursor inside and press lowercase 'f'
 to flood fill the area.
 !-kadvance:randfill;See Random Flood Fill
 
+:brdselect;Board Selection Dialog
 There are many boards in a ZZT world.
 Press 'b' to view the board list, where
 you can choose a different board to edit
 or create a new one.
+
+In the board selection dialog, boards may
+be moved using LEFT and RIGHT and deleted
+with BACKSPACE.
+
+Alternately, pressing PAGEUP or PAGEDOWN
+on the main KevEdit screen will move
+forwards and backwards through the board
+list.
 
 :sidebar;Getting to Know the Sidebar
 
@@ -68,11 +79,11 @@ records per board.  Keep an eye on how
 many you have used so that you don't run
 out!
 
-The next line simply displays the title of
-the world.  Currently, the title is the
-same as the filename (it is case
-sensitive) but this will be configurable
-later.
+The next line displays the title of the
+world, which can be modified in the
+!-kwldinfo;World Info Dialog.
+Unless you modify the title yourself, this
+will be the same as the world's filename.
 
 On the bottom of the sidebar are two
 horizontal bars.  The first one has a
@@ -83,11 +94,11 @@ arrow forward along the selector and
 shift+'p' to move it backward.  In order,
 the tiles in the pattern selector are:
 
-        * Solid block
-        * Normal block
-        * Breakable block
+        * Solid Wall
+        * Normal Wall
+        * Breakable Wall
         * Water
-        * Empty space
+        * Empty Space
         * Line
 
 Press space to plot any of these common
@@ -101,6 +112,12 @@ cursor over it and press ENTER or INSERT.
 It will appear in the backbuffer, where
 you can plot it like anything else in the
 pattern selector.
+
+To quickly access a position in the
+pattern selector, the numbers 0-9 can be
+used. Pressing 0 will select the Solid
+Wall pattern. Pressing one of 1-9 will
+select a slot in the backbuffer.
 
 :color;The Color Selector
 
@@ -199,13 +216,6 @@ directory.  To save your world, press 's'.
 You will be prompted for an 8 letter name.
 This will be the title and filename of
 your world.
-
-NOTE: The title of the game is only set
-the first time you save the world. If you
-save your world under a different file
-name, the title will not be changed. There
-are several uses for this feature. Use the
-World Info dialog to modify the title.
 
 :zzt;Working with ZZT
 

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.34 2002/02/16 10:25:22 bitman Exp $
+ * $Id: screen.c,v 1.35 2002/02/16 23:42:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -461,9 +461,8 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 	for (i = 0; i < e->standard_patterns->size; i++) {
 		patdef pattern = e->standard_patterns->patterns[i];
 		d->putch(61 + i, 21,
-						 z_getchar(pattern.type, pattern.color, pattern.patparam,
-											 NULL, 0, 0),
-						 z_getcolour(pattern.type, pattern.color, pattern.patparam));
+						 zztLoneTileGetDisplayChar(pattern),
+						 zztLoneTileGetDisplayColor(pattern));
 	}
 #endif
 
@@ -477,8 +476,14 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 			x = 0;
 		d->putch(68 + e->pbuf->pos - x, 20, 31, 0x17);
 	}
+	
+	/* Backbuffer lock state */
+	if (e->backbuffer->lock == PATBUF_UNLOCK)
+		d->putch(67, 21, 0xB3, 0x01);  /* Blue vertical line */
+	else
+		d->putch(67, 21, '/', 0x04);   /* Red slash */
 
-	/* Draw pattern stack */
+	/* Draw pattern backbuffer */
 	for (i = 0; i < BBVWIDTH && i + x < e->backbuffer->size; i++) {
 		ZZTtile pattern = e->backbuffer->patterns[i + x];
 		d->putch(68 + i, 21,
@@ -667,7 +672,10 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 					free(subdir);
 				} else {
 					/* A file was chosen */
-					result = fullpath(curdir, files.cur->s, SLASH_DEFAULT);
+					if (str_equ(files.cur->s, " !", STREQU_RFRONT)) /* Special "!" filename case */
+						result = fullpath(curdir, files.cur->s + 1, SLASH_DEFAULT);
+					else
+						result = fullpath(curdir, files.cur->s, SLASH_DEFAULT);
 					done = 1;
 				}
 				break;
