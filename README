@@ -1,17 +1,31 @@
+!contents;Table of Contents
 $-----------------------------------------
 KevEdit 0.3.2
      A world file editor for the game ZZT
 $-----------------------------------------
-Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+Copyright (C) 2000-2001 Kev Vance   <kvance@tekktonik.net>
+With many contributions from bitman <bitman@users.sourceforge.net>
 
- * KevEdit is nowhere near finished.
- * This README is even further from finished.
+:contents;Using Kevedit
+!starting;Getting Started
+!new;New features
+!basics;Basic Movement and Plotting
+!sidebar;The KevEdit Sidebar
+!defc;Default Color Mode
+!uncommon;Uncommon tiles
+!creatures;Editing Creatures & Objects
+!text;Placing Text on the Board
+!file;File Operations
+!zzt;Working with ZZT
+!buffers;Resizable Backbuffers
+!advanced;Advanced Tile Editing
+!advanced;(gradient draw mode)
+!help;The Help System
+!quit;Quitting
+!support;Support
 
-$Best Viewed In KevEdit
+:starting;Getting Started With KevEdit
 
-$----------------------------
-$Getting Started With KevEdit
-$----------------------------
 Copy the binary KEVEDIT.EXE to your ZZT directory.  You can run it with no
 arguments to get a blank new world, or give it a world on the command line to
 load it.
@@ -22,20 +36,18 @@ C> kevedit town.zzt
 This will load town.zzt into the editor if it exists.  Otherwise, a new world
 will be created.
 
-$---------------------
-$New in Version 0.3.2!
-$---------------------
-$*** Look for these new features ***
+:new;New in Versions 0.3.2 and 0.3.3!
+!contents;<-- Back to Contents
 
- * Resizable backbuffers
- * Advanced tile editing
- * Helpful help dialog
- * More creatures
- * Copy and paste!
+!buffers;Resizable backbuffers
+!advanced;Advanced tile editing
+!help;Hypertext help dialog!!!
+!creatures;More creatures
+!creatures;Copy and paste!
 
-$---------------------------
-$Basic Movement and Plotting
-$---------------------------
+:basics;Basic Movement and Plotting
+!contents;<-- Back to Contents
+
 You control the blinking cursor around the 60x25 board with the arrow keys.
 Holding ALT with an arrow key will move faster.  Notice that the cursor
 changes the colour of the tile under it.  This is to help you find it when
@@ -55,9 +67,9 @@ place the cursor inside and press lowercase 'f' to flood fill the area. See
 There are many boards in a ZZT world.  Press 'b' to view the board list,
 where you can edit a different board or create a new one.
 
-$-------------------
-$The KevEdit Sidebar
-$-------------------
+:sidebar;The KevEdit Sidebar
+!contents;<-- Back to Contents
+
 The blue bar to the right of the screen is the KEVEDIT SIDEBAR.  It displays
 information about the current state of the editor as well as keys for common
 actions.
@@ -104,9 +116,9 @@ pressing shift+'c'.
 
 To make the foreground color blink on and off, press 'v' before you plot.
 
-$------------------
-$Default Color Mode
-$------------------
+:defc;Default Color Mode
+!contents;<-- Back to Contents
+
 Next to the color selector lies the letter D.  When it is bright and capital,
 DEFAULT COLOR MODE is on.  When it is lowercase and dim, it is off.  Default
 color mode (or DefC) is a great idea that I stole from MegaZeux 1.0.  When it
@@ -116,9 +128,9 @@ When you turn DefC off, anything you plot will be the color chosen in the
 color selector.  This is a great way to customize game items and to change the
 color of objects.
 
-$--------------
-$Uncommon Tiles
-$--------------
+:uncommon;Uncommon Tiles
+!contents;<-- Back to Contents
+
 Well, it's not that they're uncommon, just not used as much as the nice
 gradient on the pattern selector.  To choose among items, creatures, and
 terrains, press F1, F2, or F3.  If you want to plot any of these, press its
@@ -129,9 +141,9 @@ Objects are a special type of tile in the Creature menu.  Right now, you can
 choose a custom character for the object.  Later, an editor will be included
 to enter ZZT-OOP programming into the object.
 
-$------------------
-$Editing Parameters
-$------------------
+:creatures;Editing Creatures & Objects
+!contents;<-- Back to Contents
+
 If a tile has editable parameters, such as a built-in enemy, object, or
 scroll, pressing ENTER will allow you to modify them.  After you have done
 this, it will be placed in the backbufffer.
@@ -145,10 +157,9 @@ cursor, ESCAPE quits, ctrl+'y' deletes a line.
 
 $******* NEW in 0.3.2 *******
 The ZZT-OOP editor even features copy and paste! Text may be highlighted by
-holding down ALT and using the arrow keys to navigate. Eventually, the editor
-will allow use of SHIFT instead of ALT for selection, so be patient. Use
-alt+'c' to copy the selected text, alt+'x to cut, and alt+'v' to paste.
-CTRL-DELETE will clear a selected area without copying.
+holding down SHIFT and using the arrow keys to navigate. Use alt+'c' to copy the
+selected text, alt+'x to cut, and alt+'v' to paste. CTRL-DELETE will clear a
+selected area without copying.
 
 The ZZT-OOP editor has a configurable word wrap.  alt+'+' and alt+'-' will
 increase or decrease the maximum length of a line of text.  You can also
@@ -161,44 +172,48 @@ your program to a file and alt+'o' will open an already saved program,
 replacing the current one.  alt+'i' will insert a saved program where the
 cursor is.  alt+'m' will load a ZZM format music file.
 
-$-------------------------
-$Placing Text on the Board
-$-------------------------
+$***** Coming Soon ******
+bitman might just work on support for the ZZTAE zzl library which allows several
+objects to be crammed into a single file for easy access.
+
+:text;Placing Text on the Board
+!contents;<-- Back to Contents
+
 $******* NEW in 0.3.2 *******
 To add readable text tiles to the board, press F4 to activate text entry mode.
 Every character you type will be written on the board.  To add a non-typable
 character, press ctrl+'a' for the ASCII selection dialog box.  To leave text
 entry mode, press F4 again.
 
-$---------------
-$File Operations
-$---------------
+:file;File Operations
+!contents;<-- Back to Contents
+
 KevEdit can load and save normal ZZT worlds.  To load a world, press 'l' and
 you will be presented with a list of all world files in the current directory.
 To save your world, press 's'.  You will be prompted for an 8 letter name.
 This will be the title and filename of your world.
 
-$----------------
-$Working with ZZT
-$----------------
+:zzt;Working with ZZT
+!contents;<-- Back to Contents
+
 To aid in testing a game, pressing 'r' will run ZZT on the current world.
 It will not jump directly to the game, you still must choose your input
 device, etc.
 
 For this to work, zzt.exe and zzt.dat must be in the current directory.
 
-$---------------------
-$Resizable Backbuffers
-$---------------------
+:buffers;Resizable Backbuffers
+!contents;<-- Back to Contents
+
 $******* NEW in 0.3.2 *******
 The backbuffer may  be  resized  using  the '<' and '>' keys. Some gradients
 may not fit in the default ten-tile backbuffer, so this may prove useful. Only
 ten tiles will be visible at once, but the backbuffer will scroll
 automatically.
 
-$---------------------
-$Advanced Tile Editing
-$---------------------
+:advanced;Advanced Tile Editing
+!contents;<-- Back to Contents
+
 $******* NEW in 0.3.2 *******
 KevEdit includes several advanced tile editting features, including gradient
 draw mode, get mode, and random flood fill.
@@ -232,33 +247,42 @@ backbuffer to increase the likelyhood that it will be used.
 Both gradient draw mode and random flood fill use the ENTIRE backbuffer, so feel
 free to resize the backbuffer as necessary using '<' and '>'.
 
-$-----
-$Help!
-$-----
-$******* NEW in 0.3.2 *******
-Someday, KevEdit will have an online help system.  For now, pressing 'h' will
-present you with a dialog box with copyright and version information, as well
-as this readme file if it is in the current directory.
+:help;Help!
+!contents;<-- Back to Contents
 
-$--------
-$Quitting
-$--------
+$******* NEW in 0.3.3 *******
+KevEdit now has a hypertext help system! If've you've got this far, either the
+insane markup in this file is giving you a headache, or you've already been
+using it! Words cannot describe the joy of this simple triumph!
+
+Of course, KevEdit only supports one help file at the moment, so everything is
+globbed together, but that could change eventually.
+
+:quit;Quitting
+!contents;<-- Back to Contents
+
 For your safety, pressing 'q' will ask if you really want to quit.  If you
 answer in the affirmative, KevEdit will terminate.  It will not ask you if
 you really /really/ want to quit, or perhaps you would just like to save your
 work instead, because I hate it when programs doubt my quititude.
 
-$-------
-$The End
-$-------
-That's all I can think of.  KevEdit is not supported at this time, please do
-not send me email asking how to use it.
+:support;Support
+!contents;<-- Back to Contents
 
-If you find bugs, try to fix it and send me a patch :)  If you can't fix it,
-report it.
+That concludes this monsterous text on the various usages of KevEdit. Though
+KevEdit is not supported at present, you can send emails to bitman
+<bitman_squared@hotmail.com> if you can't figure something out or just don't
+like it. Also, the kevedit-talk mailing list is a good source of updates on the
+development of KevEdit.
+
+If you find bugs, try to fix it and send in a patch :)  If you can't fix it,
+report it. For the overzelous, you can do what I (bitman) did join in on the
+development if you find sending in patches too tedious. CVS is great for that
+sort of thing.
 
 http://kevedit.sourceforge.net/ is where you can check for new releases, get
 the CVS code, post bug reports, etc.
 
     Kev Vance <kvance@tekktonik.net>
-    October 21, 2000
+    Ryan Phillips <bitman@users.sf.net>
+    October 8, 2001

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.20 2001/10/04 23:09:42 kvance Exp $
+ * $Id: editbox.c,v 1.21 2001/10/09 01:14:36 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -360,10 +360,14 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 	centerstr = sv->cur;
 
 	if (!editwidth) {
-		/* It would be nice if we could hide the cursor here. */
 		d->cursorgo(9, 13);
-		if (zocformatting && sv->first->s[0] == '@' && centerstr == sv->first)
-			centerstr = centerstr->next;
+		if (zocformatting && sv->first != NULL && sv->first->s[0] == '@') {
+			/* Display the first line as the title, not in the box itself */
+			if (sv->first->s[1] != '\x0')
+				title = sv->first->s + 1; /* What's the harm? We're only looking. */
+			if (centerstr == sv->first)
+				centerstr = centerstr->next;
+		}
 	}
 	
 	if (centerstr == NULL)

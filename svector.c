@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.12 2001/05/12 21:15:28 bitman Exp $
+ * $Id: svector.c,v 1.13 2001/10/09 01:14:36 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <ctype.h>
+#include <string.h>
 
 
 void initstringvector(stringvector * v)
@@ -202,6 +203,14 @@ void removestringvector(stringvector * v)
 	return;
 }
 
+stringvector * stringvectorcat(stringvector * v1, stringvector * v2)
+{
+	v1->last->next       = v2->first;
+	v1->last->next->prev = v1->last;
+	v1->last             = v2->last;
+	v2->first            = v1->first;
+	return v1;
+}
 
 void pushstringcopy(stringvector * v, char * s)
 {
@@ -213,12 +222,62 @@ void pushstringcopy(stringvector * v, char * s)
 	pushstring(v, copy);
 }
 
+/******* String utility functions ******/
+
+char * str_dup(char * s)
+{
+	char* copy = (char *) malloc(sizeof(char) * (strlen(s) + 1));
+	if (copy == NULL)
+		return NULL;
+
+	strcpy(copy, s);
+	return copy;
+}
+
+char * str_dupmin(char * s, int min)
+{
+	char* copy;
+	int duplen = strlen(s);
+	if (duplen < min) duplen = min;
+
+	copy = (char *) malloc(sizeof(char) * (duplen + 1));
+	if (copy == NULL)
+		return NULL;
+
+	strncpy(copy, s, duplen);
+	copy[duplen] = '\0';
+	return copy;
+}
+
+char * str_dupmax(char * s, int max)
+{
+	char* copy;
+	int duplen = strlen(s);
+	if (duplen > max) duplen = max;
+
+	copy = (char *) malloc(sizeof(char) * (duplen + 1));
+	if (copy == NULL)
+		return NULL;
+
+	strncpy(copy, s, duplen);
+	copy[duplen] = '\0';
+	return copy;
+}
+
+char * str_duplen(char * s, int len)
+{
+	char* copy = (char *) malloc(sizeof(char) * (len + 1));
+	if (copy == NULL)
+		return NULL;
+
+	strncpy(copy, s, len);
+	copy[len] = '\0';
+	return copy;
+}
 
 /* str_lowercase - used by str_equ to convert a string to lowercase,
  *                 same as strlwr() in djgpp, but more compatible.
  *                 introduced by Elchonon Edelson for linux port */
-
-
 char* str_lowercase(char* string)
 {
 	char* s = string;

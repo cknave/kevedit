@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.6 2001/09/23 19:57:41 bitman Exp $
+ * $Id: misc.c,v 1.7 2001/10/09 01:14:36 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,10 +23,13 @@
 #include "editbox.h"
 #include "screen.h"
 #include "patbuffer.h"
+#include "hypertxt.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#define HELPMESSAGEMAX 42
 
 char * getfilename(char* buffer, char* fullpath, int buflen)
 {
@@ -146,25 +149,41 @@ void runzzt(char *args)
 
 void help(displaymethod* d)
 {
+	int done = 0;
 	stringvector helpdialog, readmefile;
 
 	initstringvector(&helpdialog);
 	readmefile = filetosvector("readme", 42, 42);
 
-	pushstringcopy(&helpdialog, "KevEdit R5, Version " VERSION);
-	pushstringcopy(&helpdialog, "Copyright (C) 2000 Kev Vance, et al.");
-	pushstringcopy(&helpdialog, "Distribute under the terms of the GNU GPL");
+	/* Use copies because we destroy the vector later */
+	pushstring(&helpdialog, str_dup("KevEdit R5, Version " VERSION));
+	pushstring(&helpdialog, str_dup("Copyright (C) 2000 Kev Vance, et al."));
+	pushstring(&helpdialog, str_dup("Distribute under the terms of the GNU GPL"));
 
 	if (readmefile.first != NULL) {
-		pushstringcopy(&helpdialog, "");
-		pushstringcopy(&helpdialog, "$=-=-=-=-=-=-=-=- README =-=-=-=-=-=-=-=-=");
-		pushstringcopy(&helpdialog, "");
+		pushstring(&helpdialog, str_dup(""));
+		pushstring(&helpdialog, str_dup("$=-=-=-=-=-=-=-=- README =-=-=-=-=-=-=-=-="));
+		pushstring(&helpdialog, str_dup(""));
 
-		helpdialog.last->next = readmefile.first;
-		helpdialog.last->next->prev = helpdialog.last;
+		/* Tack the readmefile onto the end of the helpdialog svector */
+		helpdialog.cur = helpdialog.last;
+		stringvectorcat(&helpdialog, &readmefile);
+		if (helpdialog.cur->next != NULL)
+			helpdialog.cur = helpdialog.cur->next;
 	}
 
-	editbox("About KevEdit", &helpdialog, 0, 1, d);
+	/* Now that the helpfile is loaded, have some fun with it. */
+	do {
+		done = 1;  /* The most likely case is that this will be the last loop */
+		if (editbox("About KevEdit", &helpdialog, 0, 1, d) != EDITBOX_CANCEL) {
+			if (ishypermessage(&helpdialog)) {
+				char msg[HELPMESSAGEMAX];
+				gethypermessage(msg, &helpdialog, HELPMESSAGEMAX);
+				if (findhypermessage(msg, &helpdialog))
+					done = 0;  /* Only case where we keep looping */
+			}
+		}
+	} while (!done);
 
 	deletestringvector(&helpdialog);
 }
@@ -366,18 +385,14 @@ void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * my
 	int i;
 	char filename[13];
 
-	/* Update boarddata to reflect bigboard */
-	free(myworld->board[myinfo->curboard]->data);
-	myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
-
 	/* Prompt the user for a filename */
 	strcpy(filename, myinfo->currentfile);
-	filenamedialog(filename, "Save World As", "zzt", 1, mydisplay);
-
-	/*
-	if (!strcmp(filename, myinfo->currentfile))
+	if (filenamedialog(filename, "Save World As", "zzt", 1, mydisplay) == NULL)
 		return;
-		*/
+
+	/* Update board data to reflect bigboard */
+	free(myworld->board[myinfo->curboard]->data);
+	myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
 
 	/* Copy filename w/o ext onto world's title */
 	for (i = 0; i < 9 && filename[i] != '.' && filename[i] != '\0'; i++) {

@@ -6,8 +6,8 @@ CC = i586-pc-msdosdjgpp-gcc
 
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
-#OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-OPTIMIZE = -g -Wall
+OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+#OPTIMIZE = -g -Wall
 
 # Set CGI to ON to enable GGI display
 GGI =
@@ -37,17 +37,15 @@ CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.2\"
 # No more modifications below this line
 # -------------------------------------
 
-# Uncomment if you are bitman (runs kevedit after compiling)
-#run: kevedit
-#	./kevedit
+OBJECTS = display.o main.o menu.o misc.o register.o patbuffer.o hypertxt.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
 
 all: kevedit
 
 clean:
 	rm -f *.o kevedit
 
-kevedit: display.o main.o menu.o misc.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
-	$(CC) -o $@ display.o main.o menu.o misc.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
+kevedit: $(OBJECTS)
+	$(CC) -o $@ $(OBJECTS) $(CFLAGS)
 
 display.o: display.c display.h
 	$(CC) -o $@ display.c $(CFLAGS) -c
@@ -73,6 +71,8 @@ register.o: register.c register.h editbox.h
 	$(CC) -o $@ register.c $(CFLAGS) -c
 patbuffer.o: patbuffer.c kevedit.h zzt.h display.h
 	$(CC) -o $@ patbuffer.c $(CFLAGS) -c
+hypertxt.o: hypertxt.c hypertxt.h svector.h
+	$(CC) -o $@ hypertxt.c $(CFLAGS) -c
 
 panel.o: panel.c panel.h
 	$(CC) -o $@ panel.c $(CFLAGS) -c
