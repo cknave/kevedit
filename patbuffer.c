@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.2 2001/05/05 21:34:17 bitman Exp $
+ * $Id: patbuffer.c,v 1.3 2001/05/12 21:15:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 #include "kevedit.h"
 #include "zzt.h"
 #include "display.h"
+#include "screen.h"
 
 #include <stdlib.h>
 
@@ -177,12 +178,11 @@ void push(patbuffer* pbuf, int type, int color, param * p)
  * updated). Will plot over player, so be careful. */
 int pat_plot(board* b, patdef pattern, int x, int y, u_int8_t * bigboard, unsigned char paramlist[60][25])
 {
-	int i, t;
 	int u = 0;
 
 	if (b->info->objectcount >= 150 && pattern.patparam != NULL &&
 	    paramlist[x][y] == 0) {
-		return;
+		return 0;
 	}
 	
 	/* Clear existing parameter */
@@ -245,8 +245,6 @@ void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int
 
 void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, unsigned char paramlist[60][25], int xpos, int ypos, char code, u_int8_t colour, int fillmethod)
 {
-	int i, x, t, targetcolour;
-	int u = 0;
 	patbuffer* pbuf = myinfo->pbuf;
 	int whichPattern = pbuf->pos;
 	patdef pattern;

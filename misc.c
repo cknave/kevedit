@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.1 2001/05/05 21:34:17 bitman Exp $
+ * $Id: misc.c,v 1.2 2001/05/12 21:15:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,8 +21,11 @@
 #include "display.h"
 #include "svector.h"
 #include "editbox.h"
+#include "screen.h"
 
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 
 void runzzt(char *args)

@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.9 2001/05/05 21:34:17 bitman Exp $
+ * $Id: screen.h,v 1.10 2001/05/12 21:15:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 
 #include "display.h"
 #include "zzt.h"
+#include "kevedit.h"
 
 extern void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay);
 extern void drawpanel(displaymethod * d);

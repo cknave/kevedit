@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.32 2001/05/05 21:34:17 bitman Exp $
+ * $Id: main.c,v 1.33 2001/05/12 21:15:27 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 #include "display.h"
 #include "kevedit.h"
@@ -36,8 +37,6 @@ int main(int argc, char **argv)
 {
 	int i, x, t;
 	int c, e;
-	int subc, sube;
-	int listpos;
 	int quit = 0;
 	displaymethod *mydisplay = (displaymethod *) malloc(sizeof(displaymethod));
 	editorinfo *myinfo = (editorinfo *) malloc(sizeof(editorinfo));
@@ -47,7 +46,6 @@ int main(int argc, char **argv)
 	unsigned char paramlist[60][25];
 
 	world *myworld;
-	FILE *fp;
 	param *pm;
 
 	RegisterDisplays();

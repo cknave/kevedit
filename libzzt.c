@@ -1,5 +1,5 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.8 2001/05/05 21:34:17 bitman Exp $
+ * $Id: libzzt.c,v 1.9 2001/05/12 21:15:27 bitman Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -764,9 +764,11 @@ int saveworld(char *fname, world * wo)
 	int i, t;
 	u_int8_t x;
 	u_int16_t w;
-	size_t s;
+/* TODO: Remove the following if they serve no purpose:
+  size_t s;
 
 	param temp;
+*/
 
 	fp = fopen(fname, "wb");
 	if (fp == NULL)

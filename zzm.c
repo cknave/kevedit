@@ -1,5 +1,5 @@
 /* zzm.c  -- zzm file routines
- * $Id: zzm.c,v 1.4 2001/04/24 23:12:55 bitman Exp $
+ * $Id: zzm.c,v 1.5 2001/05/12 21:15:28 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -59,10 +59,7 @@ int zzmpicksong(stringvector * zzmv, displaymethod * d)
 	stringvector rawtitles;		/* vector sharing strings with zzmv */
 	stringnode * curline;		/* Current node */
 	char *newstr;			/* New strings for songtitles */
-	int i = 0, j = 0, k = 0;
-
-	int *songnumlist = NULL;
-	int songcount = 0;
+	int i = 0, k = 0;
 
 	if (zzmv == NULL || zzmv->first == NULL)
 		return -1;

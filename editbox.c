@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.18 2001/05/05 21:34:17 bitman Exp $
+ * $Id: editbox.c,v 1.19 2001/05/12 21:15:27 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include "panel_ed.h"
 #include "zzm.h"
 #include "register.h"
+#include "screen.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -219,7 +220,7 @@ void editmoredata(param * p, displaymethod * d)
 	initstringvector(&sv);
 
 	/* load the vector */
-	if (p->moredata == NULL | p->length <= 0) {
+	if ((p->moredata == NULL) | (p->length <= 0)) {
 		/* We need to create an empty node */
 		str = (char *) malloc(editwidth + 2);
 		strcpy(str, "");
@@ -739,7 +740,6 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						/* alt+i: insert file */
 						{
 							stringvector filetypelist;
-							int listpos = -1;
 							
 							initstringvector(&filetypelist);
 
@@ -1123,7 +1123,6 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 {
 	int i = 0;			/* position in s */
 	int j = 0;			/* position in token */
-	int k = 0;			/* length of subtoken */
 	char token[80] = "";	/* token buffer */
 
 	/* find out what we're dealing with based on the first char */
@@ -1707,7 +1706,6 @@ stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
 	char * str = NULL;
 	int strpos = 0;
 	int c = 0;
-	int i, j;
 
 	initstringvector(&v);
 

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.20 2001/05/05 21:34:17 bitman Exp $
+ * $Id: screen.c,v 1.21 2001/05/12 21:15:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,8 @@
 #include <string.h>
 #include <dirent.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
 
 #include "panel_f1.h"
 #include "panel_f2.h"
@@ -165,7 +167,7 @@ char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, 
 
 void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
 {
-	int t, x, i, j;
+	int t, x, i;
 	/* start at yoffset */
 	i = yoffset * SCROLL_BOX_WIDTH * 2;
 
@@ -308,7 +310,7 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 
 void drawscreen(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25])
 {
-	int x, y, z, i = 0;
+	int x, y, i = 0;
 
 	for (y = 0; y < 25; y++) {
 		for (x = 0; x < 60; x++) {
@@ -420,8 +422,7 @@ char * filedialog(char * buffer, char * extention, char * title, displaymethod *
 {
 	DIR *dp;
 	struct dirent *dirent;
-	int i, t, x, listpos, offset;
-	int subc, sube;
+	int i, x;
 	char filelist[500][13];
 	stringvector files;
 
@@ -514,7 +515,7 @@ char *titledialog(displaymethod * d)
 
 int boarddialog(world * w, editorinfo * e, displaymethod * mydisplay)
 {
-	int i, t, listpos, offset;
+	int t, listpos, offset;
 	int subc, sube;
 
 	drawscrollbox(0, 0, mydisplay);

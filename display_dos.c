@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.8 2001/05/05 21:34:17 bitman Exp $
+ * $Id: display_dos.c,v 1.9 2001/05/12 21:15:27 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,11 +22,14 @@
 
 #include <stdlib.h>
 #include <conio.h>
+#include <string.h>
 
 #include <sys/nearptr.h>
+#include <sys/farptr.h>
 #include <dpmi.h>
 #include <crt0.h>
 #include <go32.h>
+#include <pc.h>
 
 #include "display.h"
 #include "display_dos.h"
@@ -86,6 +89,7 @@ int kb_isr()
 		lshift = 0;
 	if(key == 0xB6)
 		rshift = 0;
+	/* TODO: this should return something */
 }
 
 
@@ -170,7 +174,6 @@ void display_dos_print(int x, int y, int c, char *ch)
 
 void display_dos_titlebar(char *title)
 {
-	int i;
 	__dpmi_regs r;
 	char buffer[81];
 
@@ -191,7 +194,7 @@ void display_dos_titlebar(char *title)
 	if (windows == 1) {
 		/* Put the title in the MS-Windows window.  Max 79 chars+NULL */
 		if (strlen(title) > 79) {
-			strncpy(&buffer, title, 79);
+			strncpy(buffer, title, 79);
 			buffer[79] = '\0';
 		} else {
 			strcpy(buffer, title);

@@ -1,5 +1,5 @@
 /* register.c  -- text editor memory registers
- * $Id: register.c,v 1.4 2001/05/05 21:34:17 bitman Exp $
+ * $Id: register.c,v 1.5 2001/05/12 21:15:28 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,9 +20,10 @@
 
 #include "register.h"
 #include "editbox.h"
-#include <string.h>
 
+#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, int startpos, int endpos);
 int mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwidth, int editwidth);

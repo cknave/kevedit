@@ -7,8 +7,8 @@ CC = gcc
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
 #OPTIMIZE = -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-#OPTIMIZE = -g
-OPTIMIZE =
+OPTIMIZE = -ggdb -Wall
+#OPTIMIZE =
 
 # Set CGI to ON to enable GGI display
 GGI =
