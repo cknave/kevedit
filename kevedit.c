@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.5 2002/09/16 06:47:24 bitman Exp $
+ * $Id: kevedit.c,v 1.6 2002/09/17 06:05:33 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -272,6 +272,7 @@ void keveditHandleSelection(keveditor * myeditor)
 		myeditor->sely = myeditor->cursory;
 
 		myeditor->selectmode = SELECT_ON;
+		myeditor->clearselectflag = 0;
 		myeditor->updateflags |= UD_BOARD;
 	}
 }
