@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.39 2002/09/22 02:17:38 bitman Exp $
+ * $Id: misc.c,v 1.40 2002/09/23 21:27:27 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -338,7 +338,6 @@ void entergradientmode(keveditor * myeditor)
 
 		/* Substitute fill patterns for standard patterns */
 		deletepatternbuffer(buffers->standard_patterns);
-		free(buffers->standard_patterns);
 		buffers->standard_patterns = createfillpatterns(myeditor);
 		buffers->pbuf = buffers->standard_patterns; /* Very important */
 
@@ -369,7 +368,6 @@ void exitgradientmode(keveditor * myeditor)
 
 		/* Restore the regular standard patterns */
 		deletepatternbuffer(buffers->standard_patterns);
-		free(buffers->standard_patterns);
 		buffers->standard_patterns = createstandardpatterns();
 		buffers->pbuf = buffers->standard_patterns; /* Very important */
 
@@ -702,7 +700,6 @@ patbuffer* createstandardpatterns(void)
 	standard_patterns = patbuffer_create(6);
 
 	/* Initialize pattern definitions */
-	standard_patterns = patbuffer_create(6);
 	standard_patterns->patterns[0].type = ZZT_SOLID;
 	standard_patterns->patterns[1].type = ZZT_NORMAL;
 	standard_patterns->patterns[2].type = ZZT_BREAKABLE;
@@ -834,7 +831,6 @@ void dofloodfill(keveditor * myeditor, int randomflag)
 	/* Delete the fill buffer if we created it above */
 	if (randomflag && myeditor->buffers.pbuf == myeditor->buffers.standard_patterns) {
 		deletepatternbuffer(fillbuffer);
-		free(fillbuffer);
 	}
 
 	/* Cleanup */
@@ -1059,7 +1055,6 @@ void dogradient(keveditor * myeditor)
 	/* Delete the fillbuffer if we createded it custom */
 	if (myeditor->buffers.pbuf == myeditor->buffers.standard_patterns) {
 		deletepatternbuffer(fillbuffer);
-		free(fillbuffer);
 	}
 
 	myeditor->clearselectflag = 1;

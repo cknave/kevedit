@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.7 2002/09/17 20:01:24 bitman Exp $
+ * $Id: kevedit.c,v 1.8 2002/09/23 21:27:26 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -136,8 +136,8 @@ void deletekeveditor(keveditor * myeditor)
 	/* Free pattern buffers */
 	deletepatternbuffer(myeditor->buffers.standard_patterns);
 	deletepatternbuffer(myeditor->buffers.backbuffer);
-	free(myeditor->buffers.standard_patterns);
-	free(myeditor->buffers.backbuffer);
+	myeditor->buffers.standard_patterns = NULL;
+	myeditor->buffers.backbuffer = NULL;
 
 	/* Free the selection */
 	deleteselection(&myeditor->selPersistant);
