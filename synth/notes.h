@@ -1,5 +1,5 @@
 /* notes.h	-- Generate musical notes in chromatic scale
- * $Id: notes.h,v 1.2 2002/04/05 01:57:51 kvance Exp $
+ * $Id: notes.h,v 1.3 2002/04/05 04:44:38 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,14 @@
 #define NOTE_As	 1
 #define NOTE_B	 2
 
+/* Note length in seconds */
+#define LEN_T	0.05
+#define LEN_S	0.11
+#define LEN_I   0.22
+#define LEN_Q	0.44
+#define LEN_H	0.88
+#define LEN_W	1.76
+
 /* Pitch of A in octave 0 (where middle C is) */
 /* In real music, this is 440. */
 /* In ZZT, it seems to be 432. */
@@ -43,12 +51,12 @@
 /* On/off value for various states of signedness and bits */
 #define U8_0		112
 #define U8_1		142
-#define S8_0		-1
-#define S8_1		1
-#define U16_0		0
-#define U16_1		65535
-#define S16_0		-32768
-#define S16_1		32767
+#define S8_0		-15
+#define S8_1		15
+#define U16_0		28927
+#define U16_1		36607
+#define S16_0		-3840
+#define S16_1		3840
 
 float NoteFreq(int note, int octave);	/* Return the frequency of a given note
 					   the given octaves away from middle */
