@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_REVISION([$Id: configure.in,v 1.4 2003/10/01 03:50:37 bitman Exp $])
+AC_REVISION([$Id: configure.in,v 1.5 2003/10/01 23:36:42 bitman Exp $])
 AC_INIT(KevEdit, 0.5.1, kev@kvance.com, kevedit)
 AC_CONFIG_SRCDIR(kevedit.c)
 
@@ -44,7 +44,7 @@ AC_SYS_LONG_FILE_NAMES
 dnl Check for windows (for glob's sake)
 AC_MSG_CHECKING(for Windows)
 case "$host" in
-	*-*-*win*)
+	*-*-*cygwin*)
 		AC_DEFINE(WINDOWS32)
 		AC_MSG_RESULT(yes)
 		;;
@@ -53,10 +53,10 @@ case "$host" in
 		;;
 esac
 
-dnl Define some random things
+dnl Define some random things for the sake of the old build system
 AC_DEFINE(CANGLOB)
 AC_DEFINE_UNQUOTED(keveditVERSION, "$PACKAGE_VERSION")
-AC_DEFINE_UNQUOTED(DATAPATH, "$pkgdatadir")
+AC_DEFINE_UNQUOTED(DATAPATH, ".")
 
 dnl Determine available displays
 AC_MSG_NOTICE(Searching for available displays)
