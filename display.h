@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.16 2002/12/04 23:53:06 kvance Exp $
+ * $Id: display.h,v 1.17 2002/12/13 00:08:45 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -102,6 +102,8 @@ extern void RegisterDisplays();
 #define DKEY_F8         (0x42 | DDOSKEY_EXT)
 #define DKEY_F9         (0x43 | DDOSKEY_EXT)
 #define DKEY_F10        (0x44 | DDOSKEY_EXT)
+#define DKEY_F11        (0x85 | DDOSKEY_EXT)
+#define DKEY_F12        (0x86 | DDOSKEY_EXT)
 
 /* Alt-arrow keys */
 #define DKEY_ALT_LEFT   (155 | DDOSKEY_EXT)
