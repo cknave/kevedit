@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.70 2002/08/24 00:48:40 bitman Exp $
+ * $Id: main.c,v 1.71 2002/08/30 02:21:57 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -61,9 +61,9 @@ int main(int argc, char **argv)
 	RegisterDisplays();
 	mydisplay = pickdisplay(&display);
 
-	printf("Initializing %s version %s...\n", mydisplay->name, mydisplay->version);
 	if (!mydisplay->init()) {
-		printf("\nDisplay initialization failed.  Exiting.\n");
+		printf("\nFailed to initialize %s display version %s.  Exiting.\n",
+		       mydisplay->name, mydisplay->version); 
 		return 1;
 	}
 
