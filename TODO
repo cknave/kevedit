@@ -8,6 +8,7 @@ Tile under cursor displays w/ different for/back-color always
 Exploit ability of board to "link to self" using index FF
 Add monitor & blink rays to terrain documentation
 Respond to exit event from SDL
+Option: shift+arrow draws like tab
 
 Number boards in the board selector
 Char dialog: Alpha keys select characters 

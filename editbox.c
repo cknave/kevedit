@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.51 2002/12/13 00:28:33 bitman Exp $
+ * $Id: editbox.c,v 1.52 2003/02/17 15:20:38 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,8 @@
 #include "synth/synth.h"
 #include "synth/zzm.h"
 
+#include "libzzt2/zztoop.h"
+
 #include "display.h"
 
 #include <stdlib.h>
@@ -57,144 +59,9 @@
  * (now it looks like in zzt, except centered) */
 #define SLEADER  "\x07    \x07    \x07    \x07    \x07    \x07    \x07    \x07    \x07"
 
-/* ZZT Object Code colours */
-
-#define ZOC_DEFAULT_COLOUR     WHITE_F
-#define ZOC_OPERATOR_COLOUR    YELLOW_F | BRIGHT_F
-#define ZOC_HEADING_COLOUR     WHITE_F | BRIGHT_F
-#define ZOC_HYPER_COLOUR       WHITE_F | BRIGHT_F
-#define ZOC_HYPARROW_COLOUR    RED_F
-
-#define ZOC_OBJNAME_COLOUR     BLUE_F | BRIGHT_F
-#define ZOC_COMMENT_COLOUR     CYAN_F | BRIGHT_F
 #define ZOC_TEXT_COLOUR        GREEN_F | BRIGHT_F
 #define ZOC_HIGHLIGHT_COLOUR   BLACK_F | WHITE_B
-
-#define ZOC_STDCOMMAND_COLOUR  GREEN_F
-#define ZOC_STDITEM_COLOUR     WHITE_F | BRIGHT_F
-#define ZOC_STDKIND_COLOUR     CYAN_F | BRIGHT_F
-#define ZOC_STDDIR_COLOUR      WHITE_F | BRIGHT_F
-#define ZOC_STDMESSAGE_COLOUR  MAGENTA_F | BRIGHT_F
-#define ZOC_STDLABEL_COLOUR    RED_F | BRIGHT_F
-#define ZOC_STDFLAG_COLOUR     YELLOW_F | BRIGHT_F
-
-#define ZOC_MESSAGE_COLOUR     MAGENTA_F
-#define ZOC_LABEL_COLOUR       RED_F
-#define ZOC_FLAG_COLOUR        YELLOW_F
-
-#define ZOC_MTIME_COLOUR       CYAN_F
-#define ZOC_MTIMEMOD_COLOUR    CYAN_F | BRIGHT_F
-#define ZOC_MOCTAVE_COLOUR     YELLOW_F | BRIGHT_F
-#define ZOC_MPITCH_COLOUR      BROWN_F
-#define ZOC_MREST_COLOUR       GREEN_F
-#define ZOC_MNOTE_COLOUR       GREEN_F | BRIGHT_F
-#define ZOC_MDRUM_COLOUR       MAGENTA_F | BRIGHT_F
 #define ZOC_MPLAY_COLOUR       WHITE_F | BRIGHT_F
-
-/* zzt components for special highlighting */
-
-#define ZZTCOMMANDCOUNT 27
-const char zztcommands[ZZTCOMMANDCOUNT][12] =
-{
-	"become",  "bind",    "change", "char",
-	"clear",   "cycle",   "die",    "end",
-	"endgame", "give",    "go",     "idle",
-	"if",      "lock",    "play",   "put",
-	"restart", "restore", "send",   "set",
-	"shoot",   "take",    "throwstar",
-	"try",     "unlock",  "walk",   "zap"
-};
-
-
-/* Command syntax:
- * Each type of argument to a command is given a letter and stored
- * in a string in zztcommandtax[], which corresponds to that same
- * numbered element in zztcommands */
-
-#define CTAX_KIND 'k'
-#define CTAX_OBJECTNAME 'o'
-#define CTAX_NUMBER 'n'
-#define CTAX_FLAG 'f'
-#define CTAX_ITEM 'i'
-#define CTAX_DIRECTION 'd'
-#define CTAX_THENMESSAGE 't'
-#define CTAX_SOUND 's'
-#define CTAX_MESSAGE 'm'
-
-const char zztcommandtax[ZZTCOMMANDCOUNT][30] =
-{
-	"k",  "o",   "kk", "n",
-	"f",  "n",   "",   "",
-	"",   "in",  "d",  "",
-	"ft", "",    "s",  "dk",
-	"",   "m",   "m",  "f",
-	"d",  "int", "d",
-	"dt", "",    "d",  "m"
-};
-
-#define ZZTMESSAGECOUNT 5
-const char zztmessages[ZZTMESSAGECOUNT][10] =
-{
-	"touch", "shot", "bombed", "thud", "energize"
-};
-
-#define ZZTFLAGCOUNT 6
-const char zztflags[ZZTFLAGCOUNT][12] =
-{
-	"alligned", "contact", "blocked", "energized", "exists", "any"
-};
-
-#define ZZTITEMCOUNT 5
-const char zztitems[ZZTITEMCOUNT][8] =
-{
-	"ammo", "gems", "torches", "health", "score"
-};
-
-#define ZZTKINDCOUNT 41
-const char zztkinds[ZZTKINDCOUNT][12] =
-{
-	"empty", "player", "ammo", "torch",
-	"gem", "key", "door", "scroll",
-	"passage", "duplicator", "bomb", "energizer",
-	"star", "clockwise", "counter", "bullet",
-	"water", "forest", "solid", "normal",
-	"breakable", "boulder", "sliderns", "sliderew",
-	"fake", "invisible", "blinkwall", "transporter",
-	"line", "ricochet", "bear", "ruffian",
-	"object", "slime", "shark", "spinninggun",
-	"pusher", "lion", "tiger", "head",
-	"segment"
-};
-
-#define ZZTCOLOURCOUNT 7
-const char zztcolours[ZZTCOLOURCOUNT][8] =
-{
-	"blue", "green", "red", "cyan", "purple", "yellow", "white"
-};
-
-#define ZZTDIRCOUNT 15
-const char zztdirs[ZZTDIRCOUNT][6] =
-{
-	"north", "south", "east", "west", "idle",
-	"seek", "flow", "rnd", "rndns", "rndne",
-	"n", "s", "e", "w", "i"
-};
-
-#define ZZTDIRMODCOUNT 4
-const char zztdirmods[ZZTDIRMODCOUNT][5] =
-{
-	"cw", "ccw", "rndp", "opp"
-};
-
-
-/* token testing functions */
-int iszztcommand(char *token);
-int iszztmessage(char *token);
-int iszztflag(char *token);
-int iszztitem(char *token);
-int iszztkind(char *token);
-int iszztdir(char *token);
-int iszztcolour(char *token);
 
 void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymethod* d);
 
@@ -662,7 +529,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 							;
 						tmpstr[i] = '\0';
 
-						if (!iszztcommand(tmpstr)) {
+						if (zztoopFindCommand(tmpstr) == -1) {
 							/* If it's not a valid command, don't bother looking for it */
 							tmpstr[0] = '\0';
 						}
@@ -1184,442 +1051,32 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 /**** Syntax highlighting functions ****************************************/
 /***************************************************************************/
 
+/* Draw highlighted syntax using ZOOPDraw */
+#include "zoopdraw.h"
 
 void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod * d)
 {
-	int i = 0;			/* position in s */
-	int j = 0;			/* position in token */
-	char token[80] = "";	/* token buffer */
+	ZZTOOPparser * parser = zztoopCreateParser(s);
+	ZZTOOPdrawer drawer;
 
-	/* find out what we're dealing with based on the first char */
-	switch (s[0]) {
-		case '#':
-			/* command */
-			d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
-			for (i = 1; s[i] != ' ' && s[i] != 0; i++)
-				token[i - 1] = s[i];
-			token[i - 1] = 0;
+	zztoopInitDrawer(&drawer);
+	drawer.display = d;
 
-			if (iszztcommand(token)) {
-				d->print_discrete(x + 1, y, ZOC_STDCOMMAND_COLOUR, token);
-
-				displaycommand(x + i, y, token, s + i, d);
-			} else {
-				/* Display as #send call */
-				if (strchr(token, ':') != NULL) {
-					for (j = 1; s[j] != ':' && s[j] != 0; j++)
-						d->putch_discrete(x + j, y, s[j], ZOC_OBJNAME_COLOUR);
-					d->putch_discrete(x + j, y, ':', ZOC_OPERATOR_COLOUR);
-					if (j < strlen(s)) j++;
-					d->print_discrete(x + j, y, (iszztmessage(s + j) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), s + j);
-				} else
-					d->print_discrete(x + 1, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token);
-				d->print_discrete(x + i, y, ZOC_DEFAULT_COLOUR, s + i);
-			}
-
-			break;
-
-		case ':':
-			/* message */
-			if (firstline) {
-				/* This requires some explaination: When a message label occurs at the
-				 * beginning of an object's code, it cannot be sent to. So, we shall
-				 * display it in the default colour to make this apparent. */
-				d->print_discrete(x, y, ZOC_DEFAULT_COLOUR, s);
-				break;
-			}
-			if (format) {
-				s = strstr(s, ";");
-				if (s != NULL)
-					d->print_discrete(x, y, ZOC_HEADING_COLOUR, s + 1);
-			} else {
-				d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
-				for (i = 1; s[i] != '\'' && s[i] != 0; i++)
-					token[i - 1] = s[i];
-				token[i - 1] = 0;
-				
-				d->print_discrete(x + 1, y, (iszztmessage(token) ? ZOC_STDLABEL_COLOUR : ZOC_LABEL_COLOUR), token);
-				
-				if (s[i] == '\'')
-					d->print_discrete(x + i, y, ZOC_COMMENT_COLOUR, s + i);
-			}
-			break;
-
-		case '?':
-		case '/':
-			/* movement */
-			d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
-
-			for (i = 1; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' ' && s[i] != '#'; i++)
-				token[i-1] = s[i];
-			token[i-1] = 0;
-
-			while (!iszztdir(token) && s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != '#') {
-				while (s[i] == ' ') { token[i - 1] = ' '; i++; }
-				for (; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' ' && s[i] != '#'; i++)
-					token[i-1] = s[i];
-				token[i-1] = 0;
-			}
-
-			if (iszztdir(token)) {
-				/* token is a proper direction */
-				d->print_discrete(x + 1, y, ZOC_STDDIR_COLOUR, token);
-			} else
-				d->print_discrete(x + 1, y, ZOC_DEFAULT_COLOUR, token);
-
-			if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ' || s[i] == '#')
-				displayzoc(x + i, y, s + i, format, 0, d);
-
-			break;
-
-		case '!':
-			/* hypermessage */
-			if (format) {
-				/* white and -> indented */
-				d->putch_discrete(x + 2, y, 0x10, ZOC_HYPARROW_COLOUR);
-				s = strstr(s, ";");
-				if (s != NULL)
-					d->print_discrete(x + 5, y, ZOC_HYPER_COLOUR, s + 1);
-			} else {
-				d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
-				for (i = 1; s[i] != ';' && s[i] != 0; i++)
-					d->putch_discrete(x + i, y, s[i], ZOC_MESSAGE_COLOUR);
-
-				if (s[i] == 0) break;
-
-				d->putch_discrete(x + i, y, s[i], ZOC_OPERATOR_COLOUR);
-				for (i++; s[i] != 0; i++)
-					d->putch_discrete(x + i, y, s[i], ZOC_HYPER_COLOUR);
-			}
-
-			break;
-
-		case '\'':
-			/* comment */
-			d->print_discrete(x, y, ZOC_COMMENT_COLOUR, s);
-			break;
-
-		case '$':
-			/* heading */
-			if (format) {
-				/* white and centered */
-				s++;
-				d->print_discrete(x + 20 - (strlen(s)/2), y, ZOC_HEADING_COLOUR, s);
-			} else {
-				d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
-				d->print_discrete(x + 1, y, ZOC_HEADING_COLOUR, s + 1);
-			}
-			break;
-
-		case '@':
-			/* objectname */
-			if (firstline) {
-				/* it's only an objectname on the first line */
-				d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
-				d->print_discrete(x + 1, y, ZOC_OBJNAME_COLOUR, s + 1);
-			}
-			else
-				d->print_discrete(x, y, ZOC_TEXT_COLOUR, s);
-			break;
-		
-		case ' ':
-			/* indented comment? */
-			for (i = 1; s[i] == ' '; i++)
-				;
-			d->print_discrete(x, y, (s[i]=='\'' ? ZOC_COMMENT_COLOUR : ZOC_TEXT_COLOUR), s);
-		default:
-			/* normal text */
-			d->print_discrete(x, y, ZOC_TEXT_COLOUR, s);
-			break;
-	}
-}
-
-
-
-/* display a zzt #command */
-void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
-{
-	int t;			/* Index in zztcommands syntax list */
-	int i;			/* Index in zztcommandtax[t] */
-	int j;			/* Index in args */
-	int k;			/* Length of buffer */
-	int l;			/* General counter */
-	char ctax;	/* Current command arg syntax */
-	char token[41] = "";
-
-	for (t = 0; t < ZZTCOMMANDCOUNT; t++)
-		if (str_equ(zztcommands[t], command, STREQU_UNCASE))
-			break;
-
-	if (t == ZZTCOMMANDCOUNT) {
-		d->print_discrete(x, y, ZOC_DEFAULT_COLOUR, args);
-		return;
+	if (format) {
+		/* Non-strict help */
+		parser->flags = ZOOPFLAG_HELP;
+		drawer.helpformatting = 1;
 	}
 
-	j = 0;
-	for (i = 0; i < strlen(zztcommandtax[t]); i++) {
-		/* Advance to next token */
-		k = tokenadvance(token, args, &j);
+	if (firstline)
+		parser->flags |= ZOOPFLAG_FIRSTLINE;
 
-		ctax = zztcommandtax[t][i];
+	drawer.x = x; drawer.y = y;
+	drawer.length = 42;  /* TODO: replace 42 w/ constant or something */
 
-		/* Determine current token type (stage 1) */
-		switch (ctax) {
-			case CTAX_OBJECTNAME:
-				d->print_discrete(x + j - k, y, ZOC_OBJNAME_COLOUR, token);
-				break;
+	zztoopDraw(drawer, zztoopParseLine(parser));
 
-			case CTAX_NUMBER:
-				d->print_discrete(x + j - k, y, ZOC_TEXT_COLOUR, token);
-				break;
-
-			case CTAX_FLAG:
-				if (str_equ(token, "not", STREQU_UNCASE)) {
-					d->print_discrete(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
-					/* Advance to next token */
-					k = tokenadvance(token, args, &j);
-				}
-				/* If it's a built-in, display it as such */
-				if (iszztflag(token))
-					d->print_discrete(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
-				else
-					d->print_discrete(x + j - k, y, ZOC_FLAG_COLOUR, token);
-				/* Check the blocked flag for directions */
-				if (str_equ(token, "blocked", STREQU_UNCASE)) {
-					k = tokenadvance(token, args, &j);
-					ctax = CTAX_DIRECTION;
-				}
-				if (str_equ(token, "any", STREQU_UNCASE)) {
-					k = tokenadvance(token, args, &j);
-					ctax = CTAX_KIND;
-				}
-				break;
-
-			case CTAX_ITEM:
-				if (iszztitem(token)) {
-					d->print_discrete(x + j - k, y, ZOC_STDITEM_COLOUR, token);
-				} else
-					d->print_discrete(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
-				break;
-
-			case CTAX_THENMESSAGE:
-				if (str_equ(token, "then", STREQU_UNCASE)) {
-					d->print_discrete(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
-					k = tokenadvance(token, args, &j);
-				}
-				if (token[0] == '#' || token[0] == '/' || token[0] == '?') {
-					/* remainder of args is a #command or movement */
-					displayzoc(x + j - k, y, args + j - k, 1, 0, d);
-					j = strlen(args);  /* Avoid overwriting */
-				} else {
-					if (iszztcommand(token)) {
-						d->print_discrete(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
-						displaycommand(x + j, y, token, args + j, d);
-						j = strlen(args);  /* Avoid overwriting */
-					} else {
-						/* Thenmessage was not a command, so display it as a normal
-						 * message */
-						ctax = CTAX_MESSAGE;
-					}
-				}
-				break;
-
-			case CTAX_SOUND:
-				displayzzm(x + j - k, y, token, d);
-				break;
-		}
-
-		/* Determine current token type (stage 2) */
-		switch (ctax) {
-			case CTAX_KIND:
-				if (iszztkind(token)) {
-					d->print_discrete(x + j - k, y, ZOC_STDKIND_COLOUR, token);
-				} else {
-					k = tokengrow(token, args, &j);
-					if (iszztkind(token)) {
-						d->print_discrete(x + j - k, y, ZOC_STDKIND_COLOUR, token);
-					} else
-						d->print_discrete(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
-				}
-				break;
-
-			case CTAX_DIRECTION:
-				while (!iszztdir(token) && j < strlen(args))
-					k = tokengrow(token, args, &j);
-				if (iszztdir(token))
-					d->print_discrete(x + j - k, y, ZOC_STDDIR_COLOUR, token);
-				else
-					d->print_discrete(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
-				break;
-
-			case CTAX_MESSAGE:
-				if (strchr(token, ':') != NULL) {
-					/* We have an objectname included */
-					for (l = 0; token[l] != ':'; l++)
-						d->putch_discrete(x + j - k + l, y, token[l], ZOC_OBJNAME_COLOUR);
-					d->putch_discrete(x + j - k + l, y, ':', ZOC_OPERATOR_COLOUR);
-					l++;
-					d->print_discrete(x + j - k + l, y, (iszztmessage(token + l) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token + l);
-				} else
-					d->print_discrete(x + j - k, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token);
-				break;
-		}
-	}
-
-	/* Finish anything we haven't dealt with */
-	for (; j < strlen(args); j++)
-		d->putch_discrete(x + j, y, args[j], ZOC_DEFAULT_COLOUR);
-}
-
-/* displayzzm() - displays zzm music highlighted */
-void displayzzm(int x, int y, char *music, displaymethod * d)
-{
-	int i;
-
-	for (i = 0; i < strlen(music); i++) {
-		int colour = ZOC_DEFAULT_COLOUR;
-
-		switch (toupper(music[i])) {
-			/* Time determiners */
-			case 'T':
-			case 'S':
-			case 'I':
-			case 'Q':
-			case 'H':
-			case 'W': colour = ZOC_MTIME_COLOUR; break;
-			/* Time modifiers */
-			case '3':
-			case '.': colour = ZOC_MTIMEMOD_COLOUR; break;
-			/* Octave switch */
-			case '+':
-			case '-': colour = ZOC_MOCTAVE_COLOUR; break;
-			/* Sharp/flat: pitch modifiers */
-			case '!':
-			case '#': colour = ZOC_MPITCH_COLOUR; break;
-			/* Rest */
-			case 'X': colour = ZOC_MREST_COLOUR; break;
-			default:
-				if (toupper(music[i]) >= 'A' && toupper(music[i]) <= 'G')
-					colour = ZOC_MNOTE_COLOUR;
-				if (toupper(music[i]) >= '0' && toupper(music[i]) <= '9')
-					colour = ZOC_MDRUM_COLOUR;
-		}
-		d->putch_discrete(x + i, y, music[i], colour);
-	}
-}
-
-
-/******** token testers **************/
-int iszztcommand(char *token)
-{
-	int i = 0;
-	char buffer[41] = "";
-
-	memcpy(buffer, token, 40);
-	buffer[40] = 0;
-
-	for (i = 0; i < ZZTCOMMANDCOUNT; i++)
-		if (str_equ(buffer, zztcommands[i], STREQU_UNCASE))
-			return 1;
-
-	return 0;
-}
-
-int iszztmessage(char *token)
-{
-	int i = 0;
-	char buffer[41] = "";
-
-	memcpy(buffer, token, 40);
-	buffer[40] = 0;
-
-	for (i = 0; i < ZZTMESSAGECOUNT; i++)
-		if (str_equ(buffer, zztmessages[i], STREQU_UNCASE))
-			return 1;
-
-	return 0;
-}
-
-int iszztflag(char *token)
-{
-	int i = 0;
-	char buffer[41] = "";
-
-	memcpy(buffer, token, 40);
-	buffer[40] = 0;
-
-	for (i = 0; i < ZZTFLAGCOUNT; i++)
-		if (str_equ(buffer, zztflags[i], STREQU_UNCASE))
-			return 1;
-
-	return 0;
-}
-
-int iszztitem(char *token)
-{
-	int i = 0;
-	char buffer[41] = "";
-
-	memcpy(buffer, token, 40);
-	buffer[40] = 0;
-
-	for (i = 0; i < ZZTITEMCOUNT; i++)
-		if (str_equ(buffer, zztitems[i], STREQU_UNCASE))
-			return 1;
-
-	return 0;
-}
-
-int iszztkind(char *token)
-{
-	int i = 0;
-	char buffer[41] = "";
-
-	memcpy(buffer, token, 40);
-	buffer[40] = 0;
-
-	for (i = 0; i < ZZTCOLOURCOUNT; i++)
-		if (str_equ(buffer, zztcolours[i], STREQU_UNCASE | STREQU_FRONT)) {
-			/* Advance token to nearest space */
-			while (token[0] != ' ' && token[0] != 0) token++;
-			/* Advance token to nearest nonspace */
-			while (token[0] == ' ') token++; 
-
-			/* now see if next word is a valid token */
-			return iszztkind(token);
-		}
-
-	for (i = 0; i < ZZTKINDCOUNT; i++)
-		if (str_equ(buffer, zztkinds[i], STREQU_UNCASE))
-			return 1;
-
-	return 0;
-}
-
-int iszztdir(char *token)
-{
-	int i = 0;
-	char buffer[41] = "";
-
-	memcpy(buffer, token, 40);
-	buffer[40] = 0;
-
-	for (i = 0; i < ZZTDIRMODCOUNT; i++)
-		if (str_equ(buffer, zztdirmods[i], STREQU_UNCASE | STREQU_RFRONT)) {
-			/* Advance token to nearest space */
-			while (token[0] != ' ' && token[0] != 0) token++; 
-			/* Advance token to nearest nonspace */
-			while (token[0] == ' ') token++; 
-
-			/* now see if next word is a valid token */
-			return iszztdir(token);
-		}
-
-	for (i = 0; i < ZZTDIRCOUNT; i++)
-		if (str_equ(buffer, zztdirs[i], STREQU_UNCASE))
-			return 1;
-
-	return 0;
+	zztoopDeleteParser(parser);
 }
 
 

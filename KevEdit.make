@@ -42,7 +42,7 @@ CFLAGS += $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(VERSIONFLAG) $(PATHS)
 
 CENTRALOBJS = kevedit.o misc.o dosemu.o menu.o editbox.o screen.o
 LIBRARYOBJS = libzzt2/libzzt2.a synth/synth.a svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
-MISCOBJS    = patbuffer.o help.o dialog.o infobox.o paramed.o register.o
+MISCOBJS    = patbuffer.o help.o dialog.o infobox.o paramed.o register.o zoopdraw.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o panel_bd.o panel_sd.o panel_ti.o scroll.o tbox.o cbox.o tdialog.o
 DISPLAYOBJS = display.o $(SDLOBJ) $(VCSAOBJ) $(DOSOBJ)
 
@@ -140,6 +140,7 @@ dialog.o: dialog.c display.h svector.h
 infobox.o: infobox.c infobox.h libzzt2/zzt.h display.h
 paramed.o: paramed.c paramed.h libzzt2/zzt.h display.h dialog.h
 register.o: register.c register.h editbox.h
+zoopdraw.o: zoopdraw.c zoopdraw.h libzzt2/zztoop.h display.h
 
 # Draw data structures
 panel.o: panel.c panel.h
