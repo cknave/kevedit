@@ -3,6 +3,7 @@
 Blinkwall lines now drawn properly
 DPMI time slices are given up for more multitasking friendliness
 Text entry implemented
+ZZT-OOP editor import/export
 
 0.3: August 22, 2000
 --------------------
