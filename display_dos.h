@@ -1,5 +1,5 @@
 /* display_dos.h        -- Define for DOS display method
- * $Id: display_dos.h,v 1.1 2000/06/15 03:58:04 kvance Exp $
+ * $Id: display_dos.h,v 1.1.1.1 2000/06/15 03:58:04 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify

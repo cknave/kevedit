@@ -1,5 +1,5 @@
 /* Image Saved In ACiDDRAW v1.1 */
-/* $Id: tbox.c,v 1.1 2000/06/15 03:58:18 kvance Exp $ */
+/* $Id: tbox.c,v 1.1.1.1 2000/06/15 03:58:18 kvance Exp $ */
 
 #define TITLE_BOX_WIDTH 39
 #define TITLE_BOX_DEPTH 3

@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.1 2000/06/15 03:58:11 kvance Exp $
+ * $Id: kevedit.h,v 1.1.1.1 2000/06/15 03:58:11 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify

@@ -1,5 +1,5 @@
 /* display_vcsa.c       -- Functions for the Linux console display method
- * $Id: display_vcsa.c,v 1.1 2000/06/15 03:58:10 kvance Exp $
+ * $Id: display_vcsa.c,v 1.1.1.1 2000/06/15 03:58:10 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify

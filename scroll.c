@@ -1,5 +1,5 @@
 /* Image Saved In ACiDDRAW v1.1 */
-/* $Id: scroll.c,v 1.1 2000/06/15 03:58:05 kvance Exp $ */
+/* $Id: scroll.c,v 1.1.1.1 2000/06/15 03:58:05 kvance Exp $ */
 
 #define SCROLL_BOX_WIDTH 49
 #define SCROLL_BOX_DEPTH 19

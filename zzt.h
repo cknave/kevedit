@@ -1,5 +1,5 @@
 /* zzt.h        -- ZZT library definitions
- * $Id: zzt.h,v 1.1 2000/06/15 03:58:11 kvance Exp $
+ * $Id: zzt.h,v 1.1.1.1 2000/06/15 03:58:11 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
