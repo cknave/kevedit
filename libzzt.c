@@ -1,5 +1,5 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.5 2000/11/13 19:56:23 kvance Exp $
+ * $Id: libzzt.c,v 1.6 2001/01/01 00:43:45 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ board *
 	b = (board *) malloc(sizeof(board));
 
 	/* Create title & info */
-	b->title = (u_int8_t *) malloc(strlen(title));
+	b->title = (u_int8_t *) malloc(strlen(title)+1);
 	strcpy(b->title, title);
 	b->info = (boardinfo *) malloc(sizeof(boardinfo));
 	memset(b->info, 0, sizeof(boardinfo));
