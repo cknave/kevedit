@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.8 2002/09/23 21:27:26 bitman Exp $
+ * $Id: kevedit.c,v 1.9 2002/11/11 13:18:02 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -234,7 +234,7 @@ void keveditHandleSelection(keveditor * myeditor)
 	int selectblockflag = myeditor->mydisplay->shift();
 
 	/* Except for shift + ASCII key */
-	if (myeditor->key < 0x7F)
+	if (myeditor->key < 0x7F || myeditor->key == DKEY_SHIFT_TAB)
 		selectblockflag = 0;
 
 	if (selectblockflag && myeditor->selectmode != SELECT_BLOCK) {
@@ -408,6 +408,11 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 		case DKEY_ESC:
 			myeditor->clearselectflag = 1;
+			myeditor->drawmode = 0;
+			myeditor->gradmode = 0;
+			myeditor->aqumode  = 0;
+			myeditor->textentrymode = 0;
+			myeditor->updateflags |= UD_DRAWMODE | UD_TEXTMODE | UD_PATTERNS;
 			break;
 
 		/****************** Major actions ****************/
@@ -636,6 +641,12 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 		case DKEY_CTRL_V:
 			paste(myeditor);
+			break;
+
+		case DKEY_CTRL_X:
+			copy(myeditor);
+			dofloodfill(myeditor, 0);
+			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT;
 			break;
 
 		/***************** Backbuffer Actions ****************/

@@ -39,11 +39,27 @@ void shuffle(ZZTworld * w) {
 	}
 }
 
+void testblockcopy(ZZTworld * w) {
+	ZZTblock *area;
+
+	/* block copy testing */
+	area = zztBlockCopyArea(zztBoardGetBlock(w), 17, 10, 57, 15);
+	printblock(area);
+	zztBlockPaste(zztBoardGetBlock(w), area, 0, 8);
+
+	zztBlockFree(area);
+}
+
+void testparams(ZZTworld * w) {
+	zztBoardSelect(w, 1);
+	zztMove(w, 0, 0, 0, 1);
+	zztPlotPlayer(w, 1, 0);
+}
+
 int main(int argc, char * argv[])
 {
 	ZZTworld *w;
-	char loadname[1000] = "town.zzt";
-	ZZTblock *area;
+	char loadname[1000] = "test.zzt";
 
 	if (argc > 1) {
 		strcpy(loadname, argv[1]);
@@ -57,21 +73,15 @@ int main(int argc, char * argv[])
 	}
 	printf("Loaded %s\n", loadname);
 
-	/* block copy testing */
-	area = zztBlockCopyArea(zztBoardGetCurPtr(w)->bigboard, 11, 0, 52, 8);
-	printblock(area);
-	zztBlockPaste(zztBoardGetCurPtr(w)->bigboard, area, 11, 8);
+	/* Test something */
+	testparams(w);
 
 	/* Print the current board */
 	printboard(w);
 
-#if 0
-	/* Shuffle things up a bit */
-	shuffle(w);
-
-	/* Rename to SHUFFLE */
-	zztWorldSetFilename(w, "shuffle.zzt");
-	zztWorldSetTitle(w, "SHUFFLE");
+	/* Rename to testout */
+	zztWorldSetFilename(w, "testout.zzt");
+	zztWorldSetTitle(w, "testout");
 
 	/* Unlock */
 	zztWorldSetFlag(w, 0, "");
@@ -81,11 +91,9 @@ int main(int argc, char * argv[])
 		printf("Error saving world!\n");
 	else
 		printf("Saved test\n");
-#endif
 
 	/* Clean up */
 	zztWorldFree(w);
-	zztBlockFree(area);
 
 	return 0;
 }

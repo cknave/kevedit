@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.11 2002/09/23 21:42:29 bitman Exp $
+ * $Id: board.c,v 1.12 2002/11/11 13:18:03 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 
 /* zztParamCopyPtr(dest, src)
  * Copies param onto pre-reserved memory
- * Found in tiles.c
+ * Found in params.c
  */
 int zztParamCopyPtr(ZZTparam *dest, ZZTparam *src);
 
@@ -118,56 +118,49 @@ u_int8_t *_zzt_rle_encode(ZZTblock *block)
 int _zzt_param_decode(ZZTparam* params, int paramcount, ZZTblock *block)
 {
 	int i;
+
+	/* Store the number of params */
+	block->paramcount = paramcount;
+	/* Allocate an array of pointers */
+	block->params = (ZZTparam **) malloc(sizeof(ZZTparam*) * paramcount);
+
 	for (i = 0; i < paramcount; i++) {
+		/* Duplicate the compressed param */
+		ZZTparam* param = zztParamDuplicate(params + i);
+
+		/* Store the param pointer in the ordered array */
+		block->params[i] = param;
+		param->index = i;
+
+		/* Store the param pointer in the tile array */
 		if (params[i].x < block->width && params[i].y < block->height)
-			zztTileAt(block, params[i].x, params[i].y).param =
-				zztParamDuplicate(params + i);
-		/* TODO: show some kind of error for params at an invalid location? */
+			zztTileAt(block, params[i].x, params[i].y).param = param;
 	}
 	return 1;
 }
 
-int _zzt_param_encoded_size(ZZTblock *block)
-{
-	int i, size = 0;
-	int maxcount = block->width * block->height;
-
-	/* Count the params */
-	for (i = 0; i < maxcount; i++) {
-		if (block->tiles[i].param != NULL)
-			size++;
-	}
-	return size;
-}
-
 ZZTparam *_zzt_param_encode(int *paramsize, int playerx, int playery, ZZTblock *block)
 {
-	int i, size, ofs;
-	int maxcount = block->width * block->height;
-	int playerindex = block->width * playery + playerx;
 	ZZTparam *params;
+	int i;
 
-	size = _zzt_param_encoded_size(block);
-	if (size == 0)
+	if (block->paramcount == 0)
 		return NULL;
 
-	/* Copy the params */
-	params = (ZZTparam *) malloc(sizeof(ZZTparam) * size);
-	/* Copy the player params first */
-	if (block->tiles[playerindex].param == NULL)
-		return NULL;
-	zztParamCopyPtr(params + 0, block->tiles[playerindex].param);
-	/* Loop through the rest */
-	for (i = 0, ofs = 1; i < maxcount && ofs < size; i++) {
-		if (block->tiles[i].param != NULL && i != playerindex) {
-			zztParamCopyPtr(params + ofs, block->tiles[i].param);
-			/* TODO: Set param x and y to indicate position in tiles[],
-			 * rather than assume they have not been tampered with. */
-			ofs++;
-		}
+	/* Make room for the compressed list of params */
+	params = (ZZTparam *) malloc(sizeof(ZZTparam) * block->paramcount);
+
+	/* Ensure that the first param points to the player */
+	block->params[0]->x = playerx;
+	block->params[0]->y = playery;
+
+	/* Copy each param onto the params array */
+	for (i = 0; i < block->paramcount; i++)
+	{
+		zztParamCopyPtr(params + i, block->params[i]);
 	}
 
-	*paramsize = size;
+	*paramsize = block->paramcount;
 	return params;
 }
 
@@ -449,7 +442,7 @@ u_int16_t zztBoardGetSize(ZZTboard *board)
 	/* Size the bigboard */
 	if (board->bigboard != NULL) {
 		size += _zzt_rle_encoded_size(board->bigboard) * 3;
-		size += _zzt_param_encoded_size(board->bigboard) * 0x21;
+		size += board->bigboard->paramcount * 0x21;
 		/* Find size of program data */
 		for (i = 0; i < board->bigboard->width * board->bigboard->height; i++)
 			if (board->bigboard->tiles[i].param != NULL)

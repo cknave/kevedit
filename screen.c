@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.55 2002/09/17 20:01:25 bitman Exp $
+ * $Id: screen.c,v 1.56 2002/11/11 13:18:02 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -415,7 +415,7 @@ void updatepanel(keveditor * e)
 		d->putch_discrete(63, 0, ' ', 0x1f);
 		d->putch_discrete(76, 0, ' ', 0x1f);
 		d->putch_discrete(77, 0, ' ', 0x1f);
-		sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w));
+		sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w) - 1);
 		i = 70 - strlen(s) / 2;
 		for (x = 0; x < strlen(s); x++) {
 			d->putch_discrete(i + x, 0, s[x], 0x1c);

@@ -3,8 +3,7 @@ Summary: Powerful ZZT Editing
 URL: http://kevedit.sourceforge.net/
 License: GPL
 Packager: Ryan Phillips <bitman@users.sourceforge.net>
-# TODO: Is there a better group?
-Group: Games
+Group: Amusements/Games
 
 Buildroot: /tmp/%{name}-%{version}
 Source: %{name}-%{version}.src.tgz

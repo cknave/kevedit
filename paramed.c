@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.16 2002/09/12 22:05:49 bitman Exp $
+ * $Id: paramed.c,v 1.17 2002/11/11 13:18:02 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -859,6 +859,11 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 		/* Advance the label/value templates */
 		option.y++; option.x = 13;
 		label.y = option.y;
+
+		/* Stat index */
+		_addlabel("Stat Index");
+		sprintf(buf, "%d", tile.param->index);
+		_addoption(buf, ID_NONE);
 
 		/* Tile under info */
 		under.type = tile.param->utype;

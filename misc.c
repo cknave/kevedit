@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.41 2002/09/24 01:05:37 kvance Exp $
+ * $Id: misc.c,v 1.42 2002/11/11 13:18:02 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -111,14 +111,10 @@ void paste(keveditor * myeditor)
 		                myeditor->mydisplay);
 
 		if (key == ' ' || key == DKEY_ENTER) {
-			/* TODO: use the preview block to save time. */
-			/* FIXME: update the paramcount to be the same
-			 * as the new number of params. Otherwise data will get lost
-			 * when switching boards */
-			/* FIXME: don't exceed 150 params */
 			pasteblock(zztBoardGetBlock(myeditor->myworld),
 								 myeditor->copyBlock, pasteselection, myeditor->copySelection, x, y);
-			zztBoardSetParamcount(myeditor->myworld, countparams(zztBoardGetBlock(myeditor->myworld)));
+			/* Set the paramcount for the board */
+			zztBoardSetParamcount(myeditor->myworld, zztBoardGetBlock(myeditor->myworld)->paramcount);
 			done = 1;
 		}
 
@@ -133,28 +129,11 @@ void paste(keveditor * myeditor)
 	myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT;
 }
 
-/* TODO: should countparams() and pasteblock() go in libzzt2? selection.c/h has
- * to go with it... */
-int countparams(ZZTblock *block)
-{
-	int size = block->width * block->height;
-	int i, count = 0;
-
-	for (i = 0; i < size; i++)
-		if (block->tiles[i].param != NULL)
-			count++;
-
-	return count;
-}
-
 /* TODO: make a new type "alphablock" containing a block and a selection */
 int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcsel, int x, int y)
 {
 	int srcpos;     /* Current index in source */
 	int row, col;   /* Current row and col in dest */
-
-	/* QUICKHACK: Prevent too many params from being placed */
-	int paramcount = countparams(dest);
 
 	/* Paste */
 
@@ -172,39 +151,7 @@ int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcse
 
 			/* Can't use plot because we want to maintain terrain under creatures
 			 * from the source block, not the destination block */
-
-			/* QUICKHACK: Prevent too many params from being placed */
-			if ((zztTileAt(dest, col, row).param == NULL) &&
-					(src->tiles[srcpos].param != NULL)) {
-				/* A param is being added */
-
-				if (paramcount >= ZZT_BOARD_MAX_PARAMS)
-					continue;
-
-				paramcount++;
-			} else
-			if ((zztTileAt(dest, col, row).param != NULL) &&
-					(src->tiles[srcpos].param == NULL)) {
-				/* A param is being removed */
-				paramcount--;
-			}
-
-			/* TODO: there should be a libzzt2 call which handles the following
-			 * on one line. */
-			
-			/* Free existing tile param */
-			if (zztTileAt(dest, col, row).param != NULL)
-				zztParamFree(zztTileAt(dest, col, row).param);
-
-			/* Copy */
-			zztTileAt(dest, col, row) = src->tiles[srcpos];
-			zztTileAt(dest, col, row).param = zztParamDuplicate(src->tiles[srcpos].param);
-
-			/* Update the copied param to reflect its new location */
-			if (zztTileAt(dest, col, row).param != NULL) {
-				zztTileAt(dest, col, row).param->x = col;
-				zztTileAt(dest, col, row).param->y = row;
-			}
+			zztTileSet(dest, col, row, src->tiles[srcpos]);
 		}
 		/* If the loop stopped short of using every column in src, advance
 		 * the srcpos index to ignore these columns */
@@ -1000,8 +947,6 @@ void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pb
 		if (!preview) {
 			zztPlot(myworld, x, y, pattern);
 		} else {
-			/* TODO: don't plot if we have too many params already */
-			/* (not a big deal, this is only the preview after all */
 			zztTilePlot(prevBlock, x, y, pattern);
 		}
 	}

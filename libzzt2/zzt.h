@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.20 2002/09/16 06:47:25 bitman Exp $
+ * $Id: zzt.h,v 1.21 2002/11/11 13:18:03 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -128,14 +128,15 @@ typedef struct ZZTboardinfo {
 /* Many fields are used for different things based on the type of enemy.
    Refer to the ZZT File Format */
 typedef struct ZZTparam {
+	u_int8_t index;   /* Position of param in list */
 	u_int8_t x;		/* X position */
 	u_int8_t y;		/* Y position */
 	u_int16_t xstep;	/* X step */
 	u_int16_t ystep;	/* Y step */
 	u_int16_t cycle;	/* Cycle (speed) */
 	u_int8_t data[3];	/* Generic data */
-	u_int16_t leaderindex;	/* Index of leader (usually for centipedes) */
-	u_int16_t followerindex;	/* Index of follower (centipedes) */
+	u_int16_t leaderindex;	/* Index of leader (usually for centipedes, -1 if none) */
+	u_int16_t followerindex;	/* Index of follower (centipedes, -1 if none) */
 	u_int8_t utype;		/* Type of tile underneath */
 	u_int8_t ucolor;	/* Color of tile underneath */
 	u_int8_t magic[4];	/* UNKNOWN */
@@ -143,7 +144,7 @@ typedef struct ZZTparam {
 	u_int16_t length;	/* Length of program */
 	u_int8_t *program;	/* Program (if any) */
 
-	u_int16_t bindindex;	/* Index of object bound to */
+	u_int16_t bindindex;	/* Index of object bound to (zero if none) */
 } ZZTparam;
 
 /* ZZT tile info -- the basic building-block of a decompressed board */
@@ -157,6 +158,13 @@ typedef struct ZZTtile {
 typedef struct ZZTblock {
 	ZZTtile * tiles;
 	int width, height;
+
+	/* Array of param pointers. Memory is shared with the params in tiles[] */
+	ZZTparam ** params;
+	int paramcount;
+
+	/* Maximum number of params (usually ZZT_BOARD_MAX_PARAMS) */
+	int maxparams;
 } ZZTblock;
 
 /* ZZT board -- fill a ZZT world with these */
@@ -464,9 +472,15 @@ const char *zztParamDatauseGetName(ZZTtile tile, int which);
 int zztParamDatauseLocate(int datause);
 
 /***** TILE MANIPULATORS ******/
+/* zztTileSet(block, x, y, tile)
+ * Set the tile at (x, y) for the given block
+ * No protection against overwriting the player
+ */
+int zztTileSet(ZZTblock * block, int x, int y, ZZTtile tile);
 /* zztTilePlot(block, x, y, tile)
  * Plot a tile to the given block at (x, y)
- * No protection against overwriting the player or too many params
+ * Tiles underneath other tiles are handled appropriately
+ * No protection against overwriting the player
  */
 int zztTilePlot(ZZTblock * block, int x, int y, ZZTtile tile);
 /* zztPlot(world, x, y, tile)
@@ -479,6 +493,18 @@ int zztPlot(ZZTworld * world, int x, int y, ZZTtile tile);
  * This must be seperate from zztPlot to allow player clones
  */
 int zztPlotPlayer(ZZTworld * world, int x, int y);
+/* zztTileMove(block, fromx, fromy, tox, toy)
+ * Move a tile from one place to another
+ * Tile params will remain in the same order
+ * No protection against overwriting/moving the player
+ */
+int zztTileMove(ZZTblock * block, int fromx, int fromy, int tox, int toy);
+/* zztMove(block, fromx, fromy, tox, toy)
+ * Move a tile from one place to another
+ * Tile params will remain in the same order
+ * This function is PlayerSafe (TM)
+ */
+int zztMove(ZZTworld * world, int fromx, int fromy, int tox, int toy);
 /* zztTileErase(block, x, y)
  * Erase the tile at (x, y)
  * If tile has terrain underneath, the terrain remains

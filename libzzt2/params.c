@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.7 2002/08/24 22:59:08 bitman Exp $
+ * $Id: params.c,v 1.8 2002/11/11 13:18:03 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -138,6 +138,7 @@ ZZTparam *zztParamCreateBlank(void)
 	param = (ZZTparam *) malloc(sizeof(ZZTparam));
 
 	/* Zero-ify */
+	param->index = -1;
 	param->x = 0;
 	param->y = 0;
 	param->xstep = 0;
@@ -151,8 +152,8 @@ ZZTparam *zztParamCreateBlank(void)
 	memset(param->magic, 0, sizeof(param->magic));
 	param->instruction = 0;
 	param->length = 0;
-	param->bindindex = 0;
 	param->program = NULL;
+	param->bindindex = 0;
 
 	return param;
 }

@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.14 2002/09/18 04:21:43 bitman Exp $
+ * $Id: tiles.c,v 1.15 2002/11/11 13:18:03 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -216,6 +216,69 @@ const u_int8_t _zzt_display_char_line_table[] = {
 	206, /* n s w e */
 };
 
+/* Relink a param: references greater than start will be decreased by one,
+ * references equal to start will be reset to their default value. */
+void _zzt_relink_param(ZZTparam * param, int start)
+{
+	if (param->leaderindex > start && param->leaderindex != 0xFFFF)
+		param->leaderindex--;
+	else if (param->leaderindex == start)
+		param->leaderindex = 0xFFFF;
+
+	if (param->followerindex > start && param->followerindex != 0xFFFF)
+		param->followerindex--;
+	else if (param->followerindex == start)
+		param->followerindex = 0xFFFF;
+
+	if (param->bindindex > start)
+		param->bindindex--;
+	else if (param->bindindex == start)
+		param->bindindex = 0;
+}
+
+/* Remove a param from the a block's list of params */
+void _zzt_block_remove_param_from_list(ZZTblock * block, int index)
+{
+	int i;
+
+	/* No invalid indexes allowed */
+	if (index < 0)
+		return;
+
+	for (i = index + 1; i < block->paramcount; i++) {
+		block->params[i - 1] = block->params[i];
+		block->params[i - 1]->index = i - 1;
+	}
+
+	/* Number of params has decreased */
+	block->paramcount--;
+
+	/* Relink all references to the removed params */
+	for (i = 0; i < block->paramcount; i++) {
+		_zzt_relink_param(block->params[i], index);
+	}
+}
+
+/* Determine type/color to use as undertile for a tile */
+ZZTtile _zzt_get_undertile(ZZTtile tile)
+{
+	ZZTtile undertile = { ZZT_EMPTY, 0x0F, NULL };
+
+	if (tile.param != NULL) {
+		/* Steal the under type/color from the given tile */
+		undertile.type = tile.param->utype;
+		undertile.color = tile.param->ucolor;
+	} else {
+		if (tile.type == ZZT_EMPTY || tile.type == ZZT_FAKE ||
+				tile.type == ZZT_WATER) {
+			/* Steal the type and color from the given tile itself */
+			undertile = tile;
+		}
+	}
+
+	return undertile;
+}
+
 ZZTblock *zztBlockCreate(int width, int height)
 {
 	ZZTblock *block;
@@ -226,6 +289,9 @@ ZZTblock *zztBlockCreate(int width, int height)
 	block->width = width;
 	block->height = height;
 
+	/* Use max params for a board by default + 1 for the player */
+	block->maxparams = ZZT_BOARD_MAX_PARAMS + 1;
+
 	/* Allocate the tile space */
 	block->tiles = (ZZTtile*) malloc(sizeof(ZZTtile) * width * height);
 	/* Fill the tiles with blanks */
@@ -235,6 +301,10 @@ ZZTblock *zztBlockCreate(int width, int height)
 		block->tiles[i].param = NULL;
 	}
 
+	/* No params just yet */
+	block->paramcount = 0;
+	block->params = NULL;
+
 	return block;
 }
 
@@ -242,15 +312,17 @@ void zztBlockFree(ZZTblock *block)
 {
 	int i;
 
-	/* Free any params in the tile list */
-	for (i = 0; i < block->width * block->height; i++) {
-		if (block->tiles[i].param != NULL) {
-			/* Free program if present */
-			if (block->tiles[i].param->program != NULL)
-				free(block->tiles[i].param->program);
-			free(block->tiles[i].param);
+	/* Free all params */
+	for (i = 0; i < block->paramcount; i++) {
+		if (block->params[i] != NULL) {
+			zztParamFree(block->params[i]);
 		}
 	}
+
+	/* Free the params list */
+	if (block->params != NULL)
+		free(block->params);
+
 	/* Free the tile list and the block */
 	free(block->tiles);
 	free(block);
@@ -270,6 +342,8 @@ ZZTblock *zztBlockDuplicate(ZZTblock *block)
 
 	/* Copy dimensions */
 	dest->width = block->width; dest->height = block->height;
+	dest->paramcount = block->paramcount;
+	dest->maxparams  = block->maxparams;
 
 	if (block->tiles == NULL)   /* Anything is possible... */
 		return dest;
@@ -279,9 +353,21 @@ ZZTblock *zztBlockDuplicate(ZZTblock *block)
 	memcpy(dest->tiles, block->tiles, sizeof(ZZTtile) * tilecount);
 
 	/* Copy param data */
-	for (i = 0; i < tilecount; i++) {
-		if (block->tiles[i].param != NULL) {
-			dest->tiles[i].param = zztParamDuplicate(block->tiles[i].param);
+	dest->params = (ZZTparam **) malloc(sizeof(ZZTparam*) * dest->paramcount);
+
+	for (i = 0; i < block->paramcount; i++) {
+		if (block->params[i] != NULL) {
+			int x, y;
+			dest->params[i] = zztParamDuplicate(block->params[i]);
+			x = dest->params[i]->x;
+			y = dest->params[i]->y;
+
+			/* Update the tile for this param */
+			if (x < block->width && y < block->height &&
+					x >= 0           && y >= 0)
+				zztTileAt(dest, x, y).param = dest->params[i];
+		} else {
+			dest->params[i] = NULL;
 		}
 	}
 	
@@ -291,7 +377,7 @@ ZZTblock *zztBlockDuplicate(ZZTblock *block)
 ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2)
 {
 	int row;          /* Current row in source */
-	int destpos;      /* Current index in the dest block */
+	int destx;      /* Current column in the destination block */
 	ZZTblock * dest;  /* Destination block */
 
 	/* Make sure (x1, y1) is upper left corner and (x2, y2) is lower right */
@@ -313,22 +399,23 @@ ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2)
 
 	/* Copy */
 
-	destpos = 0;   /* Start at beginning of dest->tiles */
 	for (row = y1; row <= y2; row++) {
 		/* Find start and end indexes within src */
 		int srcpos = row * src->width + x1;
 		int endpos = row * src->width + x2;
-		for (; srcpos <= endpos; srcpos++, destpos++) {
-			/* Copy the current source tile onto the current dest tile */
-			dest->tiles[destpos] = src->tiles[srcpos];
-			dest->tiles[destpos].param = zztParamDuplicate(src->tiles[srcpos].param);
+		for (destx = 0; srcpos <= endpos && destx < dest->width; srcpos++, destx++) {
+			zztTileSet(dest, destx, row - y1, src->tiles[srcpos]);
 		}
 	}
 
 	return dest;
 }
 
-int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y)
+int zztBlockPaste(ZZTblock *dest, ZZTblock *src,
+#ifdef SELECTION
+									selection destsel, selection srcsel,
+#endif
+									int x, int y)
 {
 	int srcpos;     /* Current index in source */
 	int row, col;   /* Current row and col in dest */
@@ -340,18 +427,18 @@ int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y)
 		for (col = x; col < src->width + x && col < dest->width; col++, srcpos++) {
 			/* Paste the currently indexed tile from source to (row, col) in dest */
 
-			/* TODO: allow positions to be excluded via selection mask (easy!) */
-			
+			if (row < 0 || col < 0)
+				continue;
+
+#ifdef SELECTION
+			/* Only copy selected tiles */
+			if (!isselected(destsel, col, row) || !isselected(srcsel, col - x, row - y))
+				continue;
+#endif
+
 			/* Can't use plot because we want to maintain terrain under creatures
 			 * from the source block, not the destination block */
-
-			/* Free existing tile param */
-			if (zztTileAt(dest, col, row).param != NULL)
-				zztParamFree(zztTileAt(dest, col, row).param);
-
-			/* Copy (I love this macro) */
-			zztTileAt(dest, col, row) = src->tiles[srcpos];
-			zztTileAt(dest, col, row).param = zztParamDuplicate(src->tiles[srcpos].param);
+			zztTileSet(dest, col, row, src->tiles[srcpos]);
 		}
 		/* If the loop stopped short of using every column in src, advance
 		 * the srcpos index to ignore these columns */
@@ -362,43 +449,85 @@ int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y)
 	return 1;
 }
 
+int zztTileSet(ZZTblock * block, int x, int y, ZZTtile tile)
+{
+	/* Param for the tile being overwritten */
+	ZZTparam * oldparam = zztTileAt(block, x, y).param;
+
+	/* Do not continue if we will exceed maxparams */
+	if (block->paramcount >= block->maxparams &&
+			tile.param != NULL && oldparam == NULL)
+		return 0;  /* Fail */
+
+	/* Copy type and color */
+	zztTileAt(block, x, y).type = tile.type;
+	zztTileAt(block, x, y).color = tile.color;
+
+	/* If we are given the same param that's already there, we are done. */
+	if (tile.param == oldparam)
+		return 1;  /* Success */
+
+	/* Duplicate the param we are given so that we have our own copy. */
+	tile.param = zztParamDuplicate(tile.param);
+	
+	/* Plot the new param (NULL or not) */
+	zztTileAt(block, x, y).param = tile.param;
+
+	/* If we are plotting a paramed tile */
+	if (tile.param != NULL) {
+
+		/* Tell the param where it now lives */
+		tile.param->x = x;
+		tile.param->y = y;
+
+		/* Update the param list */
+		if (oldparam != NULL) {
+			/* Put the new param where the old one used to be */
+			tile.param->index = oldparam->index;
+			block->params[tile.param->index] = tile.param;
+		} else {
+			/* Add the param to the end of the list */
+			tile.param->index = block->paramcount++;
+			block->params = (ZZTparam **) realloc(block->params, sizeof(ZZTparam*) * block->paramcount);
+			block->params[block->paramcount - 1] = tile.param;
+		}
+	} else {
+		if (oldparam != NULL) {
+			/* Remove the old param from the param list */
+			_zzt_block_remove_param_from_list(block, oldparam->index);
+		}
+	}
+
+	/* Remove the old param since we don't need it any more. */
+	if (oldparam != NULL) {
+		zztParamFree(oldparam);
+	}
+
+	return 1;  /* Success */
+}
+
 int zztTilePlot(ZZTblock * block, int x, int y, ZZTtile tile)
 {
-	ZZTtile undertile;
-
 	/* Destination must be within bounds */
 	if (x < 0 || x >= block->width || y < 0 || y >= block->height)
 		return 0;
 
-	/* Remember the old tile in case we are plotting a param tile */
-	undertile = zztTileAt(block, x, y);
-
-	zztTileAt(block, x, y).type = tile.type;
-	zztTileAt(block, x, y).color = tile.color;
-	
-	/* Remove any existing param */
-	if (zztTileAt(block, x, y).param != NULL) {
-		/* Remeber the under type/color in case of plotting param */
-		undertile.type = undertile.param->utype;
-		undertile.color = undertile.param->ucolor;
-		zztParamFree(zztTileAt(block, x, y).param);
-		zztTileAt(block, x, y).param = NULL;
-	}
-	/* Check to see if we are writing a param */
 	if (tile.param != NULL) {
-		zztTileAt(block, x, y).param = zztParamDuplicate(tile.param);
-		/* Tell the param where it now lives */
-		zztTileAt(block, x, y).param->x = x;
-		zztTileAt(block, x, y).param->y = y;
-		if (undertile.type == ZZT_EMPTY || undertile.type == ZZT_FAKE ||
-				undertile.type == ZZT_WATER) {
-			zztTileAt(block, x, y).param->utype = undertile.type;
-			zztTileAt(block, x, y).param->ucolor = undertile.color;
-		}
+		int success;
+		ZZTtile undertile = _zzt_get_undertile(zztTileAt(block, x, y));
+
+		/* Make a copy of a param, change the under info, and plot that */
+		tile.param = zztParamDuplicate(tile.param);
+		tile.param->utype  = undertile.type;
+		tile.param->ucolor = undertile.color;
+
+		success = zztTileSet(block, x, y, tile);
+
+		zztParamFree(tile.param);
+		return success;
 	}
 
-	/* Success! */
-	return 1;
+	return zztTileSet(block, x, y, tile);
 }
 
 int zztPlot(ZZTworld * world, int x, int y, ZZTtile tile)
@@ -413,17 +542,11 @@ int zztPlot(ZZTworld * world, int x, int y, ZZTtile tile)
 	if (x == brd->plx && y == brd->ply)
 		return 0;
 
-	/* Determine whether we are adding a param to the list */
-	if (tile.param != NULL && zztTileAt(brd->bigboard, x, y).param == NULL) {
-		/* No exceeding max params */
-		if (zztBoardGetParamcount(world) >= ZZT_BOARD_MAX_PARAMS)
-			return 0;
-		zztBoardSetParamcount(world, zztBoardGetParamcount(world) + 1);
-	} else if (zztTileAt(brd->bigboard, x, y).param != NULL && tile.param == NULL) {
-		zztBoardSetParamcount(world, zztBoardGetParamcount(world) - 1);
-	}
-
+	/* Plot the tile */
 	zztTilePlot(brd->bigboard, x, y, tile);
+
+	/* Update the paramcount for the board just to be nice. */
+	zztBoardSetParamcount(world, brd->bigboard->paramcount);
 	
 	return 1;
 }
@@ -431,7 +554,6 @@ int zztPlot(ZZTworld * world, int x, int y, ZZTtile tile)
 int zztPlotPlayer(ZZTworld * world, int x, int y)
 {
 	ZZTboard* brd = zztBoardGetCurPtr(world);
-	ZZTtile player;
 
 	/* Simple case */
 	if (x == brd->plx && y == brd->ply)
@@ -441,19 +563,65 @@ int zztPlotPlayer(ZZTworld * world, int x, int y)
 	if (!zztBoardDecompress(brd))
 		return 0;
 
-	/* Pick up the player */
-	player = zztTileGet(world, brd->plx, brd->ply);
-
-	/* Plot the player to the new location -- param data is copied */
-	zztTilePlot(brd->bigboard, x, y, player);
-
-	/* Erase the plotted player, leaving terrain underneath */
-	zztTileErase(brd->bigboard, brd->plx, brd->ply);
+	zztTileMove(brd->bigboard, brd->plx, brd->ply, x, y);
 
 	/* Record the change */
 	brd->plx = x; brd->ply = y;
 
 	return 1;
+}
+
+int zztTileMove(ZZTblock * block, int fromx, int fromy, int tox, int toy)
+{
+	ZZTtile from, to, underfrom, underto;
+
+	if (fromx > block->width || fromy > block->height ||
+			tox   > block->width || toy   > block->height)
+		return 0;  /* Fail */
+
+	/* Grab from and to tiles */
+	from = zztTileAt(block, fromx, fromy);
+	to   = zztTileAt(block, tox,   toy);
+
+	/* Grab undertiles */
+	underfrom = _zzt_get_undertile(from);
+	underto   = _zzt_get_undertile(to);
+
+	/* Remove any params we may be overwriting */
+	zztTileErase(block, tox, toy);
+
+	/* Move from to its new home */
+	zztTileAt(block, tox, toy) = from;
+
+	/* Update from's params */
+	if (from.param != NULL) {
+		from.param->utype  = underto.type;
+		from.param->ucolor = underto.color;
+
+		from.param->x = tox;
+		from.param->y = toy;
+	}
+	
+	/* Replace from with its undertile */
+	zztTileAt(block, fromx, fromy) = underfrom;
+
+	return 1;
+}
+
+int zztMove(ZZTworld * world, int fromx, int fromy, int tox, int toy)
+{
+	ZZTboard * brd = zztBoardGetCurPtr(world);
+
+	/* Can't move onto the player */
+	if (tox == brd->plx && toy == brd->ply)
+		return 0;
+
+	if (fromx == brd->plx && fromy == brd->ply) {
+		/* Player is being moved -- use zztPlotPlayer() */
+		return zztPlotPlayer(world, tox, toy);
+	}
+
+	return zztTileMove(brd->bigboard, fromx, fromy, tox, toy);
 }
 
 int zztTileErase(ZZTblock * block, int x, int y)
