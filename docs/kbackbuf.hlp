@@ -1,0 +1,106 @@
+@The Backbuffer
+$The Backbuffer
+
+In KevEdit, the backbuffer is a valuable
+tool for storing tiles, as well as
+customized gradients.
+
+!quick;Quick Keys
+!resize;Resizing the Backbuffer
+!lock;Backbuffer Locking
+!aquire;Aquire Mode
+!draw;Draw Mode
+!gradient;Gradient Draw Mode
+
+:quick;Quick Keys
+
+To quickly access a position in the
+pattern selector, the numbers 0-9 can be
+used. Pressing 0 will select the Empty
+pattern, which you will probably need
+frequently. Pressing one of 1-9 will
+select a slot in the backbuffer.
+
+:resize;Resizing the Backbuffer
+
+The backbuffer may  be  resized  using
+the '<' and '>' keys. Some gradients may
+not fit in the default ten-tile
+backbuffer, so this will prove useful.
+Only ten tiles will be visible at once,
+but the backbuffer will scroll
+automatically.
+
+The Gradient Tool, Gradient Draw Mode, and
+Random Fill all use the ENTIRE backbuffer,
+so feel free to resize the backbuffer as
+necessary using '<' and '>'.
+
+:lock;Backbuffer Locking
+
+By default, using ENTER to modify a tile,
+plotting an uncommon tile from the F1 - F3
+menus, or pressing INSERT will copy a tile
+into the backbuffer. Backbuffer locking
+prevents the backbuffer from being
+modified, except that when INSERT is
+pressed, the tile under the cursor will be
+inserted into the currently selected
+backbuffer slot, if the pattern selector
+is over the backbuffer. This mimics ZZTAE
+behavior.
+
+To toggle backbuffer locking, press '/'.
+
+:aquire;Aquire Mode
+
+Aquire mode lifts tiles into the
+backbuffer as the cursor is moved. By
+using aquire mode, one can load a large
+gradient or line of objects into the
+backbuffer with relatively few keystrokes.
+Press 'a' to toggle aquire mode. The 'a'
+next to the backbuffer will indicate
+whether aquire mode is on or off.
+
+By default, the backbuffer will be resized
+so that no non-empty tiles are lost. To
+force the backbuffer to stay the same
+size, use SHIFT+'A'.
+
+Holding down ALT while moving the cursor
+will aquire several tiles at once.
+
+:draw;Draw Mode
+
+This drawing tool should be familiar from
+the original ZZT editor. Simply press TAB
+and the currently selected pattern will be
+plotted everywhere the cursor goes. Press
+TAB again to exit Draw Mode.
+
+:gradient;Gradient Draw Mode
+
+Gradient Draw Mode works much in the same
+way as Draw Mode, except that KevEdit
+cycles through the backbuffer with each
+cursor movement. This can be used to
+easily plot gradients or other patterns.
+
+Use SHIFT-TAB to activate gradient mode
+and TAB to turn it off. When gradient mode
+is on, KevEdit will cycle through the
+backbuffer backward so that tiles are laid
+down in the same order they enter the
+buffer. To cycle forward, press SHIFT-TAB
+a second time.
+
+Holding down ALT while moving will
+continuously paint the gradient for ten
+spaces at a time horizontally and five
+tiles at a time vertically.
+
+If the one of the standard patterns is
+selected, a fade from foreground color to
+background color will be used instead of
+the backbuffer.

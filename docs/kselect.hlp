@@ -1,0 +1,110 @@
+@Tile Selection
+$Tile Selection
+
+Tile selection is a very powerful tool
+offered by KevEdit. Once a set of tiles
+has been selected, it can be copied,
+pasted into, or filled in various ways.
+
+!selecting;Selecting Tiles
+!copy;Copy and Paste
+!fill;Filling
+!randfill;Random Filling
+!gradtool;Gradient Tool
+
+:selecting;Selecting Tiles
+
+Selecting tiles is easy. To quickly select
+a block of tiles, hold down SHIFT while
+moving the cursor with the arrow keys.
+Release shift, move the cursor, and repeat
+to add another block to the selection.
+
+To flood select a group of identical
+tiles, press lowercase 'x'. To select all
+tiles on the current board which are
+identical to the tile under the cursor,
+press SHIFT+'X'.
+
+The current selection can be reset by
+pressing ESCAPE.
+
+:copy;Copy and Paste
+
+To copy the selected area, press CTRL-C.
+You may then press CTRL-V to paste the
+copied tiles. Use the arrow keys to move
+the copied tiles to where you want
+them, then press SPACEBAR or ENTER. To
+cancel pasting, press ESCAPE.
+
+If an area is selected when you paste a
+group of tiles, then only the selected
+area will be affected. This can be very
+useful, especially when combined with the
+gradient tool.
+
+:fill;Filling
+
+Once an area has been selected, it can be
+filled with the current pattern by
+pressing lowercase 'f'.
+
+If an area is not selected, pressing 'f'
+will floodfill around the cursor. This is
+equivilant to pressing 'x' then 'f'.
+
+:randfill;Random Filling
+
+Pressing SHIFT+'F' will fill the
+selected area with tiles chosen at random
+from the pattern buffer. If the backbuffer
+is selected, tiles will be randomly chosen
+from there. If the standard patterns are
+selected, a mix of the current foreground
+and background colours will be used.
+
+If no tiles are selected, a random
+floodfill will occur.
+
+BEWARE: once an area is filled with
+random tiles, it is difficult to undo.
+Save beforehand if possible. An undo
+feature is in the works, but don't get
+your hopes up too high.
+
+In a random flood fill, all tiles used are
+given equal probability. To increase the
+occurance of a certain kind of tile, put
+more than one copy in the backbuffer.
+
+!-kbackbuf;See Backbuffer Documentation
+
+:gradtool;Gradient Tool
+
+One of the most versatile drawing tools
+offered by KevEdit, the Gradient tool
+allows a custom or built-in gradient to be
+drawn in various ways.
+
+Press 'g' to activate the Gradient Tool
+and follow the provided instructions.
+
+If an area is not selected, you will be
+able to select one block or flooded
+region. This will be depreciated in future
+releases.
+
+If the pattern selector is above the
+standard patterns (left of the
+backbuffer), then the gradient tool will
+use the current colour settings to create
+a gradient of walls fading from the
+foreground colour to the background
+colour.
+
+If the pattern selector is above the
+backbuffer, the patterns in the backbuffer
+will be used by the gradient tool.
+
+!-kbackbuf;See Backbuffer Documentation

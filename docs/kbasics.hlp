@@ -28,7 +28,7 @@ will be plotted where the cursor is.  The
 TAB key will turn on or off drawing mode.
 In drawing mode, the cursor plots
 automatically when moved.
-!-kadvance:gradient;See Gradient Draw Mode
+!-kbackbuf:gradient;See Gradient Draw Mode
 
 To remove the tile under the cursor, press
 DELETE. If the tile is a creature with
@@ -39,7 +39,7 @@ If you create an enclosed area and want to
 fill it in with one type of tile, place
 the cursor inside and press lowercase 'f'
 to flood fill the area.
-!-kadvance:randfill;See Random Flood Fill
+!-kbackbuf:randfill;See Random Flood Fill
 
 :brdselect;Board Selection Dialog
 
@@ -118,11 +118,8 @@ It will appear in the backbuffer, where
 you can plot it like anything else in the
 pattern selector.
 
-To quickly access a position in the
-pattern selector, the numbers 0-9 can be
-used. Pressing 0 will select the Empty
-pattern. Pressing one of 1-9 will select a
-slot in the backbuffer.
+More information is available on:
+!-kbackbuf;The Backbuffer
 
 :color;The Color Selector
 
