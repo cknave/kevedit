@@ -24,6 +24,7 @@ ALT-T also runs zzt for testing (by popular demand)
 Monitor, blink rays, and dead smiley added to F3 menu
 Major overhaul of main() -- migrated most code to kevedit.c
 Statless players can be any colour
+Order of stats is no longer forgotten
 
 0.4.0: February 19, 2002
 ------------------------
