@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.44 2002/08/23 21:34:11 bitman Exp $
+ * $Id: editbox.c,v 1.45 2002/08/23 22:41:23 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1096,7 +1096,6 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 #ifdef SDL
 	SDL_AudioSpec spec;
 
-	SDL_Init(SDL_INIT_AUDIO);
 	OpenSynth(&spec);
 #endif
 

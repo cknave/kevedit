@@ -1,5 +1,5 @@
 /* sdl_synth.c	-- SDL music synthesizer
- * $Id: sdl_synth.c,v 1.1 2002/08/23 21:34:15 bitman Exp $
+ * $Id: sdl_synth.c,v 1.2 2002/08/23 22:41:25 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -69,6 +69,7 @@ int OpenSynth(SDL_AudioSpec * spec)
 void CloseSynth(void)
 {
 	SDL_CloseAudio();
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	AudioCleanUp();
 }
 
