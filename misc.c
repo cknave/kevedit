@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.44 2002/12/04 23:53:06 kvance Exp $
+ * $Id: misc.c,v 1.45 2002/12/14 02:46:20 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -250,7 +250,7 @@ void runzzt(char* path, char* world)
 
 	/* No .zzt is required */
 	if(strlen(world) > 4 && world[strlen(world)-4] == '.') {
-		no_extension = strdup(world);
+		no_extension = str_dup(world);
 		no_extension[strlen(world)-4] = '\0';
 	}
 

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.58 2002/12/04 23:53:06 kvance Exp $
+ * $Id: screen.c,v 1.59 2002/12/14 02:46:20 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -652,7 +652,7 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 	int done = 0;
 	char* result = NULL;
 	stringvector files;
-	char* curdir = strdup(dir);
+	char* curdir = str_dup(dir);
 
 	if (filetypes == FTYPE_DIR)
 		drawsidepanel(mydisplay, PANEL_DIRDIALOG);
