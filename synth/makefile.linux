@@ -1,4 +1,4 @@
-# Makefile for libzzt2 in Linux
+# Makefile for synth in Linux
 
 # Choose your compiler & archiver
 CC = gcc

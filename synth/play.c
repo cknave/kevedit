@@ -19,24 +19,6 @@ void printNoteData(musicalNote note, musicSettings settings)
 SDL_AudioSpec spec;
 #endif
 
-void play(char* tune)
-{
-	musicalNote note = zzmGetDefaultNote();
-	musicSettings settings = zzmGetDefaultSettings();
-
-	do {
-		note = zzmGetNote(tune, note);
-
-		printNoteData(note, settings);
-
-#ifdef DOS
-		pcSpeakerPlayNote(note, settings);
-#elif defined SDL
-		SynthPlayNote(spec, note, settings);
-#endif
-	} while (note.type != NOTETYPE_NONE);
-}
-
 void start() {
 #ifdef SDL
 	SDL_Init(SDL_INIT_AUDIO);
@@ -56,6 +38,30 @@ void end() {
 #elif defined DOS
 	pcSpeakerFinish();
 #endif
+}
+
+void playSong(musicalNote* song, musicSettings settings)
+{
+	if (song == NULL)
+		return;
+
+	printf("Playing note\n");
+#ifdef DOS
+	pcSpeakerPlayNote(*song, settings);
+#elif defined SDL
+	SynthPlayNote(spec, *song, settings);
+#endif
+
+	playSong(song->next, settings);
+}
+
+void play(char* tune)
+{
+	musicalNote* song = zzmGetNoteChain(tune, zzmGetDefaultNote());
+
+	playSong(song, zzmGetDefaultSettings());
+
+	deleteNoteChain(song);
 }
 
 int main(int argc, char* argv[])

@@ -1,4 +1,4 @@
-# Makefile for libzzt2
+# Makefile for synth in DOS (crosscompiled)
 
 # Choose your compiler & archiver
 CC = i586-pc-msdosdjgpp-gcc

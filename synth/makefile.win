@@ -1,4 +1,4 @@
-# Makefile for libzzt2 in Windows
+# Makefile for synth in Windows
 
 # Choose your compiler & archiver
 CC = i686-pc-cygwin-gcc -mno-cygwin

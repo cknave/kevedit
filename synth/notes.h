@@ -1,5 +1,5 @@
 /* notes.h	-- Generate musical notes in chromatic scale
- * $Id: notes.h,v 1.6 2002/08/23 21:34:15 bitman Exp $
+ * $Id: notes.h,v 1.7 2002/08/24 22:59:59 bitman Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -67,6 +67,7 @@ typedef struct musicalNote {
 	int slur;       /* TRUE if note is to slur/tie with the next */
 
 	int src_pos;    /* Position of next note in source string */
+	struct musicalNote* next;  /* Notes can be chained together */
 } musicalNote;
 
 typedef struct musicSettings {
@@ -79,6 +80,9 @@ typedef struct musicSettings {
 	/* Spacing between notes, in milliseconds */
 	float noteSpacing;
 } musicSettings;
+
+/* Delete a chain of notes */
+void deleteNoteChain(musicalNote* chain);
 
 /* Return the frequency of a given musical note. */
 float noteFrequency(musicalNote mnote, musicSettings settings);

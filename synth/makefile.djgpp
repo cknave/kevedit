@@ -1,4 +1,4 @@
-# Makefile for libzzt2 in DJGPP
+# Makefile for synth in DJGPP
 
 # Choose your compiler & archiver
 CC = gcc

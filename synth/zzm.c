@@ -1,5 +1,5 @@
 /* zzm.c  -- zzm music format
- * $Id: zzm.c,v 1.1 2002/08/23 21:34:15 bitman Exp $
+ * $Id: zzm.c,v 1.2 2002/08/24 22:59:59 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 /* Translation table for easy sharpening/flattening.
  * C is at the bottom of an octave, B at the top. */
@@ -47,6 +48,7 @@ musicalNote zzmGetDefaultNote(void)
 	note.slur   = 1;
 
 	note.src_pos = 0;
+	note.next = NULL;
 	return note;
 }
 
@@ -55,7 +57,6 @@ musicSettings zzmGetDefaultSettings(void)
 	musicSettings settings;
 	settings.basePitch = ZZM_BASE_PITCH;
 	settings.wholeDuration = 1760;
-	/* TODO: turn of slurring and set this to zero? */
 	settings.noteSpacing = 8;
 
 	return settings;
@@ -152,4 +153,32 @@ musicalNote zzmGetNote(char* tune, musicalNote previousNote)
 	note.type = NOTETYPE_NONE;
 	note.index = 0;
 	return note;
+}
+
+musicalNote* zzmGetNoteChain(char* tune, musicalNote defNote)
+{
+	musicalNote* first, * last;
+
+	last = first = (musicalNote*) malloc(sizeof(musicalNote));
+
+	if (first == NULL)
+		return NULL;
+
+	/* The first note is actually a copy of the defNote */
+	(*first) = defNote;
+
+	do {
+		musicalNote *cur = (musicalNote*) malloc(sizeof(musicalNote));
+
+		/* Copy the returned note */
+		(*cur) = zzmGetNote(tune, *last);
+
+		last->next = cur;
+		last = cur;
+	} while (last->type != NOTETYPE_NONE);
+
+	/* End of the line */
+	last->next = NULL;
+
+	return first;
 }

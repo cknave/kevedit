@@ -1,5 +1,5 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.7 2002/08/23 21:34:15 bitman Exp $
+ * $Id: notes.c,v 1.8 2002/08/24 22:59:59 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,18 @@ short drums[DRUMCOUNT][DRUMCYCLES] = {
 		{ 400, 380, 360, 340, 320, 300, 280, 260, 250, 240},  /* 8 */
 		{ 150, 100, 140,  90, 130,  80, 120,  70, 110,  60}   /* 9 */
 };
+
+/* Delete a chain of notes */
+void deleteNoteChain(musicalNote* chain)
+{
+	/* Free each note in the chain recursively */
+	if (chain == NULL)
+		return;
+
+	deleteNoteChain(chain->next);
+	chain->next = NULL;  /* Why not? */
+	free(chain);
+}
 
 /* Frequency notation (makes it easier to compute frequency):
 	C   -3

@@ -1,5 +1,5 @@
 /* zzm.h  -- zzm music format
- * $Id: zzm.h,v 1.1 2002/08/23 21:34:15 bitman Exp $
+ * $Id: zzm.h,v 1.2 2002/08/24 22:59:59 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -37,5 +37,8 @@ musicSettings zzmGetDefaultSettings(void);
 
 /* Read a note from a tune, using the previous note for defaults */
 musicalNote zzmGetNote(char* tune, musicalNote previousNote);
+
+/* Read a chain of notes from a tune (use deleteNoteChain() when done) */
+musicalNote* zzmGetNoteChain(char* tune, musicalNote defNote);
 
 #endif
