@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.31 2001/04/21 03:06:48 bitman Exp $
+ * $Id: main.c,v 1.32 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,8 +18,8 @@
  */
 
 #include <stdlib.h>
-#include <dirent.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "display.h"
 #include "kevedit.h"
@@ -29,91 +29,8 @@
 #include "editbox.h"
 #include "register.h"
 #include "patbuffer.h"
+#include "misc.h"
 
-
-void runzzt(char *args)
-{
-	char runcommand[256];	/* [12] should be enough, but... */
-
-	strcpy(runcommand, "zzt ");
-
-	/* Now now, no naughty overflowing the buffer */
-	strncpy(runcommand+4, args, 251);
-	runcommand[255] = '\0';
-
-	system(runcommand);
-}
-
-void help(displaymethod* d)
-{
-	stringvector helpdialog, readmefile;
-
-	initstringvector(&helpdialog);
-	readmefile = filetosvector("readme", 42, 42);
-
-	pushstringcopy(&helpdialog, "KevEdit R5, Version " VERSION);
-	pushstringcopy(&helpdialog, "Copyright (C) 2000 Kev Vance, et al.");
-	pushstringcopy(&helpdialog, "Distribute under the terms of the GNU GPL");
-
-	if (readmefile.first != NULL) {
-		pushstringcopy(&helpdialog, "");
-		pushstringcopy(&helpdialog, "$=-=-=-=-=-=-=-=- README =-=-=-=-=-=-=-=-=");
-		pushstringcopy(&helpdialog, "");
-
-		helpdialog.last->next = readmefile.first;
-		helpdialog.last->next->prev = helpdialog.last;
-	}
-
-	editbox("About KevEdit", &helpdialog, 0, 1, d);
-
-	deletestringvector(&helpdialog);
-}
-
-
-void showParamData(param * p, int paramNumber, displaymethod * d) {
-	char buffer[50];
-	stringvector data;
-	initstringvector(&data);
-
-	pushstringcopy(&data, "$Param Data");
-	pushstringcopy(&data, "");
-
-	sprintf(buffer, "param#:      %d / 150", paramNumber);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "x:           %d", p->x);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "y:           %d", p->y);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "xstep:       %d", p->xstep);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "ystep:       %d", p->ystep);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "cycle:       %d", p->cycle);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "data1:       %d", p->data1);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "data2:       %d", p->data2);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "data3:       %d", p->data3);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "magic:       %d", p->magic);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "undert:      0x%X", p->undert);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "underc:      0x%X", p->underc);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "instruction: %d", p->instruction);
-	pushstringcopy(&data, buffer);
-	sprintf(buffer, "length:      %d", p->length);
-	pushstringcopy(&data, buffer);
-
-	editbox("Param Data", &data, 0, 1, d);
-
-	deletestringvector(&data);
-}
-
-
-char filelist[500][13];		/* lalala, wastey wastey */
 
 int main(int argc, char **argv)
 {
@@ -146,7 +63,7 @@ int main(int argc, char **argv)
 
 	if (x > 1) {
 		/* More than 1 display method available, user must choose */
-		printf("Hi.  This seems to be your first time running KevEdit.  What display method\n" \
+		printf("Hi.  This seems to be your first time running KevEdit.  What display method\n"
 		       "works best on your platform?\n\n");
 
 		mydisplay = &display;
@@ -342,73 +259,32 @@ int main(int argc, char **argv)
 					e = 1;
 					c = 77;
 				break;
-			/* perhaps bitman will someday add alt movement for these keys as well? */
+			/* perhaps bitman will someday add jump movement for these keys as well? */
 			}
 		}
 
 		/* Act on key pressed */
 		switch (c) {
 		case '!':
-			/* open text file for edit */
-			strcpy(buffer, "");
-			{
-				stringvector editvector;
-				initstringvector(&editvector);
-				editbox("Text Editor", &editvector, 42, 0, mydisplay);
-				if (filenamedialog(buffer, "Save As", "", 1, mydisplay) != NULL)
-					svectortofile(&editvector, buffer);
-				deletestringvector(&editvector);
+			if (e == 0) {
+				/* Open text editor */
+				texteditor(mydisplay);
+
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
 			}
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-//			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'z':
 		case 'Z':
 			if (e == 0) {
-				/* Clear board */
-				for (i = 3; i < 25; i++) {
-					for (x = 0; x < 20; x++) {
-						mydisplay->putch(x + 60, i, ' ', 0x1f);
-					}
+				if (confirmprompt(mydisplay, "Clear board?") != 0) {
+					clearboard(myworld, myinfo, bigboard, paramlist);
+
+					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				}
-				mydisplay->print(61, 3, 0x1f, "Clear board?");
-				mydisplay->print(61, 4, 0x1e, "y/n");
-				i = 0;
-				while (i == 0) {
-					i = mydisplay->getch();
-					if (i == 'y' || i == 'Y') {
-						for (i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-							if (myworld->board[myinfo->curboard]->params[i]->moredata != NULL)
-								free(myworld->board[myinfo->curboard]->params[i]->moredata);
-							free(myworld->board[myinfo->curboard]->params[i]);
-						}
-						free(myworld->board[myinfo->curboard]->data);
-						free(myworld->board[myinfo->curboard]->info);
-						strcpy(buffer, myworld->board[myinfo->curboard]->title);
-						free(myworld->board[myinfo->curboard]->title);
-						free(myworld->board[myinfo->curboard]);
-						myworld->board[myinfo->curboard] = z_newboard(buffer);
-						rle_decode(myworld->board[myinfo->curboard]->data, bigboard);
-						for (i = 0; i < 25; i++)
-							for (x = 0; x < 60; x++)
-								paramlist[x][i] = 0;
-						/* Okay, so we just need paramlist[0][0] filled in, but do I feel
-						 * like rewriting this code I stole from switch board? No. */
-						for (i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-							if (myworld->board[myinfo->curboard]->params[i]->x > 0 && myworld->board[myinfo->curboard]->params[i]->x < 61 && myworld->board[myinfo->curboard]->params[i]->y > 0 && myworld->board[myinfo->curboard]->params[i]->y < 26)
-								paramlist[myworld->board[myinfo->curboard]->params[i]->x - 1][myworld->board[myinfo->curboard]->params[i]->y - 1] = i;
-						}
-						myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
-						myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
-						break;
-					} else if (i == 'n' || i == 'N') {
-						break;
-					} else
-						i = 0;
-				}
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 			}
@@ -416,35 +292,12 @@ int main(int argc, char **argv)
 		case 'n':
 		case 'N':
 			if (e == 0) {
-				/* New world */
-				for (i = 3; i < 25; i++) {
-					for (x = 0; x < 20; x++) {
-						mydisplay->putch(x + 60, i, ' ', 0x1f);
-					}
+				if (confirmprompt(mydisplay, "Make new world?") != 0) {
+					myworld = clearworld(myworld, myinfo, bigboard, paramlist);
+
+					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				}
-				mydisplay->print(61, 3, 0x1f, "Make new world?");
-				mydisplay->print(61, 4, 0x1e, "y/n");
-				i = 0;
-				while (i == 0) {
-					i = mydisplay->getch();
-					if (i == 'y' || i == 'Y') {
-						z_delete(myworld);
-						myworld = z_newworld();
-						myworld->board[0] = z_newboard("KevEdit World");
-						rle_decode(myworld->board[0]->data, bigboard);
-						for (i = 0; i < 25; i++)
-							for (x = 0; x < 60; x++)
-								paramlist[x][i] = 0;
-						strcpy(myinfo->currenttitle, "UNTITLED");
-						myinfo->currentfile = "untitled.zzt";
-						myinfo->curboard = 0;
-						break;
-					} else if (i == 'n' || i == 'N') {
-						break;
-					} else
-						i = 0;
-				}
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 			}
@@ -452,29 +305,11 @@ int main(int argc, char **argv)
 		case 'q':
 		case 'Q':
 			/* Quit */
-			if (e == 0) {
-				for (i = 3; i < 25; i++) {
-					for (x = 0; x < 20; x++) {
-						mydisplay->putch(x + 60, i, ' ', 0x1f);
-					}
-				}
-				mydisplay->print(61, 3, 0x1f, "Quit?");
-				mydisplay->print(67, 3, 0x1e, "y/n");
-				c = 0;
-				while (c == 0) {
-					c = mydisplay->getch();
-					if (c == 'y' || c == 'Y') {
-						quit = 1;
-					} else if (c == 'n' || c == 'N') {
-						quit = 0;
-
-					} else
-						c = 0;
-				}
-				if (quit == 0) {
-					drawpanel(mydisplay);
-					updatepanel(mydisplay, myinfo, myworld);
-				}
+			if (confirmprompt(mydisplay, "Quit?") != 0) {
+				quit = 1;
+			} else {
+				drawpanel(mydisplay);
+				updatepanel(mydisplay, myinfo, myworld);
 			}
 			break;
 		case 'd':
@@ -485,21 +320,12 @@ int main(int argc, char **argv)
 			break;
 		case 9:
 			/* Toggle draw mode */
-			if (myinfo->gradmode != 0) {
-				/* If grad mode is on, turn it and drawmode off */
-				myinfo->gradmode = myinfo->drawmode = 0;
-			} else {
-				/* Otherwise toggle draw mode */
-				myinfo->drawmode ^= 1;
-			}
-			/* Get mode should go off either way */
-			myinfo->getmode = 0;
-			/* Update changes and start plotting if we entered draw mode */
-			updatepanel(mydisplay, myinfo, myworld);
-			if (myinfo->drawmode == 1) {
+			if (toggledrawmode(myinfo) != 0) {
+				/* Update changes and start plotting if we entered draw mode */
 				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
+			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'g':
 		case 'G':
@@ -523,28 +349,8 @@ int main(int argc, char **argv)
 			/* Shift-tab */
 			if (e == 0)
 				break;
-			/* Toggle gradient mode - pattern changes with each cursor
-			 * movement & drawmode is turned on. */
-			if (myinfo->pbuf == myinfo->standard_patterns)
-				break;
 
-			myinfo->getmode = 0;
-			if (myinfo->gradmode != 0) {
-				/* Gradmode is already on, advance once and reverse it */
-				if (myinfo->gradmode < 0) {
-					if (--myinfo->pbuf->pos < 0)
-						myinfo->pbuf->pos = myinfo->pbuf->size - 1;
-				} else {
-					if (++myinfo->pbuf->pos >= myinfo->pbuf->size)
-						myinfo->pbuf->pos = 0;
-				}
-				myinfo->gradmode = -(myinfo->gradmode);
-			} else {
-				/* Turn gradmode & drawmode on */
-				myinfo->drawmode = 1;
-				/* Gradmode cycles backward by default */
-				myinfo->gradmode = -1;
-
+			if (togglegradientmode(myinfo) != 0) {
 				/* Plot only when first turning gradmode on */
 				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -582,29 +388,8 @@ int main(int argc, char **argv)
 			break;
 		case 'b':
 		case 'B':
-			/* Switch boards */
-			i = boarddialog(myworld, myinfo, mydisplay);
-			if (i == -1) {
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				break;
-			}
-			free(myworld->board[myinfo->curboard]->data);
-			myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
-			myinfo->curboard = i;
-			if (myinfo->curboard > myworld->zhead->boardcount)
-				myinfo->curboard = 0;
-			rle_decode(myworld->board[myinfo->curboard]->data, bigboard);
-			for (i = 0; i < 25; i++)
-				for (x = 0; x < 60; x++)
-					paramlist[x][i] = 0;
-			for (i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-				if (myworld->board[myinfo->curboard]->params[i]->x > 0 && myworld->board[myinfo->curboard]->params[i]->x < 61 && myworld->board[myinfo->curboard]->params[i]->y > 0 && myworld->board[myinfo->curboard]->params[i]->y < 26)
-					paramlist[myworld->board[myinfo->curboard]->params[i]->x - 1][myworld->board[myinfo->curboard]->params[i]->y - 1] = i;
-			}
-			myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
-			myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
+			changeboard(mydisplay, myworld, myinfo, bigboard, paramlist);
+
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			updatepanel(mydisplay, myinfo, myworld);
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -618,100 +403,7 @@ int main(int argc, char **argv)
 		case 's':
 		case 'S':
 			if (e != 1) {
-				/* Save World */
-				free(myworld->board[myinfo->curboard]->data);
-				myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
-				for (i = 3; i < 25; i++) {
-					for (x = 0; x < 20; x++) {
-						mydisplay->putch(x + 60, i, ' ', 0x1f);
-					}
-				}
-				mydisplay->print(61, 3, 0x1f, "Save As");
-				for (i = 0; i < 9; i++) {
-					if (myinfo->currentfile[i] == '.' || myinfo->currentfile[i] == '\0') {
-						buffer[i] = '\0';
-						t = i;
-						break;
-					}
-					buffer[i] = myinfo->currentfile[i];
-				}
-				for (i = 0; i < 9; i++) {
-					if (i > strlen(buffer))
-						mydisplay->putch(61 + i, 4, ' ', 0x0f);
-					else
-						mydisplay->putch(61 + i, 4, buffer[i], 0x0f);
-				}
-				mydisplay->print(70, 4, 0x1f, ".zzt");
-				x = 0;
-				while (x != 27) {
-					mydisplay->cursorgo(61 + t, 4);
-					x = mydisplay->getch();
-					switch (x) {
-					case 8:
-						if (t > 0) {
-							t--;
-							buffer[t] = '\0';
-							mydisplay->putch(61 + t, 4, ' ', 0x0f);
-						}
-						break;
-					case 13:
-						if (t > 0) {
-							if (!strcmp(myworld->zhead->title, "UNTITLED")) {
-								strcpy(myworld->zhead->title, buffer);
-								myworld->zhead->titlelength = strlen(buffer);
-							}
-							strcpy(myinfo->currenttitle, buffer);
-							strcat(buffer, ".zzt");
-							strcpy(myinfo->currentfile, buffer);
-							fp = fopen(buffer, "rb");
-							if (fp != NULL) {
-								fclose(fp);
-								mydisplay->print(61, 5, 0x1f, "Overwrite?");
-								mydisplay->print(72, 5, 0x1e, "y/n");
-								while (c != 0) {
-									c = mydisplay->getch();
-									if (c == 'y' || c == 'Y') {
-										goto __saveconfirm;
-									}
-									if (c == 'n' || c == 'N') {
-										c = 0;
-									}
-								}
-							} else {
-							      __saveconfirm:
-								myworld->zhead->startboard = myinfo->curboard;
-								saveworld(buffer, myworld);
-								mydisplay->print(61, 6, 0x1f, "Written.");
-								mydisplay->cursorgo(69, 6);
-								mydisplay->getch();
-
-							}
-							x = 27;
-						}
-						break;
-					default:
-						if (t == 8)
-							break;
-						if (x < 45)
-							break;
-						if (x > 45 && x < 48)
-							break;
-						if (x > 57 && x < 65)
-							break;
-						if (x > 90 && x < 95)
-							break;
-						if (x == 96)
-							break;
-						if (x > 122)
-							break;
-						buffer[t] = x;
-						mydisplay->putch(61 + t, 4, x, 0x0f);
-						t++;
-						buffer[t] = '\0';
-						mydisplay->cursorgo(61 + t, 4);
-						break;
-					}
-				}
+				saveworldprompt(mydisplay, myworld, myinfo, bigboard);
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
@@ -767,11 +459,11 @@ int main(int argc, char **argv)
 		case 'L':
 		case 'l':
 			/* Load world */
-			listpos = filedialog("zzt", "Load World", mydisplay);
-			if (listpos != -1) {
+			filedialog(buffer, "zzt", "Load World", mydisplay);
+			if (strlen(buffer) != 0) {
 				z_delete(myworld);
-				myworld = loadworld(filelist[listpos]);
-				strncpy(myinfo->currentfile, filelist[listpos], 13);
+				myworld = loadworld(buffer);
+				strncpy(myinfo->currentfile, buffer, 13);
 				strncpy(myinfo->currenttitle, myworld->zhead->title, 20);
 				myinfo->currenttitle[myworld->zhead->titlelength] = '\0';
 				myinfo->curboard = myworld->zhead->startboard;

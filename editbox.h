@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.8 2001/01/07 23:55:42 bitman Exp $
+ * $Id: editbox.h,v 1.9 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,11 +32,14 @@
  * sv->cur to selected node.  If zochighlight is nonzero, it does ZZT Object
  * Code (ZOC) highlighting.
  *
- * Return code: ascii code for exit keypress (i.e. 13 or 27) */
+ * Return code: EDITBOX_OK on enter, EDITBOX_CANCEL on ESC */
 
 void editmoredata(param * p, displaymethod * d);
 int editbox(char* title, stringvector * sv, int editwidth, int zocformatting, displaymethod * d);
 
+#define scrolldialog(title, sv, d) editbox((title), (sv), 0, 1, (d))
+#define EDITBOX_OK     1
+#define EDITBOX_CANCEL 2
 
 /* Internal use functions */
 

@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.10 2001/04/24 23:12:55 bitman Exp $
+ * $Id: svector.c,v 1.11 2001/05/05 21:34:17 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "editbox.h"
+#include "svector.h"
 
 #include <stdlib.h>
 #include <malloc.h>

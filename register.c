@@ -1,5 +1,5 @@
 /* register.c  -- text editor memory registers
- * $Id: register.c,v 1.3 2001/04/08 18:45:05 bitman Exp $
+ * $Id: register.c,v 1.4 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -70,8 +70,6 @@ void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, in
 
 	/* We should be able to delete the following commented code */
 	/* If starting on 0, start with blank line */
-//	if (startpos == 0)
-//		pushstring(dest, strcpy((char *) malloc(1), ""));
 
 	if (startn == endn) {
 		if (startpos < strlen(startn->s) && endpos <= strlen(startn->s)) {
@@ -127,15 +125,10 @@ int mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwi
 		/* Insert inside current line of dest */
 		return wordwrap(dest, src->first->s, inspos, inspos, wrapwidth, editwidth);
 	} else {
-		/* TODO: chop dest->cur->s in half at inspos. wordwrap the src->first onto
+		/* Chop dest->cur->s in half at inspos. wordwrap the src->first onto
 		 * the end of the left half. Insert the remainder of src into dest, then
 		 * wordwrap the right half onto the end of that. */
 		stringnode* insertionLine = dest->cur;
-//		int lastLen = strlen(dest->cur->s) - inspos;
-//		char* lastHalf = (char *) malloc(lastLen + 2);
-
-//		strcpy(lastHalf, dest->cur->s + inspos);
-//		dest->cur->s[inspos] = 0;
 
 		/* Make a new line after dest->cur and put the last string in src in */
 		insertstring(dest, strcpy((char *) malloc(editwidth + 2), src->last->s));
@@ -162,42 +155,4 @@ int mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwi
 	}
 }
 
-/* testing - DOS only code just to make bitman's life easier */
-/*
-#include <conio.h>
-#include <stdlib.h>
-
-
-void printsv(stringvector sv) {
-	printf("Contents of sv:\n");
-	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next)
-		printf("%s\n", sv.cur->s);
-	printf("\n");
-}
-
-void regtest(void) {
-	stringvector sv;
-
-	initstringvector(&sv);
-	pushstring(&sv, strcpy((char *) malloc(50), "Line number 1"));
-	pushstring(&sv, strcpy((char *) malloc(50), "Second line"));
-	pushstring(&sv, strcpy((char *) malloc(50), "Line of three"));
-
-	printsv(sv);
-
-	regyank('\"', sv.first, sv.first, 5, 11);
-
-	printsv(reg);
-	
-	sv.cur = sv.first;
-	regput('\"', &sv, 0, 42, 50);
-
-	printsv(sv);
-
-	removestringvector(&sv);
-	getch();
-	exit(0);
-}
-*/
-/* end testing */
 

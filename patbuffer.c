@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.1 2001/04/21 03:06:48 bitman Exp $
+ * $Id: patbuffer.c,v 1.2 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,8 @@ patbuffer* patbuffer_create(int size)
 		pbuf->patterns[i].color = 0x07;
 		pbuf->patterns[i].patparam = NULL;
 	}
+
+	return pbuf;
 }
 
 
@@ -220,7 +222,6 @@ int pat_plot(board* b, patdef pattern, int x, int y, u_int8_t * bigboard, unsign
 }
 
 
-//void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16])
 void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, unsigned char paramlist[60][25])
 {
 	patbuffer* pbuf = myinfo->pbuf;

@@ -1,9 +1,5 @@
 # Makefile for KevEdit
 
-# Comment next line if you can't use long file names (e.g. in DOS)
-#LONGFILES = ON
-LFN = -DLONG_FILES
-
 # Choose your compiler
 #CC = i586-pc-msdosdjgpp-gcc
 CC = gcc
@@ -11,7 +7,8 @@ CC = gcc
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
 #OPTIMIZE = -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-OPTIMIZE = -g
+#OPTIMIZE = -g
+OPTIMIZE =
 
 # Set CGI to ON to enable GGI display
 GGI =
@@ -36,12 +33,12 @@ ifeq ($(DOS),ON)
 	DOSOBJ = display_dos.o
 endif
 
-CFLAGS = -s $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) $(LFN) -DVERSION=\"0.3.1\"
+CFLAGS = -s $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.1\"
 
 # No more modifications below this line
 # -------------------------------------
 
-# Uncomment if you are bitman
+# Uncomment if you are bitman (runs kevedit after compiling)
 #run: kevedit
 #	./kevedit
 
@@ -50,14 +47,16 @@ all: kevedit
 clean:
 	rm -f *.o kevedit
 
-kevedit: display.o main.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
-	$(CC) -o $@ display.o main.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
+kevedit: display.o main.o misc.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
+	$(CC) -o $@ display.o main.o misc.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
 
 display.o: display.c display.h
 	$(CC) -o $@ display.c $(CFLAGS) -c
-main.o: main.c display.h screen.h scroll.h kevedit.h zzt.h editbox.h
+main.o: main.c display.h screen.h scroll.h kevedit.h zzt.h editbox.h register.h patbuffer.h misc.h
 	$(CC) -o $@ main.c $(CFLAGS) -c
-screen.o: screen.c panel.h kevedit.h display.h zzt.h panel_f1.h panel_f2.h panel_f3.h tbox.h cbox.h
+misc.o: misc.c misc.h
+	$(CC) -o $@ misc.c $(CFLAGS) -c
+screen.o: screen.c panel.h kevedit.h display.h zzt.h panel_f1.h panel_f2.h panel_f3.h tbox.h cbox.h editbox.h
 	$(CC) -o $@ screen.c $(CFLAGS) -c
 scroll.o: scroll.c scroll.h
 	$(CC) -o $@ scroll.c $(CFLAGS) -c
@@ -65,13 +64,13 @@ libzzt.o: libzzt.c zzt.h
 	$(CC) -o $@ libzzt.c $(CFLAGS) -c
 svector.o: svector.c svector.h
 	$(CC) -o $@ svector.c $(CFLAGS) -c
-editbox.o: editbox.c editbox.h colours.h svector.h panel_ed.h zzm.h
+editbox.o: editbox.c editbox.h scroll.h colours.h svector.h panel_ed.h zzm.h register.h
 	$(CC) -o $@ editbox.c $(CFLAGS) -c
-zzm.o: zzm.c zzm.h svector.h editbox.h
+zzm.o: zzm.c zzm.h svector.h editbox.h kevedit.h
 	$(CC) -o $@ zzm.c $(CFLAGS) -c
 register.o: register.c register.h editbox.h
 	$(CC) -o $@ register.c $(CFLAGS) -c
-patbuffer.o: patbuffer.c patbuffer.h
+patbuffer.o: patbuffer.c kevedit.h zzt.h display.h
 	$(CC) -o $@ patbuffer.c $(CFLAGS) -c
 
 panel.o: panel.c panel.h

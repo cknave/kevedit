@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.17 2001/04/24 23:12:53 bitman Exp $
+ * $Id: editbox.c,v 1.18 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,21 +19,19 @@
 
 
 /* Uncomment the following line when display->shift() actually works! */
-//#define _SHIFTDETECTWORKS 1
+/* #define _SHIFTDETECTWORKS 1 */
 
-
-#include "zzm.h"
 #include "editbox.h"
+#include "scroll.h"
+#include "colours.h"
+#include "svector.h"
+#include "panel_ed.h"
+#include "zzm.h"
+#include "register.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "scroll.h"
-#include "colours.h"
-#include "panel_ed.h"
-#include "register.h"
-#include "svector.h"
 
 
 /* What portion of display box needs update? */
@@ -180,10 +178,6 @@ int iszztitem(char *token);
 int iszztkind(char *token);
 int iszztdir(char *token);
 int iszztcolour(char *token);
-
-/* needed to use filedialog */
-extern char filelist[500][13];
-
 
 
 /***** draweditpanel() ***********/
@@ -600,9 +594,15 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 				default:
 					e = 1;
 			}
-		} else if (c == 27 || (!editwidth && c == 13)) {
+		} else if (c == 27) {
 			e = -1;
-			done = c;
+			if (editwidth)
+				done = EDITBOX_OK;
+			else
+				done = EDITBOX_CANCEL;
+		} else if (!editwidth && c == 13) {
+			e = -1;
+			done = EDITBOX_OK;
 		}
 
 		if (editwidth) {
@@ -754,23 +754,21 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 							}
 
 							if (filetypelist.cur != NULL)
-								listpos = filedialog(filetypelist.cur->s + 2, (c == 24 ? "Open ZZT Object Code (ZOC) File" : "Insert ZZT Object Code (ZOC) File"), d);
+								filedialog(strbuf, filetypelist.cur->s + 2, (c == 24 ? "Open ZZT Object Code (ZOC) File" : "Insert ZZT Object Code (ZOC) File"), d);
 
-							removestringvector(&filetypelist);
-
-							if (listpos != -1) {
+							if (strlen(strbuf) != 0) {
 								stringvector newsvector;
-								newsvector = filetosvector(filelist[listpos], wrapwidth, editwidth);
+								newsvector = filetosvector(strbuf, wrapwidth, editwidth);
 								if (newsvector.first != NULL) {
 									if (c == 24) {
-										strcpy(savefilename, filelist[listpos]);
+										strcpy(savefilename, strbuf);
 										if (str_equ(filetypelist.cur->s, "*.zoc", 0))
 											zocformatting = 1;
 										else
 											zocformatting = 0;
 										/* erase & replace sv */
 										deletestringvector(sv);
-										memcpy(sv, &newsvector, sizeof(stringvector));
+										*sv = newsvector;
 										centerstr = sv->first;
 									} else {
 										/* insert newsvector before centerstr */
@@ -794,7 +792,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 										}
 									} /* esle alt-i */
 								}	/* fi file selected */
-							}		/* fi listpos */
+							}		/* fi not empty */
+							removestringvector(&filetypelist);
 						}			/* block */
 						updateflags = U_EDITAREA | U_TITLE;
 						break;
@@ -811,10 +810,10 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 					case 50:
 						/* alt-m: load .zzm music */
 						{
-							int listpos = filedialog("zzm", "Choose ZZT Music (ZZM) File", d);
-							if (listpos != -1) {
+							filedialog(strbuf, "zzm", "Choose ZZT Music (ZZM) File", d);
+							if (strlen(strbuf) != 0) {
 								stringvector zzmv;
-								zzmv = filetosvector(filelist[listpos], 80, 80);
+								zzmv = filetosvector(strbuf, 80, 80);
 								if (zzmv.first != NULL) {
 									stringvector song;
 									song = zzmpullsong(&zzmv, zzmpicksong(&zzmv, d));
@@ -1023,7 +1022,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						break;
 
 					case 27: /* escape when done */
-						done = 1;
+						done = EDITBOX_OK;
 						break;
 
 					case 1: 
@@ -1444,7 +1443,6 @@ int iszztcommand(char *token)
 
 	memcpy(buffer, token, 40);
 	buffer[40] = 0;
-	strlwr(buffer);
 
 	for (i = 0; i < ZZTCOMMANDCOUNT; i++)
 		if (str_equ(buffer, zztcommands[i], STREQU_UNCASE))
@@ -1460,7 +1458,6 @@ int iszztmessage(char *token)
 
 	memcpy(buffer, token, 40);
 	buffer[40] = 0;
-	strlwr(buffer);
 
 	for (i = 0; i < ZZTMESSAGECOUNT; i++)
 		if (str_equ(buffer, zztmessages[i], STREQU_UNCASE))
@@ -1476,7 +1473,6 @@ int iszztflag(char *token)
 
 	memcpy(buffer, token, 40);
 	buffer[40] = 0;
-	strlwr(buffer);
 
 	for (i = 0; i < ZZTFLAGCOUNT; i++)
 		if (str_equ(buffer, zztflags[i], STREQU_UNCASE))
@@ -1492,7 +1488,6 @@ int iszztitem(char *token)
 
 	memcpy(buffer, token, 40);
 	buffer[40] = 0;
-	strlwr(buffer);
 
 	for (i = 0; i < ZZTITEMCOUNT; i++)
 		if (str_equ(buffer, zztitems[i], STREQU_UNCASE))
@@ -1508,7 +1503,6 @@ int iszztkind(char *token)
 
 	memcpy(buffer, token, 40);
 	buffer[40] = 0;
-	strlwr(buffer);
 
 	for (i = 0; i < ZZTCOLOURCOUNT; i++)
 		if (str_equ(buffer, zztcolours[i], STREQU_UNCASE | STREQU_FRONT)) {
@@ -1535,7 +1529,6 @@ int iszztdir(char *token)
 
 	memcpy(buffer, token, 40);
 	buffer[40] = 0;
-	strlwr(buffer);
 
 	for (i = 0; i < ZZTDIRMODCOUNT; i++)
 		if (str_equ(buffer, zztdirmods[i], STREQU_UNCASE | STREQU_FRONT)) {

@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.7 2001/01/26 02:05:49 bitman Exp $
+ * $Id: display_dos.c,v 1.8 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -92,33 +92,33 @@ int kb_isr()
 int display_dos_init()
 {
 	__dpmi_regs r;
-	// Set char-smashed-together mode
+	/* Set char-smashed-together mode */
 	r.x.ax = 0x1201;
 	r.h.bl = 0x30;
 	__dpmi_int(0x10, &r);
 	r.x.ax = 0x0003;
 	__dpmi_int(0x10, &r);
 
-	// Pointer to video memory
+	/* Pointer to video memory */
 	videomem = __dpmi_segment_to_descriptor(0xb800);
-	// Block cursor
+	/* Block cursor */
 	_setcursortype(_SOLIDCURSOR);
 
-	// No windows by default
+	/* No windows by default */
 	windows = 0;
 
-	// Check for Win95/Win98
+	/* Check for Win95/Win98 */
 	if (getenv("winbootdir") != NULL)
 		windows = 1;
-	// Check for WinNT/Win2k
+	/* Check for WinNT/Win2k */
 	if ((getenv("OS") != NULL) && !strcmp(getenv("OS"), "Windows_NT"))
 		windows = 2;
 
 	lshift = rshift = 0;
-	// Save the old handler
+	/* Save the old handler */
 	_go32_dpmi_get_protected_mode_interrupt_vector(KBD_INT, &old_kb_handler);
 
-	// Create new handler, chain it to old
+	/* Create new handler, chain it to old */
 	new_kb_handler.pm_offset = (int) kb_isr;
 	new_kb_handler.pm_selector = _go32_my_cs();
 	_go32_dpmi_chain_protected_mode_interrupt_vector(KBD_INT, &new_kb_handler);
@@ -129,15 +129,15 @@ int display_dos_init()
 void display_dos_end()
 {
 	__dpmi_regs r;
-	// Restore video mode
+	/* Restore video mode */
 	r.x.ax = 0x1202;
 	r.h.bl = 0x30;
 	__dpmi_int(0x10, &r);
 	r.x.ax = 0x0003;
 	__dpmi_int(0x10, &r);
-	// Restore cursor
+	/* Restore cursor */
 	_setcursortype(_NORMALCURSOR);
-	// Restore keyboard handler
+	/* Restore keyboard handler */
 	_go32_dpmi_set_protected_mode_interrupt_vector(KBD_INT, &old_kb_handler);
 }
 

@@ -1,5 +1,5 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.7 2001/01/07 19:54:06 kvance Exp $
+ * $Id: libzzt.c,v 1.8 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -400,7 +400,7 @@ int rle_decode(u_int8_t * clean, u_int8_t * unclean)
 }
 
 long rle_lengthof(u_int8_t * clean)
-{				/* how many bytes is an rle encoded *//* block? */
+{				/* how many bytes is an rle encoded block? */
 	int i;
 	long bytes;
 	i = bytes = 0;
@@ -1046,8 +1046,8 @@ world *
 			}
 		}
 
-		//      fseek(fp, pos, SEEK_SET);
-		//      fseek(fp, bsize, SEEK_CUR);
+		/*      fseek(fp, pos, SEEK_SET); 
+		        fseek(fp, bsize, SEEK_CUR); */
 		fseek(fp, -51, SEEK_CUR);
 	}
 

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.19 2001/04/21 03:06:48 bitman Exp $
+ * $Id: screen.c,v 1.20 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,8 +31,8 @@
 #include "cbox.h"
 #include "zzt.h"
 #include "scroll.h"
+#include "editbox.h"
 
-extern char filelist[500][13];
 
 /* The following define tells updatepanel to draw the standard patterns
  * in the current colour, rather than plain ol' white */
@@ -108,8 +108,10 @@ char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, 
 			if (t > 0) {
 				FILE *fp = NULL;
 
-				if (extlen)
+				if (extlen) {
+					strcat(buffer, ".");
 					strcat(buffer, ext);
+				}
 
 				fp = fopen(buffer, "rb");
 				if (fp != NULL && askoverwrite) {
@@ -414,22 +416,28 @@ int sort_function(const void *a, const void *b)
 }
 
 
-int filedialog(char *extention, char *title, displaymethod * mydisplay)
+char * filedialog(char * buffer, char * extention, char * title, displaymethod * mydisplay)
 {
 	DIR *dp;
 	struct dirent *dirent;
 	int i, t, x, listpos, offset;
 	int subc, sube;
+	char filelist[500][13];
+	stringvector files;
+
+	buffer[0] = 0;
+	initstringvector(&files);
 
 	dp = opendir(".");
 	if (dp == NULL)
-		return -1;
+		return buffer;
 	if (strlen(extention) > 3)
-		return -1;
+		return buffer;
 
 	i = 0;
 	drawscrollbox(0, 0, mydisplay);
 	mydisplay->print(30 - (strlen(title) / 2), 4, 0x0a, title);
+
 	x = 0;
 	while (1) {
 		dirent = readdir(dp);
@@ -444,63 +452,19 @@ int filedialog(char *extention, char *title, displaymethod * mydisplay)
 	if (x != 0) {
 		/* This qsort sure was worth all that wasted memory */
 		qsort(filelist, x, 13, sort_function);
+	} else {
+		return buffer;
 	}
-	listpos = 0;
-	offset = 7;
-	subc = 0;
-	mydisplay->cursorgo(9, 13);
-	while (subc != 27) {
-		drawscrollbox(3, 0, mydisplay);
-		for (t = (offset >= 0) ? offset : 0; t < 15 && (t - offset) < x; t++) {
-			mydisplay->print(9, t + 6, 0x0a, filelist[t - offset]);
-		}
 
-		sube = 0;
-		subc = mydisplay->getch();
-		if (!subc) {
-			sube = 1;
-			subc = mydisplay->getch();
-		}
-		if (sube == 1 && subc == 72) {
-			/* Up Arrow */
-			if (listpos > 0) {
-				listpos--;
-				offset++;
-			}
-		}
-		if (sube == 1 && subc == 80) {
-			/* Down Arrow */
-			if (listpos < x - 1) {
-				listpos++;
-				offset--;
-			}
-		}
-		if (sube == 1 && subc == 73) {
-			/* Page Up */
-			listpos -= 7;
-			if (listpos < 0) {
-				offset += 7 + listpos;
-				listpos = 0;
-			} else
-				offset += 7;
-		}
-		if (sube == 1 && subc == 81) {
-			/* Page Down */
-			listpos += 7;
-			if (listpos > x) {
-				offset -= 6 - (listpos - x);
-				listpos = x - 1;
-			} else
-				offset -= 7;
-		}
-		if (subc == 13) {
-			/* Enter */
-			if (x == 0)
-				return -1;
-			return listpos;
-		}
-	}
-	return -1;
+	for (i = 0; i < x; i++)
+		pushstringcopy(&files, filelist[i]);
+
+	if (editbox(title, &files, 0, 1, mydisplay) == EDITBOX_OK)
+		strcpy(buffer, files.cur->s);
+
+	deletestringvector(&files);
+
+	return buffer;
 }
 
 char *titledialog(displaymethod * d)
@@ -883,3 +847,27 @@ unsigned char charselect(displaymethod * d, int c)
 
 	return i;
 }
+
+
+int confirmprompt(displaymethod * mydisplay, char * prompt)
+{
+	int i, x;
+	for (i = 3; i < 25; i++) {
+		for (x = 0; x < 20; x++) {
+			mydisplay->putch(x + 60, i, ' ', 0x1f);
+		}
+	}
+
+	mydisplay->print(61, 3, 0x1f, prompt);
+	mydisplay->print(61, 4, 0x1e, "y/n");
+
+	while (1) {
+		i = mydisplay->getch();
+		if (i == 'y' || i == 'Y')
+			return 1;
+		else if (i == 'n' || i == 'N')
+			return 0;
+	}
+}
+
+

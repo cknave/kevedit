@@ -1,5 +1,5 @@
-/* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.5 2001/05/05 21:34:17 bitman Exp $
+/* misc.h       -- General routines for everyday KevEditing
+ * $Id: misc.h,v 1.1 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,45 +17,20 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _KEVEDIT_H
-#define _KEVEDIT_H 1
+#ifndef _MISC_H
+#define _MISC_H 1
 
-#include "zzt.h"
+#include "display.h"
 
-typedef struct patdef {
-	int type;
-	int color;
-	param* patparam;
-} patdef;
+void runzzt(char *args);
+void help(displaymethod* d);
+void showParamData(param * p, int paramNumber, displaymethod * d);
+void texteditor(displaymethod * mydisplay);
 
+void clearboard(world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
+world * clearworld(world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
+int toggledrawmode(editorinfo * myinfo);
+int togglegradientmode(editorinfo * myinfo);
+void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard);
 
-typedef struct patbuffer {
-	patdef* patterns;
-	int size;
-	int pos;
-} patbuffer;
-
-
-typedef struct editorinfo {
-	int cursorx, cursory;
-	int drawmode;
-	int gradmode;
-	int getmode;
-	int blinkmode;
-	int textentrymode;
-	int defc;
-	int forec, backc;
-	patbuffer* pbuf;
-	patbuffer* standard_patterns;
-	patbuffer* backbuffer;
-
-	int playerx, playery;
-
-	char *currentfile;
-	char *currenttitle;
-
-	int curboard;
-} editorinfo;
-
-
-#endif				/* _KEVEDIT_H */
+#endif

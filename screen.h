@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.8 2001/02/15 04:59:09 bitman Exp $
+ * $Id: screen.h,v 1.9 2001/05/05 21:34:17 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,14 +31,15 @@ extern void cursorspace(displaymethod * d, world * w, editorinfo * e, char *bigb
 
 extern void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
 
-extern int filedialog(char *extention, char *title, displaymethod * mydisplay);
+extern char * filedialog(char * buffer, char * extention, char * title, displaymethod * mydisplay);
 extern int boarddialog(world * w, editorinfo * e, displaymethod * mydisplay);
-extern char* filenamedialog(char * filename, char * prompt, char * ext, int askoverwrite, displaymethod * mydisplay);
+extern char * filenamedialog(char * filename, char * prompt, char * ext, int askoverwrite, displaymethod * mydisplay);
 
 extern int dothepanel_f1(displaymethod * d, editorinfo * e);
 extern int dothepanel_f2(displaymethod * d, editorinfo * e);
 extern int dothepanel_f3(displaymethod * d, editorinfo * e);
 
 extern unsigned char charselect(displaymethod * d, int c);
+int confirmprompt(displaymethod * mydisplay, char * prompt);
 
 #endif				/* _SCREEN_H */
