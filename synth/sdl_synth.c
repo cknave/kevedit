@@ -1,5 +1,5 @@
 /* sdl_synth.c	-- SDL music synthesizer
- * $Id: sdl_synth.c,v 1.8 2002/12/04 23:53:06 kvance Exp $
+ * $Id: sdl_synth.c,v 1.9 2003/10/02 17:57:48 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -51,7 +51,7 @@ int OpenSynth(SDL_AudioSpec * spec)
 	/* Open audio device */
 	if(SDL_OpenAudio(&desired, &obtained) < 0) {
 		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
-		exit(1);
+		return 1;
 	}
 	SDL_PauseAudio(0);
 
