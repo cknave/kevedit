@@ -6,6 +6,7 @@ $New in Version 0.3.4
 !-kbasics:zzt;Run ZZT at title screen
 !-langtut;OOP Language Tutorial
 :;  *  Multi-directory file dialogs
+:;  *  ALT works better in draw mode
 
 $Bugs fixed in 0.3.4
   *  Occasional crash of Help Dialog

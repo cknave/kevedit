@@ -58,6 +58,10 @@ tiles are laid down in the same order they
 enter the buffer. To cycle forward, press
 SHIFT-TAB a second time.
 
+Holding down ALT while moving will
+continuously paint the gradient for ten
+spaces at a time.
+
 This feature may, at present, only be
 used with a custom gradient. The
 backbuffer must be selected by the pattern
@@ -74,6 +78,9 @@ backbuffer with relatively few keystrokes.
 Press 'a' to toggle get mode. The 'a' next
 to the backbuffer will indicate whether
 get mode is on.
+
+Holding down ALT while moving the cursor
+will aquire ten tiles at a time.
 
 NOTE: Aquire mode was formerly "get mode"
 but the name didn't have much ring to it
