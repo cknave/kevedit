@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.25 2001/11/06 07:33:05 bitman Exp $
+ * $Id: editbox.c,v 1.26 2001/11/06 09:19:18 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -110,8 +110,8 @@ const char zztcommandtax[ZZTCOMMANDCOUNT][30] =
 	"",   "in",  "d",  "",
 	"ft", "",    "s",  "dk",
 	"",   "m",   "m",  "f",
-	"d",  "inm", "d",
-	"dm", "",    "d",  "m"
+	"d",  "int", "d",
+	"dt", "",    "d",  "m"
 };
 
 #define ZZTMESSAGECOUNT 5
@@ -1216,13 +1216,13 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 			/* movement */
 			d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
 
-			for (i = 1; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' '; i++)
+			for (i = 1; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' ' && s[i] != '#'; i++)
 				token[i-1] = s[i];
 			token[i-1] = 0;
 
-			while (!iszztdir(token) && s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'') {
+			while (!iszztdir(token) && s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != '#') {
 				while (s[i] == ' ') { token[i - 1] = ' '; i++; }
-				for (; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' '; i++)
+				for (; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' ' && s[i] != '#'; i++)
 					token[i-1] = s[i];
 				token[i-1] = 0;
 			}
@@ -1233,7 +1233,7 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 			} else
 				d->print(x + 1, y, ZOC_DEFAULT_COLOUR, token);
 
-			if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ')
+			if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ' || s[i] == '#')
 				displayzoc(x + i, y, s + i, format, 0, d);
 
 			break;
@@ -1411,10 +1411,18 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 				if (token[0] == '#') {
 					/* remainder of args is a #command */
 					displayzoc(x + j - k, y, args + j - k, 1, 0, d);
-					j = strlen(args);
+					j = strlen(args);  /* Avoid overwriting */
 				} else {
-					/* Thenmessage was not a command, so display it as a normal message */
-					ctax = CTAX_MESSAGE;
+					/* TODO: Thenmessage may or may not be a command. Arg. */
+					if (iszztcommand(token)) {
+						d->print(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
+						displaycommand(x + j, y, token, args + j, d);
+						j = strlen(args);  /* Avoid overwriting */
+					} else {
+						/* Thenmessage was not a command, so display it as a normal
+						 * message */
+						ctax = CTAX_MESSAGE;
+					}
 				}
 				break;
 
