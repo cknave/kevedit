@@ -41,16 +41,17 @@ CFLAGS = -s $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) $(LFN) -DVERSION=\"0.3.1\"
 # No more modifications below this line
 # -------------------------------------
 
-run: kevedit
-	./kevedit
+# Uncomment if you are bitman
+#run: kevedit
+#	./kevedit
 
 all: kevedit
 
 clean:
 	rm -f *.o kevedit
 
-kevedit: display.o main.o register.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
-	$(CC) -o $@ display.o main.o register.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
+kevedit: display.o main.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
+	$(CC) -o $@ display.o main.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
 
 display.o: display.c display.h
 	$(CC) -o $@ display.c $(CFLAGS) -c
@@ -70,6 +71,8 @@ zzm.o: zzm.c zzm.h svector.h editbox.h
 	$(CC) -o $@ zzm.c $(CFLAGS) -c
 register.o: register.c register.h editbox.h
 	$(CC) -o $@ register.c $(CFLAGS) -c
+patbuffer.o: patbuffer.c patbuffer.h
+	$(CC) -o $@ patbuffer.c $(CFLAGS) -c
 
 panel.o: panel.c panel.h
 	$(CC) -o $@ panel.c $(CFLAGS) -c

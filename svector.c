@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.8 2001/02/15 04:59:09 bitman Exp $
+ * $Id: svector.c,v 1.9 2001/04/21 03:06:48 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -216,6 +216,17 @@ char* strlowercase(char* string)
 }
 
 
+void pushstringcopy(stringvector * v, char * s)
+{
+	char* copy = (char *) malloc(sizeof(char) * (strlen(s) + 1));
+	if (copy == NULL)
+		return;
+
+	strcpy(copy, s);
+	pushstring(v, copy);
+}
+
+
 /* strequ - string comparison */
 int strequ(const char *str1, const char *str2, int flags)
 {
@@ -256,5 +267,6 @@ int strequ(const char *str1, const char *str2, int flags)
 
 	return isequ;
 }
+
 
 

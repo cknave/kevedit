@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.30 2001/04/09 02:44:59 bitman Exp $
+ * $Id: main.c,v 1.31 2001/04/21 03:06:48 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,200 +28,8 @@
 #include "zzt.h"
 #include "editbox.h"
 #include "register.h"
+#include "patbuffer.h"
 
-patdef patdefs[16];
-param *patparams[10];
-unsigned char paramlist[60][25];
-
-void push(int type, int color, param * p)
-{
-	int i;
-
-	if (patparams[9] != NULL) {
-		if (patparams[9]->moredata != NULL)
-			free(patparams[9]->moredata);
-		free(patparams[9]);
-	}
-	for (i = 8; i > -1; i--) {
-		patdefs[i + 7].type = patdefs[i + 6].type;
-		patdefs[i + 7].color = patdefs[i + 6].color;
-		patparams[i + 1] = patparams[i];
-	}
-	patdefs[6].type = type;
-	patdefs[6].color = color;
-	if (p != NULL) {
-		patparams[0] = malloc(sizeof(param));
-		memcpy(patparams[0], p, sizeof(param));
-		if (patparams[0]->moredata != NULL) {
-			/* dup. the data, too */
-			patparams[0]->moredata = (char *) malloc(p->length);
-			memcpy(patparams[0]->moredata, p->moredata, p->length);
-		}
-	} else
-		patparams[0] = NULL;
-}
-
-void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16])
-{
-	int i, x, t;
-	int u = 0;
-#define CURRENTPARAM	myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]
-#define NEWPARAM	myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount]
-
-	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
-		return;
-	if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-		/* We're overwriting a parameter */
-		if (CURRENTPARAM->moredata != NULL)
-			free(CURRENTPARAM->moredata);
-		free(CURRENTPARAM);
-		for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-			myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
-		}
-		for (x = 0; x < 25; x++) {
-			for (i = 0; i < 60; i++) {
-				if (paramlist[i][x] > t)
-					paramlist[i][x]--;
-			}
-		}
-		myworld->board[myinfo->curboard]->info->objectcount--;
-		paramlist[myinfo->cursorx][myinfo->cursory] = 0;
-		u = 1;
-	}
-	/* Plot the type */
-	bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = patdefs[myinfo->pattern].type;
-	/* Plot the colour */
-	if (myinfo->pattern < 6 || myinfo->defc == 0) {
-		i = (myinfo->backc << 4) + myinfo->forec;
-		if (myinfo->blinkmode == 1)
-			i += 0x80;
-		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = i;
-	} else
-		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = patdefs[myinfo->pattern].color;
-	/* Plot the parameter if applicable */
-	if (myinfo->pattern > 5 && patparams[myinfo->pattern - 6] != NULL) {
-		myworld->board[myinfo->curboard]->info->objectcount++;
-		if (myworld->board[myinfo->curboard]->info->objectcount < 151) {
-			NEWPARAM = malloc(sizeof(param));
-			memcpy(NEWPARAM, patparams[myinfo->pattern - 6], sizeof(param));
-			if (patparams[myinfo->pattern - 6]->moredata != NULL) {
-				NEWPARAM->moredata = (char *) malloc(patparams[myinfo->pattern - 6]->length);
-				memcpy(NEWPARAM->moredata, patparams[myinfo->pattern - 6]->moredata, patparams[myinfo->pattern - 6]->length);
-			}
-			paramlist[myinfo->cursorx][myinfo->cursory] = myworld->board[myinfo->curboard]->info->objectcount;
-			NEWPARAM->x = myinfo->cursorx + 1;
-			NEWPARAM->y = myinfo->cursory + 1;
-			u = 1;
-		}
-	}
-	/* Oops, too many */
-	if (myworld->board[myinfo->curboard]->info->objectcount == 151) {
-		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = Z_EMPTY;
-		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x07;
-		myworld->board[myinfo->curboard]->info->objectcount--;
-		u = 1;
-	}
-	if (u == 1)
-		updatepanel(mydisplay, myinfo, myworld);
-}
-
-void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16], int xpos, int ypos, char code, u_int8_t colour, int fillmethod)
-{
-	int i, x, t, targetcolour;
-	int u = 0;
-	int pattern = myinfo->pattern;
-#define CURRENTFLOODPARAM	myworld->board[myinfo->curboard]->params[paramlist[xpos][ypos]]
-
-	/* If fillmethod is positive, cycle through patterns backward. */
-	if (fillmethod > 0) {
-		fillmethod = fillmethod - 1;
-		if (fillmethod < 6)
-			fillmethod = pattern;
-		pattern = fillmethod;
-	} else
-	/* If fillmethod is negative, select a random pattern less than
-	 * or equal to myinfo->pattern, if not a built-in pattern */
-	if (fillmethod < 0 && pattern >= 6) {
-		pattern = 6 + (rand() % (pattern - 5));
-	}
-
-	/* Find the target colour */
-	if (pattern < 6 || myinfo->defc == 0) {
-		i = (myinfo->backc << 4) + myinfo->forec;
-		if (myinfo->blinkmode == 1)
-			i += 0x80;
-		targetcolour = i;
-	} else
-		targetcolour = patdefs[pattern].color;
-
-	/* Is there any parameter space left? */
-	if (pattern > 5) {
-		if (patparams[pattern - 6] != NULL && paramlist[xpos][ypos] == 0) {
-			if (myworld->board[myinfo->curboard]->info->objectcount == 150)
-				return;
-		}
-	}
-	if (xpos == myinfo->playerx && ypos == myinfo->playery)
-		return;
-	if (paramlist[xpos][ypos] != 0) {
-		/* We're overwriting a parameter */
-		if (CURRENTFLOODPARAM->moredata != NULL)
-			free(CURRENTFLOODPARAM->moredata);
-		free(CURRENTFLOODPARAM);
-		for (t = i = paramlist[xpos][ypos]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-			myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
-		}
-		for (x = 0; x < 25; x++) {
-			for (i = 0; i < 60; i++) {
-				if (paramlist[i][x] > t)
-					paramlist[i][x]--;
-			}
-		}
-		myworld->board[myinfo->curboard]->info->objectcount--;
-		paramlist[xpos][ypos] = 0;
-	}
-	/* Plot the type */
-	bigboard[(xpos + ypos * 60) * 2] = patdefs[pattern].type;
-	/* Plot the colour */
-	bigboard[(xpos + ypos * 60) * 2 + 1] = targetcolour;
-	/* Plot the parameter if applicable */
-	if (pattern > 5 && patparams[pattern - 6] != NULL) {
-		myworld->board[myinfo->curboard]->info->objectcount++;
-		if (myworld->board[myinfo->curboard]->info->objectcount < 151) {
-			NEWPARAM = malloc(sizeof(param));
-			memcpy(NEWPARAM, patparams[pattern - 6], sizeof(param));
-			if (patparams[pattern - 6]->moredata != NULL) {
-				NEWPARAM->moredata = (char *) malloc(patparams[pattern - 6]->length);
-				memcpy(NEWPARAM->moredata, patparams[pattern - 6]->moredata, patparams[pattern - 6]->length);
-			}
-			paramlist[xpos][ypos] = myworld->board[myinfo->curboard]->info->objectcount;
-			NEWPARAM->x = xpos + 1;
-			NEWPARAM->y = ypos + 1;
-		}
-	}
-	/* Oops, too many */
-	if (myworld->board[myinfo->curboard]->info->objectcount == 151) {
-		bigboard[(xpos + ypos * 60) * 2] = Z_EMPTY;
-		bigboard[(xpos + ypos * 60) * 2 + 1] = 0x07;
-		myworld->board[myinfo->curboard]->info->objectcount--;
-	}
-	if (xpos != 0) {
-		if (bigboard[((xpos - 1) + ypos * 60) * 2] == code && (bigboard[((xpos - 1) + ypos * 60) * 2 + 1] == colour || bigboard[((xpos - 1) + ypos * 60) * 2] == Z_EMPTY))
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos - 1, ypos, code, colour, fillmethod);
-	}
-	if (xpos != 59) {
-		if (bigboard[((xpos + 1) + ypos * 60) * 2] == code && (bigboard[((xpos + 1) + ypos * 60) * 2 + 1] == colour || bigboard[((xpos + 1) + ypos * 60) * 2] == Z_EMPTY))
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos + 1, ypos, code, colour, fillmethod);
-	}
-	if (ypos != 0) {
-		if (bigboard[(xpos + (ypos - 1) * 60) * 2] == code && (bigboard[(xpos + (ypos - 1) * 60) * 2 + 1] == colour || bigboard[(xpos + (ypos - 1) * 60) * 2] == Z_EMPTY))
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos - 1, code, colour, fillmethod);
-	}
-	if (ypos != 24) {
-		if (bigboard[(xpos + (ypos + 1) * 60) * 2] == code && (bigboard[(xpos + (ypos + 1) * 60) * 2 + 1] == colour || bigboard[(xpos + (ypos + 1) * 60) * 2] == Z_EMPTY))
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos + 1, code, colour, fillmethod);
-	}
-}
 
 void runzzt(char *args)
 {
@@ -243,14 +51,14 @@ void help(displaymethod* d)
 	initstringvector(&helpdialog);
 	readmefile = filetosvector("readme", 42, 42);
 
-	pushstring(&helpdialog, "KevEdit R5, Version " VERSION);
-	pushstring(&helpdialog, "Copyright (C) 2000 Kev Vance, et al.");
-	pushstring(&helpdialog, "Distribute under the terms of the GNU GPL");
+	pushstringcopy(&helpdialog, "KevEdit R5, Version " VERSION);
+	pushstringcopy(&helpdialog, "Copyright (C) 2000 Kev Vance, et al.");
+	pushstringcopy(&helpdialog, "Distribute under the terms of the GNU GPL");
 
 	if (readmefile.first != NULL) {
-		pushstring(&helpdialog, "");
-		pushstring(&helpdialog, "$=-=-=-=-=-=-=-=- README =-=-=-=-=-=-=-=-=");
-		pushstring(&helpdialog, "");
+		pushstringcopy(&helpdialog, "");
+		pushstringcopy(&helpdialog, "$=-=-=-=-=-=-=-=- README =-=-=-=-=-=-=-=-=");
+		pushstringcopy(&helpdialog, "");
 
 		helpdialog.last->next = readmefile.first;
 		helpdialog.last->next->prev = helpdialog.last;
@@ -258,17 +66,54 @@ void help(displaymethod* d)
 
 	editbox("About KevEdit", &helpdialog, 0, 1, d);
 
-	/* Don't destroy helpdialog, as most of it is in the data segment */
-	if (readmefile.first != NULL) {
-		readmefile.first->prev = NULL;  /* Disconnect from helpdialog */
-		deletestringvector(&readmefile);
-	}
+	deletestringvector(&helpdialog);
+}
+
+
+void showParamData(param * p, int paramNumber, displaymethod * d) {
+	char buffer[50];
+	stringvector data;
+	initstringvector(&data);
+
+	pushstringcopy(&data, "$Param Data");
+	pushstringcopy(&data, "");
+
+	sprintf(buffer, "param#:      %d / 150", paramNumber);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "x:           %d", p->x);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "y:           %d", p->y);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "xstep:       %d", p->xstep);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "ystep:       %d", p->ystep);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "cycle:       %d", p->cycle);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "data1:       %d", p->data1);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "data2:       %d", p->data2);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "data3:       %d", p->data3);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "magic:       %d", p->magic);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "undert:      0x%X", p->undert);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "underc:      0x%X", p->underc);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "instruction: %d", p->instruction);
+	pushstringcopy(&data, buffer);
+	sprintf(buffer, "length:      %d", p->length);
+	pushstringcopy(&data, buffer);
+
+	editbox("Param Data", &data, 0, 1, d);
+
+	deletestringvector(&data);
 }
 
 
 char filelist[500][13];		/* lalala, wastey wastey */
-
-/* remove */
 
 int main(int argc, char **argv)
 {
@@ -279,9 +124,10 @@ int main(int argc, char **argv)
 	int quit = 0;
 	displaymethod *mydisplay = (displaymethod *) malloc(sizeof(displaymethod));
 	editorinfo *myinfo = (editorinfo *) malloc(sizeof(editorinfo));
-	char *string = (char *) malloc(256);
+	char *string = (char *) malloc(sizeof(char) * 256);
 	char *bigboard = (char *) malloc(BOARD_MAX * 2);
 	char buffer[255];
+	unsigned char paramlist[60][25];
 
 	world *myworld;
 	FILE *fp;
@@ -346,10 +192,13 @@ int main(int argc, char **argv)
 	myinfo->defc = 1;
 	myinfo->forec = 0x0f;
 	myinfo->backc = 0x00;
-	myinfo->pattern = 0;
-	myinfo->currenttitle = (char *) malloc(20);
+	myinfo->standard_patterns = patbuffer_create(6);
+	myinfo->backbuffer = patbuffer_create(10);
+	myinfo->pbuf = myinfo->standard_patterns;
+
+	myinfo->currenttitle = (char *) malloc(21);
 	strcpy(myinfo->currenttitle, "UNTITLED");
-	myinfo->currentfile = (char *) malloc(13);
+	myinfo->currentfile = (char *) malloc(14);
 	strcpy(myinfo->currentfile, "untitled.zzt");
 
 	myinfo->curboard = 0;
@@ -394,25 +243,13 @@ int main(int argc, char **argv)
 				paramlist[x][i] = 0;
 	}
 	/* Initialize pattern definitions */
-	patdefs[0].type = Z_SOLID;
-	patdefs[1].type = Z_NORMAL;
-	patdefs[2].type = Z_BREAKABLE;
-	patdefs[3].type = Z_WATER;
-	patdefs[4].type = Z_EMPTY;
-	patdefs[5].type = Z_LINE;
-	patdefs[6].type = Z_EMPTY;
-	patdefs[7].type = Z_EMPTY;
-	patdefs[8].type = Z_EMPTY;
-	patdefs[9].type = Z_EMPTY;
-	patdefs[10].type = Z_EMPTY;
-	patdefs[11].type = Z_EMPTY;
-	patdefs[12].type = Z_EMPTY;
-	patdefs[13].type = Z_EMPTY;
-	patdefs[14].type = Z_EMPTY;
-	patdefs[15].type = Z_EMPTY;
-
-	for (i = 0; i < 10; i++)
-		patparams[i] = NULL;
+	myinfo->standard_patterns->patterns[0].type = Z_SOLID;
+	myinfo->standard_patterns->patterns[1].type = Z_NORMAL;
+	myinfo->standard_patterns->patterns[2].type = Z_BREAKABLE;
+	myinfo->standard_patterns->patterns[3].type = Z_WATER;
+	myinfo->standard_patterns->patterns[4].type = Z_EMPTY;
+	myinfo->standard_patterns->patterns[5].type = Z_LINE;
+	pat_applycolordata(myinfo->standard_patterns, myinfo);
 
 	/* Draw */
 
@@ -449,20 +286,7 @@ int main(int argc, char **argv)
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 					/* We're overwriting a parameter */
-					if (CURRENTPARAM->moredata != NULL)
-						free(CURRENTPARAM->moredata);
-					free(CURRENTPARAM);
-					for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-						myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
-					}
-					for (x = 0; x < 25; x++) {
-						for (i = 0; i < 60; i++) {
-							if (paramlist[i][x] > t)
-								paramlist[i][x]--;
-						}
-					}
-					myworld->board[myinfo->curboard]->info->objectcount--;
-					paramlist[myinfo->cursorx][myinfo->cursory] = 0;
+					param_remove(myworld->board[myinfo->curboard], paramlist, myinfo->cursorx, myinfo->cursory);
 				}
 				bigboard[(myinfo->cursorx+myinfo->cursory*60)*2] = Z_EMPTY;
 				bigboard[(myinfo->cursorx+myinfo->cursory*60)*2+1] = 0x07;
@@ -476,20 +300,7 @@ int main(int argc, char **argv)
 				if (myinfo->cursorx != myinfo->playerx || myinfo->cursory != myinfo->playery) {
 					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 						/* We're overwriting a parameter */
-						if (CURRENTPARAM->moredata != NULL)
-							free(CURRENTPARAM->moredata);
-						free(CURRENTPARAM);
-						for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-							myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
-						}
-						for (x = 0; x < 25; x++) {
-							for (i = 0; i < 60; i++) {
-								if (paramlist[i][x] > t)
-									paramlist[i][x]--;
-							}
-						}
-						myworld->board[myinfo->curboard]->info->objectcount--;
-						paramlist[myinfo->cursorx][myinfo->cursory] = 0;
+						param_remove(myworld->board[myinfo->curboard], paramlist, myinfo->cursorx, myinfo->cursory);
 					}
 					/* Determine the text code based on the FG colour */
 					if (myinfo->forec == 0 || myinfo->forec == 8 || myinfo->forec == 15)
@@ -550,7 +361,7 @@ int main(int argc, char **argv)
 			}
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-			drawpanel(mydisplay);
+//			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'z':
@@ -676,8 +487,6 @@ int main(int argc, char **argv)
 			/* Toggle draw mode */
 			if (myinfo->gradmode != 0) {
 				/* If grad mode is on, turn it and drawmode off */
-				myinfo->pattern = (myinfo->gradmode > 0 ? myinfo->gradmode :
-				                                          -(myinfo->gradmode));
 				myinfo->gradmode = myinfo->drawmode = 0;
 			} else {
 				/* Otherwise toggle draw mode */
@@ -688,7 +497,7 @@ int main(int argc, char **argv)
 			/* Update changes and start plotting if we entered draw mode */
 			updatepanel(mydisplay, myinfo, myworld);
 			if (myinfo->drawmode == 1) {
-				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
@@ -699,16 +508,14 @@ int main(int argc, char **argv)
 
 			/* drawmode & gradmode can't be on while in getmode */
 			myinfo->drawmode = 0;
-			if (myinfo->gradmode != 0) {
-				myinfo->pattern = myinfo->gradmode;
-				myinfo->gradmode = 0;
-			}
+			myinfo->gradmode = 0;
+
 			if (myinfo->getmode != 0) {
 				/* Grab if getmode is on */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
 				else
-					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
 			}
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
@@ -718,28 +525,28 @@ int main(int argc, char **argv)
 				break;
 			/* Toggle gradient mode - pattern changes with each cursor
 			 * movement & drawmode is turned on. */
-			if (myinfo->pattern < 6)
+			if (myinfo->pbuf == myinfo->standard_patterns)
 				break;
 
 			myinfo->getmode = 0;
 			if (myinfo->gradmode != 0) {
 				/* Gradmode is already on, advance once and reverse it */
 				if (myinfo->gradmode < 0) {
-					if (--myinfo->pattern < 6)
-						myinfo->pattern = -(myinfo->gradmode);
+					if (--myinfo->pbuf->pos < 0)
+						myinfo->pbuf->pos = myinfo->pbuf->size - 1;
 				} else {
-					if (++myinfo->pattern > myinfo->gradmode)
-						myinfo->pattern = 6;
+					if (++myinfo->pbuf->pos >= myinfo->pbuf->size)
+						myinfo->pbuf->pos = 0;
 				}
 				myinfo->gradmode = -(myinfo->gradmode);
 			} else {
 				/* Turn gradmode & drawmode on */
 				myinfo->drawmode = 1;
 				/* Gradmode cycles backward by default */
-				myinfo->gradmode = -(myinfo->pattern);
+				myinfo->gradmode = -1;
 
 				/* Plot only when first turning gradmode on */
-				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 
@@ -749,11 +556,12 @@ int main(int argc, char **argv)
 		case 'V':
 			/* Toggle blink mode */
 			myinfo->blinkmode ^= 1;
+			pat_applycolordata(myinfo->standard_patterns, myinfo);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case ' ':
 			/* Plot */
-			plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+			plot(myworld, myinfo, mydisplay, bigboard, paramlist);
 			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			break;
 		case 'c':
@@ -761,6 +569,7 @@ int main(int argc, char **argv)
 			myinfo->forec++;
 			if (myinfo->forec == 16)
 				myinfo->forec = 0;
+			pat_applycolordata(myinfo->standard_patterns, myinfo);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'C':
@@ -768,6 +577,7 @@ int main(int argc, char **argv)
 			myinfo->backc++;
 			if (myinfo->backc == 8)
 				myinfo->backc = 0;
+			pat_applycolordata(myinfo->standard_patterns, myinfo);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'b':
@@ -907,10 +717,13 @@ int main(int argc, char **argv)
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			} else {
 				/* Plot an empty */
-				x = myinfo->pattern;
-				myinfo->pattern = 4;	/* That's an empty */
-				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-				myinfo->pattern = x;
+				patbuffer* prevbuf = myinfo->pbuf;
+				myinfo->pbuf = myinfo->standard_patterns;
+				x = myinfo->pbuf->pos;
+				myinfo->pbuf->pos = 4;	/* That's an empty */
+				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+				myinfo->pbuf->pos = x;
+				myinfo->pbuf = prevbuf;
 				updatepanel(mydisplay, myinfo, myworld);
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
@@ -918,34 +731,38 @@ int main(int argc, char **argv)
 		case 'f':
 		case 'F':
 			/* Flood fill */
-			if (myinfo->pattern < 6 || myinfo->defc == 0) {
-				i = (myinfo->backc << 4) + myinfo->forec;
-				if (myinfo->blinkmode == 1)
-					i += 0x80;
-				x = i;
-			} else
-				x = patdefs[myinfo->pattern].color;
-
-			if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == patdefs[myinfo->pattern].type && (patdefs[myinfo->pattern].type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == x))
-				break;
 			{
-				int randflag = 0;
-				if (c == 'F' && myinfo->pattern >= 6) {
-					/* Set randflag to a positive number for bitman's patented
-					 * cycle fill (it almost generates even patterns). For the
-					 * moment, no keys are mapped to do this. */
-					randflag = -1;
-					for (i = 6; i <= myinfo->pattern; i++)
-						if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == patdefs[i].type && (patdefs[i].type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == patdefs[i].color)) {
-							randflag = 0;
-							break;
-						}
-					srand(time(0));
+				patdef curpattern = myinfo->pbuf->patterns[myinfo->pbuf->pos];
+				if (myinfo->defc == 0) {
+					i = (myinfo->backc << 4) + myinfo->forec;
+					if (myinfo->blinkmode == 1)
+						i += 0x80;
+					x = i;
+				} else
+					x = curpattern.color;
+
+				if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == curpattern.type && (curpattern.type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == x))
+					break;
+				{
+					int randflag = 0;
+					if (c == 'F') {
+						/* Set randflag to a negative number for bitman's patented
+						 * cycle fill (it almost generates even patterns). For the
+						 * moment, no keys are mapped to do this. */
+						randflag = 1;
+						for (i = 0; i < myinfo->pbuf->size; i++)
+							/* Break randomization if target type is in pattern buffer */
+							if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == myinfo->pbuf->patterns[i].type && (myinfo->pbuf->patterns[i].type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == myinfo->pbuf->patterns[i].color)) {
+								randflag = 0;
+								break;
+							}
+						srand(time(0));
+					}
+					floodfill(myworld, myinfo, mydisplay, bigboard, paramlist, myinfo->cursorx, myinfo->cursory, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], randflag);
 				}
-				floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, myinfo->cursorx, myinfo->cursory, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], randflag);
+				updatepanel(mydisplay, myinfo, myworld);
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			break;
 		case 'L':
 		case 'l':
@@ -1039,9 +856,14 @@ int main(int argc, char **argv)
 				}
 			} else {
 				/* Select new pattern backwards */
-				myinfo->pattern--;
-				if (myinfo->pattern == -1)
-					myinfo->pattern = 15;
+				myinfo->pbuf->pos--;
+				if (myinfo->pbuf->pos == -1) {
+					if (myinfo->pbuf == myinfo->standard_patterns)
+						myinfo->pbuf = myinfo->backbuffer;
+					else
+						myinfo->pbuf = myinfo->standard_patterns;
+					myinfo->pbuf->pos = myinfo->pbuf->size - 1;
+				}
 				updatepanel(mydisplay, myinfo, myworld);
 			}
 			break;
@@ -1055,9 +877,14 @@ int main(int argc, char **argv)
 			break;
 		case 'p':
 			/* Select new pattern forwards */
-			myinfo->pattern++;
-			if (myinfo->pattern == 16)
-				myinfo->pattern = 0;
+			myinfo->pbuf->pos++;
+			if (myinfo->pbuf->pos == myinfo->pbuf->size) {
+				if (myinfo->pbuf == myinfo->standard_patterns)
+					myinfo->pbuf = myinfo->backbuffer;
+				else
+					myinfo->pbuf = myinfo->standard_patterns;
+				myinfo->pbuf->pos = 0;
+			}
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 59:
@@ -1072,20 +899,7 @@ int main(int argc, char **argv)
 					bigboard[(myinfo->playerx + myinfo->playery * 60) * 2 + 1] = 0x07;
 					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 						/* We're overwriting a parameter */
-						if (CURRENTPARAM->moredata != NULL)
-							free(CURRENTPARAM->moredata);
-						free(CURRENTPARAM);
-						for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-							myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
-						}
-						for (x = 0; x < 25; x++) {
-							for (i = 0; i < 60; i++) {
-								if (paramlist[i][x] > t)
-									paramlist[i][x]--;
-							}
-						}
-						myworld->board[myinfo->curboard]->info->objectcount--;
-						paramlist[myinfo->cursorx][myinfo->cursory] = 0;
+						param_remove(myworld->board[myinfo->curboard], paramlist, myinfo->cursorx, myinfo->cursory);
 					}
 					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = Z_PLAYER;
 					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x1f;
@@ -1100,7 +914,7 @@ int main(int argc, char **argv)
 						break;
 					case Z_GEM:
 					case Z_KEY:
-						push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
+						push(myinfo->backbuffer, i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
 						break;
 					case Z_AMMO:
 					case Z_TORCH:
@@ -1115,14 +929,14 @@ int main(int argc, char **argv)
 							if (i == Z_ENERGIZER)
 								x = 0x05;
 						}
-						push(i, x, NULL);
+						push(myinfo->backbuffer, i, x, NULL);
 						break;
 					case Z_DOOR:
 						if (myinfo->defc == 1)
 							x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
 						else
 							x = (myinfo->backc << 4) + (myinfo->forec) + (myinfo->blinkmode * 0x80);
-						push(i, x, NULL);
+						push(myinfo->backbuffer, i, x, NULL);
 						break;
 					case Z_SCROLL:
 						if (myworld->board[myinfo->curboard]->info->objectcount == 150) {
@@ -1141,7 +955,7 @@ int main(int argc, char **argv)
 							}
 						pm = z_newparam_scroll(myinfo->cursorx + 1, myinfo->cursory + 1, x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
 						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-						push(i, t, pm);
+						push(myinfo->backbuffer, i, t, pm);
 						break;
 						}
 					case Z_PASSAGE:
@@ -1150,7 +964,7 @@ int main(int argc, char **argv)
 							x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
 						else
 							x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-						push(i, x, pm);
+						push(myinfo->backbuffer, i, x, pm);
 						break;
 					case Z_DUPLICATOR:
 						/* Anything important under it? */
@@ -1168,23 +982,26 @@ int main(int argc, char **argv)
 							x = 0x0f;
 						else
 							x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-						push(i, x, pm);
+						push(myinfo->backbuffer, i, x, pm);
 						break;
 					case Z_CWCONV:
 					case Z_CCWCONV:
 						pm = z_newparam_conveyer(myinfo->cursorx + 1, myinfo->cursory + 1);
-						push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
+						push(myinfo->backbuffer, i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
 						break;
 					case Z_BOMB:
 						pm = z_newparam_bomb(myinfo->cursorx + 1, myinfo->cursory + 1);
-						push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
+						push(myinfo->backbuffer, i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
 						break;
 					}
 					if (i != -1 && i != Z_PLAYER) {
-						x = myinfo->pattern;
-						myinfo->pattern = 6;
-						plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-						myinfo->pattern = x;
+						patbuffer* prevbuf = myinfo->pbuf;
+						myinfo->pbuf = myinfo->backbuffer;
+						x = myinfo->pbuf->pos;
+						myinfo->pbuf->pos = 0;
+						plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+						myinfo->pbuf->pos = x;
+						myinfo->pbuf = prevbuf;
 					}
 				}
 				drawpanel(mydisplay);
@@ -1193,11 +1010,12 @@ int main(int argc, char **argv)
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			}
 			break;
-		case 60:
+		case 60: /* '<' */
 			/* F2 panel */
-			if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
-				break;
 			if (e == 1) {
+				if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
+					break;
+
 				i = dothepanel_f2(mydisplay, myinfo);
 				/* All these need parameter space */
 				if (myworld->board[myinfo->curboard]->info->objectcount == 150) {
@@ -1223,7 +1041,7 @@ int main(int argc, char **argv)
 						t = 0x06;
 					else
 						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-					push(i, t, pm);
+					push(myinfo->backbuffer, i, t, pm);
 					break;
 				case Z_RUFFIAN:
 					pm = z_newparam_ruffian(myinfo->cursorx + 1, myinfo->cursory + 1, 4, 4);
@@ -1231,12 +1049,12 @@ int main(int argc, char **argv)
 						t = 0x0d;
 					else
 						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-					push(i, t, pm);
+					push(myinfo->backbuffer, i, t, pm);
 					break;
 				case Z_SLIME:
 					pm = z_newparam_slime(myinfo->cursorx + 1, myinfo->cursory + 1, 4);
 					t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-					push(i, t, pm);
+					push(myinfo->backbuffer, i, t, pm);
 					break;
 				case Z_SHARK:
 					pm = z_newparam_shark(myinfo->cursorx + 1, myinfo->cursory + 1, x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], 4);
@@ -1247,24 +1065,33 @@ int main(int argc, char **argv)
 						t += 0x07;
 					} else
 						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-					push(i, t, pm);
+					push(myinfo->backbuffer, i, t, pm);
 					break;
 				case Z_OBJECT:
 					pm = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay, -1), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
 					t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-					push(i, t, pm);
+					push(myinfo->backbuffer, i, t, pm);
 					break;
 				}
 				if (i != -1) {
-					x = myinfo->pattern;
-					myinfo->pattern = 6;
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-					myinfo->pattern = x;
+					patbuffer* prevbuf = myinfo->pbuf;
+					myinfo->pbuf = myinfo->backbuffer;
+					x = myinfo->pbuf->pos;
+					myinfo->pbuf->pos = 0;
+					plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+					myinfo->pbuf->pos = x;
+					myinfo->pbuf = prevbuf;
 				}
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			} else {
+				/* Decrease size of backbuffer */
+				if (myinfo->backbuffer->size > 1) {
+					patbuffer_resize(myinfo->backbuffer, -1);
+					updatepanel(mydisplay, myinfo, myworld);
+				}
 			}
 			break;
 		case 61:
@@ -1284,7 +1111,7 @@ int main(int argc, char **argv)
 				case Z_NSSLIDER:
 				case Z_EWSLIDER:
 				case Z_INVISIBLE:
-					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
+					push(myinfo->backbuffer, i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
 					break;
 				case Z_WATER:
 				case Z_FOREST:
@@ -1299,17 +1126,20 @@ int main(int argc, char **argv)
 						if (i == Z_RICOCHET)
 							x = 0x0a;
 					}
-					push(i, x, NULL);
+					push(myinfo->backbuffer, i, x, NULL);
 					break;
 				case Z_EDGE:
-					push(i, 0x07, NULL);
+					push(myinfo->backbuffer, i, 0x07, NULL);
 					break;
 				}
 				if (i != -1) {
-					x = myinfo->pattern;
-					myinfo->pattern = 6;
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-					myinfo->pattern = x;
+					patbuffer* prevbuf = myinfo->pbuf;
+					myinfo->pbuf = myinfo->backbuffer;
+					x = myinfo->pbuf->pos;
+					myinfo->pbuf->pos = 0;
+					plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+					myinfo->pbuf->pos = x;
+					myinfo->pbuf = prevbuf;
 				}
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
@@ -1317,10 +1147,18 @@ int main(int argc, char **argv)
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			}
 			break;
-		case 62:
-			/* F4 - Enter Text */
-			myinfo->textentrymode ^= 1;
-			updatepanel(mydisplay, myinfo, myworld);
+		case 62: /* '>' */
+			if (e == 1) {
+				/* F4 - Enter Text */
+				myinfo->textentrymode ^= 1;
+				updatepanel(mydisplay, myinfo, myworld);
+			} else {
+				/* Increase size of backbuffer */
+				if (myinfo->backbuffer->size < 128) {
+					patbuffer_resize(myinfo->backbuffer, 1);
+					updatepanel(mydisplay, myinfo, myworld);
+				}
+			}
 			break;
 		case 'i':
 		case 'I':
@@ -1360,9 +1198,9 @@ int main(int argc, char **argv)
 			if (e == 1) {
 				/* Grab */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
 				else
-					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
 				updatepanel(mydisplay, myinfo, myworld);
 				break;
 			} else {
@@ -1382,25 +1220,17 @@ int main(int argc, char **argv)
 			}
 			break;
 
-		default:
-			/* Consider digits 0-9 */
-			/* When the user presses a digit, the coresponding buffer
-			 * pattern is plotted, without moving the pattern cursor.
-			 * Users can thus "scale" the buffer by tapping number
-			 * keys like a piano. */
-			if (e == 0 && c >= 0x30 && c <= 0x39) {
-				int oldPattern = myinfo->pattern;
-				/* Change the pattern to whichever position in the buffer
-				 * the user entered, 1 low and 0 high, as on the keyboard.
-				 * We programmers can cringe at not starting at zero,
-				 * but I think most users will like it best this way. */
-				myinfo->pattern = (c != 0x30 ? c - 0x2B : 0x0F);
-				/* Plot the pattern and update the screen */
-				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
-				/* Restore the pattern */
-				myinfo->pattern = oldPattern;
+		case '?':
+			/* display param data (for developement purposes and debugging) */
+			if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
+				if (myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
+					/* we have params; lets show them! */
+					showParamData(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], paramlist[myinfo->cursorx][myinfo->cursory], mydisplay);
+					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				}
 			}
+			break;
 		}
 
 		if ((e == 1) && (c == 75  || c == 77 || c == 72 || c == 80 ||
@@ -1409,23 +1239,23 @@ int main(int argc, char **argv)
 			if (myinfo->getmode != 0) {
 				/* Get if getmode is on */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
 				else
-					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+					push(myinfo->backbuffer, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
 				updatepanel(mydisplay, myinfo, myworld);
 			}
 			/* If gradmode is on, cycle through the pattern buffer.
 			 * Negative values move backward, positive values forward. */
 			if (myinfo->gradmode < 0) {
-				if (--myinfo->pattern < 6)
-					myinfo->pattern = -(myinfo->gradmode);
+				if (--myinfo->pbuf->pos < 0)
+					myinfo->pbuf->pos = myinfo->pbuf->size - 1;
 			} else if (myinfo->gradmode > 0) {
-				if (++myinfo->pattern > myinfo->gradmode)
-					myinfo->pattern = 6;
+				if (++myinfo->pbuf->pos >= myinfo->pbuf->size)
+					myinfo->pbuf->pos = 0;
 			}
 			/* If drawmode is on, plot */
 			if (myinfo->drawmode == 1) {
-				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
 			}
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			updatepanel(mydisplay, myinfo, myworld);
@@ -1438,6 +1268,15 @@ int main(int argc, char **argv)
 	/* Free the registers used by copy & paste in the ZOC editor */
 	deleteregisters();
 
+	/* Free pattern buffers */
+	free(myinfo->standard_patterns);
+	free(myinfo->backbuffer);
+
+	/* Free myinfo stuff */
+	free(myinfo->currentfile);
+	free(myinfo->currenttitle);
+
+	/* Free everything! Free! Free! Free! Let freedom ring! */
 	free(myinfo);
 	free(string);
 	free(bigboard);

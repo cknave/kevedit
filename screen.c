@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.18 2001/04/08 18:45:05 bitman Exp $
+ * $Id: screen.c,v 1.19 2001/04/21 03:06:48 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,9 +33,17 @@
 #include "scroll.h"
 
 extern char filelist[500][13];
-extern patdef patdefs[16];
-extern param *patparams[10];
 
+/* The following define tells updatepanel to draw the standard patterns
+ * in the current colour, rather than plain ol' white */
+#define STDPATFOLLOWCOLOR
+
+/* Backbuffer scroll start - where in the backbuffer to start scrolling
+ * when bb is larger than visible width */
+#define BBSCROLLSTART 7
+#define BBVWIDTH      10
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
 
 /* okay most of this was stolen from case 's' in main(), but I needed a more
  * generic filename input function. case 's' could even be modified to use
@@ -218,7 +226,7 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 		i = 0x9e;
 	d->print(69, 12, i, "Enter Text");
 
-	/* Arrows to point at current colour/pattern */
+	/* Arrows to point at current colour */
 	for (i = 61; i < 77; i++) {
 		d->putch(i, 22, ' ', 0x1f);
 	}
@@ -230,10 +238,6 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 	}
 	d->putch(61 + e->forec, 22, 31, 0x17);
 	d->putch(69 + e->backc, 24, 30, 0x17);
-	if (e->pattern < 6)
-		d->putch(61 + e->pattern, 20, 31, 0x17);
-	else
-		d->putch(62 + e->pattern, 20, 31, 0x17);
 
 	/* Default colour mode? */
 	if (e->defc == 1)
@@ -264,12 +268,39 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 	strncpy(&s[10], e->currenttitle, 244);
 	d->titlebar(s);
 
+#ifdef STDPATFOLLOWCOLOR
+	/* Draw standard patterns in all their colourful grandure */
+	for (i = 0; i < e->standard_patterns->size; i++) {
+		patdef pattern = e->standard_patterns->patterns[i];
+		d->putch(61 + i, 21,
+		   z_getchar(pattern.type, pattern.color, pattern.patparam,
+				         NULL, 0, 0),
+		   z_getcolour(pattern.type, pattern.color, pattern.patparam));
+	}
+#endif
+
+	/* Pattern arrow */
+	if (e->pbuf == e->standard_patterns) {
+		d->putch(61 + e->pbuf->pos, 20, 31, 0x17);
+		x = 0;
+	} else {
+		x = min(e->backbuffer->pos - BBSCROLLSTART, e->backbuffer->size - BBVWIDTH);
+		if (x < 0)
+			x = 0;
+		d->putch(68 + e->pbuf->pos - x, 20, 31, 0x17);
+	}
+
 	/* Draw pattern stack */
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < BBVWIDTH && i + x < e->backbuffer->size; i++) {
+		patdef pattern = e->backbuffer->patterns[i + x];
 		d->putch(68 + i, 21,
-			 z_getchar(patdefs[6 + i].type, patdefs[6 + i].color, patparams[i],
-				   NULL, 0, 0),
-			 z_getcolour(patdefs[6 + i].type, patdefs[6 + i].color, patparams[i]));
+		   z_getchar(pattern.type, pattern.color, pattern.patparam,
+				         NULL, 0, 0),
+		   z_getcolour(pattern.type, pattern.color, pattern.patparam));
+	}
+	/* Start where we left off and fill the rest w/ blue solids */
+	for (; i < BBVWIDTH; i++) {
+		d->putch(68 + i, 21, ' ', 0x1F);
 	}
 }
 

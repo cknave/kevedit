@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.7 2001/04/08 18:45:05 bitman Exp $
+ * $Id: svector.h,v 1.8 2001/04/21 03:06:48 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -67,6 +67,9 @@ int deletestringvector(stringvector * v);
 /* removestringvector - empties a stringvector without free()ing any s */
 void removestringvector(stringvector * v);
 
+/* pushstringcopy - malloc()s a copy of s and pushes it into v, size equal
+ *                  to (length of s) + 1 */
+void pushstringcopy(stringvector * v, char * s);
 
 /* This really belongs somewhere else, but this function is so small I can't
  * justify giving it its own header & .c file. */
