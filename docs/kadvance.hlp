@@ -83,7 +83,8 @@ forward, press SHIFT-TAB a second time.
 
 Holding down ALT while moving will
 continuously paint the gradient for ten
-spaces at a time.
+spaces at a time horizontally and five
+tiles at a time vertically.
 
 If the one of the standard patterns is
 selected, a fade from foreground color to
@@ -98,12 +99,17 @@ the backbuffer as the cursor is moved. By
 using aquire mode, one can load a large
 gradient or line of objects into the
 backbuffer with relatively few keystrokes.
-Press 'a' to toggle get mode. The 'a' next
-to the backbuffer will indicate whether
-get mode is on.
+Press 'a' to toggle aquire mode. The 'a'
+next to the backbuffer will indicate
+whether aquire mode is on.
+
+By default, the backbuffer will be resized
+so that no non-empty tiles are lost. To
+force the backbuffer to stay the same
+size, use SHIFT+'A'.
 
 Holding down ALT while moving the cursor
-will aquire ten tiles at a time.
+will aquire several tiles at once.
 
 :randfill;Random Flood Fill
 

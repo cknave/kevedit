@@ -1,5 +1,6 @@
-0.4.1
+0.5.0
 -----
+Native Linux and Windows via SDL display
 Param Editor interface improvements
 Tile Info with ability to add/remove stats (params) for any type
 Monitor type recognized
@@ -8,6 +9,8 @@ Object editor panel updated (CTRL-C instead of ALT-C)
 CTRL-K access to Kolor dialog for use in Text Entry mode
 Help topics added for Stat Editor and Tile Info
 Documentation on items, creatures, and terrain added to help
+Bug fixed: board move/delete no longer crash on passages w/o stats
+Aquire mode grows the backbuffer by default
 
 0.4.0: February 19, 2002
 ------------------------
@@ -26,7 +29,6 @@ Quick key reference organized by key purpose
 All F-menu tiles implemented
 Dynamic dialog system introduced
 Param editing implemented! After all these years!!!
-Added variable locking in display_dos to prevent swapping in ISR
 
 0.3.4: November 14, 2001
 ------------------------

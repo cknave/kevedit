@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.6 2002/02/20 02:54:52 bitman Exp $
+ * $Id: board.c,v 1.7 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -253,7 +253,7 @@ int _zzt_board_relink(ZZTboard *brd, int offset, int start, int end, int movefro
 	}
 	board_length = brd->bigboard->width * brd->bigboard->height;
 	for (j = 0; j < board_length; j++) {
-		if (brd->bigboard->tiles[j].type == ZZT_PASSAGE) {
+		if (brd->bigboard->tiles[j].type == ZZT_PASSAGE && brd->bigboard->tiles[j].param != NULL) {
 			relink(brd->bigboard->tiles[j].param->data[2]);
 		}
 	}
@@ -282,7 +282,7 @@ int _zzt_board_limit_links(ZZTboard *brd, int max)
 
 	board_length = brd->bigboard->width * brd->bigboard->height;
 	for (j = 0; j < board_length; j++) {
-		if (brd->bigboard->tiles[j].type == ZZT_PASSAGE) {
+		if (brd->bigboard->tiles[j].type == ZZT_PASSAGE && brd->bigboard->tiles[j].param != NULL) {
 			fixlink(brd->bigboard->tiles[j].param->data[2]);
 		}
 	}

@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.4 2002/03/20 00:55:21 bitman Exp $
+ * $Id: display_sdl.c,v 1.5 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "SDL.h"
 
 #include "display.h"
@@ -610,6 +611,9 @@ int display_sdl_getch()
 		} else {
 			/* Other shift conversions */
 			switch(event.key.keysym.sym) {
+				case SDLK_TAB:
+					event.key.keysym.sym = DKEY_SHIFT_TAB;
+					break;
 				case '`':
 					event.key.keysym.sym = '~';
 					break;
@@ -740,7 +744,7 @@ void display_sdl_print_discrete(int x, int y, int c, char *ch)
 	int i, len = strlen(ch);
 
 	for(i = 0; i < len; i++)
-		display_sdl_putch(x+i, y, ch[i], c);
+		display_sdl_putch_discrete(x+i, y, ch[i], c);
 }
 
 void display_sdl_update(int x, int y, int w, int h)

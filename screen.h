@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.25 2002/03/20 04:52:25 bitman Exp $
+ * $Id: screen.h,v 1.26 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,6 @@
 #include "kevedit.h"
 #include "svector.h"
 #include "files.h"
-#include "selection.h"
 
 /* line_editor flags */
 #define LINED_NORMAL   0x00
@@ -84,7 +83,7 @@ void drawspot(displaymethod * d, ZZTworld * w, editorinfo * e);
 
 /* Block drawing functions */
 void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
-void drawblock(displaymethod * d, ZZTblock * b, selection alpha, int offx, int offy);
+void drawblock(displaymethod * d, ZZTblock * b, int offx, int offy);
 void cursorspaceblock(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
 void drawblockspot(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
 

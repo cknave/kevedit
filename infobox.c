@@ -1,5 +1,5 @@
 /* infobox.c - board/world information dialogs
- * $Id: infobox.c,v 1.12 2002/03/20 04:52:25 bitman Exp $
+ * $Id: infobox.c,v 1.13 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -458,6 +458,9 @@ void editworldinfo(ZZTworld* myworld, displaymethod* d)
 		d->putch(51, cursory, '\xAE', 0x02);
 		d->cursorgo(cursorx, cursory);
 
+		/* TODO: there is a better way to update the cursor */
+		d->update(3, 4, 51, 19);
+
 		/* Get the key */
 		key = d->getch();
 
@@ -575,9 +578,6 @@ void drawstaticworldinfo(displaymethod* d)
 	d->print_discrete(13, 17, 0x0A, "    Time Elapsed:");
 	d->print_discrete(13, 18, 0x0A, "   Is Saved Game:");
 	d->print_discrete(23, 20, 0x0F, "Set/Clear Flags");
-
-	/* Update the display */
-	d->update(3, 4, 51, 19);
 }
 
 void drawworldinfo(ZZTworld* myworld, displaymethod* d)
@@ -613,7 +613,7 @@ void drawworldinfo(ZZTworld* myworld, displaymethod* d)
 	d->print_discrete(31, 18, 0x0B, zztWorldGetSavegame(myworld) ? "Yes" : "No");
 
 	/* Update the display */
-	d->update(3, 4, 51, 19);
+	d->update(3, 3, 52, 19);
 }
 
 int worldinfoeditoption(int curoption, ZZTworld* myworld,
@@ -772,6 +772,9 @@ void editworldflags(ZZTworld* myworld, displaymethod* d)
 		d->putch(51, cursory, '\xAE', 0x02);
 		d->cursorgo(cursorx, cursory);
 
+		/* TODO: there is a better way to update the cursor */
+		d->update(3, 4, 51, 19);
+
 		/* Get the key */
 		key = d->getch();
 
@@ -829,9 +832,6 @@ void drawstaticflags(displaymethod * d)
 	d->print_discrete(22, 9+7, 0x0A, "Flag  8:");
 	d->print_discrete(22, 9+8, 0x0A, "Flag  9:");
 	d->print_discrete(22, 9+9, 0x0A, "Flag 10:");
-
-	/* Update the display */
-	d->update(3, 4, 51, 19);
 }
 
 void drawflags(ZZTworld * myworld, displaymethod * d)
@@ -843,7 +843,7 @@ void drawflags(ZZTworld * myworld, displaymethod * d)
 	}
 
 	/* Update the display */
-	d->update(3, 4, 51, 19);
+	d->update(3, 3, 52, 19);
 }
 
 void worldflagedit(int curoption, ZZTworld* myworld,

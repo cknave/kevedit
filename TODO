@@ -1,29 +1,27 @@
-For the 0.4.x release:
+For the 0.5.x release:
 ----------------------
 Change color/pattern of current tile
   ENTER changes char of TEXT under cursor
 Retain color mode added to defc toggle
 Quickly switch to adjacent board
 Show/hide all objects/stated-things
-Re-label ctrl-c in code editor
 Quick key for quick key reference (and mention on panel)
-Aquire mode that resizes backbuffer
 Tile under cursor displays w/ different for/back-color always
-Stat editor panel
+Stat editor & tile info panels
 Re-draw panel after zzm import
 Exploit ability of board to "link to self" using index FF
 Allow #play-back to piggy-back on other commands. i.e. /i#play
 Add monitor and horiz/vert blink wall rays to F3 menu display
 Add monitor & blink rays to terrain documentation
 
-For the 0.5 release:
+For the 0.6 release:
 --------------------
 Block copy/paste/move/export/import
 ANSI file support (as much as ZZT can do)
 Multiple backbuffers and toolkit file format
 Object library sidebar menu
 
-For the 0.6 release:
+For the 0.7 release:
 --------------------
 Configurable keybindings
 UNIX, here we come!

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.66 2002/03/19 19:12:50 kvance Exp $
+ * $Id: main.c,v 1.67 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -105,25 +105,24 @@ int main(int argc, char **argv)
 	/* Trap ctrl+c */
 	signal(SIGINT, sigInt);
 
-	/* Draw */
-	drawpanel(mydisplay);
-	updatepanel(mydisplay, myinfo, myworld);
-	drawscreen(mydisplay, myworld);
-	mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-	mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+	/* Update everything initially */
+	myinfo->updateflags = UD_ALL | UD_BOARDTITLE;
 
 	/* Main loop begins */
 
 	while (quit == 0) {
-		/* Draw the tile under the cursor as such */
-		cursorspace(mydisplay, myworld, myinfo);
-		mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory); /* Why not? */
+
+		/* Update the interface */
+		keveditUpdateInterface(mydisplay, myinfo, myworld);
 
 		/* Get the key */
 		key = mydisplay->getch();
 
 		/* Undo the cursorspace (draw as a normal tile) */
 		drawspot(mydisplay, myworld, myinfo);
+
+		/* Cursor almost always needs updated */
+		myinfo->updateflags |= UD_CURSOR;
 
 		/* Check for text entry */
 		if (myinfo->textentrymode == 1) {
@@ -134,15 +133,14 @@ int main(int argc, char **argv)
 				/* Backspace */
 				myinfo->cursorx--;
 				zztErase(myworld, myinfo->cursorx, myinfo->cursory);
-				updatepanel(mydisplay, myinfo, myworld);
+				myinfo->updateflags |= UD_CURSOR;
 			} else if ((key < 0x80 && key >= 0x20) || key == DKEY_CTRL_A) {
 				/* Insert the current keystroke as text */
 				ZZTtile textTile = { ZZT_BLUETEXT, 0x00, NULL };
 
 				if (key == DKEY_CTRL_A) { /* ASCII selection */
 					key = charselect(mydisplay, -1);
-					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					drawscreen(mydisplay, myworld);
+					myinfo->updateflags |= UD_BOARD;
 				}
 
 				/* Determine the text code based on the FG colour */
@@ -164,15 +162,21 @@ int main(int argc, char **argv)
 			}
 		}
 
-		/* bitman's addition: vi keys, only when envar "KVI" is set will
-		 * these apply. */
-		if (getenv("KVI") != NULL) {
+		if (myinfo->vimovement == 1) {
+			/* vi movement is on */
 			switch (key) {
-			/* Look for vi keys */
-			case 'h': key = DKEY_LEFT;  break;
-			case 'j': key = DKEY_DOWN;  break;
-			case 'k': key = DKEY_UP;    break;
-			case 'l': key = DKEY_RIGHT; break;
+				case 'h': key = DKEY_LEFT;  break;
+				case 'j': key = DKEY_DOWN;  break;
+				case 'k': key = DKEY_UP;    break;
+				case 'l': key = DKEY_RIGHT; break;
+			}
+		} else if (myinfo->vimovement == 2) {
+			/* dvorak vi movement is on (yes, bitman uses this) */
+			switch (key) {
+				case 'd': key = DKEY_LEFT;  break;
+				case 'h': key = DKEY_DOWN;  break;
+				case 't': key = DKEY_UP;    break;
+				case 'n': key = DKEY_RIGHT; break;
 			}
 		}
 
@@ -191,7 +195,7 @@ int main(int argc, char **argv)
 					myinfo->pbuf->pos = key - '1';
 				}
 			}
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_PATTERNS;
 			key = DKEY_NONE;
 		}
 
@@ -235,8 +239,7 @@ int main(int argc, char **argv)
 			if (confirmprompt(mydisplay, "Quit?") == CONFIRM_YES) {
 				quit = 1;
 			} else {
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
+				myinfo->updateflags |= UD_PANEL;
 			}
 			break;
 		case 'n':
@@ -244,50 +247,39 @@ int main(int argc, char **argv)
 			if (confirmprompt(mydisplay, "Make new world?") == CONFIRM_YES) {
 				myworld = clearworld(myworld);
 
-				drawscreen(mydisplay, myworld);
+				myinfo->updateflags |= UD_BOARD;
 			}
 
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_PANEL;
 			break;
 		case 'z':
 		case 'Z':
 			if (confirmprompt(mydisplay, "Clear board?") == CONFIRM_YES) {
 				clearboard(myworld);
-				/* TODO: clear board */
 
-				drawscreen(mydisplay, myworld);
+				myinfo->updateflags |= UD_BOARD;
 			}
 
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_PANEL;
 			break;
 
 		case 'b':
 		case 'B':
 			switchboard(myworld, mydisplay);
 
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+			myinfo->updateflags |= UD_ALL | UD_BOARDTITLE;
 			break;
 		case DKEY_PAGEDOWN:
 			/* Switch to next board (bounds checking is automatic) */
 			zztBoardSelect(myworld, zztBoardGetCurrent(myworld) + 1);
 
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+			myinfo->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
 			break;
 		case DKEY_PAGEUP:
 			/* Switch to previous board (bounds checking is automatic) */
 			zztBoardSelect(myworld, zztBoardGetCurrent(myworld) - 1);
 
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+			myinfo->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
 			break;
 
 		case 'i':
@@ -295,10 +287,7 @@ int main(int argc, char **argv)
 			/* Board Info */
 			editboardinfo(myworld, mydisplay);
 
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;
 			break;
 		case 'w':
 		case 'W':
@@ -306,19 +295,13 @@ int main(int argc, char **argv)
 			editworldinfo(myworld, mydisplay);
 			myinfo->changed_title = 1;
 
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;
 			break;
 		case DKEY_CTRL_T:
 			/* Tile Info */
 			tileinfo(mydisplay, myworld, myinfo->cursorx, myinfo->cursory);
 
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;
 			break;
 
 		/********************* File operations ****************/
@@ -329,10 +312,7 @@ int main(int argc, char **argv)
 			saveworld(mydisplay, myworld);
 			myinfo->changed_title = 1;
 
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;
 			break;
 		case 'l':
 		case 'L':
@@ -340,22 +320,14 @@ int main(int argc, char **argv)
 			myworld = loadworld(mydisplay, myworld);
 			myinfo->changed_title = 1;
 
-			drawscreen(mydisplay, myworld);
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+			myinfo->updateflags |= UD_ALL | UD_BOARDTITLE;
 			break;
 		case 't':
 		case 'T':
 			/* Transfer board */
 			boardtransfer(mydisplay, myworld);
 
-			drawscreen(mydisplay, myworld);
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+			myinfo->updateflags |= UD_ALL | UD_BOARDTITLE;
 			break;
 		case 'o':
 		case 'O':
@@ -376,7 +348,7 @@ int main(int argc, char **argv)
 			if (myinfo->forec == 16)
 				myinfo->forec = 0;
 			pat_applycolordata(myinfo->standard_patterns, myinfo);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_COLOR;
 			break;
 		case 'C':
 			/* Change background colour */
@@ -384,7 +356,7 @@ int main(int argc, char **argv)
 			if (myinfo->backc == 8)
 				myinfo->backc = 0;
 			pat_applycolordata(myinfo->standard_patterns, myinfo);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_COLOR;
 			break;
 		case 'k':
 		case 'K':
@@ -393,23 +365,21 @@ int main(int argc, char **argv)
 			colorselector(mydisplay, &myinfo->backc, &myinfo->forec,
 										&myinfo->blinkmode);
 
-			pat_applycolordata(myinfo->standard_patterns, myinfo);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawscreen(mydisplay, myworld);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_COLOR | UD_BOARD;
 			break;
 		case 'v':
 		case 'V':
 			/* Toggle blink mode */
 			myinfo->blinkmode ^= 1;
 			pat_applycolordata(myinfo->standard_patterns, myinfo);
-			updatepanel(mydisplay, myinfo, myworld);
+
+			myinfo->updateflags |= UD_BLINKMODE;
 			break;
 		case 'd':
 		case 'D':
 			/* Toggle DefC mode */
 			myinfo->defc ^= 1;
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_COLORMODE;
 			break;
 
 		/****************** Misc *********************/
@@ -419,11 +389,7 @@ int main(int argc, char **argv)
 			/* Help */
 			help(mydisplay);
 
-			/* Update everything */
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;
 			break;
 		case 'r':
 		case 'R':
@@ -434,22 +400,15 @@ int main(int argc, char **argv)
 			
 			/* restart display from scratch */
 			mydisplay->init();
-			drawpanel(mydisplay);
-			drawscreen(mydisplay, myworld);
 
-			/* Redraw */
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;
+			myinfo->changed_title = 1;
 			break;
 		case '!':
 			/* Open text editor */
 			texteditor(mydisplay);
 
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawscreen(mydisplay, myworld);
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_ALL;
 			break;
 
 		/***************** Drawing *****************/
@@ -457,44 +416,41 @@ int main(int argc, char **argv)
 		case ' ':
 			/* Plot */
 			plot(myworld, myinfo, mydisplay);
-			drawspot(mydisplay, myworld, myinfo);
+			myinfo->updateflags |= UD_SPOT;
 			break;
 		case DKEY_TAB:
 			/* Toggle draw mode */
 			if (toggledrawmode(myinfo) != 0) {
 				/* Update changes and start plotting if we entered draw mode */
 				plot(myworld, myinfo, mydisplay);
-				drawspot(mydisplay, myworld, myinfo);
+				myinfo->updateflags |= UD_SPOT;
 			}
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_DRAWMODE;
 			break;
 		case DKEY_SHIFT_TAB:
 			/* Shift-tab */
 			if (togglegradientmode(myinfo) != 0) {
 				/* Plot only when first turning gradmode on */
 				plot(myworld, myinfo, mydisplay);
-				drawspot(mydisplay, myworld, myinfo);
+				myinfo->updateflags |= UD_SPOT;
 			}
 
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_DRAWMODE;
 			break;
 		case DKEY_BACKSPACE:
 		case DKEY_DELETE:
 			zztErase(myworld, myinfo->cursorx, myinfo->cursory);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_OBJCOUNT;
 			break;
 		case 'f':
 		case 'F':
 			dofloodfill(mydisplay, myworld, myinfo, key == 'F');
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
+			myinfo->updateflags |= UD_BOARD | UD_OBJCOUNT;
 			break;
 		case 'g':
 		case 'G':
 			dogradient(mydisplay, myworld, myinfo);
-			drawscreen(mydisplay, myworld);
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_ALL;
 			break;
 
 		/***************** Backbuffer Actions ****************/
@@ -502,25 +458,25 @@ int main(int argc, char **argv)
 		case 'p':
 			/* Select new pattern forwards */
 			nextpattern(myinfo);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_PATTERNS;
 			break;
 		case 'P':
 			/* Select new pattern backwards */
 			previouspattern(myinfo);
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_PATTERNS;
 			break;
 		case '<':
 			/* Decrease size of backbuffer */
 			if (myinfo->backbuffer->size > 1) {
 				patbuffer_resize(myinfo->backbuffer, -1);
-				updatepanel(mydisplay, myinfo, myworld);
+				myinfo->updateflags |= UD_PATTERNS;
 			}
 			break;
 		case '>':
 			/* Increase size of backbuffer */
 			if (myinfo->backbuffer->size < MAX_BACKBUF) {
 				patbuffer_resize(myinfo->backbuffer, 1);
-				updatepanel(mydisplay, myinfo, myworld);
+				myinfo->updateflags |= UD_PATTERNS;
 			}
 			break;
 		case '/':
@@ -529,21 +485,31 @@ int main(int argc, char **argv)
 				myinfo->backbuffer->lock = PATBUF_NOPUSH;
 			else
 				myinfo->backbuffer->lock = PATBUF_UNLOCK;
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_PATTERNS;
 			break;
 		case 'a':
 		case 'A':
 			/* Toggle aqu mode - cursor movement loads pattern buffer automatically */
-			myinfo->aqumode ^= 1;
+			if (myinfo->aqumode) {
+				myinfo->aqumode = 0;
+			} else {
+				if (key == 'a') {
+					myinfo->aqumode = AQUMODE_RESIZE;
+				} else {
+					myinfo->aqumode = AQUMODE_NORESIZE;
+				}
 
-			/* drawmode & gradmode can't be on while in aqumode */
-			exitgradientmode(myinfo);
+				/* drawmode & gradmode can't be on while in aqumode */
+				exitgradientmode(myinfo);
 
-			if (myinfo->aqumode != 0) {
-				/* Grab if aqumode is on */
+				/* Grab now that aqumode is on */
+				if (myinfo->aqumode == AQUMODE_RESIZE && myinfo->backbuffer->patterns[myinfo->backbuffer->size - 1].type != ZZT_EMPTY)
+					/* Resize the backbuffer if necessary */
+					patbuffer_resize(myinfo->backbuffer, 1);
 				push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
 			}
-			updatepanel(mydisplay, myinfo, myworld);
+
+			myinfo->updateflags |= UD_PATTERNS;
 			break;
 
 		/***************** Function Keys *******************/
@@ -551,33 +517,22 @@ int main(int argc, char **argv)
 		case DKEY_F1:
 			/* F1 panel */
 			itemmenu(mydisplay, myworld, myinfo);
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;  /* TODO: can we narrow this down? */
 			break;
 		case DKEY_F2:
 			/* F2 panel */
 			creaturemenu(mydisplay, myworld, myinfo);
-
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;  /* TODO: can we narrow this down? */
 			break;
 		case DKEY_F3:
 			/* F3 panel */
 			terrainmenu(mydisplay, myworld, myinfo);
-
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			myinfo->updateflags |= UD_ALL;  /* TODO: can we narrow this down? */
 			break;
 		case DKEY_F4:
 			/* F4 - Enter Text */
 			myinfo->textentrymode ^= 1;
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_TEXTMODE;
 			break;
 		case DKEY_ENTER:
 			/* Modify / Grab */
@@ -586,11 +541,7 @@ int main(int argc, char **argv)
 			/* When all is said and done, push the tile */
 			push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
 
-			/* redraw everything */
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawscreen(mydisplay, myworld);
+			myinfo->updateflags |= UD_ALL;
 			break;
 
 		case DKEY_INSERT:
@@ -605,7 +556,7 @@ int main(int argc, char **argv)
 					patreplace(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
 			}
 
-			updatepanel(mydisplay, myinfo, myworld);
+			myinfo->updateflags |= UD_PATTERNS;
 			break;
 		}
 
@@ -615,10 +566,16 @@ int main(int argc, char **argv)
 		    key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT ||
 		    key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN) {
 			int repeat = 0;
-			if (key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT)
+			if (key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT) {
 				repeat = 10;
-			else if(key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN)
+				if (myinfo->drawmode || myinfo->gradmode)
+					myinfo->updateflags |= UD_BOARD;
+			}
+			else if(key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN) {
 				repeat = 5;
+				if (myinfo->drawmode || myinfo->gradmode)
+					myinfo->updateflags |= UD_BOARD;
+			}
 
 			do {
 				/* Consider alt-direction actions */
@@ -648,8 +605,10 @@ int main(int argc, char **argv)
 				/* Act on keystrokes */
 				if (myinfo->aqumode != 0) {
 					/* Get if aquire mode is on */
+					if (myinfo->aqumode == AQUMODE_RESIZE && myinfo->backbuffer->patterns[myinfo->backbuffer->size - 1].type != ZZT_EMPTY)
+						/* Resize the backbuffer if necessary */
+						patbuffer_resize(myinfo->backbuffer, 1);
 					push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
-					updatepanel(mydisplay, myinfo, myworld);
 				}
 				/* If gradmode is on, cycle through the pattern buffer.
 				 * Negative values move backward, positive values forward. */
@@ -664,10 +623,10 @@ int main(int argc, char **argv)
 				if (myinfo->drawmode == 1) {
 					plot(myworld, myinfo, mydisplay);
 				}
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawspot(mydisplay, myworld, myinfo);
+
 			} while (repeat);
+
+			myinfo->updateflags |= UD_PATTERNS | UD_OBJCOUNT | UD_SPOT;
 		}
 	}
 

@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.29 2002/03/19 19:12:50 kvance Exp $
+ * $Id: misc.c,v 1.30 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -129,22 +129,78 @@ void initeditorinfo(editorinfo * myinfo)
 
 	myinfo->cursorx = 0;
 	myinfo->cursory = 0;
+	myinfo->updateflags = UD_NONE;
+
 	myinfo->drawmode = 0;
 	myinfo->gradmode = 0;
 	myinfo->aqumode = 0;
 	myinfo->blinkmode = 0;
 	myinfo->textentrymode = 0;
+
 	myinfo->defc = 1;
 	myinfo->forec = 0x0f;
 	myinfo->backc = 0x00;
+
 	myinfo->standard_patterns = createstandardpatterns();
 	myinfo->backbuffer = patbuffer_create(10);
 	myinfo->pbuf = myinfo->standard_patterns;
+
 	myinfo->changed_title = 1;
 
+	/* Don't color standard patterns by default */
+	myinfo->colorStandardPatterns = 0;
+
+	/* Use KVI environment variable to decide if vi keys should be used */
+	if (getenv("KVI") == NULL) {
+		/* No vi movement by default. :-( */
+		myinfo->vimovement = 0;
+	} else {
+		if (str_equ(getenv("KVI"), "dvorak", STREQU_UNCASE))
+			myinfo->vimovement = 2;
+		else
+			myinfo->vimovement = 1;
+	}
+
 	pat_applycolordata(myinfo->standard_patterns, myinfo);
+
 }
 
+void keveditUpdateInterface(displaymethod * mydisplay, editorinfo * myinfo, ZZTworld * myworld)
+{
+	/* Update the kevedit interface */
+	int uf = myinfo->updateflags;
+
+	/* Update panel takes care of panel related update flags */
+	updatepanel(mydisplay, myinfo, myworld);
+
+	/* Move the display cursor */
+	mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+
+	if (uf & UD_BOARD) {
+		/* Draw the whole board */
+		drawscreen(mydisplay, myworld);
+	} else {
+		/* Otherwise, possibly draw parts of the board */
+
+		if (uf & UD_SPOT) {
+			/* Draw the spot around the cursor */
+			drawspot(mydisplay, myworld, myinfo);
+		}
+
+		if (uf & UD_CURSOR) {
+			/* Draw the tile under the cursor */
+			cursorspace(mydisplay, myworld, myinfo);
+		}
+	}
+
+	if (uf & UD_BOARDTITLE) {
+		/* Draw the board title this time only */
+		char * title = zztBoardGetTitle(myworld);
+		mydisplay->print(30 - strlen(title) / 2, 0, 0x70, title);
+	}
+
+	myinfo->updateflags = UD_NONE;  /* Everything should be updated now */
+}
 
 void texteditor(displaymethod * mydisplay)
 {
@@ -776,14 +832,20 @@ int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, pat
 	return key;
 }
 
-//void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay)
 void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, displaymethod * mydisplay)
 {
 	int x = -1, y = 0;
 	ZZTtile pattern = pbuf.patterns[pbuf.pos];
+	ZZTblock * prevBlock = NULL;
 
 	if (randomseed != 0)
 		srand(randomseed);
+
+	if (preview) {
+		prevBlock = zztBlockDuplicate(zztBoardGetCurPtr(myworld)->bigboard);
+		if (prevBlock == NULL)
+			return;
+	}
 
 	/* Plot the patterns */
 	while (!nextselected(fillsel, &x, &y)) {
@@ -792,11 +854,15 @@ void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pb
 		if (!preview) {
 			zztPlot(myworld, x, y, pattern);
 		} else {
-			/* This is kinda sloppy for types which need to know who is next to
-			 * them, such as line-walls */
-			/* TODO: consider writing to a temporary area to achieve previews */
-			mydisplay->putch(x, y, zztLoneTileGetDisplayChar(pattern), zztLoneTileGetDisplayColor(pattern));
+			/* TODO: don't plot if we have too many params already */
+			/* (not a big deal, this is only the preview after all */
+			zztTilePlot(prevBlock, x, y, pattern);
 		}
+	}
+
+	if (preview) {
+		drawblock(mydisplay, prevBlock, 0, 0);
+		zztBlockFree(prevBlock);
 	}
 }
 

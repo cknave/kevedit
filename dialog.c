@@ -1,5 +1,5 @@
 /* dialog.c - general dialog tools
- * $Id: dialog.c,v 1.3 2002/03/20 04:52:24 bitman Exp $
+ * $Id: dialog.c,v 1.4 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -178,7 +178,7 @@ void dialogDraw(displaymethod * mydisplay, dialog dia)
 		for (i = 0; i < dia.optioncount; i++)
 			dialogComponentDraw(mydisplay, dia.options[i]);
 
-	/* TODO: draw pointer to current option */
+	/* Draw pointer to current option */
 	if (dia.options != NULL) {
 		dialogComponent curopt = dia.options[dia.curoption];
 		mydisplay->putch_discrete(START_X - 2, START_Y + curopt.y, '\xAF', 0x02);
@@ -187,7 +187,7 @@ void dialogDraw(displaymethod * mydisplay, dialog dia)
 	}
 
 	/* Update the display */
-	mydisplay->update(3, 4, 51, 19);
+	mydisplay->update(3, 3, 52, 19);
 }
 
 int dialogComponentEdit(displaymethod * mydisplay, dialogComponent * comp, int editwidth, int linedflags)

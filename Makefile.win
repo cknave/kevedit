@@ -2,7 +2,6 @@
 MAKEFILE_NAME = Makefile.win
 
 # Choose your compiler
-#CC = i586-pc-msdosdjgpp-gcc
 CC = i686-pc-cygwin-gcc -mno-cygwin
 
 # Uncomment next line to optimize kevedit

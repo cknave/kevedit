@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.13 2002/03/20 00:55:21 bitman Exp $
+ * $Id: display.h,v 1.14 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -117,11 +117,26 @@ extern void RegisterDisplays();
 #define DKEY_CTRL_D     ('d' - 0x60)
 #define DKEY_CTRL_E     ('e' - 0x60)
 #define DKEY_CTRL_F     ('f' - 0x60)
+#define DKEY_CTRL_G     ('g' - 0x60)
+#define DKEY_CTRL_H     ('h' - 0x60)  /* Same as BS */
+#define DKEY_CTRL_I     ('i' - 0x60)  /* Same as TAB */
+#define DKEY_CTRL_J     ('j' - 0x60)
 #define DKEY_CTRL_K     ('k' - 0x60)
+#define DKEY_CTRL_L     ('l' - 0x60)
+#define DKEY_CTRL_M     ('m' - 0x60)  /* Same as ENTER */
+#define DKEY_CTRL_N     ('n' - 0x60)
+#define DKEY_CTRL_O     ('o' - 0x60)
+#define DKEY_CTRL_P     ('p' - 0x60)
+#define DKEY_CTRL_Q     ('q' - 0x60)
+#define DKEY_CTRL_R     ('r' - 0x60)
+#define DKEY_CTRL_S     ('s' - 0x60)
 #define DKEY_CTRL_T     ('t' - 0x60)
+#define DKEY_CTRL_U     ('u' - 0x60)
 #define DKEY_CTRL_V     ('v' - 0x60)
+#define DKEY_CTRL_W     ('w' - 0x60)
 #define DKEY_CTRL_X     ('x' - 0x60)
 #define DKEY_CTRL_Y     ('y' - 0x60)
+#define DKEY_CTRL_Z     ('z' - 0x60)
 
 #define DKEY_CTRL_DELETE  (147 | DDOSKEY_EXT)
 
@@ -137,5 +152,6 @@ extern void RegisterDisplays();
 #define DKEY_ALT_MINUS  (130 | DDOSKEY_EXT) 
 /* TODO: make alt + different from alt = */
 #define DKEY_ALT_PLUS   (131 | DDOSKEY_EXT)
+#define DKEY_ALT_EQUALS (131 | DDOSKEY_EXT)
 
 #endif				/* _DISPLAY_H */

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.38 2002/03/20 04:52:24 bitman Exp $
+ * $Id: editbox.c,v 1.39 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -215,8 +215,7 @@ void draweditpanel(int insertflag, int wrapwidth, int zocmode, displaymethod * d
 		d->print(72, 8, YELLOW_F | BRIGHT_F | BLUE_B, "off");
 }
 
-void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,
-									char* title, displaymethod* d)
+void updateditbox(displaymethod * d, stringvector* sv, int updateflags, int editwidth, int flags, char* title, int doupdate)
 {
 	/* update title if needed */
 	if (updateflags & U_TITLE) {
@@ -262,7 +261,8 @@ void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,
 	}
 
 	/* Update the display */
-	d->update(3, 4, 51, 19);
+	if (doupdate)
+		d->update(3, 4, 51, 19);
 }
 
 
@@ -335,7 +335,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 			draweditpanel(insertflag, wrapwidth, flags & EDITBOX_ZOCMODE, d);
 
 		sv->cur = centerstr;
-		updateditbox(sv, updateflags, editwidth, flags, title, d);
+		updateditbox(d, sv, updateflags, editwidth, flags, title, selPos == -1);
 		updateflags = U_NONE;
 
 		/* Draw highlighted text if applicable */
@@ -585,7 +585,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 							centerstr->s[i] = centerstr->s[i+1];
 						updateflags = U_CENTER;
 					}
-					else if (strlen(centerstr->s) == 0) {
+					else if (strlen(centerstr->s) == 0 && !(sv->first == sv->last)) {
 						/* This string is empty: destroy */
 						sv->cur = centerstr;
 						deletestring(sv);
@@ -1101,7 +1101,7 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 			s.slur = slur;
 
 			/* Update everything because we have likely shifted to a new line. */
-			updateditbox(sv, U_EDITAREA, editwidth, flags, "", d);
+			updateditbox(d, sv, U_EDITAREA, editwidth, flags, "", 1);
 
 			while (s.pos < strlen(tune) && !d->kbhit()) {
 				int oldpos = s.pos;
@@ -1110,7 +1110,7 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 				zzmnote note = zzmgetnote(tune, &s);
 
 				/* Display the whole line */
-				updateditbox(sv, U_CENTER, editwidth, flags, "", d);
+				updateditbox(d, sv, U_CENTER, editwidth, flags, "", 1);
 
 				/* Display the part of the string which will be played now */
 				strpart = str_duplen(tune + oldpos, s.pos - oldpos);

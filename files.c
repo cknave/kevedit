@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.7 2002/03/19 19:44:36 kvance Exp $
+ * $Id: files.c,v 1.8 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -196,8 +196,8 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 
 		fulld_name = fullpath(dir, dirent->d_name, SLASH_DEFAULT);
 		stat(fulld_name, &statent);
-		
-		if (access(fulld_name, X_OK) && !S_ISDIR(statent.st_mode)) {
+
+		if (!S_ISDIR(statent.st_mode)) {
 			if (filetypes & FTYPE_FILE) {
 				/* The current file is not a directory, check the extension */
 				if (extension[0] == '*' ||

@@ -2,13 +2,12 @@
 MAKEFILE_NAME = Makefile
 
 # Choose your compiler
-#CC = i586-pc-msdosdjgpp-gcc
 CC = gcc
 
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
-#OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-OPTIMIZE = -g -Wall
+OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+#OPTIMIZE = -g -Wall
 
 # Set SDL to ON to enable SDL display
 SDL = ON

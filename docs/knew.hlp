@@ -1,15 +1,17 @@
 @New Features
 $New Features
 
-$New in Version 0.4.1
+$New in Version 0.5.0
+:;  *  Native Linux and Windows support
 !-kstats;Stats Editor documentation
 !-ktileinf;Tile Info
 !-item;Items documentation
-!-creature;Creature documentation
+!-creature;Creatures documentation
 !-terrain;Terrain documentation
+!-kadvance:aquire;Aquire Mode grows backbuffer
 :;  *  CTRL-K selects color (for F4 mode)
 
-$Bugs fixed in 0.4.1
+$Bugs fixed in 0.5.0
 :;  *  Monitor recognized as valid type
 :;  *  Object Editor panel updated
 

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.47 2002/03/20 04:52:25 bitman Exp $
+ * $Id: screen.c,v 1.48 2002/03/24 08:39:54 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -399,125 +399,165 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 	int i, x;
 	char s[255];
 	char * title = zztWorldGetTitle(w);
+	int uf = e->updateflags;
 
-	/* (x, y) position */
-	d->putch_discrete(62, 0, ' ', 0x1f);
-	d->putch_discrete(63, 0, ' ', 0x1f);
-	d->putch_discrete(76, 0, ' ', 0x1f);
-	d->putch_discrete(77, 0, ' ', 0x1f);
-	sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w));
-	i = 70 - strlen(s) / 2;
-	for (x = 0; x < strlen(s); x++) {
-		d->putch_discrete(i + x, 0, s[x], 0x1c);
-	}
+	if (uf & UD_PANEL)
+		/* If the entire panel is to be updated, redraw the template */
+		drawpanel(d);
 
-	/* Draw Mode? */
-	if (e->drawmode == 0)
-		i = 0x1f;
-	else if (e->gradmode == 0)
-		i = 0x1e;
-	else
-		i = 0x1c;
-	d->print(69, 15, i, "Draw");
+	if (uf & UD_PANEL || uf & UD_PANEL_TOP) {
+		/* Draw the top portion of the panel */
 
-	/* Blink Mode? */
-	if (e->blinkmode == 0)
-		i = 0x1f;
-	else
-		i = 0x1e;
-	d->print(65, 19, i, "Blink");
-
-	/* Text entry Mode? */
-	if (e->textentrymode == 0)
-		i = 0x1f;
-	else
-		i = 0x9e;
-	d->print(69, 12, i, "Enter Text");
-
-	/* Arrows to point at current colour */
-	for (i = 61; i < 77; i++) {
-		d->putch_discrete(i, 22, ' ', 0x1f);
-	}
-	for (i = 61; i < 77; i++) {
-		d->putch_discrete(i, 24, ' ', 0x1f);
-	}
-	for (i = 61; i < 78; i++) {
-		d->putch_discrete(i, 20, ' ', 0x1f);
-	}
-	d->putch_discrete(61 + e->forec, 22, 31, 0x17);
-	d->putch_discrete(69 + e->backc, 24, 30, 0x17);
-
-	/* Default colour mode? */
-	if (e->defc == 1)
-		d->putch_discrete(78, 23, 'D', 0x1e);
-	else
-		d->putch_discrete(78, 23, 'd', 0x18);
-
-	/* Get mode? */
-	if (e->aqumode == 1)
-		d->putch_discrete(78, 21, 'A', 0x1e);
-	else
-		d->putch_discrete(78, 21, 'a', 0x18);
-
-	/* Too long title */
-	if (strlen(title) > 8) {
-		for (x = 0; x < 5; x++) {
-			d->putch_discrete(71 + x, 1, title[x], 0x17);
+		/* (x, y) position */
+		d->putch_discrete(62, 0, ' ', 0x1f);
+		d->putch_discrete(63, 0, ' ', 0x1f);
+		d->putch_discrete(76, 0, ' ', 0x1f);
+		d->putch_discrete(77, 0, ' ', 0x1f);
+		sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w));
+		i = 70 - strlen(s) / 2;
+		for (x = 0; x < strlen(s); x++) {
+			d->putch_discrete(i + x, 0, s[x], 0x1c);
 		}
-		for (x = 0; x < 3; x++) {
-			d->putch_discrete(76 + x, 1, '.', 0x1f);
+
+		strcpy(s, "KevEdit - ");
+		strncpy(&s[10], title, 244);
+		if(e->changed_title == 1) {
+			e->changed_title = 0;
+			d->titlebar(s);
 		}
-	} else {
-		/* Regular title */
-		d->print(71, 1, 0x17, title);
+
+		/* Too long title */
+		if (strlen(title) > 8) {
+			for (x = 0; x < 5; x++) {
+				d->putch_discrete(71 + x, 1, title[x], 0x17);
+			}
+			for (x = 0; x < 3; x++) {
+				d->putch_discrete(76 + x, 1, '.', 0x1f);
+			}
+		} else {
+			/* Regular title */
+			d->print(71, 1, 0x17, title);
+		}
+
 	}
 
-	strcpy(s, "KevEdit - ");
-	strncpy(&s[10], title, 244);
-	if(e->changed_title == 1) {
-		e->changed_title = 0;
-		d->titlebar(s);
+	if (uf & UD_PANEL || uf & UD_PANEL_MIDDLE) {
+		/* Draw the middle portion of the panel */
+
+		/* Draw Mode? */
+		if (e->drawmode == 0)
+			i = 0x1f;
+		else if (e->gradmode == 0)
+			i = 0x1e;
+		else
+			i = 0x1c;
+		d->print(69, 15, i, "Draw");
+
+		/* Text entry Mode? */
+		if (e->textentrymode == 0)
+			i = 0x1f;
+		else
+			i = 0x9e;
+		d->print(69, 12, i, "Enter Text");
+
 	}
 
-#ifdef STDPATFOLLOWCOLOR
-	/* Draw standard patterns in all their colourful grandure */
-	for (i = 0; i < e->standard_patterns->size; i++) {
-		patdef pattern = e->standard_patterns->patterns[i];
-		d->putch_discrete(61 + i, 21,
-						 zztLoneTileGetDisplayChar(pattern),
-						 zztLoneTileGetDisplayColor(pattern));
-	}
-#endif
+	if (uf & UD_PANEL || uf & UD_PANEL_BOTTOM) {
+		/* Draw the bottom portion of the panel */
 
-	/* Pattern arrow */
-	if (e->pbuf == e->standard_patterns) {
-		d->putch_discrete(61 + e->pbuf->pos, 20, 31, 0x17);
-		x = 0;
-	} else {
-		x = min(e->backbuffer->pos - BBSCROLLSTART, e->backbuffer->size - BBVWIDTH);
-		if (x < 0)
+		/* Blink Mode? */
+		if (e->blinkmode == 0)
+			i = 0x1f;
+		else
+			i = 0x1e;
+		d->print(65, 19, i, "Blink");
+
+		/* Arrows to point at current colour */
+		for (i = 61; i < 77; i++) {
+			d->putch_discrete(i, 22, ' ', 0x1f);
+		}
+		for (i = 61; i < 77; i++) {
+			d->putch_discrete(i, 24, ' ', 0x1f);
+		}
+		for (i = 61; i < 78; i++) {
+			d->putch_discrete(i, 20, ' ', 0x1f);
+		}
+		d->putch_discrete(61 + e->forec, 22, 31, 0x17);
+		d->putch_discrete(69 + e->backc, 24, 30, 0x17);
+
+		/* Default colour mode? */
+		if (e->defc == 1)
+			d->putch_discrete(78, 23, 'D', 0x1e);
+		else
+			d->putch_discrete(78, 23, 'd', 0x18);
+
+		/* Aquire mode? */
+		if (e->aqumode == AQUMODE_NORESIZE)
+			d->putch_discrete(78, 21, 'A', 0x1c);
+		else if (e->aqumode == AQUMODE_RESIZE)
+			d->putch_discrete(78, 21, 'A', 0x1e);
+		else
+			d->putch_discrete(78, 21, 'a', 0x18);
+
+
+		if (e->colorStandardPatterns) {
+			/* Draw standard patterns in all their colourful grandure */
+			for (i = 0; i < e->standard_patterns->size; i++) {
+				ZZTtile pattern = e->standard_patterns->patterns[i];
+				d->putch_discrete(61 + i, 21,
+								 zztLoneTileGetDisplayChar(pattern),
+								 zztLoneTileGetDisplayColor(pattern));
+			}
+		}
+
+		/* Pattern arrow */
+		if (e->pbuf == e->standard_patterns) {
+			d->putch_discrete(61 + e->pbuf->pos, 20, 31, 0x17);
 			x = 0;
-		d->putch_discrete(68 + e->pbuf->pos - x, 20, 31, 0x17);
-	}
-	
-	/* Backbuffer lock state */
-	if (e->backbuffer->lock == PATBUF_UNLOCK)
-		d->putch_discrete(67, 21, 0xB3, 0x01);  /* Blue vertical line */
-	else
-		d->putch_discrete(67, 21, '/', 0x04);   /* Red slash */
+		} else {
+			x = min(e->backbuffer->pos - BBSCROLLSTART, e->backbuffer->size - BBVWIDTH);
+			if (x < 0)
+				x = 0;
+			d->putch_discrete(68 + e->pbuf->pos - x, 20, 31, 0x17);
+		}
+		
+		/* Backbuffer lock state */
+		if (e->backbuffer->lock == PATBUF_UNLOCK)
+			d->putch_discrete(67, 21, 0xB3, 0x01);  /* Blue vertical line */
+		else
+			d->putch_discrete(67, 21, '/', 0x04);   /* Red slash */
 
-	/* Draw pattern backbuffer */
-	for (i = 0; i < BBVWIDTH && i + x < e->backbuffer->size; i++) {
-		ZZTtile pattern = e->backbuffer->patterns[i + x];
-		d->putch_discrete(68 + i, 21,
-						 zztLoneTileGetDisplayChar(pattern),
-						 zztLoneTileGetDisplayColor(pattern));
+		/* Draw pattern backbuffer */
+		for (i = 0; i < BBVWIDTH && i + x < e->backbuffer->size; i++) {
+			ZZTtile pattern = e->backbuffer->patterns[i + x];
+			d->putch_discrete(68 + i, 21,
+							 zztLoneTileGetDisplayChar(pattern),
+							 zztLoneTileGetDisplayColor(pattern));
+		}
+		/* Start where we left off and fill the rest w/ blue solids */
+		for (; i < BBVWIDTH; i++) {
+			d->putch_discrete(68 + i, 21, ' ', 0x1F);
+		}
 	}
-	/* Start where we left off and fill the rest w/ blue solids */
-	for (; i < BBVWIDTH; i++) {
-		d->putch_discrete(68 + i, 21, ' ', 0x1F);
+
+	if (uf & UD_PANEL)
+		/* Update the whole panel */
+		d->update(61, 0, 18, 25);
+	else {
+		/* Update in parts */
+
+		if (uf & UD_PANEL_TOP)
+			/* Just the top */
+			d->update(61, 0, 18, 2);
+
+		if (uf & UD_PANEL_MIDDLE)
+			/* Just the middle */
+			d->update(69, 12, 10, 4);
+
+		if (uf & UD_PANEL_BOTTOM)
+			/* Just the bottom */
+			d->update(61, 19, 18, 6);
 	}
-	d->update(61, 0, 18, 25);
 }
 
 void drawscreen(displaymethod * d, ZZTworld * w)
@@ -590,20 +630,19 @@ void drawspot(displaymethod * d, ZZTworld * w, editorinfo * e)
 void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
 {
 	/* TODO: protect drawing region */
-	d->putch(x + offx, y + offy, zztTileGetDisplayChar(b, x, y), zztTileGetDisplayColor(b, x, y));
+	d->putch_discrete(x + offx, y + offy, zztTileGetDisplayChar(b, x, y), zztTileGetDisplayColor(b, x, y));
 }
 
-void drawblock(displaymethod * d, ZZTblock * b, selection alpha, int offx, int offy)
+void drawblock(displaymethod * d, ZZTblock * b, int offx, int offy)
 {
 	int x, y;
 
 	for (x = 0; x < b->width; x++) {
 		for (y = 0; y < b->height; y++) {
-			if (isselected(alpha, x, y)) {
-				drawblocktile(d, b, x, y, offx, offy);
-			}
+			drawblocktile(d, b, x, y, offx, offy);
 		}
 	}
+	d->update(0, 0, 60, 25);
 }
 
 void cursorspaceblock(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
@@ -1149,7 +1188,7 @@ int charselect(displaymethod * d, int c)
 
 void colorselectdrawat(displaymethod* d, int x, int y, char ch)
 {
-	d->putch(x + 13, y + 8, ch, (y << 4) | (x & 0x0F) | ((x & 0x10) << 3));
+	d->putch_discrete(x + 13, y + 8, ch, (y << 4) | (x & 0x0F) | ((x & 0x10) << 3));
 }
 
 void colorselectdraw(displaymethod* d)
@@ -1164,22 +1203,24 @@ void colorselectdraw(displaymethod* d)
 			colorselectdrawat(d, x, y, '\xFE');
 
 	/* Draw the corners */
-	d->putch(12, 7,  '\xC9', 0x2A);
-	d->putch(12, 16, '\xC8', 0x2A);
-	d->putch(45, 7,  '\xBB', 0x2A);
-	d->putch(45, 16, '\xBC', 0x2A);
+	d->putch_discrete(12, 7,  '\xC9', 0x2A);
+	d->putch_discrete(12, 16, '\xC8', 0x2A);
+	d->putch_discrete(45, 7,  '\xBB', 0x2A);
+	d->putch_discrete(45, 16, '\xBC', 0x2A);
 
 	/* Draw the top and bottom borders */
 	for (x = 0; x < 32; x++) {
-		d->putch(x + 13, 7, '\xCD', 0x2A);
-		d->putch(x + 13, 16, '\xCD', 0x2A);
+		d->putch_discrete(x + 13, 7, '\xCD', 0x2A);
+		d->putch_discrete(x + 13, 16, '\xCD', 0x2A);
 	}
 
 	/* Draw the left and right borders */
 	for (y = 0; y < 8; y++) {
-		d->putch(12, y + 8, '\xBA', 0x2A);
-		d->putch(45, y + 8, '\xBA', 0x2A);
+		d->putch_discrete(12, y + 8, '\xBA', 0x2A);
+		d->putch_discrete(45, y + 8, '\xBA', 0x2A);
 	}
+
+	d->update(12, 7, 34, 18);
 }
 
 void colorselectremovecursor(displaymethod* d, int curx, int cury)
@@ -1187,21 +1228,21 @@ void colorselectremovecursor(displaymethod* d, int curx, int cury)
 	int x, y;
 
 	/* Draw the corners */
-	d->putch(12, 7,  '\xC9', 0x2A);
-	d->putch(12, 16, '\xC8', 0x2A);
-	d->putch(45, 7,  '\xBB', 0x2A);
-	d->putch(45, 16, '\xBC', 0x2A);
+	d->putch_discrete(12, 7,  '\xC9', 0x2A);
+	d->putch_discrete(12, 16, '\xC8', 0x2A);
+	d->putch_discrete(45, 7,  '\xBB', 0x2A);
+	d->putch_discrete(45, 16, '\xBC', 0x2A);
 
 	/* Draw the top and bottom borders */
 	for (x = max(curx - 1, 0); x < 32 && x <= curx + 1; x++) {
-		d->putch(x + 13, 7, '\xCD', 0x2A);
-		d->putch(x + 13, 16, '\xCD', 0x2A);
+		d->putch_discrete(x + 13, 7, '\xCD', 0x2A);
+		d->putch_discrete(x + 13, 16, '\xCD', 0x2A);
 	}
 
 	/* Draw the left and right borders */
 	for (y = max(cury - 1, 0); y < 8 && y <= cury + 1; y++) {
-		d->putch(12, y + 8, '\xBA', 0x2A);
-		d->putch(45, y + 8, '\xBA', 0x2A);
+		d->putch_discrete(12, y + 8, '\xBA', 0x2A);
+		d->putch_discrete(45, y + 8, '\xBA', 0x2A);
 	}
 
 	for (x = max(curx - 1, 0); x < 32 && x <= curx + 1; x++)
@@ -1212,11 +1253,14 @@ void colorselectremovecursor(displaymethod* d, int curx, int cury)
 		colorselectdrawat(d, x, cury, '\xFE');
 	for (y = 0; y < 8; y++)
 		colorselectdrawat(d, curx, y, '\xFE');
+
+	/* No need to update display -- that will be done when we
+	 * draw the cursor again */
 }
 
 void colorselectdrawcursorat(displaymethod* d, int x, int y, char ch)
 {
-	d->putch(x + 13, y + 8, ch, (y << 4) | (x & 0x0F));
+	d->putch_discrete(x + 13, y + 8, ch, (y << 4) | (x & 0x0F));
 }
 
 void colorselectdrawcursor(displaymethod* d, int curx, int cury)
@@ -1224,10 +1268,10 @@ void colorselectdrawcursor(displaymethod* d, int curx, int cury)
 	int x, y;
 
 	/* Draw the arrows */
-	d->putch(curx + 13, 7,  '\xCB', 0x2A);
-	d->putch(curx + 13, 16, '\xCA', 0x2A);
-	d->putch(12, cury + 8,  '\xCC', 0x2A);
-	d->putch(45, cury + 8,  '\xB9', 0x2A);
+	d->putch_discrete(curx + 13, 7,  '\xCB', 0x2A);
+	d->putch_discrete(curx + 13, 16, '\xCA', 0x2A);
+	d->putch_discrete(12, cury + 8,  '\xCC', 0x2A);
+	d->putch_discrete(45, cury + 8,  '\xB9', 0x2A);
 
 	/* Draw the cursor */
 	colorselectdrawcursorat(d, curx + 1, cury - 1, '\xBB');
@@ -1251,32 +1295,33 @@ void colorselectdrawcursor(displaymethod* d, int curx, int cury)
 
 	/* Draw overlaps with the boarders */
 	if (curx == 0) {   /* Left side */
-		d->putch(12, 8 + cury - 1, '\xCC', 0x2A);
-		d->putch(12, 8 + cury,     '\xBA', 0x2A);
-		d->putch(12, 8 + cury + 1, '\xCC', 0x2A);
+		d->putch_discrete(12, 8 + cury - 1, '\xCC', 0x2A);
+		d->putch_discrete(12, 8 + cury,     '\xBA', 0x2A);
+		d->putch_discrete(12, 8 + cury + 1, '\xCC', 0x2A);
 	}
 	if (curx == 31) {  /* Right side */
-		d->putch(45, 8 + cury - 1, '\xB9', 0x2A);
-		d->putch(45, 8 + cury,     '\xBA', 0x2A);
-		d->putch(45, 8 + cury + 1, '\xB9', 0x2A);
+		d->putch_discrete(45, 8 + cury - 1, '\xB9', 0x2A);
+		d->putch_discrete(45, 8 + cury,     '\xBA', 0x2A);
+		d->putch_discrete(45, 8 + cury + 1, '\xB9', 0x2A);
 	}
 	if (cury == 0) {   /* Top */
-		d->putch(13 + curx - 1, 7, '\xCB', 0x2A);
-		d->putch(13 + curx    , 7, '\xCD', 0x2A);
-		d->putch(13 + curx + 1, 7, '\xCB', 0x2A);
+		d->putch_discrete(13 + curx - 1, 7, '\xCB', 0x2A);
+		d->putch_discrete(13 + curx    , 7, '\xCD', 0x2A);
+		d->putch_discrete(13 + curx + 1, 7, '\xCB', 0x2A);
 	}
 	if (cury == 7) {   /* Bottom */
-		d->putch(13 + curx - 1, 16, '\xCA', 0x2A);
-		d->putch(13 + curx    , 16, '\xCD', 0x2A);
-		d->putch(13 + curx + 1, 16, '\xCA', 0x2A);
+		d->putch_discrete(13 + curx - 1, 16, '\xCA', 0x2A);
+		d->putch_discrete(13 + curx    , 16, '\xCD', 0x2A);
+		d->putch_discrete(13 + curx + 1, 16, '\xCA', 0x2A);
 	}
 
 	/* Draw the corners */
-	d->putch(12, 7,  '\xC9', 0x2A);
-	d->putch(12, 16, '\xC8', 0x2A);
-	d->putch(45, 7,  '\xBB', 0x2A);
-	d->putch(45, 16, '\xBC', 0x2A);
+	d->putch_discrete(12, 7,  '\xC9', 0x2A);
+	d->putch_discrete(12, 16, '\xC8', 0x2A);
+	d->putch_discrete(45, 7,  '\xBB', 0x2A);
+	d->putch_discrete(45, 16, '\xBC', 0x2A);
 
+	d->update(12, 7, 34, 18);
 }
 
 int colorselector(displaymethod * d, int * bg, int * fg, int * blink)
