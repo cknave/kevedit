@@ -22,7 +22,7 @@ INSERT
  z - Clears the current board
  i - Board Info
  w - World Info
- r - Runs zzt
+ r or ALT-T - Runs zzt
  h - Help
  ! - Loads text editor
 

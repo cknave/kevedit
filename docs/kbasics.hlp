@@ -246,7 +246,8 @@ filename to save the current board to.
 
 To aid in testing a game, pressing 'r'
 will run ZZT on the current world, jumping
-directly to the title screen.
+directly to the title screen. ALT-T may
+also be used to achieve the same effect.
 
 For this to work, zzt.exe must be in the
 same directory as kevedit.exe. zzt.dat and

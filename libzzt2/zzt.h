@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.16 2002/05/31 22:17:26 bitman Exp $
+ * $Id: zzt.h,v 1.17 2002/06/02 03:55:01 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -85,20 +85,21 @@ typedef unsigned int u_int32_t;
 #define ZZT_PROPERTY_PROGRAM 0x08
 
 /* Uses for the data[] in a param */
-#define ZZT_DATAUSE_NONE         0
-#define ZZT_DATAUSE_PASSAGEDEST  1
-#define ZZT_DATAUSE_DUPRATE      2
-#define ZZT_DATAUSE_SENSITIVITY  3
-#define ZZT_DATAUSE_INTELLIGENCE 4
-#define ZZT_DATAUSE_RESTTIME     5
-#define ZZT_DATAUSE_CHAR         6
-#define ZZT_DATAUSE_LOCKED       7
-#define ZZT_DATAUSE_SPEED        8
-#define ZZT_DATAUSE_FIRERATEMODE 9
-#define ZZT_DATAUSE_DEVIANCE    10
-#define ZZT_DATAUSE_STARTTIME   11
-#define ZZT_DATAUSE_PERIOD      12
-#define ZZT_DATAUSE_OWNER       13
+#define ZZT_DATAUSE_NONE          0
+#define ZZT_DATAUSE_PASSAGEDEST   1
+#define ZZT_DATAUSE_DUPRATE       2
+#define ZZT_DATAUSE_TIMELEFT      3
+#define ZZT_DATAUSE_SENSITIVITY   4
+#define ZZT_DATAUSE_INTELLIGENCE  5
+#define ZZT_DATAUSE_RESTTIME      6
+#define ZZT_DATAUSE_CHAR          7
+#define ZZT_DATAUSE_LOCKED        8
+#define ZZT_DATAUSE_SPEED         9
+#define ZZT_DATAUSE_FIRERATEMODE 10
+#define ZZT_DATAUSE_DEVIANCE     11
+#define ZZT_DATAUSE_STARTTIME    12
+#define ZZT_DATAUSE_PERIOD       13
+#define ZZT_DATAUSE_OWNER        14
 
 /* ZZT param profile -- description of tile with param data */
 typedef struct ZZTprofile {

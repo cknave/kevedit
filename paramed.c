@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.14 2002/05/31 22:17:26 bitman Exp $
+ * $Id: paramed.c,v 1.15 2002/06/02 03:55:01 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -349,6 +349,17 @@ char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w
 				strcat(buffer, " Slow");
 			}
 			break;
+		case ZZT_DATAUSE_TIMELEFT:
+			if (data == 0) {
+				strcpy(buffer, "Inactive");
+			} else if (data > 9)
+				sprintf(buffer, "%d", data);
+			else {
+				strcpy(buffer, "1 ");
+				scalestring(buffer + strlen(buffer), data - 1);
+				strcat(buffer, " 9");
+			}
+			break;
 		case ZZT_DATAUSE_PASSAGEDEST:
 			if (data < zztWorldGetBoardcount(w))
 				strcpy(buffer, w->boards[data].title);
@@ -493,6 +504,15 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			tile.param->data[1] = !tile.param->data[1];
 			return 1;
 		/* 8-bit numbers */
+		case ZZT_DATAUSE_TIMELEFT:
+			/* For values under ten, toggle between 0 and 9 */
+			if (tile.param->data[zztParamDatauseLocate(opt->id)] < 10) {
+				if (tile.param->data[zztParamDatauseLocate(opt->id)] == 0)
+					tile.param->data[zztParamDatauseLocate(opt->id)] = 9;
+				else
+					tile.param->data[zztParamDatauseLocate(opt->id)] = 0;
+				return 1;
+			}
 		case ZZT_DATAUSE_DUPRATE:
 		case ZZT_DATAUSE_SENSITIVITY:
 		case ZZT_DATAUSE_INTELLIGENCE:
@@ -501,7 +521,7 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 		case ZZT_DATAUSE_DEVIANCE:
 		case ZZT_DATAUSE_STARTTIME:
 		case ZZT_DATAUSE_PERIOD:
-			/* Don't edit these for numbers under 9 */
+			/* Require user to inc/dec for values under 9 */
 			if (tile.param->data[zztParamDatauseLocate(opt->id)] < 9)
 				return 0;
 		case ID_CYCLE:
@@ -618,10 +638,20 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 		case ZZT_DATAUSE_DEVIANCE:
 		case ZZT_DATAUSE_STARTTIME:
 		case ZZT_DATAUSE_PERIOD:
+			/* These can all slide as high as 8 */
 			if (tile.param->data[dul] < -delta)
 				tile.param->data[dul] = 0;
 			else if (tile.param->data[dul] < 9 && tile.param->data[dul] > 8 - delta)
 				tile.param->data[dul] = 8;
+			else
+				tile.param->data[dul] += delta;
+			return 1;
+		case ZZT_DATAUSE_TIMELEFT:
+			/* This can slide as high as 9 */
+			if (tile.param->data[dul] < -delta)
+				tile.param->data[dul] = 0;
+			else if (tile.param->data[dul] < 10 && tile.param->data[dul] > 9 - delta)
+				tile.param->data[dul] = 9;
 			else
 				tile.param->data[dul] += delta;
 			return 1;

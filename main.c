@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.68 2002/05/04 04:17:43 bitman Exp $
+ * $Id: main.c,v 1.69 2002/06/02 03:55:01 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -393,6 +393,7 @@ int main(int argc, char **argv)
 			break;
 		case 'r':
 		case 'R':
+		case DKEY_ALT_T:  /* By popular demand */
 			/* run zzt */
 			/* Load current world into zzt */
 			mydisplay->end();

@@ -17,6 +17,9 @@ Bug fixed: importing a corrupt board crashed KevEdit
 Bug fixed: special bind index is now recognized in program length
 zztParam.magic1 broken into "leader" and "follower" for centipedes
 zztParam.magic2 renamed to just magic (it's all alone now)
+Objects may be #lock-ed and #unlock-ed
+Time remaining available for bombs
+ALT-T also runs zzt for testing (by popular demand)
 
 0.4.0: February 19, 2002
 ------------------------

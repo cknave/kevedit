@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.5 2002/05/31 22:17:26 bitman Exp $
+ * $Id: params.c,v 1.6 2002/06/02 03:55:01 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,7 @@ const ZZTprofile _zzt_param_profile_table[] = {
 	/* ZZT_SCROLL         */ { ZZT_PROPERTY_CYCLE | ZZT_PROPERTY_PROGRAM, 1, { 0, 0, 0 } },
 	/* ZZT_PASSAGE        */ { ZZT_PROPERTY_NONE, 0, { 0, 0, ZZT_DATAUSE_PASSAGEDEST } },
 	/* ZZT_DUPLICATOR     */ { ZZT_PROPERTY_STEP, 0, { 0, ZZT_DATAUSE_DUPRATE, 0 } },
-	/* ZZT_BOMB           */ { ZZT_PROPERTY_CYCLE, 6, { 0, 0, 0 } },   /* TODO: there must be more to it than this */
+	/* ZZT_BOMB           */ { ZZT_PROPERTY_CYCLE, 6, { ZZT_DATAUSE_TIMELEFT, 0, 0 } },   /* TODO: there must be more to it than this */
 	/* ZZT_ENERGIZER      */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_STAR           */ { ZZT_PROPERTY_STEP | ZZT_PROPERTY_CYCLE, 1, { ZZT_DATAUSE_OWNER, 0, 0 } }, /* TODO: does owner matter? */
 	/* ZZT_CWCONV         */ { ZZT_PROPERTY_CYCLE, 3, { 0, 0, 0 } },
@@ -78,6 +78,7 @@ u_int16_t _zzt_datause_default_table[] = {
 	/* ZZT_DATAUSE_NONE         */ 0,
 	/* ZZT_DATAUSE_PASSAGEDEST  */ 0,
 	/* ZZT_DATAUSE_DUPRATE      */ 4,
+	/* ZZT_DATAUSE_TIMELEFT     */ 0,
 	/* ZZT_DATAUSE_SENSITIVITY  */ 8,
 	/* ZZT_DATAUSE_INTELLIGENCE */ 4,
 	/* ZZT_DATAUSE_RESTTIME     */ 4,
@@ -96,6 +97,7 @@ char * _zzt_datause_name_table[] = {
 	/* ZZT_DATAUSE_NONE         */ "",
 	/* ZZT_DATAUSE_PASSAGEDEST  */ "Passage Destination",
 	/* ZZT_DATAUSE_DUPRATE      */ "Duplication Rate",
+	/* ZZT_DATAUSE_TIMELEFT     */ "Time Remaining",
 	/* ZZT_DATAUSE_SENSITIVITY  */ "Sensitivity",
 	/* ZZT_DATAUSE_INTELLIGENCE */ "Intelligence",
 	/* ZZT_DATAUSE_RESTTIME     */ "Rest Time",
@@ -114,10 +116,12 @@ u_int16_t _zzt_datause_location_table[] = {
 	/* ZZT_DATAUSE_NONE         */ 0,
 	/* ZZT_DATAUSE_PASSAGEDEST  */ 2,
 	/* ZZT_DATAUSE_DUPRATE      */ 1,
+	/* ZZT_DATAUSE_TIMELEFT     */ 0,
 	/* ZZT_DATAUSE_SENSITIVITY  */ 0,
 	/* ZZT_DATAUSE_INTELLIGENCE */ 0,
 	/* ZZT_DATAUSE_RESTTIME     */ 1,
 	/* ZZT_DATAUSE_CHAR         */ 0,
+	/* ZZT_DATAUSE_LOCKED       */ 1,
 	/* ZZT_DATAUSE_SPEED        */ 1,
 	/* ZZT_DATAUSE_FIRERATEMODE */ 1,
 	/* ZZT_DATAUSE_DEVIANCE     */ 1,
