@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.2 2003/11/21 21:29:58 bitman Exp $
+ * $Id: tiles.c,v 1.3 2003/11/21 21:36:17 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -385,10 +385,10 @@ ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2)
 	if (y1 > y2) swap(y1, y2, int);
 
 	/* Make sure coords are within range */
-	if (x1 > src->width)  x1 = src->width  - 1;
-	if (x2 > src->width)  x2 = src->width  - 1;
-	if (y1 > src->height) y1 = src->height - 1;
-	if (y2 > src->height) y2 = src->height - 1;
+	if (x1 >= src->width)  x1 = src->width  - 1;
+	if (x2 >= src->width)  x2 = src->width  - 1;
+	if (y1 >= src->height) y1 = src->height - 1;
+	if (y2 >= src->height) y2 = src->height - 1;
 
 	/* Create the destination block */
 	/* Endpoints are included in the copy */
