@@ -42,7 +42,7 @@ endif
 CENTRALOBJS = main.o misc.o menu.o editbox.o screen.o
 LIBRARYOBJS = libzzt.o svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
 MISCOBJS    = patbuffer.o help.o infobox.o register.o
-DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o scroll.o tbox.o cbox.o
+DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o scroll.o tbox.o cbox.o
 DISPLAYOBJS = display.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
 
 OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS)
@@ -92,15 +92,18 @@ register.o: register.c register.h editbox.h
 
 # Draw data structures
 panel.o: panel.c panel.h
-panel_f1.o: panel_f1.c panel_f1.h
-panel_f2.o: panel_f2.c panel_f2.h
-panel_f3.o: panel_f3.c panel_f3.h
-panel_ed.o: panel_ed.c panel_ed.h
-panel_hl.o: panel_hl.c panel_hl.h
-panel_bi.o: panel_bi.c panel_bi.h
-panel_wi.o: panel_wi.c panel_wi.h
-panel_g1.o: panel_g1.c panel_g1.h
-panel_g2.o: panel_g2.c panel_g2.h
+panel_f1.o: panel_f1.c panel_f1.h # F1 panel
+panel_f2.o: panel_f2.c panel_f2.h # F2 panel
+panel_f3.o: panel_f3.c panel_f3.h # F3 panel
+panel_ed.o: panel_ed.c panel_ed.h # Editbox panel
+panel_hl.o: panel_hl.c panel_hl.h # Help panel
+panel_bi.o: panel_bi.c panel_bi.h # Board Info panel
+panel_wi.o: panel_wi.c panel_wi.h # World Info panel
+panel_g1.o: panel_g1.c panel_g1.h # Gradient tool panel 1
+panel_g2.o: panel_g2.c panel_g2.h # Gradient tool panel 2
+panel_dd.o: panel_dd.c panel_dd.h # Directory Dialog
+panel_fd.o: panel_fd.c panel_fd.h # File Dialog
+panel_fn.o: panel_fn.c panel_fn.h # File Name Dialog
 scroll.o: scroll.c scroll.h
 tbox.o: tbox.c tbox.h
 cbox.o: cbox.c cbox.h

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.32 2001/11/11 06:38:07 bitman Exp $
+ * $Id: screen.c,v 1.33 2001/11/14 01:46:50 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,9 @@
 #include "panel_f1.h"
 #include "panel_f2.h"
 #include "panel_f3.h"
+#include "panel_dd.h"
+#include "panel_fd.h"
+#include "panel_fn.h"
 #include "scroll.h"
 #include "tbox.h"
 #include "cbox.h"
@@ -210,7 +213,7 @@ char* filenamedialog(char* initname, char* extension, char* prompt,
 	char* path = NULL;
 	char* result = NULL;
 	int done = 0;
-	int i, x;
+	int i;
 	
 	if (extlen > 3)
 		return NULL;
@@ -231,12 +234,8 @@ char* filenamedialog(char* initname, char* extension, char* prompt,
 				break;
 			}
 
-	/* Clear the panel area */
-	for (i = 3; i < 25; i++) {
-		for (x = 0; x < 20; x++) {
-			mydisplay->putch(x + 60, i, ' ', 0x1f);
-		}
-	}
+	/* Display the panel */
+	drawsidepanel(mydisplay, PANEL_FILENAME);
 
 	/* Display the prompt */
 	if (strlen(prompt) < 20)
@@ -310,8 +309,13 @@ char* filenamedialog(char* initname, char* extension, char* prompt,
 					char* newpath;
 
 					newpath =
-						filedialog(path, "", "Choose a Path (arrows nav, enter selects)",
+						filedialog(path, "", "Choose a Directory",
 											 FTYPE_DIR, mydisplay);
+
+					/* TODO: Refresh the screen or something */
+					drawscrollbox(0, 0, mydisplay);
+					/* Display the panel */
+					drawsidepanel(mydisplay, PANEL_FILENAME);
 
 					if (newpath != NULL) {
 						/* Change the path if the user chose a directory */
@@ -597,6 +601,11 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 	stringvector files;
 	char* curdir = strdup(dir);
 
+	if (filetypes == FTYPE_DIR)
+		drawsidepanel(mydisplay, PANEL_DIRDIALOG);
+	else if (filetypes | FTYPE_FILE)
+		drawsidepanel(mydisplay, PANEL_FILEDIALOG);
+
 	while (!done) {
 		int response;
 
@@ -607,12 +616,8 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 		switch (response) {
 			case EDITBOX_OK:
 				if (!(filetypes & FTYPE_FILE) && ishypermessage(files)) {
-					/* If files are not to be listed and a directory is chosen,
-					 * treat it as a final choice. */
-					char* subdir = gethypermessage(files);
-
-					result = fullpath(curdir, subdir, SLASH_DEFAULT);
-					free(subdir);
+					/* If only listing directories, return the current dir */
+					result = str_dup(curdir);
 
 					done = 1;
 				}
