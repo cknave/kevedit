@@ -1,5 +1,5 @@
 /* helplist.c  -- very simple linked list of help sections
- * $Id: helplist.c,v 1.1 2001/10/22 02:48:22 bitman Exp $
+ * $Id: helplist.c,v 1.2 2001/11/10 01:07:32 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -72,7 +72,8 @@ helpsection* findsection(helpsection* sectionlist, char* title)
 {
 	/* Keep looping until we hit either the end of the list or the title */
 	while (sectionlist != NULL &&
-				 !str_equ(sectionlist->title, title, STREQU_UNCASE))
+				 (sectionlist->title == NULL ||
+				  !str_equ(sectionlist->title, title, STREQU_UNCASE)))
 		sectionlist = sectionlist->next;
 
 	/* Return whatever we ended up with */
