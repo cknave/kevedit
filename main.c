@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.44 2001/11/09 01:15:09 bitman Exp $
+ * $Id: main.c,v 1.45 2001/11/10 04:48:12 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,8 +46,11 @@ void sigInt(int i)
 
 int main(int argc, char **argv)
 {
-	int i, x;
+	int i, x;             /* General counters */
+#if 0
 	int c, e;
+#endif
+	int key;              /* Keypress */
 	int quit = 0;
 	displaymethod *mydisplay;
 	editorinfo *myinfo;
@@ -124,26 +127,27 @@ int main(int argc, char **argv)
 	/* Main loop begins */
 
 	while (quit == 0) {
+		/* Draw the tile under the cursor as such */
 		cursorspace(mydisplay, myworld, myinfo, bigboard, paramlist);
-		e = 0;
-		c = mydisplay->getch();
-		if (!c) {
-			e = 1;
-			c = mydisplay->getch();
-		}
-		/* Undo the cursorspace */
+
+		/* Get the key */
+		key = mydisplay->getch();
+		if (key == 0)
+			key = mydisplay->getch() | DDOSKEY_EXT;
+
+		/* Undo the cursorspace (draw as a normal tile) */
 		i = (myinfo->cursorx + myinfo->cursory * 60) * 2;
 		mydisplay->putch(myinfo->cursorx, myinfo->cursory,
 				 z_getchar(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], bigboard, myinfo->cursorx, myinfo->cursory),
 				 z_getcolour(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]));
 
 		/* Check for text entry */
-		if (myinfo->textentrymode == 1 && e == 0) {
-			if (c == 13 || c == 27) {
+		if (myinfo->textentrymode == 1) {
+			if (key == DKEY_ENTER || key == DKEY_ESC) {
 				/* Leave text entry mode */
-				c = 62;
-				e = 1;
-			} else if(c == 8 && myinfo->cursorx > 0) {
+				key = DKEY_F4;
+			} else if (key == DKEY_BACKSPACE && myinfo->cursorx > 0) {
+				/* Backspace */
 				myinfo->cursorx--;
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
@@ -153,11 +157,14 @@ int main(int argc, char **argv)
 				bigboard[(myinfo->cursorx+myinfo->cursory*60)*2] = Z_EMPTY;
 				bigboard[(myinfo->cursorx+myinfo->cursory*60)*2+1] = 0x07;
 				updatepanel(mydisplay, myinfo, myworld);
-			} else {
-				if (c == 1) { /* ASCII selection */
-					c = charselect(mydisplay, -1);
+			} else if ((key < 0x80 && key >= 0x20) || key == DKEY_CTRL_A) {
+				/* Insert the current keystroke as text */
+
+				if (key == DKEY_CTRL_A) { /* ASCII selection */
+					key = charselect(mydisplay, -1);
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				}
+
 				/* Plot the text character */
 				if (myinfo->cursorx != myinfo->playerx || myinfo->cursory != myinfo->playery) {
 					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
@@ -176,9 +183,9 @@ int main(int argc, char **argv)
 					   i += 8; */
 
 					tiletype (bigboard, myinfo->cursorx, myinfo->cursory) = Z_BLUETEXT + i;
-					tilecolor(bigboard, myinfo->cursorx, myinfo->cursory) = c;
-					c = 77;
-					e = 1;
+					tilecolor(bigboard, myinfo->cursorx, myinfo->cursory) = key;
+					/* Move right now */
+					key = DKEY_RIGHT;
 				} else
 					continue;
 			}
@@ -186,67 +193,71 @@ int main(int argc, char **argv)
 
 		/* bitman's addition: vi keys, only when envar "KVI" is set will
 		 * these apply. */
-		if ((e == 0) && (getenv("KVI") != NULL)) {
-			switch (c) {
+		if (getenv("KVI") != NULL) {
+			switch (key) {
 			/* Look for vi keys */
-			case 'h':
-					e = 1;
-					c = 75;
-				break;
-			case 'j':
-					e = 1;
-					c = 80;
-				break;
-			case 'k':
-					e = 1;
-					c = 72;
-				break;
-			case 'l':
-					e = 1;
-					c = 77;
-				break;
+			case 'h': key = DKEY_LEFT;  break;
+			case 'j': key = DKEY_DOWN;  break;
+			case 'k': key = DKEY_UP;    break;
+			case 'l': key = DKEY_RIGHT; break;
 			}
 		}
 
 		/* Act on key pressed */
-		switch (c) {
-		case '!':
-			if (e == 0) {
-				/* Open text editor */
-				texteditor(mydisplay);
+		switch (key) {
 
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
+			/**************** Movement Keys *****************/
+
+		case DKEY_LEFT:
+			/* Left arrow */
+			if (myinfo->cursorx > 0) {
+				myinfo->cursorx--;
 			}
 			break;
-		case 'z':
-		case 'Z':
-			if (e == 0) {
-				if (confirmprompt(mydisplay, "Clear board?") == CONFIRM_YES) {
-					clearboard(myworld, myinfo, bigboard, paramlist);
-
-					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				}
-
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
+		case DKEY_ALT_LEFT:
+			/* Alt+Left */
+			myinfo->cursorx -= 10;
+			if (myinfo->cursorx < 0)
+				myinfo->cursorx = 0;
+			break;
+		case DKEY_RIGHT:
+			/* Right arrow */
+			if (myinfo->cursorx < 59) {
+				myinfo->cursorx++;
 			}
 			break;
-		case 'n':
-		case 'N':
-			if (e == 0) {
-				if (confirmprompt(mydisplay, "Make new world?") == CONFIRM_YES) {
-					myworld = clearworld(myworld, myinfo, bigboard, paramlist);
-
-					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				}
-
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
+		case DKEY_ALT_RIGHT:
+			/* Alt+Right */
+			myinfo->cursorx += 10;
+			if (myinfo->cursorx > 59)
+				myinfo->cursorx = 59;
+			break;
+		case DKEY_UP:
+			/* Up arrow */
+			if (myinfo->cursory > 0) {
+				myinfo->cursory--;
 			}
 			break;
+		case DKEY_ALT_UP:
+			/* Alt+Up */
+			myinfo->cursory -= 5;
+			if (myinfo->cursory < 0)
+				myinfo->cursory = 0;
+			break;
+		case DKEY_DOWN:
+			/* Down arrow or P */
+			if (myinfo->cursory < 24) {
+				myinfo->cursory++;
+			}
+			break;
+		case DKEY_ALT_DOWN:
+			/* Alt+Down */
+			myinfo->cursory += 5;
+			if (myinfo->cursory > 24)
+				myinfo->cursory = 24;
+			break;
+
+			/****************** Major actions ****************/
 		case 'q':
 		case 'Q':
 			/* Quit */
@@ -257,88 +268,29 @@ int main(int argc, char **argv)
 				updatepanel(mydisplay, myinfo, myworld);
 			}
 			break;
-		case 'd':
-		case 'D':
-			/* Toggle DefC mode */
-			myinfo->defc ^= 1;
-			updatepanel(mydisplay, myinfo, myworld);
-			break;
-		case 9:
-			/* Toggle draw mode */
-			if (toggledrawmode(myinfo) != 0) {
-				/* Update changes and start plotting if we entered draw mode */
-				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
-			}
-			updatepanel(mydisplay, myinfo, myworld);
-			break;
-		case 'g':
-		case 'G':
-		case 'a':
-		case 'A':
-			/* Toggle aqu mode - cursor movement loads pattern buffer automatically */
-			myinfo->aqumode ^= 1;
+		case 'n':
+		case 'N':
+			if (confirmprompt(mydisplay, "Make new world?") == CONFIRM_YES) {
+				myworld = clearworld(myworld, myinfo, bigboard, paramlist);
 
-			/* drawmode & gradmode can't be on while in aqumode */
-			myinfo->drawmode = 0;
-			myinfo->gradmode = 0;
-
-			if (myinfo->aqumode != 0) {
-				/* Grab if aqumode is on */
-				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(myinfo->backbuffer,
-							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-							 myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-				else
-					push(myinfo->backbuffer,
-							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-							 NULL);
-			}
-			updatepanel(mydisplay, myinfo, myworld);
-			break;
-		case 15:
-			/* Shift-tab */
-			if (e == 0)
-				break;
-
-			if (togglegradientmode(myinfo) != 0) {
-				/* Plot only when first turning gradmode on */
-				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 
+			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
-		case 'v':
-		case 'V':
-			/* Toggle blink mode */
-			myinfo->blinkmode ^= 1;
-			pat_applycolordata(myinfo->standard_patterns, myinfo);
+		case 'z':
+		case 'Z':
+			if (confirmprompt(mydisplay, "Clear board?") == CONFIRM_YES) {
+				clearboard(myworld, myinfo, bigboard, paramlist);
+
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			}
+
+			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
-		case ' ':
-			/* Plot */
-			plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
-			break;
-		case 'c':
-			/* Change foregeound colour */
-			myinfo->forec++;
-			if (myinfo->forec == 16)
-				myinfo->forec = 0;
-			pat_applycolordata(myinfo->standard_patterns, myinfo);
-			updatepanel(mydisplay, myinfo, myworld);
-			break;
-		case 'C':
-			/* Change background colour */
-			myinfo->backc++;
-			if (myinfo->backc == 8)
-				myinfo->backc = 0;
-			pat_applycolordata(myinfo->standard_patterns, myinfo);
-			updatepanel(mydisplay, myinfo, myworld);
-			break;
+
 		case 'b':
 		case 'B':
 			changeboard(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -348,37 +300,37 @@ int main(int argc, char **argv)
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			mydisplay->print(30 - strlen(myworld->board[myinfo->curboard]->title) / 2, 0, 0x70, myworld->board[myinfo->curboard]->title);
 			break;
-		case '\b':
-			/* backspace: same action as delete */
-			c = 's';
-			e = 1;
-			/* NO BREAK here; continue into following code */
+		case 'i':
+		case 'I':
+			/* Board Info */
+			editboardinfo(myworld, myinfo->curboard, mydisplay);
+
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+		case 'w':
+		case 'W':
+			/* World Info */
+			editworldinfo(myworld, mydisplay);
+
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+
+		/********************* File operations ****************/
+
 		case 's':
 		case 'S':
-			if (e != 1) {
 				saveworldprompt(mydisplay, myworld, myinfo, bigboard);
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			} else {
-				/* Plot an empty */
-				patbuffer* prevbuf = myinfo->pbuf;
-				myinfo->pbuf = myinfo->standard_patterns;
-				x = myinfo->pbuf->pos;
-				myinfo->pbuf->pos = 4;	/* That's an empty */
-				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-				myinfo->pbuf->pos = x;
-				myinfo->pbuf = prevbuf;
-				updatepanel(mydisplay, myinfo, myworld);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
-			}
-			break;
-		case 'F':
-		case 'f':
-			dofloodfill(mydisplay, myworld, myinfo, bigboard, paramlist, c == 'F');
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-			break;
+				break;
 		case 'L':
 		case 'l':
 			/* Load world */
@@ -413,273 +365,280 @@ int main(int argc, char **argv)
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			mydisplay->print(30 - strlen(myworld->board[myinfo->curboard]->title) / 2, 0, 0x70, myworld->board[myinfo->curboard]->title);
 			break;
-		/* Code common to all movement keys can be found after this switch statement */
-		case 75:
+		case 'o':
+		case 'O':
+			/* Load object from library */
+			objectlibrarymenu(mydisplay, myworld, myinfo, bigboard, paramlist);
+			
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+
+		/****************** Colour ******************/
+
+		case 'c':
+			/* Change foregeound colour */
+			myinfo->forec++;
+			if (myinfo->forec == 16)
+				myinfo->forec = 0;
+			pat_applycolordata(myinfo->standard_patterns, myinfo);
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
+		case 'C':
+			/* Change background colour */
+			myinfo->backc++;
+			if (myinfo->backc == 8)
+				myinfo->backc = 0;
+			pat_applycolordata(myinfo->standard_patterns, myinfo);
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
 		case 'k':
-			/* Left arrow */
-			if (e == 1) {
-				if (myinfo->cursorx > 0) {
-					myinfo->cursorx--;
-				}
-			} else {
-				/* Kolor selector */
-				colorselector(mydisplay, &myinfo->backc, &myinfo->forec,
-											&myinfo->blinkmode);
+		case 'K':
+			/* Kolor selector */
+			colorselector(mydisplay, &myinfo->backc, &myinfo->forec,
+										&myinfo->blinkmode);
 
-				pat_applycolordata(myinfo->standard_patterns, myinfo);
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				updatepanel(mydisplay, myinfo, myworld);
-			}
+			pat_applycolordata(myinfo->standard_patterns, myinfo);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			updatepanel(mydisplay, myinfo, myworld);
 			break;
-		case 155:
-			/* Alt+Left */
-			if (e == 1) {
-				myinfo->cursorx -= 10;
-				if (myinfo->cursorx < 0)
-					myinfo->cursorx = 0;
-			}
+		case 'v':
+		case 'V':
+			/* Toggle blink mode */
+			myinfo->blinkmode ^= 1;
+			pat_applycolordata(myinfo->standard_patterns, myinfo);
+			updatepanel(mydisplay, myinfo, myworld);
 			break;
-		case 77:
-			/* Right arrow */
-			if (e == 1) {
-				if (myinfo->cursorx < 59) {
-					myinfo->cursorx++;
-				}
-			}
+		case 'd':
+		case 'D':
+			/* Toggle DefC mode */
+			myinfo->defc ^= 1;
+			updatepanel(mydisplay, myinfo, myworld);
 			break;
-		case 157:
-			/* Alt+Right */
-			if (e == 1) {
-				myinfo->cursorx += 10;
-				if (myinfo->cursorx > 59)
-					myinfo->cursorx = 59;
-			}
-			break;
-		case 72:
+
+		/****************** Misc *********************/
+
 		case 'h':
-			/* Up arrow or H */
-			if (e == 1) {
-				/* Move cursor up */
-				if (myinfo->cursory > 0) {
-					myinfo->cursory--;
-				}
-			} else {
-				/* Help */
-				help(mydisplay);
+		case 'H':
+			/* Help */
+			help(mydisplay);
 
-				/* Update everything */
-				drawpanel(mydisplay);
+			/* Update everything */
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+		case 'r':
+		case 'R':
+			/* run zzt */
+			/* Load current world into zzt */
+			mydisplay->end();
+			runzzt(datapath, myinfo->currentfile);
+			
+			/* restart display from scratch */
+			mydisplay->init();
+			drawpanel(mydisplay);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+
+			/* Redraw */
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+		case '!':
+			/* Open text editor */
+			texteditor(mydisplay);
+
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
+
+		/***************** Drawing *****************/
+
+		case ' ':
+			/* Plot */
+			plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+			break;
+		case DKEY_TAB:
+			/* Toggle draw mode */
+			if (toggledrawmode(myinfo) != 0) {
+				/* Update changes and start plotting if we entered draw mode */
+				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+			}
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
+		case DKEY_SHIFT_TAB:
+			/* Shift-tab */
+			if (togglegradientmode(myinfo) != 0) {
+				/* Plot only when first turning gradmode on */
+				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+			}
+
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
+		case DKEY_BACKSPACE:
+		case DKEY_DELETE:
+			/* Plot an empty */
+			{
+				patbuffer* prevbuf = myinfo->pbuf;
+				myinfo->pbuf = myinfo->standard_patterns;
+				x = myinfo->pbuf->pos;
+				myinfo->pbuf->pos = 4;	/* That's an empty */
+				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+				myinfo->pbuf->pos = x;
+				myinfo->pbuf = prevbuf;
 				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
-		case 152:
-			/* Alt+Up */
-			if (e == 1) {
-				myinfo->cursory -= 5;
-				if (myinfo->cursory < 0)
-					myinfo->cursory = 0;
-			}
+		case 'f':
+		case 'F':
+			dofloodfill(mydisplay, myworld, myinfo, bigboard, paramlist, key == 'F');
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			break;
-		case 80:
-			/* Down arrow or P */
-			if (e == 1) {
-				if (myinfo->cursory < 24) {
-					myinfo->cursory++;
-				}
-			} else {
-				/* Select new pattern backwards */
-				previouspattern(myinfo);
-				updatepanel(mydisplay, myinfo, myworld);
-			}
-			break;
-		case 160:
-			/* Alt+Down */
-			if (e == 1) {
-				myinfo->cursory += 5;
-				if (myinfo->cursory > 24)
-					myinfo->cursory = 24;
-			}
-			break;
+
+		/***************** Backbuffer Actions ****************/
+
 		case 'p':
 			/* Select new pattern forwards */
 			nextpattern(myinfo);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
-		case 59:
-			/* F1 panel */
-			if (e == 1) {
-				itemmenu(mydisplay, myworld, myinfo, bigboard, paramlist);
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			}
-			break;
-		case 60: /* '<' */
-			/* F2 panel */
-			if (e == 1) {
-				creaturemenu(mydisplay, myworld, myinfo, bigboard, paramlist);
-
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			} else {
-				/* Decrease size of backbuffer */
-				if (myinfo->backbuffer->size > 1) {
-					patbuffer_resize(myinfo->backbuffer, -1);
-					updatepanel(mydisplay, myinfo, myworld);
-				}
-			}
-			break;
-		case 61:
-			/* F3 panel */
-			if (e == 1) {
-				terrainmenu(mydisplay, myworld, myinfo, bigboard, paramlist);
-
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			}
-			break;
-		case 62: /* '>' */
-			if (e == 1) {
-				/* F4 - Enter Text */
-				myinfo->textentrymode ^= 1;
-				updatepanel(mydisplay, myinfo, myworld);
-			} else {
-				/* Increase size of backbuffer */
-				if (myinfo->backbuffer->size < MAX_BACKBUF) {
-					patbuffer_resize(myinfo->backbuffer, 1);
-					updatepanel(mydisplay, myinfo, myworld);
-				}
-			}
-			break;
-		case 'o':
-		case 'O':
-			/* Load object from library */
-			if (e == 0) {
-				objectlibrarymenu(mydisplay, myworld, myinfo, bigboard, paramlist);
-				
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			}
-			break;
-		case 'i':
-		case 'I':
-			/* Board Info */
-			editboardinfo(myworld, myinfo->curboard, mydisplay);
-
-			drawpanel(mydisplay);
+		case 'P':
+			/* Select new pattern backwards */
+			previouspattern(myinfo);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
-		case 'w':
-		case 'W':
-			/* World Info */
-			editworldinfo(myworld, mydisplay);
-
-			drawpanel(mydisplay);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			break;
-		case 13:
-			/* Modify / Grab */
-			if (e == 0) {
-				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-					if (myworld->board[myinfo->curboard]->
-							  params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
-						/* we have params; lets edit them! */
-						if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
-							myworld->board[myinfo->curboard]->
-								params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1
-								= charselect(mydisplay, myworld->board[myinfo->curboard]->
-														 params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1);
-						}
-						if (tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_SCROLL ||
-								tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
-							/* Load editor on current moredata */
-							editmoredata(myworld->board[myinfo->curboard]->
-													 params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);
-						}
-						if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_PASSAGE) {
-							param* p = myworld->board[myinfo->curboard]->
-								params[paramlist[myinfo->cursorx][myinfo->cursory]];
-							/* Choose passage destination */
-							p->data3 = boarddialog(myworld, p->data3, 0, "Passage Destination", mydisplay);
-						}
-						/* TODO: modify other params */
-						/* redraw everything */
-						drawpanel(mydisplay);
-						updatepanel(mydisplay, myinfo, myworld);
-						mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-						drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-					}
-				}
-				e = 1;	/* set ext so that <insert> code below is used */
+		case '<':
+			/* Decrease size of backbuffer */
+			if (myinfo->backbuffer->size > 1) {
+				patbuffer_resize(myinfo->backbuffer, -1);
+				updatepanel(mydisplay, myinfo, myworld);
 			}
-			/* Don't break here! When we modify, we grab too! */
-		case 0x52:
-		case 'r':
-			/* Insert or 'r' */
-			if (e == 1) {
-				/* Grab */
+			break;
+		case '>':
+			/* Increase size of backbuffer */
+			if (myinfo->backbuffer->size < MAX_BACKBUF) {
+				patbuffer_resize(myinfo->backbuffer, 1);
+				updatepanel(mydisplay, myinfo, myworld);
+			}
+			break;
+		case 'a':
+		case 'A':
+			/* Toggle aqu mode - cursor movement loads pattern buffer automatically */
+			myinfo->aqumode ^= 1;
+
+			/* drawmode & gradmode can't be on while in aqumode */
+			myinfo->drawmode = 0;
+			myinfo->gradmode = 0;
+
+			if (myinfo->aqumode != 0) {
+				/* Grab if aqumode is on */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
 					push(myinfo->backbuffer,
 							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
 							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-							 myworld->board[myinfo->curboard]->
-							   params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+							 myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
 				else
 					push(myinfo->backbuffer,
 							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
 							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
 							 NULL);
+			}
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
 
-				updatepanel(mydisplay, myinfo, myworld);
-				break;
-			} else {
-				/* 'r'un zzt */
-				/* Load current world into zzt */
-				if (e == 0) {
-					mydisplay->end();
-					runzzt(datapath, myinfo->currentfile);
-					
-					/* restart display from scratch */
-					mydisplay->init();
-					drawpanel(mydisplay);
-					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+		/***************** Function Keys *******************/
 
-					/* Ask to reload world (I don't like it any more) */
-#if 0
-					if (confirmprompt(mydisplay, "Reload World?") == CONFIRM_YES) {
-						/* Load the world from file, in case ZZT modified it */
-						if (fileexists(myinfo->currentfile)) {
-							z_delete(myworld);
-							myworld = loadworld(myinfo->currentfile);
+		case DKEY_F1:
+			/* F1 panel */
+			itemmenu(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+		case DKEY_F2:
+			/* F2 panel */
+			creaturemenu(mydisplay, myworld, myinfo, bigboard, paramlist);
 
-							updateinfo(myworld, myinfo, bigboard);
-							updateparamlist(myworld, myinfo, paramlist);
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+		case DKEY_F3:
+			/* F3 panel */
+			terrainmenu(mydisplay, myworld, myinfo, bigboard, paramlist);
 
-							drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-						}
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+		case DKEY_F4:
+			/* F4 - Enter Text */
+			myinfo->textentrymode ^= 1;
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
+		case DKEY_ENTER:
+			/* Modify / Grab */
+			if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
+				if (myworld->board[myinfo->curboard]->
+							params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
+					/* we have params; lets edit them! */
+					if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
+						myworld->board[myinfo->curboard]->
+							params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1
+							= charselect(mydisplay, myworld->board[myinfo->curboard]->
+													 params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1);
 					}
-#endif
-
-					/* Redraw */
+					if (tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_SCROLL ||
+							tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
+						/* Load editor on current moredata */
+						editmoredata(myworld->board[myinfo->curboard]->
+												 params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);
+					}
+					if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_PASSAGE) {
+						param* p = myworld->board[myinfo->curboard]->
+							params[paramlist[myinfo->cursorx][myinfo->cursory]];
+						/* Choose passage destination */
+						p->data3 = boarddialog(myworld, p->data3, 0, "Passage Destination", mydisplay);
+					}
+					/* TODO: modify other params */
+					/* redraw everything */
 					drawpanel(mydisplay);
 					updatepanel(mydisplay, myinfo, myworld);
 					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				}
 			}
+			/* Don't break here! When we modify, we grab too! */
+		case DKEY_INSERT:
+			/* Insert */
+			/* Grab */
+			if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
+				push(myinfo->backbuffer,
+						 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+						 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+						 myworld->board[myinfo->curboard]->
+							 params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+			else
+				push(myinfo->backbuffer,
+						 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+						 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+						 NULL);
+
+			updatepanel(mydisplay, myinfo, myworld);
 			break;
 
 		case '?':
@@ -699,9 +658,12 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		if ((e == 1) && (c == 75  || c == 77 || c == 72 || c == 80 ||
-										 c == 155 || c == 157 || c == 152 || c == 160)) {
-			/* Common code for all movement actions */
+		/* Common code for all movement actions */
+		if (key == DKEY_LEFT     || key == DKEY_RIGHT     ||
+		    key == DKEY_UP       || key == DKEY_DOWN      ||
+		    key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT ||
+		    key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN) {
+			/* TODO: consider ALT-movents seperately */
 			if (myinfo->aqumode != 0) {
 				/* Get if aquire mode is on */
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)

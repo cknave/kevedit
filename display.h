@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.8 2001/11/09 01:15:09 bitman Exp $
+ * $Id: display.h,v 1.9 2001/11/10 04:48:12 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,8 @@ extern void RegisterDisplays();
 /* DOS keys */
 /* TODO: move to another file */
 
+#define DKEY_NONE       0x00
+
 /* Flags */
 /* TODO: actually used these */
 #define DKEY_SHIFT      0x100
@@ -65,6 +67,8 @@ extern void RegisterDisplays();
 #define DKEY_ESC        27
 #define DKEY_BACKSPACE  '\b'
 #define DKEY_TAB        '\t'
+
+#define DKEY_SHIFT_TAB  (15 | DDOSKEY_EXT)
 
 /* Arrow keys */
 #define DKEY_UP         (0x48 | DDOSKEY_EXT)
@@ -82,6 +86,21 @@ extern void RegisterDisplays();
 
 /* Function keys */
 #define DKEY_F1         (0x3B | DDOSKEY_EXT)
+#define DKEY_F2         (0x3C | DDOSKEY_EXT)
+#define DKEY_F3         (0x3D | DDOSKEY_EXT)
+#define DKEY_F4         (0x3E | DDOSKEY_EXT)
+#define DKEY_F5         (0x3F | DDOSKEY_EXT)
+#define DKEY_F6         (0x40 | DDOSKEY_EXT)
+#define DKEY_F7         (0x41 | DDOSKEY_EXT)
+#define DKEY_F8         (0x42 | DDOSKEY_EXT)
+#define DKEY_F9         (0x43 | DDOSKEY_EXT)
+#define DKEY_F10        (0x44 | DDOSKEY_EXT)
+
+/* Alt-arrow keys */
+#define DKEY_ALT_LEFT   (155 | DDOSKEY_EXT)
+#define DKEY_ALT_RIGHT  (157 | DDOSKEY_EXT)
+#define DKEY_ALT_UP     (152 | DDOSKEY_EXT)
+#define DKEY_ALT_DOWN   (160 | DDOSKEY_EXT)
 
 /* Ctrl-letter keys */
 /* TODO: replace with 'a' | DKEY_CTRL, etc */
