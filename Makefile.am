@@ -1,4 +1,4 @@
-SUBDIRS = libzzt2 glob
+SUBDIRS = libzzt2 synth glob
 
 bin_PROGRAMS = kevedit
 
