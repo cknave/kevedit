@@ -1,4 +1,3 @@
-!contents;Table of Contents
 $-----------------------------------------
 KevEdit 0.3.4
      A world file editor for the game ZZT
@@ -7,7 +6,7 @@ Copyright (C) 2000-2001
         Kev Vance         <kev@kvance.com>
 With many contributions by
          bitman      <bitman@users.sf.net>
-
+:top;
 :contents;Using Kevedit
 !-knew;* New features *
 !-kbasics;Basics of Using KevEdit

@@ -3,7 +3,7 @@ $ZZT-OOP
 $Programming Language Tutorial
 $(Extended by bitman)
 
-:contents;Contents
+:top;Contents
 !simple;A Simple Example Program
 !end;The Importance of #end
 !oop;Object Oriented Programming
