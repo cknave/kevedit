@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.16 2000/08/31 03:36:48 bitman Exp $
+ * $Id: main.c,v 1.17 2000/09/02 04:33:23 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -294,6 +294,7 @@ int main(int argc, char **argv)
 	myinfo->cursory = myinfo->playery = 0;
 	myinfo->drawmode = 0;
 	myinfo->blinkmode = 0;
+	myinfo->textentrymode = 0;
 	myinfo->defc = 1;
 	myinfo->forec = 0x0f;
 	myinfo->backc = 0x00;
@@ -386,26 +387,75 @@ int main(int argc, char **argv)
 				 z_getchar(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], bigboard, myinfo->cursorx, myinfo->cursory),
 				 z_getcolour(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]));
 
-		switch (c) {
-			case '!':
-				/* open text file for edit */
-				strcpy(buffer, "");
-				{
-					stringvector editvector;
-					initstringvector(&editvector);
-					editbox(mydisplay, "Text Editor", &editvector, 42, 0);
-					if (filenamedialog(buffer, "Save As", "", 1, mydisplay) != NULL)
-						svectortofile(&editvector, buffer);
-					deletestringvector(&editvector);
+		/* Check for text entry */
+		if (myinfo->textentrymode == 1 && e == 0) {
+			if (c == 13 || c == 27) {
+				/* Leave text entry mode */
+				c = 62;
+				e = 1;
+			} else {
+				if (c == 1) {
+					/* ASCII selection */
+					c = charselect(mydisplay);
+					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				}
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
-				break;
-			case 'z':
-			case 'Z':
-				if (e == 0) {
+				/* Plot the text character */
+				if (myinfo->cursorx != myinfo->playerx || myinfo->cursory != myinfo->playery) {
+					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
+						/* We're overwriting a parameter */
+						if (CURRENTPARAM->moredata != NULL)
+							free(CURRENTPARAM->moredata);
+						free(CURRENTPARAM);
+						for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
+							myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
+						}
+						for (x = 0; x < 25; x++) {
+							for (i = 0; i < 60; i++) {
+								if (paramlist[i][x] > t)
+									paramlist[i][x]--;
+							}
+						}
+						myworld->board[myinfo->curboard]->info->objectcount--;
+						paramlist[myinfo->cursorx][myinfo->cursory] = 0;
+					}
+					/* Determine the text code based on the FG colour */
+					if (myinfo->forec == 0 || myinfo->forec == 8 || myinfo->forec == 15)
+						i = 6;
+					else if (myinfo->forec > 8)
+						i = myinfo->forec - 9;
+					else
+						i = myinfo->forec - 1;
+					/* XXX FIXME Was I mistaken about blinking text?
+					   if(myinfo->blinkmode)
+					   i += 8; */
+					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = Z_BLUETEXT + i;
+					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = c;
+					c = 77;
+					e = 1;
+				} else
+					continue;
+			}
+		}
+		switch (c) {
+		case '!':
+			/* open text file for edit */
+			strcpy(buffer, "");
+			{
+				stringvector editvector;
+				initstringvector(&editvector);
+				editbox(mydisplay, "Text Editor", &editvector, 42, 0);
+				if (filenamedialog(buffer, "Save As", "", 1, mydisplay) != NULL)
+					svectortofile(&editvector, buffer);
+				deletestringvector(&editvector);
+			}
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
+		case 'z':
+		case 'Z':
+			if (e == 0) {
 				/* Clear board */
 				for (i = 3; i < 25; i++) {
 					for (x = 0; x < 20; x++) {
@@ -418,8 +468,8 @@ int main(int argc, char **argv)
 				while (i == 0) {
 					i = mydisplay->getch();
 					if (i == 'y' || i == 'Y') {
-						for(i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
-							if(myworld->board[myinfo->curboard]->params[i]->moredata != NULL)
+						for (i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
+							if (myworld->board[myinfo->curboard]->params[i]->moredata != NULL)
 								free(myworld->board[myinfo->curboard]->params[i]->moredata);
 							free(myworld->board[myinfo->curboard]->params[i]);
 						}
@@ -441,9 +491,9 @@ int main(int argc, char **argv)
 				updatepanel(mydisplay, myinfo, myworld);
 			}
 			break;
-			case 'n':
-			case 'N':
-				if (e == 0) {
+		case 'n':
+		case 'N':
+			if (e == 0) {
 				/* New world */
 				for (i = 3; i < 25; i++) {
 					for (x = 0; x < 20; x++) {
@@ -460,8 +510,8 @@ int main(int argc, char **argv)
 						myworld = z_newworld();
 						myworld->board[0] = z_newboard("KevEdit World");
 						rle_decode(myworld->board[0]->data, bigboard);
-						for(i = 0; i < 25; i++)
-							for(x = 0; x < 60; x++)
+						for (i = 0; i < 25; i++)
+							for (x = 0; x < 60; x++)
 								paramlist[x][i] = 0;
 						strcpy(myinfo->currenttitle, "UNTITLED");
 						myinfo->currentfile = "untitled.zzt";
@@ -800,7 +850,7 @@ int main(int argc, char **argv)
 				drawscrollbox(0, 0, mydisplay);
 				mydisplay->print(24, 4, 0x0a, "About KevEdit");
 				mydisplay->print(9, 12, 0x0a, "KevEdit R5, Version");
-				mydisplay->print(34, 12, 0x0a, VERSION);
+				mydisplay->print(29, 12, 0x0a, VERSION);
 				mydisplay->print(9, 13, 0x0a, "Copyright (C) 2000 Kev Vance");
 				mydisplay->print(9, 14, 0x0a, "Distribute under the terms of the GNU GPL");
 				mydisplay->cursorgo(9, 13);
@@ -1048,6 +1098,11 @@ int main(int argc, char **argv)
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			}
+			break;
+		case 62:
+			/* F4 - Enter Text */
+			myinfo->textentrymode ^= 1;
+			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'i':
 		case 'I':

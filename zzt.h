@@ -1,5 +1,5 @@
 /* zzt.h        -- ZZT library definitions
- * $Id: zzt.h,v 1.4 2000/08/14 22:00:35 kvance Exp $
+ * $Id: zzt.h,v 1.5 2000/09/02 04:33:23 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -233,6 +233,7 @@ extern param *z_newparam_bomb(int x, int y);
 #define Z_TRANSPORTER	0x1E
 #define Z_LINE		0x1F
 #define Z_RICOCHET	0x20
+#define Z_BLINKHORIZ	0x21
 #define Z_BEAR		0x22
 #define Z_RUFFIAN	0x23
 #define Z_OBJECT	0x24
@@ -242,6 +243,7 @@ extern param *z_newparam_bomb(int x, int y);
 #define Z_PUSHER	0x28
 #define Z_LION		0x29
 #define Z_TIGER		0x2A
+#define Z_BLINKVERT	0x2B
 #define Z_CENTHEAD	0x2C
 #define Z_CENTBODY	0x2D
 #define Z_BLUETEXT	0x2F

@@ -1,5 +1,5 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.3 2000/08/14 22:00:35 kvance Exp $
+ * $Id: libzzt.c,v 1.4 2000/09/02 04:33:23 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -343,6 +343,8 @@ z_getchar(u_int8_t type, u_int8_t colour, param * p, u_int8_t * boardata, u_int8
 		return (boardata == NULL) ? 206 : linechar(boardata, x, y);
 	case Z_RICOCHET:
 		return '*';
+	case Z_BLINKHORIZ:
+		return 205;
 	case Z_BEAR:
 		return 153;
 	case Z_RUFFIAN:
@@ -367,6 +369,8 @@ z_getchar(u_int8_t type, u_int8_t colour, param * p, u_int8_t * boardata, u_int8
 		return 234;
 	case Z_TIGER:
 		return 227;
+	case Z_BLINKVERT:
+		return 186;
 	case Z_CENTHEAD:
 		return 233;
 	case Z_CENTBODY:
@@ -538,6 +542,8 @@ z_getcolour(u_int8_t type, u_int8_t colour, param * p)
 		return colour;
 	case Z_RICOCHET:
 		return colour;
+	case Z_BLINKHORIZ:
+		return colour;
 	case Z_BEAR:
 		return p->undert != Z_EMPTY ?
 		    (p->underc & 0xf0) + (colour & 0x0f) : colour;
@@ -565,6 +571,8 @@ z_getcolour(u_int8_t type, u_int8_t colour, param * p)
 	case Z_TIGER:
 		return p->undert != Z_EMPTY ?
 		    (p->underc & 0xf0) + (colour & 0x0f) : colour;
+	case Z_BLINKVERT:
+		return colour;
 	case Z_CENTHEAD:
 		return p->undert != Z_EMPTY ?
 		    (p->underc * 0xf0) + (colour * 0x0f) : colour;

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.12 2000/08/31 03:36:48 bitman Exp $
+ * $Id: screen.c,v 1.13 2000/09/02 04:33:23 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,11 +40,11 @@ extern param *patparams[10];
 /* okay most of this was stolen from case 's' in main(), but I needed a more
  * generic filename input function. case 's' could even be modified to use
  * this function if main() gets too bloated. --bitman */
-char* filenamedialog(char * filename, char * prompt, char * ext, int askoverwrite, displaymethod * mydisplay)
+char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, displaymethod * mydisplay)
 {
-	int i = 0, x = 0, c = 0;   /* general vars */
-	int t = strlen(filename);  /* current edit position */
-	int extlen = strlen(ext);  /* length of given extention */
+	int i = 0, x = 0, c = 0;	/* general vars */
+	int t = strlen(filename);	/* current edit position */
+	int extlen = strlen(ext);	/* length of given extention */
 	char buffer[15] = "";
 
 	if (extlen > 3 || t > 12)
@@ -78,7 +78,6 @@ char* filenamedialog(char * filename, char * prompt, char * ext, int askoverwrit
 		mydisplay->putch(70, 4, '.', 0x1f);
 		mydisplay->print(70, 4, 0x1f, ext);
 	}
-
 	x = 0;
 	while (x != 27) {
 		mydisplay->cursorgo(61 + t, 4);
@@ -198,21 +197,21 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 		i = 0x1f;
 	else
 		i = 0x1e;
-	d->putch(69, 15, 'D', i);
-	d->putch(70, 15, 'r', i);
-	d->putch(71, 15, 'a', i);
-	d->putch(72, 15, 'w', i);
+	d->print(69, 15, i, "Draw");
 
 	/* Blink Mode? */
 	if (e->blinkmode == 0)
 		i = 0x1f;
 	else
 		i = 0x1e;
-	d->putch(65, 19, 'B', i);
-	d->putch(66, 19, 'l', i);
-	d->putch(67, 19, 'i', i);
-	d->putch(68, 19, 'n', i);
-	d->putch(69, 19, 'k', i);
+	d->print(65, 19, i, "Blink");
+
+	/* Text entry Mode? */
+	if (e->textentrymode == 0)
+		i = 0x1f;
+	else
+		i = 0x9e;
+	d->print(69, 12, i, "Enter Text");
 
 	/* Arrows to point at current colour/pattern */
 	for (i = 61; i < 77; i++) {

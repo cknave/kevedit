@@ -1,3 +1,9 @@
+0.4:
+----
+Blinkwall lines now drawn properly
+DPMI time slices are given up for more multitasking friendliness
+Text entry implemented
+
 0.3: August 22, 2000
 --------------------
 Bound DELETE to plot an empty

@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.3 2000/08/12 18:13:22 kvance Exp $
+ * $Id: display_dos.c,v 1.4 2000/09/02 04:33:23 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,31 @@
 
 short videomem;
 int windows;
+
+void release_time_slice()
+{
+/* INT 2F - MS Windows, DPMI, various - RELEASE CURRENT VIRTUAL MACHINE TIME-SLICE
+   AX = 1680h
+   Return: AL = status
+   00h if the call is supported
+   80h (unchanged) if the call is not supported
+   Notes:  programs can use this function in idle loops to enhance performance
+   under multitaskers; this call is supported by MS Windows 3+, DOS 5+,
+   DPMI 1.0+, and in OS/2 2.0+ for multitasking DOS applications
+   does not block the program; it just gives up the remainder of the time
+   slice
+   should not be used by Windows-specific programs
+   when called very often without intermediate screen output under
+   MS Windows 3.x, the VM will go into an idle-state and will not
+   receive the next slice before 8 seconds have elapsed. This time can
+   be changed in SYSTEM.INI through "IdleVMWakeUpTime=<seconds>".
+   Setting it to zero results in a long wait.
+   this function has no effect under OS/2 2.10-4.0 if the DOS box has an
+   "Idle Sensitivity" setting of 100 */
+	__dpmi_regs r;
+	r.x.ax = 0x1680;
+	__dpmi_int(0x2f, &r);
+}
 
 int display_dos_init()
 {
@@ -81,6 +106,9 @@ void display_dos_putch(int x, int y, int ch, int co)
 
 int display_dos_getch()
 {
+	/* We can always release a time slice because we're always in some
+	   kind of DPMI */
+	release_time_slice();
 	return getch();
 }
 
