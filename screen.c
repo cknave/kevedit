@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.13 2000/09/02 04:33:23 kvance Exp $
+ * $Id: screen.c,v 1.14 2001/01/07 19:54:06 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -672,7 +672,12 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 			i += 2;
 		}
 	}
+	d->putch(78, 4, 153,  e->defc ? 0x06 : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 5, 5,  e->defc ? 0x0d : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
 	d->putch(78, 6, 1, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 7, '*', (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 8, '^', e->defc ? 0x07 : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+
 	while (1) {
 		i = d->getch();
 		switch (i) {
@@ -682,6 +687,18 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 		case 'O':
 		case 'o':
 			return Z_OBJECT;
+		case 'b':
+		case 'B':
+			return Z_BEAR;
+		case 'R':
+		case 'r':
+			return Z_RUFFIAN;
+		case 'V':
+		case 'v':
+			return Z_SLIME;
+		case 'Y':
+		case 'y':
+			return Z_SHARK;
 		}
 	}
 }
@@ -752,10 +769,14 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 	}
 }
 
-unsigned char charselect(displaymethod * d)
+unsigned char charselect(displaymethod * d, int c)
 {
 	int z, e, i = 0;
 	static int x, y;
+	if(c != -1) {
+		y = c / (CHAR_BOX_WIDTH-2);
+		x = c % (CHAR_BOX_WIDTH-2);
+	}
 
 	for (e = 0; e < CHAR_BOX_DEPTH; e++) {
 		for (z = 0; z < CHAR_BOX_WIDTH; z++) {

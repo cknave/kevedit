@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.26 2001/01/05 11:06:03 kvance Exp $
+ * $Id: main.c,v 1.27 2001/01/07 19:54:06 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -418,7 +418,7 @@ int main(int argc, char **argv)
 				updatepanel(mydisplay, myinfo, myworld);
 			} else {
 				if (c == 1) { /* ASCII selection */
-					c = charselect(mydisplay);
+					c = charselect(mydisplay, -1);
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				}
 				/* Plot the text character */
@@ -994,8 +994,6 @@ int main(int argc, char **argv)
 						else {
 							if (i == Z_AMMO)
 								x = 0x03;
-							if (i == Z_DUPLICATOR)
-								x = 0x0f;
 							if (i == Z_TORCH)
 								x = 0x06;
 							if (i == Z_ENERGIZER)
@@ -1038,6 +1036,24 @@ int main(int argc, char **argv)
 							x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
 						push(i, x, pm);
 						break;
+					case Z_DUPLICATOR:
+						/* Anything important under it? */
+						t = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
+						switch (t) {
+							case Z_WATER:
+							case Z_FAKE:
+								break;
+							default:
+								t = Z_EMPTY;
+								break;
+						}
+						pm = z_newparam_duplicator(myinfo->cursorx + 1, myinfo->cursory + 1, -1, 0, 4, t, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2]);
+						if(myinfo->defc == 1)
+							x = 0x0f;
+						else
+							x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+						push(i, x, pm);
+						break;
 					case Z_CWCONV:
 					case Z_CCWCONV:
 						pm = z_newparam_conveyer(myinfo->cursorx + 1, myinfo->cursory + 1);
@@ -1067,29 +1083,61 @@ int main(int argc, char **argv)
 				break;
 			if (e == 1) {
 				i = dothepanel_f2(mydisplay, myinfo);
+				/* All these need parameter space */
+				if (myworld->board[myinfo->curboard]->info->objectcount == 150) {
+					i = -1;
+					break;
+				}
+				/* Anything important under it? */
+				x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
+				switch (x) {
+					case Z_WATER:
+					case Z_FAKE:
+						break;
+					default:
+						x = Z_EMPTY;
+						break;
+				}
 				switch (i) {
 				case -1:
 					break;
-				case Z_OBJECT:
-					if (myworld->board[myinfo->curboard]->info->objectcount == 150) {
-						i = -1;
-						break;
-					} else {
-						/* Anything important under it? */
-						x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
-						switch (x) {
-						case Z_WATER:
-						case Z_FAKE:
-							break;
-						default:
-							x = Z_EMPTY;
-							break;
-						}
-						pm = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
+				case Z_BEAR:
+					pm = z_newparam_bear(myinfo->cursorx + 1, myinfo->cursory + 1, x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], 4);
+					if(myinfo->defc == 1)
+						t = 0x06;
+					else
 						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-						push(i, t, pm);
-						break;
-					}
+					push(i, t, pm);
+					break;
+				case Z_RUFFIAN:
+					pm = z_newparam_ruffian(myinfo->cursorx + 1, myinfo->cursory + 1, 4, 4);
+					if(myinfo->defc == 1)
+						t = 0x0d;
+					else
+						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+					push(i, t, pm);
+					break;
+				case Z_SLIME:
+					pm = z_newparam_slime(myinfo->cursorx + 1, myinfo->cursory + 1, 4);
+					t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+					push(i, t, pm);
+					break;
+				case Z_SHARK:
+					pm = z_newparam_shark(myinfo->cursorx + 1, myinfo->cursory + 1, x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], 4);
+					if(myinfo->defc == 1) {
+						t = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] & 0xf0;
+						if(t > 0x70)
+							t -= 0x80;
+						t += 0x07;
+					} else
+						t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+					push(i, t, pm);
+					break;
+				case Z_OBJECT:
+					pm = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay, -1), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
+					t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+					push(i, t, pm);
+					break;
 				}
 				if (i != -1) {
 					x = myinfo->pattern;
@@ -1168,6 +1216,9 @@ int main(int argc, char **argv)
 				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 					if (myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
 						/* we have params; lets edit them! */
+						if(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_OBJECT) {
+							myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1 = charselect(mydisplay, myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1);
+						}
 						if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_SCROLL || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_OBJECT) {
 							/* Load editor on current moredata */
 							editmoredata(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);

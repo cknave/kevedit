@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: screen.h,v 1.6 2000/09/09 02:33:51 bitman Exp $
+ * $Id: screen.h,v 1.7 2001/01/07 19:54:06 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,6 @@ extern int dothepanel_f1(displaymethod * d, editorinfo * e);
 extern int dothepanel_f2(displaymethod * d, editorinfo * e);
 extern int dothepanel_f3(displaymethod * d, editorinfo * e);
 
-extern unsigned char charselect(displaymethod * d);
+extern unsigned char charselect(displaymethod * d, int c);
 
 #endif				/* _SCREEN_H */

@@ -1,12 +1,11 @@
 For the 0.4 release:
 --------------------
+Many tiles with parameters do not use the under-colour/type option when they
+	are actually displayed.  Find these and fix the display routines and
+	plot routines.  The background colours are added to the tile colour
+	at plot time.
 Global parameter editor for built-in enemies
 All other unimplemented F-key tiles:
-	* Duplicator
-	* Bear
-	* Ruffian
-	* Slime
-	* Shark
 	* Spinning Gun
 	* Pusher
 	* Lion

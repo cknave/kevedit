@@ -1,5 +1,5 @@
 /* zzt.h        -- ZZT library definitions
- * $Id: zzt.h,v 1.6 2000/11/13 19:56:23 kvance Exp $
+ * $Id: zzt.h,v 1.7 2001/01/07 19:54:06 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -203,6 +203,21 @@ extern param *z_newparam_passage(int x, int y, int b);
 /* z_newparam_bomb(x, y)
  * Create a new unlit bomb at x, y */
 extern param *z_newparam_bomb(int x, int y);
+/* z_newparam_duplicator(x, y, xstep, ystep, rate, undert, underc)
+ * Create a new duplicator at x, y duplicating from xstep, ystep relative at rate */
+param *z_newparam_duplicator(int x, int y, int xstep, int ystep, int rate, int undert, int underc);
+/* z_newparam_bear(x, y, sensitivity)
+ * Create a new bear at x, y with sensitivity */
+param *z_newparam_bear(int x, int y, int undert, int underc, int sensitivity);
+/* z_newparam_ruffian(x, y, intelligence, rest)
+ * Create a new bear at x, y with set intelligence and rest time */
+param *z_newparam_ruffian(int x, int y, int intelligence, int rest);
+/* z_newparam_slime(x, y, speed)
+ * Create a new slime at x, y with given speed */
+param *z_newparam_slime(int x, int y, int speed);
+/* z_newparam_shark(x, y, undert, underc, intelligence)
+ * Create a new shark at x, y with given intelligence */
+param *z_newparam_shark(int x, int y, int undert, int underc, int intelligence);
 
 /* Definitions of codes: */
 #define Z_EMPTY		0x00

@@ -1,5 +1,5 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.6 2001/01/01 00:43:45 kvance Exp $
+ * $Id: libzzt.c,v 1.7 2001/01/07 19:54:06 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -220,6 +220,126 @@ param *z_newparam_scroll(int x, int y, int undert, int underc)
 	return p;
 }
 
+param *z_newparam_duplicator(int x, int y, int xstep, int ystep, int rate, int undert, int underc)
+{
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = xstep;
+	p->ystep = ystep;
+	p->cycle = 2;
+	p->data1 = 0;
+	/* 0=slowest, 8=fastest */
+	p->data2 = rate;
+	p->data3 = 0;
+	p->magic = 0xFFFFFFFF;
+	p->undert = undert;
+	p->underc = underc;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
+
+param *z_newparam_bear(int x, int y, int undert, int underc, int sensitivity)
+{
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = 0;
+	p->ystep = 0;
+	p->cycle = 3;
+	/* 0=most, 8=least */
+	p->data1 = sensitivity;
+	p->data2 = 0;
+	p->data3 = 0;
+	p->magic = 0xFFFFFFFF;
+	p->undert = undert;
+	p->underc = underc;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
+
+param *z_newparam_ruffian(int x, int y, int intelligence, int rest)
+{
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = 0;
+	p->ystep = 0;
+	p->cycle = 1;
+	/* 0=least, 8=most */
+	p->data1 = intelligence;
+	/* 0=slowest, 8=fastest */
+	p->data2 = rest;
+	p->data3 = 0;
+	p->magic = 0xFFFFFFFF;
+	p->undert = Z_EMPTY;
+	p->underc = 0x07;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
+
+param *z_newparam_slime(int x, int y, int speed)
+{
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = 0;
+	p->ystep = 0;
+	p->cycle = 3;
+	p->data1 = 0;
+	/* 0=slowest, 8=fastest */
+	p->data2 = speed;
+	p->data3 = 0;
+	p->magic = 0xFFFFFFFF;
+	p->undert = Z_EMPTY;
+	p->underc = 0x07;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
+
+param *z_newparam_shark(int x, int y, int undert, int underc, int intelligence)
+{
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = 0;
+	p->ystep = 0;
+	p->cycle = 3;
+	/* 0 = dumbest, 8 = smartest */
+	p->data1 = intelligence;
+	p->data2 = 0;
+	p->data3 = 0;
+	p->magic = 0xFFFFFFFF;
+	p->undert = undert;
+	p->underc = underc;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
 
 u_int8_t *
  rle_encode(u_int8_t * unclean)
@@ -580,9 +700,9 @@ z_getcolour(u_int8_t type, u_int8_t colour, param * p)
 	case Z_SLIME:
 		return p->undert != Z_EMPTY ?
 		    (p->underc & 0xf0) + (colour & 0x0f) : colour;
+	/* Apparently, sharks do not get background colours */
 	case Z_SHARK:
-		return p->undert != Z_EMPTY ?
-		    (p->underc & 0xf0) + (colour & 0x0f) : colour;
+		return colour;
 	case Z_SPINNINGGUN:
 		return p->undert != Z_EMPTY ?
 		    (p->underc & 0xf0) + (colour & 0x0f) : colour;
