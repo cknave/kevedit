@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.1 2000/06/15 03:58:10 kvance Exp $
+ * $Id: screen.c,v 1.2 2000/06/15 05:07:25 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -183,8 +183,8 @@ void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsi
 	x = e->cursorx;
 	y = e->cursory;
 
-	if (y - 1 > 0) {
-		if (x - 1 > 0) {
+	if (y - 1 >= 0) {
+		if (x - 1 >= 0) {
 			i = ((x - 1) + (y - 1) * 60) * 2;
 			d->putch(x - 1, y - 1,
 				 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y - 1]], bigboard, x - 1, y - 1),
@@ -204,7 +204,7 @@ void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsi
 			    );
 		}
 	}
-	if (x - 1 > 0) {
+	if (x - 1 >= 0) {
 		i = ((x - 1) + y * 60) * 2;
 		d->putch(x - 1, y,
 			 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y]], bigboard, x - 1, y),
@@ -224,7 +224,7 @@ void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsi
 		    );
 	}
 	if (y + 1 < 25) {
-		if (x - 1 > 0) {
+		if (x - 1 >= 0) {
 			i = ((x - 1) + (y + 1) * 60) * 2;
 			d->putch(x - 1, y + 1,
 				 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y + 1]], bigboard, x - 1, y + 1),
