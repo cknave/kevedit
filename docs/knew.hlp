@@ -9,11 +9,13 @@ $New in Version 0.5.0
 !-creature;Creatures documentation
 !-terrain;Terrain documentation
 !-kadvance:aquire;Aquire Mode grows backbuffer
+!-kstats:bind;Bind Index in Stats Editor
 :;  *  CTRL-K selects color (for F4 mode)
 
 $Bugs fixed in 0.5.0
 :;  *  Monitor recognized as valid type
 :;  *  Object Editor panel updated
+:;  *  Saved games using #bind now load
 
 $New in Version 0.4.0
 :;  *  Libzzt2 - greater stability

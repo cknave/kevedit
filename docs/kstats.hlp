@@ -6,6 +6,7 @@ $Stats Editor
 !obj;Objects and Scrolls
 !passage;Passages
 !adv;Advanced Tweaking
+!bind; * Bind Index
 
 :stats;Stats
 
@@ -98,4 +99,33 @@ for objects which have #end-ed and are not
 currently executing code. Other values
 represent a character offset from the
 beginning of the object's program.
+
+:bind;Bind Index
+
+The bind index is used by object with no
+program of its own to indicate which
+object's code to use. This is usually only
+found in saved games. A value of 0 is used
+for no binding, 1 is the first object, 1
+the second, etc.
+
+IMPORTANT: In the ZZT editor, this order
+is determined by the order that the
+objects are created in. KevEdit will
+forget this order and instead put objects
+in the upper-left first and objects in the
+lower-right last. BEWARE: KevEdit does
+not, at this time, track these changes in
+object order. A system which remembers the
+position of the binding object may be
+implemented eventually, but not at this
+time. Be happy that saved games using
+ #bind even load at all.
+
+Note: the only way to open saved games is
+by opening them in KevEdit from the
+command line, by associating them with
+KevEdit in Windows, or by changing the
+extension to zzt. We're just too lazy to
+add them to the open dialog.
 
