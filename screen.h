@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.27 2002/05/04 04:17:43 bitman Exp $
+ * $Id: screen.h,v 1.28 2002/09/12 07:48:00 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -76,10 +76,10 @@ void drawsidepanel(displaymethod * d, unsigned char panel[]);
 void drawscrollbox(displaymethod * mydisplay, int yoffset, int yendoffset, int updateflag);
 void drawscrolltitle(displaymethod * d, char * title);
 void drawpanel(displaymethod * d);
-void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w);
+void updatepanel(keveditor * e);
 void drawscreen(displaymethod * d, ZZTworld * w);
-void cursorspace(displaymethod * d, ZZTworld * w, editorinfo * e);
-void drawspot(displaymethod * d, ZZTworld * w, editorinfo * e);
+void cursorspace(keveditor * e);
+void drawspot(keveditor * e);
 
 /* Block drawing functions */
 void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
@@ -100,9 +100,9 @@ int switchboard(ZZTworld * w, displaymethod * mydisplay);
 char *titledialog(char* prompt, displaymethod * d);
 
 /* panels */
-int dothepanel_f1(displaymethod * d, editorinfo * e);
-int dothepanel_f2(displaymethod * d, editorinfo * e);
-int dothepanel_f3(displaymethod * d, editorinfo * e);
+int dothepanel_f1(keveditor * e);
+int dothepanel_f2(keveditor * e);
+int dothepanel_f3(keveditor * e);
 
 /* Prompts the user to select a char */
 int charselect(displaymethod * d, int c);

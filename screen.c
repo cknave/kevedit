@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.50 2002/08/24 00:48:40 bitman Exp $
+ * $Id: screen.c,v 1.51 2002/09/12 07:48:00 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -394,8 +394,10 @@ void drawsidepanel(displaymethod * d, unsigned char panel[])
 	d->update(60, 3, 20, 22);
 }
 
-void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
+void updatepanel(keveditor * e)
 {
+	displaymethod * d = e->mydisplay;
+	ZZTworld * w = e->myworld;
 	int i, x;
 	char s[255];
 	char * title = zztWorldGetTitle(w);
@@ -419,10 +421,9 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 			d->putch_discrete(i + x, 0, s[x], 0x1c);
 		}
 
-		strcpy(s, "KevEdit - ");
-		strncpy(&s[10], title, 244);
-		if(e->changed_title == 1) {
-			e->changed_title = 0;
+		if (uf & UD_WORLDTITLE) {
+			strcpy(s, "KevEdit - ");
+			strncpy(&s[10], title, 244);
 			d->titlebar(s);
 		}
 
@@ -500,36 +501,37 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 			d->putch_discrete(78, 21, 'a', 0x18);
 
 
-		if (e->colorStandardPatterns) {
+		if (e->options.colorStandardPatterns) {
 			/* Draw standard patterns in all their colourful grandure */
-			for (i = 0; i < e->standard_patterns->size; i++) {
-				ZZTtile pattern = e->standard_patterns->patterns[i];
+			for (i = 0; i < e->buffers.standard_patterns->size; i++) {
+				ZZTtile pattern = e->buffers.standard_patterns->patterns[i];
 				d->putch_discrete(61 + i, 21,
-								 zztLoneTileGetDisplayChar(pattern),
-								 zztLoneTileGetDisplayColor(pattern));
+				                  zztLoneTileGetDisplayChar(pattern),
+				                  zztLoneTileGetDisplayColor(pattern));
 			}
 		}
 
 		/* Pattern arrow */
-		if (e->pbuf == e->standard_patterns) {
-			d->putch_discrete(61 + e->pbuf->pos, 20, 31, 0x17);
+		if (e->buffers.pbuf == e->buffers.standard_patterns) {
+			d->putch_discrete(61 + e->buffers.pbuf->pos, 20, 31, 0x17);
 			x = 0;
 		} else {
-			x = min(e->backbuffer->pos - BBSCROLLSTART, e->backbuffer->size - BBVWIDTH);
+			x = min(e->buffers.backbuffer->pos - BBSCROLLSTART,
+							e->buffers.backbuffer->size - BBVWIDTH);
 			if (x < 0)
 				x = 0;
-			d->putch_discrete(68 + e->pbuf->pos - x, 20, 31, 0x17);
+			d->putch_discrete(68 + e->buffers.pbuf->pos - x, 20, 31, 0x17);
 		}
 		
 		/* Backbuffer lock state */
-		if (e->backbuffer->lock == PATBUF_UNLOCK)
+		if (e->buffers.backbuffer->lock == PATBUF_UNLOCK)
 			d->putch_discrete(67, 21, 0xB3, 0x01);  /* Blue vertical line */
 		else
 			d->putch_discrete(67, 21, '/', 0x04);   /* Red slash */
 
 		/* Draw pattern backbuffer */
-		for (i = 0; i < BBVWIDTH && i + x < e->backbuffer->size; i++) {
-			ZZTtile pattern = e->backbuffer->patterns[i + x];
+		for (i = 0; i < BBVWIDTH && i + x < e->buffers.backbuffer->size; i++) {
+			ZZTtile pattern = e->buffers.backbuffer->patterns[i + x];
 			d->putch_discrete(68 + i, 21,
 							 zztLoneTileGetDisplayChar(pattern),
 							 zztLoneTileGetDisplayColor(pattern));
@@ -573,8 +575,10 @@ void drawscreen(displaymethod * d, ZZTworld * w)
 }
 
 /* Make the cursor more visible */
-void cursorspace(displaymethod * d, ZZTworld * w, editorinfo * e)
+void cursorspace(keveditor * e)
 {
+	displaymethod * d = e->mydisplay;
+	ZZTworld * w = e->myworld;
 	char c, b, f;
 	c = zztGetDisplayColor(w, e->cursorx, e->cursory);
 	f = c & 0x0f;
@@ -593,8 +597,10 @@ void cursorspace(displaymethod * d, ZZTworld * w, editorinfo * e)
 }
 
 /* Update a spot around the cursor */
-void drawspot(displaymethod * d, ZZTworld * w, editorinfo * e)
+void drawspot(keveditor * e)
 {
+	displaymethod * d = e->mydisplay;
+	ZZTworld * w = e->myworld;
 	int x, y;
 	x = e->cursorx;
 	y = e->cursory;
@@ -898,8 +904,9 @@ int switchboard(ZZTworld * w, displaymethod * mydisplay)
 }
 
 
-int dothepanel_f1(displaymethod * d, editorinfo * e)
+int dothepanel_f1(keveditor * e)
 {
+	displaymethod * d = e->mydisplay;
 	int x, y, i = 0;
 	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
 
@@ -977,8 +984,9 @@ int dothepanel_f1(displaymethod * d, editorinfo * e)
 	}
 }
 
-int dothepanel_f2(displaymethod * d, editorinfo * e)
+int dothepanel_f2(keveditor * e)
 {
+	displaymethod * d = e->mydisplay;
 	int x, y, i = 0;
 	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
 
@@ -1054,8 +1062,9 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 	}
 }
 
-int dothepanel_f3(displaymethod * d, editorinfo * e)
+int dothepanel_f3(keveditor * e)
 {
+	displaymethod * d = e->mydisplay;
 	int x, y, i = 0;
 	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
 

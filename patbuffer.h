@@ -1,5 +1,5 @@
 /* patbuffer.h    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.h,v 1.5 2002/02/16 23:42:28 bitman Exp $
+ * $Id: patbuffer.h,v 1.6 2002/09/12 07:48:00 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,15 +24,17 @@
 #include "kevedit.h"
 #include "display.h"
 
+/* TODO: apply colour data w/o using keveditor */
+/* TODO: move plot to kevedit.c, or something */
 
 patbuffer* patbuffer_create(int size);
 void deletepatternbuffer(patbuffer* pbuf);
 void patbuffer_resize(patbuffer * pbuf, int delta);
 
-void pat_applycolordata(patbuffer * pbuf, editorinfo * myinfo);
+void pat_applycolordata(patbuffer * pbuf, keveditor * myeditor);
 
 void push(patbuffer* pbuf, ZZTtile tile);
 void patreplace(patbuffer * pbuf, ZZTtile pattern);
-void plot(ZZTworld * myworld, editorinfo * myinfo, displaymethod * mydisplay);
+void plot(keveditor * myeditor);
 
 #endif				/* _PATBUFFER_H */

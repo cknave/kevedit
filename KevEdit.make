@@ -33,7 +33,7 @@ CFLAGS += $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(VERSIONFLAG) $(PATHS)
 
 # Objects
 
-CENTRALOBJS = misc.o menu.o editbox.o screen.o
+CENTRALOBJS = kevedit.o misc.o menu.o editbox.o screen.o
 LIBRARYOBJS = libzzt2/libzzt2.a synth/synth.a svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
 MISCOBJS    = patbuffer.o help.o dialog.o infobox.o paramed.o register.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o panel_bd.o panel_sd.o panel_ti.o scroll.o tbox.o cbox.o tdialog.o
@@ -102,6 +102,7 @@ endif
 # Dependancies
 
 # Central KevEditing routines
+kevedit.o: kevedit.c kevedit.h misc.h menu.h editbox.h screen.h libzzt2/zzt.h patbuffer.h help.h register.h infobox.h display.h
 main.o: main.c kevedit.h misc.h menu.h editbox.h screen.h libzzt2/zzt.h patbuffer.h help.h register.h infobox.h display.h
 misc.o: misc.c misc.h kevedit.h editbox.h screen.h svector.h hypertxt.h selection.h gradient.h patbuffer.h display.h
 menu.o: menu.c menu.h kevedit.h screen.h editbox.h libzzt2/zzt.h svector.h files.h zzl.h hypertxt.h patbuffer.h display.h

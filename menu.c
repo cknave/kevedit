@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.11 2002/03/17 09:35:58 bitman Exp $
+ * $Id: menu.c,v 1.12 2002/09/12 07:48:00 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,14 +35,15 @@
 
 #include <stdlib.h>
 
-void itemmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void itemmenu(keveditor * myeditor)
 {
+	ZZTworld * myworld = myeditor->myworld;
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
-	tile.color = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+	tile.color = (myeditor->backc << 4) + myeditor->forec + (myeditor->blinkmode * 0x80);
 
-	choice = dothepanel_f1(mydisplay, myinfo);
+	choice = dothepanel_f1(myeditor);
 	tile.type = choice;
 
 	/* Create params -- zztParamCreate() returns NULL for types which have no params */
@@ -50,21 +51,21 @@ void itemmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo
 
 	if (tile.type == ZZT_PLAYER) {
 		/* The player is a special case */
-		zztPlotPlayer(myworld, myinfo->cursorx, myinfo->cursory);
+		zztPlotPlayer(myworld, myeditor->cursorx, myeditor->cursory);
 		return;
 	}
 
 	/* Use default color if in default color mode */
-	if (myinfo->defc != 0) {
+	if (myeditor->defc != 0) {
 		switch (tile.type) {
 			case ZZT_AMMO:      tile.color = 0x03; break;
 			case ZZT_TORCH:     tile.color = 0x06; break;
 			case ZZT_ENERGIZER: tile.color = 0x05; break;
 			case ZZT_DOOR:
-				tile.color = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
+				tile.color = myeditor->forec > 7 ? ((myeditor->forec - 8) << 4) + 0x0f : (myeditor->forec << 4) + 0x0f;
 				break;
 			case ZZT_PASSAGE:
-				tile.color = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
+				tile.color = myeditor->forec > 7 ? ((myeditor->forec - 8) << 4) + 0x0f : (myeditor->forec << 4) + 0x0f;
 				break;
 			case ZZT_DUPLICATOR:
 				tile.color = 0x0f;
@@ -74,8 +75,8 @@ void itemmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo
 
 	/* Plot and push the created tile */
 	if (choice != -1) {
-		zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
-		push(myinfo->backbuffer, tile);
+		zztPlot(myworld, myeditor->cursorx, myeditor->cursory, tile);
+		push(myeditor->buffers.backbuffer, tile);
 
 		/* Free our copy of the params */
 		if (tile.param != NULL)
@@ -84,21 +85,22 @@ void itemmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo
 }
 
 
-void creaturemenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void creaturemenu(keveditor * myeditor)
 {
+	ZZTworld * myworld = myeditor->myworld;
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
-	tile.color = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+	tile.color = (myeditor->backc << 4) + myeditor->forec + (myeditor->blinkmode * 0x80);
 
-	choice = dothepanel_f2(mydisplay, myinfo);
+	choice = dothepanel_f2(myeditor);
 	tile.type = choice;
 
 	/* Everything has params */
 	tile.param = zztParamCreate(tile);
 
 	/* Use default color if in default color mode */
-	if (myinfo->defc != 0) {
+	if (myeditor->defc != 0) {
 		switch (choice) {
 			case ZZT_BEAR:
 				tile.color = 0x06;
@@ -107,7 +109,7 @@ void creaturemenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * my
 				tile.color = 0x0d;
 				break;
 			case ZZT_SHARK:
-				tile.color = zztTileGet(myworld, myinfo->cursorx, myinfo->cursory).color & 0xf0;
+				tile.color = zztTileGet(myworld, myeditor->cursorx, myeditor->cursory).color & 0xf0;
 				if (tile.color > 0x70)
 					tile.color -= 0x80;
 				tile.color += 0x07;
@@ -129,8 +131,8 @@ void creaturemenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * my
 
 	/* Plot and push the created tile */
 	if (choice != -1) {
-		zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
-		push(myinfo->backbuffer, tile);
+		zztPlot(myworld, myeditor->cursorx, myeditor->cursory, tile);
+		push(myeditor->buffers.backbuffer, tile);
 		
 		/* Free our copy of the params */
 		if (tile.param != NULL)
@@ -139,14 +141,15 @@ void creaturemenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * my
 }
 
 
-void terrainmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void terrainmenu(keveditor * myeditor)
 {
+	ZZTworld * myworld = myeditor->myworld;
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
-	tile.color = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+	tile.color = (myeditor->backc << 4) + myeditor->forec + (myeditor->blinkmode * 0x80);
 
-	choice = dothepanel_f3(mydisplay, myinfo);
+	choice = dothepanel_f3(myeditor);
 	tile.type = choice;
 
 	/* Nothing has params, but why not? */
@@ -154,8 +157,8 @@ void terrainmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myi
 
 	/* Plot and push the created tile */
 	if (choice != -1) {
-		zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
-		push(myinfo->backbuffer, tile);
+		zztPlot(myworld, myeditor->cursorx, myeditor->cursory, tile);
+		push(myeditor->buffers.backbuffer, tile);
 
 		/* Free our copy of the params */
 		if (tile.param != NULL)
@@ -164,15 +167,17 @@ void terrainmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myi
 }
 
 
-void loadobjectlibrary(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void loadobjectlibrary(keveditor * myeditor)
 {
+	displaymethod * mydisplay = myeditor->mydisplay;
+	ZZTworld * myworld = myeditor->myworld;
 	char* filename;
 	stringvector zzlv;
 	ZZTtile tile;
 
 	/* No fair drawing over the player */
-	if (zztBoardGetCurPtr(myworld)->plx == myinfo->cursorx &&
-	    zztBoardGetCurPtr(myworld)->ply == myinfo->cursory)
+	if (zztBoardGetCurPtr(myworld)->plx == myeditor->cursorx &&
+	    zztBoardGetCurPtr(myworld)->ply == myeditor->cursory)
 		return;
 
 	/* Prompt for a file and load it */
@@ -192,8 +197,8 @@ void loadobjectlibrary(displaymethod * mydisplay, ZZTworld * myworld, editorinfo
 	/* Put the object into the backbuffer and plot it to the screen */
 	tile = zzlpullobject(zzlv, 0, 0, 0, 0);
 	if (tile.type == ZZT_OBJECT) {
-		zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
-		push(myinfo->backbuffer, tile);
+		zztPlot(myworld, myeditor->cursorx, myeditor->cursory, tile);
+		push(myeditor->buffers.backbuffer, tile);
 
 		/* Free our copy of the params */
 		if (tile.param != NULL)
@@ -204,12 +209,14 @@ void loadobjectlibrary(displaymethod * mydisplay, ZZTworld * myworld, editorinfo
 	deletestringvector(&zzlv);
 }
 
-void saveobjecttolibrary(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void saveobjecttolibrary(keveditor * myeditor)
 {
+	displaymethod * mydisplay = myeditor->mydisplay;
+	ZZTworld * myworld = myeditor->myworld;
 	char* filename;
 	char* title;
 	stringvector zzlv;
-	ZZTtile obj = zztTileGet(myworld, myinfo->cursorx, myinfo->cursory);
+	ZZTtile obj = zztTileGet(myworld, myeditor->cursorx, myeditor->cursory);
 
 	/* Can't save what's under the cursor unless it's an object */
 	if (obj.type != ZZT_OBJECT)
@@ -237,12 +244,14 @@ void saveobjecttolibrary(displaymethod * mydisplay, ZZTworld * myworld, editorin
 	free(filename);
 }
 
-void saveobjecttonewlibrary(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void saveobjecttonewlibrary(keveditor * myeditor)
 {
+	displaymethod * mydisplay = myeditor->mydisplay;
+	ZZTworld * myworld = myeditor->myworld;
 	char* filename;
 	char* title;
 	stringvector zzlv;
-	ZZTtile obj = zztTileGet(myworld, myinfo->cursorx, myinfo->cursory);
+	ZZTtile obj = zztTileGet(myworld, myeditor->cursorx, myeditor->cursory);
 
 	initstringvector(&zzlv);
 
@@ -284,8 +293,9 @@ void saveobjecttonewlibrary(displaymethod * mydisplay, ZZTworld * myworld, edito
 	free(filename);
 }
 
-void objectlibrarymenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void objectlibrarymenu(keveditor * myeditor)
 {
+	displaymethod * mydisplay = myeditor->mydisplay;
 	stringvector menu;
 	char* choice;
 
@@ -305,11 +315,12 @@ void objectlibrarymenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo
 	choice = gethypermessage(menu);
 
 	if (str_equ(choice, "load", 0))
-		loadobjectlibrary(mydisplay, myworld, myinfo);
+		loadobjectlibrary(myeditor);
 	else if (str_equ(choice, "save", 0))
-		saveobjecttolibrary(mydisplay, myworld, myinfo);
+		saveobjecttolibrary(myeditor);
 	else if (str_equ(choice, "new", 0))
-		saveobjecttonewlibrary(mydisplay, myworld, myinfo);
+		saveobjecttonewlibrary(myeditor);
 
 	removestringvector(&menu);
 }
+

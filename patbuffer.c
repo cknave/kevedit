@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.11 2002/02/19 23:50:06 bitman Exp $
+ * $Id: patbuffer.c,v 1.12 2002/09/12 07:48:00 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -116,11 +116,11 @@ void patbuffer_resize(patbuffer * pbuf, int delta)
 }
 
 
-void pat_applycolordata(patbuffer * pbuf, editorinfo * myinfo)
+void pat_applycolordata(patbuffer * pbuf, keveditor * myeditor)
 {
 	int i, colour;
-	colour = (myinfo->backc << 4) + myinfo->forec;
-	if (myinfo->blinkmode == 1)
+	colour = (myeditor->backc << 4) + myeditor->forec;
+	if (myeditor->blinkmode == 1)
 		colour += 0x80;
 
 	for (i = 0; i < pbuf->size; i++)
@@ -184,19 +184,18 @@ void patreplace(patbuffer * pbuf, ZZTtile pattern)
 	}
 }
 
-void plot(ZZTworld * myworld, editorinfo * myinfo, displaymethod * mydisplay)
+void plot(keveditor * myeditor)
 {
-	patbuffer* pbuf = myinfo->pbuf;
+	patbuffer* pbuf = myeditor->buffers.pbuf;
 	ZZTtile pattern = pbuf->patterns[pbuf->pos];
 
 	/* Change the color to reflect state of default color mode */
-	if (myinfo->defc == 0) {
-		pattern.color = (myinfo->backc << 4) + myinfo->forec;
-		if (myinfo->blinkmode == 1)
+	if (myeditor->defc == 0) {
+		pattern.color = (myeditor->backc << 4) + myeditor->forec;
+		if (myeditor->blinkmode == 1)
 			pattern.color += 0x80;
 	}
 
-	if (zztPlot(myworld, myinfo->cursorx, myinfo->cursory, pattern))
-		updatepanel(mydisplay, myinfo, myworld);
+	zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, pattern);
 }
 

@@ -21,6 +21,7 @@ Objects may be #lock-ed and #unlock-ed
 Time remaining available for bombs
 ALT-T also runs zzt for testing (by popular demand)
 Monitor and blink rays added to F3 menu
+Major overhaul of main() -- migrated most code to kevedit.c
 
 0.4.0: February 19, 2002
 ------------------------

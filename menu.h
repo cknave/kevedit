@@ -1,5 +1,5 @@
 /* menu.h       -- Code for using the F1-3 panels
- * $Id: menu.h,v 1.5 2002/02/16 10:25:22 bitman Exp $
+ * $Id: menu.h,v 1.6 2002/09/12 07:48:00 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,10 +24,10 @@
 
 #include "display.h"
 
-void itemmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo);
-void creaturemenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo);
-void terrainmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo);
-void objectlibrarymenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo);
+void itemmenu(keveditor * myeditor);
+void creaturemenu(keveditor * myeditor);
+void terrainmenu(keveditor * myeditor);
+void objectlibrarymenu(keveditor * myeditor);
 
 
 #endif

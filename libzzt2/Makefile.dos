@@ -6,7 +6,8 @@ AR = i586-pc-msdosdjgpp-ar cqs
 
 RM = rm -f
 
-CFLAGS = $(OPTIMIZE) $(DOS)
+# DOS is on
+DOS = -DDOS
 
 # Compile and link flags
 CFLAGS =

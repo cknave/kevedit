@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.32 2002/08/24 00:48:40 bitman Exp $
+ * $Id: misc.c,v 1.33 2002/09/12 07:48:00 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -47,15 +47,17 @@
 #include <unistd.h>
 #include <time.h>
 
-void showObjects(displaymethod * mydisplay, editorinfo * myinfo, ZZTworld * myworld)
+void showObjects(keveditor * myeditor)
 {
+	displaymethod * mydisplay = myeditor->mydisplay;
+	
 	int x, y;
-	ZZTboard * board = zztBoardGetCurPtr(myworld);
+	ZZTboard * board = zztBoardGetCurPtr(myeditor->myworld);
 
 	for (x = 0; x < board->bigboard->width; x++) {
 		for (y = 0; y < board->bigboard->height; y++) {
 			u_int8_t ch, color;
-			ZZTtile tile = zztTileGet(myworld, x, y);
+			ZZTtile tile = zztTileGet(myeditor->myworld, x, y);
 			if (tile.type != ZZT_OBJECT)
 				continue;
 
@@ -109,130 +111,6 @@ void runzzt(char* path, char* world)
 	/* DO NOT delete actions and files. deletezlinfo() did this already */
 }
 
-displaymethod * pickdisplay(displaymethod * rootdisplay)
-{
-	int x, i;
-	displaymethod* mydisplay = rootdisplay;
-	char *string = (char *) malloc(sizeof(char) * 256);
-
-	/* How many display methods? */
-	for (x = 1; x < 9; x++) {
-		if (mydisplay->next == NULL) {
-			break;
-		}
-		mydisplay = mydisplay->next;
-	}
-
-	if (x > 1) {
-		/* More than 1 display method available, user must choose */
-		printf("Hi.  This seems to be your first time running KevEdit.  What display method\n"
-		       "works best on your platform?\n\n");
-
-		mydisplay = rootdisplay;
-		for (i = 0; i < x; i++) {
-			printf("[%d] %s\n", i + 1, mydisplay->name);
-			if (mydisplay->next != NULL)
-				mydisplay = mydisplay->next;
-		}
-		do {
-			printf("\nSelect [1-%i]: ", x);
-			fgets(string, 255, stdin);
-			i = string[0];
-		}
-		while (i > 49 && i < 51);
-		i -= '1';
-		printf("\n%d SELECT\n", i);
-		mydisplay = rootdisplay;
-		for (x = 0; x < i; x++) {
-			mydisplay = mydisplay->next;
-		}
-	} else {
-		mydisplay = rootdisplay;
-	}
-
-	free(string);
-	return mydisplay;
-}
-
-
-void initeditorinfo(editorinfo * myinfo)
-{
-	/* Clear info to default values */
-
-	myinfo->cursorx = 0;
-	myinfo->cursory = 0;
-	myinfo->updateflags = UD_NONE;
-
-	myinfo->drawmode = 0;
-	myinfo->gradmode = 0;
-	myinfo->aqumode = 0;
-	myinfo->blinkmode = 0;
-	myinfo->textentrymode = 0;
-
-	myinfo->defc = 1;
-	myinfo->forec = 0x0f;
-	myinfo->backc = 0x00;
-
-	myinfo->standard_patterns = createstandardpatterns();
-	myinfo->backbuffer = patbuffer_create(10);
-	myinfo->pbuf = myinfo->standard_patterns;
-
-	myinfo->changed_title = 1;
-
-	/* Don't color standard patterns by default */
-	myinfo->colorStandardPatterns = 0;
-
-	/* Use KVI environment variable to decide if vi keys should be used */
-	if (getenv("KVI") == NULL) {
-		/* No vi movement by default. :-( */
-		myinfo->vimovement = 0;
-	} else {
-		if (str_equ(getenv("KVI"), "dvorak", STREQU_UNCASE))
-			myinfo->vimovement = 2;
-		else
-			myinfo->vimovement = 1;
-	}
-
-	pat_applycolordata(myinfo->standard_patterns, myinfo);
-
-}
-
-void keveditUpdateInterface(displaymethod * mydisplay, editorinfo * myinfo, ZZTworld * myworld)
-{
-	/* Update the kevedit interface */
-	int uf = myinfo->updateflags;
-
-	/* Update panel takes care of panel related update flags */
-	updatepanel(mydisplay, myinfo, myworld);
-
-	/* Move the display cursor */
-	mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-
-	if (uf & UD_BOARD) {
-		/* Draw the whole board */
-		drawscreen(mydisplay, myworld);
-	} else {
-		/* Otherwise, possibly draw parts of the board */
-
-		if (uf & UD_SPOT) {
-			/* Draw the spot around the cursor */
-			drawspot(mydisplay, myworld, myinfo);
-		}
-
-		if (uf & UD_CURSOR) {
-			/* Draw the tile under the cursor */
-			cursorspace(mydisplay, myworld, myinfo);
-		}
-	}
-
-	if (uf & UD_BOARDTITLE) {
-		/* Draw the board title this time only */
-		char * title = zztBoardGetTitle(myworld);
-		mydisplay->print(30 - strlen(title) / 2, 0, 0x70, title);
-	}
-
-	myinfo->updateflags = UD_NONE;  /* Everything should be updated now */
-}
 
 void texteditor(displaymethod * mydisplay)
 {
@@ -273,89 +151,93 @@ ZZTworld * clearworld(ZZTworld * myworld)
 	return newworld;
 }
 
-void entergradientmode(editorinfo * myinfo)
+void entergradientmode(keveditor * myeditor)
 {
-	if (myinfo->gradmode != 0)
+	backbuffers * buffers = &(myeditor->buffers);
+
+	if (myeditor->gradmode != 0)
 		return;  /* Don't enter grad mode if we're already there */
 
-	if (myinfo->pbuf == myinfo->standard_patterns) {
-		int oldpos = myinfo->standard_patterns->pos;
+	if (buffers->pbuf == buffers->standard_patterns) {
+		int oldpos = buffers->standard_patterns->pos;
 
 		/* Substitute fill patterns for standard patterns */
-		deletepatternbuffer(myinfo->standard_patterns);
-		free(myinfo->standard_patterns);
-		myinfo->standard_patterns = createfillpatterns(myinfo);
-		myinfo->pbuf = myinfo->standard_patterns; /* Very important */
+		deletepatternbuffer(buffers->standard_patterns);
+		free(buffers->standard_patterns);
+		buffers->standard_patterns = createfillpatterns(myeditor);
+		buffers->pbuf = buffers->standard_patterns; /* Very important */
 
 		/* Use the previous position if not too big */
-		if (oldpos >= myinfo->standard_patterns->size)
-			oldpos = myinfo->standard_patterns->size - 1;
-		myinfo->standard_patterns->pos = oldpos;
+		if (oldpos >= buffers->standard_patterns->size)
+			oldpos = buffers->standard_patterns->size - 1;
+		buffers->standard_patterns->pos = oldpos;
 
 		/* Turn gradmode on going forward for standard patterns */
-		myinfo->gradmode = 1;
+		myeditor->gradmode = 1;
 	} else {
 		/* Turn gradmode on going backward for backbuffer */
-		myinfo->gradmode = -1;
+		myeditor->gradmode = -1;
 	}
 	/* Drawmode goes on no matter what */
-	myinfo->drawmode = 1;
+	myeditor->drawmode = 1;
 }
 
-void exitgradientmode(editorinfo * myinfo)
+void exitgradientmode(keveditor * myeditor)
 {
-	if (myinfo->gradmode == 0)
+	backbuffers * buffers = &(myeditor->buffers);
+
+	if (myeditor->gradmode == 0)
 		return;  /* Can't leave a state we're not in */
 
-	if (myinfo->pbuf == myinfo->standard_patterns) {
-		int oldpos = myinfo->standard_patterns->pos;
+	if (buffers->pbuf == buffers->standard_patterns) {
+		int oldpos = buffers->standard_patterns->pos;
 
 		/* Restore the regular standard patterns */
-		deletepatternbuffer(myinfo->standard_patterns);
-		free(myinfo->standard_patterns);
-		myinfo->standard_patterns = createstandardpatterns();
-		myinfo->pbuf = myinfo->standard_patterns; /* Very important */
+		deletepatternbuffer(buffers->standard_patterns);
+		free(buffers->standard_patterns);
+		buffers->standard_patterns = createstandardpatterns();
+		buffers->pbuf = buffers->standard_patterns; /* Very important */
 
 		/* Apply the current colors */
-		pat_applycolordata(myinfo->standard_patterns, myinfo);
+		pat_applycolordata(buffers->standard_patterns, myeditor);
 
 		/* Use the previous position if not too big */
-		if (oldpos >= myinfo->standard_patterns->size)
-			oldpos = myinfo->standard_patterns->size - 1;
-		myinfo->standard_patterns->pos = oldpos;
+		if (oldpos >= buffers->standard_patterns->size)
+			oldpos = buffers->standard_patterns->size - 1;
+		buffers->standard_patterns->pos = oldpos;
 	}
 
 	/* Turn gradmode and drawmode off */
-	myinfo->gradmode = myinfo->drawmode = 0;
+	myeditor->gradmode = myeditor->drawmode = 0;
 }
 
-int toggledrawmode(editorinfo * myinfo)
+int toggledrawmode(keveditor * myeditor)
 {
-	if (myinfo->gradmode != 0) {
-		exitgradientmode(myinfo);
+	if (myeditor->gradmode != 0) {
+		exitgradientmode(myeditor);
 	} else {
 		/* Otherwise toggle draw mode */
-		myinfo->drawmode ^= 1;
+		myeditor->drawmode ^= 1;
 	}
 	/* Get mode should go off either way */
-	myinfo->aqumode = 0;
+	myeditor->aqumode = 0;
 
-	return myinfo->drawmode;
+	return myeditor->drawmode;
 }
 
-int togglegradientmode(editorinfo * myinfo)
+int togglegradientmode(keveditor * myeditor)
 {
 	/* Toggle gradient mode - pattern changes with each cursor
 	 * movement & drawmode is turned on. */
 
-	myinfo->aqumode = 0;
-	if (myinfo->gradmode != 0) {
+	myeditor->aqumode = 0;
+	if (myeditor->gradmode != 0) {
 		/* Gradmode is already on -- reverse direction */
-		myinfo->gradmode = -(myinfo->gradmode);
+		myeditor->gradmode = -(myeditor->gradmode);
 
 		return 0;    /* No reason to start plotting yet */
 	} else {
-		entergradientmode(myinfo);
+		entergradientmode(myeditor);
 		return 1;    /* Gradmode went on -- let the plotting begin! */
 	}
 }
@@ -589,31 +471,35 @@ void exporttoboard(displaymethod * mydisplay, ZZTworld * myworld)
 	free(filename);
 }
 
-void previouspattern(editorinfo * myinfo)
+void previouspattern(keveditor * myeditor)
 {
-	myinfo->pbuf->pos--;
-	if (myinfo->pbuf->pos == -1) {
-		if (myinfo->pbuf == myinfo->standard_patterns)
-			myinfo->pbuf = myinfo->backbuffer;
+	backbuffers * buffers = &(myeditor->buffers);
+
+	buffers->pbuf->pos--;
+	if (buffers->pbuf->pos == -1) {
+		if (buffers->pbuf == buffers->standard_patterns)
+			buffers->pbuf = buffers->backbuffer;
 		else
-			myinfo->pbuf = myinfo->standard_patterns;
-		myinfo->pbuf->pos = myinfo->pbuf->size - 1;
+			buffers->pbuf = buffers->standard_patterns;
+		buffers->pbuf->pos = buffers->pbuf->size - 1;
 	}
 }
 
-void nextpattern(editorinfo * myinfo)
+void nextpattern(keveditor * myeditor)
 {
-	myinfo->pbuf->pos++;
-	if (myinfo->pbuf->pos == myinfo->pbuf->size) {
-		if (myinfo->pbuf == myinfo->standard_patterns)
-			myinfo->pbuf = myinfo->backbuffer;
+	backbuffers * buffers = &(myeditor->buffers);
+
+	buffers->pbuf->pos++;
+	if (buffers->pbuf->pos == buffers->pbuf->size) {
+		if (buffers->pbuf == buffers->standard_patterns)
+			buffers->pbuf = buffers->backbuffer;
 		else
-			myinfo->pbuf = myinfo->standard_patterns;
-		myinfo->pbuf->pos = 0;
+			buffers->pbuf = buffers->standard_patterns;
+		buffers->pbuf->pos = 0;
 	}
 }
 
-patbuffer* createfillpatterns(editorinfo* myinfo)
+patbuffer* createfillpatterns(keveditor* myeditor)
 {
 	patbuffer* fillpatterns;
 
@@ -624,11 +510,11 @@ patbuffer* createfillpatterns(editorinfo* myinfo)
 	fillpatterns->patterns[3].type = ZZT_WATER;
 	fillpatterns->patterns[4].type = ZZT_SOLID;
 
-	pat_applycolordata(fillpatterns, myinfo);
+	pat_applycolordata(fillpatterns, myeditor);
 
 	/* Last pattern is an inverted-coloured solid */
-	fillpatterns->patterns[4].color = myinfo->backc |
-	                                  ((myinfo->forec & 0x07) << 4);
+	fillpatterns->patterns[4].color = myeditor->backc |
+	                                  ((myeditor->forec & 0x07) << 4);
 
 	return fillpatterns;
 }
@@ -727,31 +613,32 @@ void fillbyselection(ZZTworld* world, selection fillsel, patbuffer pbuf, int ran
 	}
 }
 
-void dofloodfill(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo, int randomflag)
+void dofloodfill(keveditor * myeditor, int randomflag)
 {
 	selection fillsel;
 	patbuffer* fillbuffer;
+	ZZTworld* myworld = myeditor->myworld;
 	ZZTblock* block = myworld->boards[zztBoardGetCurrent(myworld)].bigboard;
 
 	/* Set up the fill buffer */
-	fillbuffer = myinfo->pbuf;
-	if (randomflag && myinfo->pbuf == myinfo->standard_patterns)
-		fillbuffer = createfillpatterns(myinfo);
+	fillbuffer = myeditor->buffers.pbuf;
+	if (randomflag && myeditor->buffers.pbuf == myeditor->buffers.standard_patterns)
+		fillbuffer = createfillpatterns(myeditor);
 
 	/* Don't floodfill onto the player! It's not nice! */
-	if (myinfo->cursorx == zztBoardGetCurPtr(myworld)->plx &&
-			myinfo->cursory == zztBoardGetCurPtr(myworld)->ply)
+	if (myeditor->cursorx == zztBoardGetCurPtr(myworld)->plx &&
+			myeditor->cursory == zztBoardGetCurPtr(myworld)->ply)
 		return;
 
 	/* New selection as large as the board */
 	initselection(&fillsel, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
 
 	/* Flood select then fill using the selection */
-	floodselect(block, fillsel, myinfo->cursorx, myinfo->cursory);
+	floodselect(block, fillsel, myeditor->cursorx, myeditor->cursory);
 	fillbyselection(myworld, fillsel, *fillbuffer, randomflag);
 
 	/* Delete the fill buffer if we created it above */
-	if (randomflag && myinfo->pbuf == myinfo->standard_patterns) {
+	if (randomflag && myeditor->buffers.pbuf == myeditor->buffers.standard_patterns) {
 		deletepatternbuffer(fillbuffer);
 		free(fillbuffer);
 	}
@@ -778,50 +665,52 @@ void movebykeystroke(int key, int* x, int* y, int minx, int miny,
 }
 
 
-int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, ZZTworld * myworld, displaymethod * mydisplay)
+int promptforselection(selection sel, gradline * grad, keveditor* myeditor)
 {
 	int i, j;   /* Counters */
 	int key;
+	displaymethod* mydisplay = myeditor->mydisplay;
+	ZZTworld* myworld = myeditor->myworld;
 	ZZTblock* block = myworld->boards[zztBoardGetCurrent(myworld)].bigboard;
 
 	do {
-		mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+		mydisplay->cursorgo(myeditor->cursorx, myeditor->cursory);
 		key = mydisplay->getch();
 
-		movebykeystroke(key, &(myinfo->cursorx), &(myinfo->cursory),
+		movebykeystroke(key, &(myeditor->cursorx), &(myeditor->cursory),
 										0, 0, 59, 24, mydisplay);
 		if (key == DKEY_ESC) return 1;
 		/* Check for flood selection */
 		if (key == 'f' || key == 'F' || key == 'm') {
-			floodselect(block, sel, myinfo->cursorx, myinfo->cursory);
+			floodselect(block, sel, myeditor->cursorx, myeditor->cursory);
 			/* Set the gradient endpoints to the current position */
-			grad->x1 = grad->x2 = myinfo->cursorx;
-			grad->y1 = grad->y2 = myinfo->cursory;
+			grad->x1 = grad->x2 = myeditor->cursorx;
+			grad->y1 = grad->y2 = myeditor->cursory;
 			if (key != 'm')
 				return 0;
 		}
 	} while (key != DKEY_ENTER && key != ' ');
-	grad->x1 = myinfo->cursorx; grad->y1 = myinfo->cursory;
-	mydisplay->putch(myinfo->cursorx, myinfo->cursory, '+', 0x0F);
+	grad->x1 = myeditor->cursorx; grad->y1 = myeditor->cursory;
+	mydisplay->putch(myeditor->cursorx, myeditor->cursory, '+', 0x0F);
 	
 	do {
-		mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+		mydisplay->cursorgo(myeditor->cursorx, myeditor->cursory);
 		key = mydisplay->getch();
 
-		movebykeystroke(key, &(myinfo->cursorx), &(myinfo->cursory),
+		movebykeystroke(key, &(myeditor->cursorx), &(myeditor->cursory),
 										0, 0, 59, 24, mydisplay);
 		if (key == DKEY_ESC) return 1;
 		/* Check for flood selection */
 		if (key == 'f' || key == 'F' || key == 'm') {
-			floodselect(block, sel, myinfo->cursorx, myinfo->cursory);
+			floodselect(block, sel, myeditor->cursorx, myeditor->cursory);
 			/* Set the gradient endpoints to the current position */
-			grad->x2 = myinfo->cursorx;
-			grad->y2 = myinfo->cursory;
+			grad->x2 = myeditor->cursorx;
+			grad->y2 = myeditor->cursory;
 			if (key != 'm')
 				return 0;
 		}
 	} while (key != DKEY_ENTER && key != ' ');
-	grad->x2 = myinfo->cursorx; grad->y2 = myinfo->cursory;
+	grad->x2 = myeditor->cursorx; grad->y2 = myeditor->cursory;
 
 	/* just select everything */
 	for (i = min(grad->x1, grad->x2); i <= max(grad->x1, grad->x2); i++)
@@ -902,8 +791,10 @@ void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pb
 	}
 }
 
-void dogradient(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void dogradient(keveditor * myeditor)
 {
+	displaymethod* mydisplay = myeditor->mydisplay;
+	ZZTworld* myworld = myeditor->myworld;
 	int key;
 	int randomseed;
 	selection sel;
@@ -913,10 +804,10 @@ void dogradient(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myin
 	initselection(&sel, 60, 25);
 
 	/* Set up the fill buffer */
-	if (myinfo->pbuf == myinfo->standard_patterns)
-		fillbuffer = createfillpatterns(myinfo);
+	if (myeditor->buffers.pbuf == myeditor->buffers.standard_patterns)
+		fillbuffer = createfillpatterns(myeditor);
 	else
-		fillbuffer = myinfo->backbuffer;
+		fillbuffer = myeditor->buffers.backbuffer;
 
 	/* Prepare for randomness */
 	randomseed = time(0);
@@ -928,7 +819,7 @@ void dogradient(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myin
 	/* Draw the first panel */
 	drawsidepanel(mydisplay, PANEL_GRADTOOL1);
 
-	if (promptforselection(sel, &grad, myinfo, myworld, mydisplay)) {
+	if (promptforselection(sel, &grad, myeditor)) {
 		/* Escape was pressed */
 		deleteselection(&sel);
 		return;
@@ -946,7 +837,7 @@ void dogradient(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myin
 		/* Pick the ending point */
 		key = 
 		pickgradientpoint(myworld, &grad.x2, &grad.y2, sel, *fillbuffer, &grad, randomseed, mydisplay);
-		myinfo->cursorx = grad.x2; myinfo->cursory = grad.y2;
+		myeditor->cursorx = grad.x2; myeditor->cursory = grad.y2;
 
 		if (key == DKEY_ESC) { deleteselection(&sel); return; }
 		if (key != DKEY_TAB && key != ' ') break;
@@ -954,7 +845,7 @@ void dogradient(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myin
 		/* Pick the starting point */
 		key = 
 		pickgradientpoint(myworld, &grad.x1, &grad.y1, sel, *fillbuffer, &grad, randomseed, mydisplay);
-		myinfo->cursorx = grad.x1; myinfo->cursory = grad.y1;
+		myeditor->cursorx = grad.x1; myeditor->cursory = grad.y1;
 
 		if (key == DKEY_ESC) { deleteselection(&sel); return; }
 	} while (key == DKEY_TAB || key == ' ');
@@ -963,7 +854,7 @@ void dogradient(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myin
 	gradientfillbyselection(myworld, sel, *fillbuffer, grad, randomseed, 0, mydisplay);
 
 	/* Delete the fillbuffer if we createded it custom */
-	if (myinfo->pbuf == myinfo->standard_patterns) {
+	if (myeditor->buffers.pbuf == myeditor->buffers.standard_patterns) {
 		deletepatternbuffer(fillbuffer);
 		free(fillbuffer);
 	}
