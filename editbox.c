@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.36 2002/02/21 00:25:42 bitman Exp $
+ * $Id: editbox.c,v 1.37 2002/03/18 03:12:41 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -205,15 +205,14 @@ void draweditpanel(int insertflag, int wrapwidth, int zocmode, displaymethod * d
 	char buf[10] = "";
 	drawsidepanel(d, PANEL_EDIT);
 	
-	d->print(76, 4,  YELLOW_F | BRIGHT_F | BLUE_B, (insertflag ? "on" : "off"));
-	d->print(76, 8, YELLOW_F | BRIGHT_F | BLUE_B, (zocmode ? "on" : "off"));
+	d->print(76, 6,  YELLOW_F | BRIGHT_F | BLUE_B, (insertflag ? "on" : "off"));
 
 	sprintf(buf, "%d", wrapwidth);
 
 	if (wrapwidth)
-		d->print(76, 6, YELLOW_F | BRIGHT_F | BLUE_B, buf);
+		d->print(76, 8, YELLOW_F | BRIGHT_F | BLUE_B, buf);
 	else
-		d->print(72, 6, YELLOW_F | BRIGHT_F | BLUE_B, "off");
+		d->print(72, 8, YELLOW_F | BRIGHT_F | BLUE_B, "off");
 }
 
 void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,

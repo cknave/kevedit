@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.8 2002/03/17 09:35:58 bitman Exp $
+ * $Id: paramed.c,v 1.9 2002/03/18 03:12:41 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -100,6 +100,9 @@ void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 				break;
 			case DKEY_RIGHT:
 				rebuild = paramdeltaoption(d, w, x, y, dialogGetCurOption(dia), 1);
+				break;
+			case DKEY_F1:
+				helpsectiontopic("kstats", "", d);
 				break;
 		}
 
@@ -657,6 +660,9 @@ void tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 					default:
 						rebuild = 0;
 				}
+				break;
+			case DKEY_F1:
+				helpsectiontopic("ktileinf", "", d);
 				break;
 		}
 

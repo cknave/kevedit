@@ -8,15 +8,13 @@ Show/hide all objects/stated-things
 Re-label ctrl-c in code editor
 Quick key for quick key reference (and mention on panel)
 Aquire mode that resizes backbuffer
-Tile under cursor displays w/ different for/back color always
-Stat editor panel/help-topic
+Tile under cursor displays w/ different for/back-color always
+Stat editor panel
 Re-draw panel after zzm import
-Technical info for everything
-  Add/remove stats for every kind of tile
 Exploit ability of board to "link to self" using index FF
 Allow #play-back to piggy-back on other commands. i.e. /i#play
-Add monitor
-Add horiz/vert blink wall rays to menus
+Add monitor and horiz/vert blink wall rays to F3 menu display
+Add monitor & blink rays to terrain documentation
 
 For the 0.5 release:
 --------------------
@@ -38,3 +36,4 @@ Undo
 Font editor
 Scripting
 Change all of one kind to another
+ZZT-OOP shortcut keys

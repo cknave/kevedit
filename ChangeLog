@@ -4,6 +4,10 @@ Param Editor interface improvements
 Tile Info with ability to add/remove stats (params) for any type
 Monitor type recognized
 Monitor and blink wall rays added to Terrain menu (but not the displayed panel!)
+Object editor panel updated (CTRL-C instead of ALT-C)
+CTRL-K access to Kolor dialog for use in Text Entry mode
+Help topics added for Stat Editor and Tile Info
+Documentation on items, creatures, and terrain added to help
 
 0.4.0: February 19, 2002
 ------------------------

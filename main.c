@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.64 2002/03/17 09:35:58 bitman Exp $
+ * $Id: main.c,v 1.65 2002/03/18 03:12:41 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -385,6 +385,7 @@ int main(int argc, char **argv)
 			break;
 		case 'k':
 		case 'K':
+		case DKEY_CTRL_K:
 			/* Kolor selector */
 			colorselector(mydisplay, &myinfo->backc, &myinfo->forec,
 										&myinfo->blinkmode);

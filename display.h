@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.10 2001/12/15 00:54:53 bitman Exp $
+ * $Id: display.h,v 1.11 2002/03/18 03:12:41 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -112,6 +112,7 @@ extern void RegisterDisplays();
 #define DKEY_CTRL_D     ('d' - 0x60)
 #define DKEY_CTRL_E     ('e' - 0x60)
 #define DKEY_CTRL_F     ('f' - 0x60)
+#define DKEY_CTRL_K     ('k' - 0x60)
 #define DKEY_CTRL_T     ('t' - 0x60)
 #define DKEY_CTRL_V     ('v' - 0x60)
 #define DKEY_CTRL_X     ('x' - 0x60)
