@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.12 2002/09/12 07:48:00 bitman Exp $
+ * $Id: menu.c,v 1.13 2002/09/12 22:05:48 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include "files.h"
 #include "zzl.h"
 #include "hypertxt.h"
+#include "colours.h"
 
 #include "patbuffer.h"
 
@@ -41,7 +42,7 @@ void itemmenu(keveditor * myeditor)
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
-	tile.color = (myeditor->backc << 4) + myeditor->forec + (myeditor->blinkmode * 0x80);
+	tile.color = encodecolor(myeditor->color);
 
 	choice = dothepanel_f1(myeditor);
 	tile.type = choice;
@@ -56,16 +57,16 @@ void itemmenu(keveditor * myeditor)
 	}
 
 	/* Use default color if in default color mode */
-	if (myeditor->defc != 0) {
+	if (myeditor->defcmode != 0) {
 		switch (tile.type) {
 			case ZZT_AMMO:      tile.color = 0x03; break;
 			case ZZT_TORCH:     tile.color = 0x06; break;
 			case ZZT_ENERGIZER: tile.color = 0x05; break;
 			case ZZT_DOOR:
-				tile.color = myeditor->forec > 7 ? ((myeditor->forec - 8) << 4) + 0x0f : (myeditor->forec << 4) + 0x0f;
+				tile.color = myeditor->color.fg > 7 ? ((myeditor->color.fg - 8) << 4) + 0x0f : (myeditor->color.fg << 4) + 0x0f;
 				break;
 			case ZZT_PASSAGE:
-				tile.color = myeditor->forec > 7 ? ((myeditor->forec - 8) << 4) + 0x0f : (myeditor->forec << 4) + 0x0f;
+				tile.color = myeditor->color.fg > 7 ? ((myeditor->color.fg - 8) << 4) + 0x0f : (myeditor->color.fg << 4) + 0x0f;
 				break;
 			case ZZT_DUPLICATOR:
 				tile.color = 0x0f;
@@ -91,7 +92,7 @@ void creaturemenu(keveditor * myeditor)
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
-	tile.color = (myeditor->backc << 4) + myeditor->forec + (myeditor->blinkmode * 0x80);
+	tile.color = encodecolor(myeditor->color);
 
 	choice = dothepanel_f2(myeditor);
 	tile.type = choice;
@@ -100,7 +101,7 @@ void creaturemenu(keveditor * myeditor)
 	tile.param = zztParamCreate(tile);
 
 	/* Use default color if in default color mode */
-	if (myeditor->defc != 0) {
+	if (myeditor->defcmode != 0) {
 		switch (choice) {
 			case ZZT_BEAR:
 				tile.color = 0x06;
@@ -147,7 +148,7 @@ void terrainmenu(keveditor * myeditor)
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
-	tile.color = (myeditor->backc << 4) + myeditor->forec + (myeditor->blinkmode * 0x80);
+	tile.color = encodecolor(myeditor->color);
 
 	choice = dothepanel_f3(myeditor);
 	tile.type = choice;

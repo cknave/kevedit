@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.33 2002/09/12 07:48:00 bitman Exp $
+ * $Id: misc.c,v 1.34 2002/09/12 22:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,19 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <time.h>
+
+void plot(keveditor * myeditor)
+{
+	patbuffer* pbuf = myeditor->buffers.pbuf;
+	ZZTtile pattern = pbuf->patterns[pbuf->pos];
+
+	/* Change the color to reflect state of default color mode */
+	if (myeditor->defcmode == 0) {
+		pattern.color = encodecolor(myeditor->color);
+	}
+
+	zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, pattern);
+}
 
 void showObjects(keveditor * myeditor)
 {
@@ -199,7 +212,7 @@ void exitgradientmode(keveditor * myeditor)
 		buffers->pbuf = buffers->standard_patterns; /* Very important */
 
 		/* Apply the current colors */
-		pat_applycolordata(buffers->standard_patterns, myeditor);
+		pat_applycolordata(buffers->standard_patterns, myeditor->color);
 
 		/* Use the previous position if not too big */
 		if (oldpos >= buffers->standard_patterns->size)
@@ -510,11 +523,11 @@ patbuffer* createfillpatterns(keveditor* myeditor)
 	fillpatterns->patterns[3].type = ZZT_WATER;
 	fillpatterns->patterns[4].type = ZZT_SOLID;
 
-	pat_applycolordata(fillpatterns, myeditor);
+	pat_applycolordata(fillpatterns, myeditor->color);
 
 	/* Last pattern is an inverted-coloured solid */
-	fillpatterns->patterns[4].color = myeditor->backc |
-	                                  ((myeditor->forec & 0x07) << 4);
+	fillpatterns->patterns[4].color = myeditor->color.bg |
+	                                  ((myeditor->color.fg & 0x07) << 4);
 
 	return fillpatterns;
 }

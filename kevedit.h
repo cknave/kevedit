@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.15 2002/09/12 07:48:00 bitman Exp $
+ * $Id: kevedit.h,v 1.16 2002/09/12 22:05:48 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,8 @@
 
 #include "libzzt2/zzt.h"
 #include "display.h"
+#include "patbuffer.h"
+#include "colours.h"
 
 /* Update Flags */
 #define UD_NONE         0x00  /* Nothing at all */
@@ -49,30 +51,6 @@
 #define AQUMODE_OFF       0
 #define AQUMODE_NORESIZE  1  /* Don't resize the backbuffer */
 #define AQUMODE_RESIZE    2  /* Grow backbuffer to hold new tiles */
-
-
-#define MAX_BACKBUF 1024
-
-/* Various levels of patbuffer locking */
-#define PATBUF_UNLOCK    0x00
-#define PATBUF_NOPUSH    0x01
-#define PATBUF_NOREPLACE 0x02
-#define PATBUF_LOCK      0xFF
-
-typedef struct patbuffer {
-	ZZTtile* patterns;
-	int size;
-	int pos;
-
-	int lock;
-} patbuffer;
-
-typedef struct backbuffers {
-	/* Pattern buffers */
-	patbuffer* pbuf;
-	patbuffer* standard_patterns;
-	patbuffer* backbuffer;
-} backbuffers;
 
 
 typedef struct kevoptions {
@@ -105,14 +83,10 @@ typedef struct keveditor {
 	int gradmode;
 	int aqumode;
 	int textentrymode;
-	int defc;
+	int defcmode;
 
-	/* Color info */
-	int blinkmode;
-	int forec, backc;
-
-	/* TODO: move forec, backc, and blink into a struct in colours.h.
-	 * Rename defc to defcmode. */
+	/* Current colour */
+	textcolor color;
 
 	/* Backbuffers */
 	backbuffers buffers;

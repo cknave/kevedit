@@ -1,5 +1,5 @@
 /* colours.h   -- colour defines
- * $Id: colours.h,v 1.3 2002/05/04 04:17:43 bitman Exp $
+ * $Id: colours.h,v 1.4 2002/09/12 22:05:48 bitman Exp $
  */
 
 #ifndef __COLOURS_H
@@ -27,6 +27,12 @@
 #define WHITE_B   0x70
 #define BRIGHT_B  0x80
 
+typedef struct textcolor {
+	int fg, bg;
+	int blink;
+} textcolor;
+
+#define encodecolor(tcolor) (((tcolor.fg) & 0x0F) | ((tcolor.bg) << 4) | ((tcolor.blink) << 7))
 #define makecolor(fg, bg, blink) (((fg) & 0x0F) | ((bg) << 4) | ((blink) << 7))
 #define colorfg(color) ((color) & 0x0F)
 #define colorbg(color) (((color) & 0x70) >> 4)

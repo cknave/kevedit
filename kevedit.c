@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.1 2002/09/12 07:48:00 bitman Exp $
+ * $Id: kevedit.c,v 1.2 2002/09/12 22:05:48 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -83,11 +83,11 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 	myeditor->gradmode = 0;
 	myeditor->aqumode = 0;
 	myeditor->textentrymode = 0;
-	myeditor->defc = 1;
+	myeditor->defcmode = 1;
 
-	myeditor->blinkmode = 0;
-	myeditor->forec = 0x0f;
-	myeditor->backc = 0x00;
+	myeditor->color.blink = 0;
+	myeditor->color.fg    = 0x0f;
+	myeditor->color.bg    = 0x00;
 
 	myeditor->buffers.standard_patterns = createstandardpatterns();
 	myeditor->buffers.backbuffer        = patbuffer_create(10);
@@ -107,7 +107,7 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 			myeditor->options.vimovement = 1;
 	}
 
-	pat_applycolordata(myeditor->buffers.standard_patterns, myeditor);
+	pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 
 	return myeditor;
 }
@@ -221,12 +221,12 @@ void keveditHandleTextEntry(keveditor * myeditor)
 		ZZTtile textTile = { ZZT_BLUETEXT, 0x00, NULL };
 
 		/* Determine the text code based on the FG colour */
-		if (myeditor->forec == 0 || myeditor->forec == 8 || myeditor->forec == 15)
+		if (myeditor->color.fg == 0 || myeditor->color.fg == 8 || myeditor->color.fg == 15)
 			textTile.type += 6;
-		else if (myeditor->forec > 8)
-			textTile.type += myeditor->forec - 9;
+		else if (myeditor->color.fg > 8)
+			textTile.type += myeditor->color.fg - 9;
 		else
-			textTile.type += myeditor->forec - 1;
+			textTile.type += myeditor->color.fg - 1;
 
 		/* Determine color based on keypress */
 		textTile.color = key;
@@ -408,42 +408,41 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 		case 'c':
 			/* Change foregeound colour */
-			myeditor->forec++;
-			if (myeditor->forec == 16)
-				myeditor->forec = 0;
-			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor);
+			myeditor->color.fg++;
+			if (myeditor->color.fg == 16)
+				myeditor->color.fg = 0;
+			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 			myeditor->updateflags |= UD_COLOR;
 			break;
 		case 'C':
 			/* Change background colour */
-			myeditor->backc++;
-			if (myeditor->backc == 8)
-				myeditor->backc = 0;
-			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor);
+			myeditor->color.bg++;
+			if (myeditor->color.bg == 8)
+				myeditor->color.bg = 0;
+			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 			myeditor->updateflags |= UD_COLOR;
 			break;
 		case 'k':
 		case 'K':
 		case DKEY_CTRL_K:
 			/* Kolor selector */
-			colorselector(myeditor->mydisplay, &myeditor->forec, &myeditor->backc,
-										&myeditor->blinkmode);
-			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor);
+			colorselector(myeditor->mydisplay, &(myeditor->color));
+			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 
 			myeditor->updateflags |= UD_COLOR | UD_BOARD;
 			break;
 		case 'v':
 		case 'V':
 			/* Toggle blink mode */
-			myeditor->blinkmode ^= 1;
-			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor);
+			myeditor->color.blink ^= 1;
+			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 
 			myeditor->updateflags |= UD_BLINKMODE;
 			break;
 		case 'd':
 		case 'D':
 			/* Toggle DefC mode */
-			myeditor->defc ^= 1;
+			myeditor->defcmode ^= 1;
 			myeditor->updateflags |= UD_COLORMODE;
 			break;
 

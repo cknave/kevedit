@@ -27,7 +27,7 @@ ifeq ($(BUILDGLOB),ON)
 	GLOBLIB = glob/libglob.a
 endif
 
-PATHS = -DDATAPATH=\"$(datadir)\"
+PATHS = -DDATAPATH=\"$(datadir)\" -DBINPATH=\"$(bindir)\"
 
 CFLAGS += $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(VERSIONFLAG) $(PATHS)
 

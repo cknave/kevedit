@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.51 2002/09/12 07:48:00 bitman Exp $
+ * $Id: screen.c,v 1.52 2002/09/12 22:05:49 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -467,7 +467,7 @@ void updatepanel(keveditor * e)
 		/* Draw the bottom portion of the panel */
 
 		/* Blink Mode? */
-		if (e->blinkmode == 0)
+		if (e->color.blink == 0)
 			i = 0x1f;
 		else
 			i = 0x1e;
@@ -483,11 +483,11 @@ void updatepanel(keveditor * e)
 		for (i = 61; i < 78; i++) {
 			d->putch_discrete(i, 20, ' ', 0x1f);
 		}
-		d->putch_discrete(61 + e->forec, 22, 31, 0x17);
-		d->putch_discrete(69 + e->backc, 24, 30, 0x17);
+		d->putch_discrete(61 + e->color.fg, 22, 31, 0x17);
+		d->putch_discrete(69 + e->color.bg, 24, 30, 0x17);
 
 		/* Default colour mode? */
-		if (e->defc == 1)
+		if (e->defcmode == 1)
 			d->putch_discrete(78, 23, 'D', 0x1e);
 		else
 			d->putch_discrete(78, 23, 'd', 0x18);
@@ -908,7 +908,7 @@ int dothepanel_f1(keveditor * e)
 {
 	displaymethod * d = e->mydisplay;
 	int x, y, i = 0;
-	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
+	int color = encodecolor(e->color);
 
 	for (y = 3; y < 20; y++) {
 		for (x = 0; x < 20; x++) {
@@ -917,22 +917,22 @@ int dothepanel_f1(keveditor * e)
 		}
 	}
 	d->putch_discrete(78, 4, 2, 0x1f);
-	d->putch_discrete(78, 5, 132, e->defc ? 0x03 : color);
-	d->putch_discrete(78, 6, 157, e->defc ? 0x06 : color);
+	d->putch_discrete(78, 5, 132, e->defcmode ? 0x03 : color);
+	d->putch_discrete(78, 6, 157, e->defcmode ? 0x06 : color);
 	d->putch_discrete(78, 7, 4, color);
 	d->putch_discrete(78, 8, 12, color);
-	if (e->defc == 1)
-		d->putch_discrete(78, 9, 10, e->forec > 7 ? ((e->forec - 8) << 4) + 0x0f : (e->forec << 4) + 0x0f);
+	if (e->defcmode == 1)
+		d->putch_discrete(78, 9, 10, e->color.fg > 7 ? ((e->color.fg - 8) << 4) + 0x0f : (e->color.fg << 4) + 0x0f);
 	else
-		d->putch_discrete(78, 9, 10, (e->backc << 4) + (e->forec));
+		d->putch_discrete(78, 9, 10, (e->color.bg << 4) + (e->color.fg));
 	d->putch_discrete(78, 10, 232, 0x0f);
-	if (e->defc == 1)
-		d->putch_discrete(78, 11, 240, e->forec > 7 ? ((e->forec - 8) << 4) + 0x0f : (e->forec << 4) + 0x0f);
+	if (e->defcmode == 1)
+		d->putch_discrete(78, 11, 240, e->color.fg > 7 ? ((e->color.fg - 8) << 4) + 0x0f : (e->color.fg << 4) + 0x0f);
 	else
-		d->putch_discrete(78, 11, 240, (e->backc << 4) + (e->forec));
-	d->putch_discrete(78, 12, 250, e->defc ? 0x0f : color);
+		d->putch_discrete(78, 11, 240, (e->color.bg << 4) + (e->color.fg));
+	d->putch_discrete(78, 12, 250, e->defcmode ? 0x0f : color);
 	d->putch_discrete(78, 13, 11, color);
-	d->putch_discrete(78, 14, 127, e->defc ? 0x05 : color);
+	d->putch_discrete(78, 14, 127, e->defcmode ? 0x05 : color);
 	d->putch_discrete(78, 17, 47, color);
 	d->putch_discrete(78, 18, 92, color);
 	d->update(60, 3, 20, 22);
@@ -988,7 +988,7 @@ int dothepanel_f2(keveditor * e)
 {
 	displaymethod * d = e->mydisplay;
 	int x, y, i = 0;
-	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
+	int color = encodecolor(e->color);
 
 	for (y = 3; y < 20; y++) {
 		for (x = 0; x < 20; x++) {
@@ -996,18 +996,18 @@ int dothepanel_f2(keveditor * e)
 			i += 2;
 		}
 	}
-	/* Bear    */ d->putch_discrete(78, 4,  153,  e->defc ? 0x06 : color);
-	/* Ruffian */ d->putch_discrete(78, 5,  5,    e->defc ? 0x0d : color);
+	/* Bear    */ d->putch_discrete(78, 4,  153,  e->defcmode ? 0x06 : color);
+	/* Ruffian */ d->putch_discrete(78, 5,  5,    e->defcmode ? 0x0d : color);
 	/* Object  */ d->putch_discrete(78, 6,  1,    color);
 	/* Slime   */ d->putch_discrete(78, 7,  '*',  color);
-	/* Shark   */ d->putch_discrete(78, 8,  '^',  e->defc ? 0x07 : color);
+	/* Shark   */ d->putch_discrete(78, 8,  '^',  e->defcmode ? 0x07 : color);
 	/* SpinGun */ d->putch_discrete(78, 9,  0x18, color);
 	/* Pusher  */ d->putch_discrete(78, 10, 0x10, color);
-	/* Lion    */ d->putch_discrete(78, 11, 0xEA, e->defc ? 0x0C : color);
-	/* Tiger   */ d->putch_discrete(78, 12, 0xE3, e->defc ? 0x0B : color);
+	/* Lion    */ d->putch_discrete(78, 11, 0xEA, e->defcmode ? 0x0C : color);
+	/* Tiger   */ d->putch_discrete(78, 12, 0xE3, e->defcmode ? 0x0B : color);
 
-	/* Bullet  */ d->putch_discrete(78, 14, 0xF8, e->defc ? 0x0F : color);
-	/* Star    */ d->putch_discrete(78, 15, '/',  e->defc ? 0x0F : color);
+	/* Bullet  */ d->putch_discrete(78, 14, 0xF8, e->defcmode ? 0x0F : color);
+	/* Star    */ d->putch_discrete(78, 15, '/',  e->defcmode ? 0x0F : color);
 
 	/* Head    */ d->putch_discrete(78, 17, 0xE9, color);
 	/* Segment */ d->putch_discrete(78, 18, 'O',  color);
@@ -1066,7 +1066,7 @@ int dothepanel_f3(keveditor * e)
 {
 	displaymethod * d = e->mydisplay;
 	int x, y, i = 0;
-	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
+	int color = encodecolor(e->color);
 
 	for (y = 0; y < PANEL_F3_DEPTH; y++) {
 		for (x = 0; x < PANEL_F3_WIDTH; x++) {
@@ -1074,8 +1074,8 @@ int dothepanel_f3(keveditor * e)
 			i += 2;
 		}
 	}
-	d->putch_discrete(78, 4, 176, e->defc ? 0x9f : color);
-	d->putch_discrete(78, 5, 176, e->defc ? 0x20 : color);
+	d->putch_discrete(78, 4, 176, e->defcmode ? 0x9f : color);
+	d->putch_discrete(78, 5, 176, e->defcmode ? 0x20 : color);
 	d->putch_discrete(78, 6, 219, color);
 	d->putch_discrete(78, 7, 178, color);
 	d->putch_discrete(78, 8, 177, color);
@@ -1086,7 +1086,7 @@ int dothepanel_f3(keveditor * e)
 	d->putch_discrete(78, 13, 176, color);
 	d->putch_discrete(78, 14, 0xCE, color);
 	d->putch_discrete(78, 15, '<', color);
-	d->putch_discrete(78, 16, '*', e->defc ? 0x0a : color);
+	d->putch_discrete(78, 16, '*', e->defcmode ? 0x0a : color);
 	d->putch_discrete(78, 18, 'E', color);
 	d->putch_discrete(78, 19, 'M', color);
 	d->putch_discrete(78, 20, 205, color);
@@ -1336,13 +1336,13 @@ void colorselectdrawcursor(displaymethod* d, int curx, int cury)
 	d->update(12, 7, 34, 18);
 }
 
-int colorselector(displaymethod * d, int * fg, int * bg, int * blink)
+int colorselector(displaymethod * d, textcolor * color)
 {
 	int curx, cury;
 	int key;
 
-	curx = *fg | (*blink << 4);
-	cury = *bg;
+	curx = color->fg | (color->blink << 4);
+	cury = color->bg;
 
 	colorselectdraw(d);
 
@@ -1367,9 +1367,9 @@ int colorselector(displaymethod * d, int * fg, int * bg, int * blink)
 				if (curx < 31) curx++; else curx = 0;  break;
 
 			case DKEY_ENTER:
-				*fg = curx & 0x0F;
-				*bg = cury;
-				*blink = curx >> 4;
+				color->fg = curx & 0x0F;
+				color->bg = cury;
+				color->blink = curx >> 4;
 				return 0;
 
 			case DKEY_ESC:

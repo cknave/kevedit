@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.28 2002/09/12 07:48:00 bitman Exp $
+ * $Id: screen.h,v 1.29 2002/09/12 22:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
 #include "kevedit.h"
 #include "svector.h"
 #include "files.h"
+#include "colours.h"
 
 /* line_editor flags */
 #define LINED_NORMAL   0x00
@@ -108,7 +109,7 @@ int dothepanel_f3(keveditor * e);
 int charselect(displaymethod * d, int c);
 
 /* Prompts the user to select a color */
-int colorselector(displaymethod * d, int * fg, int * bg, int * blink);
+int colorselector(displaymethod * d, textcolor * color);
 
 /* confirmprompt() - Asks a yes/no question */
 int confirmprompt(displaymethod * mydisplay, char * prompt);

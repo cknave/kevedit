@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.15 2002/06/02 03:55:01 bitman Exp $
+ * $Id: paramed.c,v 1.16 2002/09/12 22:05:49 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -768,12 +768,14 @@ char * colorname(char * buf, int color)
 
 int selectcolor(displaymethod * d, int color)
 {
-	int fg    = colorfg(color),
-			bg    = colorbg(color), 
-			blink = colorblink(color);
+	textcolor tcolor;
 
-	if (!colorselector(d, &fg, &bg, &blink))
-		return makecolor(fg, bg, blink);
+	tcolor.fg    = colorfg(color);
+	tcolor.bg    = colorbg(color);
+	tcolor.blink = colorblink(color);
+
+	if (!colorselector(d, &tcolor))
+		return encodecolor(tcolor);
 
 	return -1;
 }

@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.12 2002/09/12 07:48:00 bitman Exp $
+ * $Id: patbuffer.c,v 1.13 2002/09/12 22:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -116,15 +116,14 @@ void patbuffer_resize(patbuffer * pbuf, int delta)
 }
 
 
-void pat_applycolordata(patbuffer * pbuf, keveditor * myeditor)
+void pat_applycolordata(patbuffer * pbuf, textcolor color)
 {
-	int i, colour;
-	colour = (myeditor->backc << 4) + myeditor->forec;
-	if (myeditor->blinkmode == 1)
-		colour += 0x80;
+	int i, tilecolor;
+
+	tilecolor = encodecolor(color);
 
 	for (i = 0; i < pbuf->size; i++)
-		pbuf->patterns[i].color = colour;
+		pbuf->patterns[i].color = tilecolor;
 }
 
 
@@ -182,20 +181,5 @@ void patreplace(patbuffer * pbuf, ZZTtile pattern)
 		pbuf->patterns[pbuf->pos].param->utype  = ZZT_EMPTY;
 		pbuf->patterns[pbuf->pos].param->ucolor = 0x0F;
 	}
-}
-
-void plot(keveditor * myeditor)
-{
-	patbuffer* pbuf = myeditor->buffers.pbuf;
-	ZZTtile pattern = pbuf->patterns[pbuf->pos];
-
-	/* Change the color to reflect state of default color mode */
-	if (myeditor->defc == 0) {
-		pattern.color = (myeditor->backc << 4) + myeditor->forec;
-		if (myeditor->blinkmode == 1)
-			pattern.color += 0x80;
-	}
-
-	zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, pattern);
 }
 
