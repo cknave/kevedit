@@ -1,0 +1,1482 @@
+Mystic Winds Object Library
+* v1.0 B - Built from Mystical Winds Toolkit 2001
+* Generator: bitman using KevEdit
+*
+* Format (by CyQ):
+* 
+* library name
+* comments, starting with *
+* per object:
+* object name
+* lines in program, char,forground color,background color,x step,y step,cycle
+* program
+* 
+Ammo (5)
+5,132,3,0,0,0,1
+@ammo
+#end
+:touch
+#give ammo 5
+#die
+Ammo (10)
+5,132,3,0,0,0,1
+@ammo
+#end
+touch
+#give ammo 10
+#die
+Ammo (20)
+5,132,3,0,0,0,1
+@ammo
+#end
+:touch
+#give ammo 20
+#die
+Torch (1)
+5,157,6,0,0,0,1
+@torch
+#end
+:touch
+#give torches 1
+#die
+Torch (2)
+5,157,6,0,0,0,1
+@torch
+#end
+:touch
+#give torches 2
+#end
+Torch (3)
+5,157,6,0,0,0,1
+@torch
+#end
+:touch
+#give torches 5
+#end
+Gem
+5,4,10,0,0,0,1
+@gem
+#end
+:touch
+#give gems 1
+#die
+Magic Gem (1 Health)
+6,4,14,0,0,0,1
+@magicgem
+#end
+:touch
+#give gems 1
+#give health 1
+#die
+Magic Gem (10 Health)
+6,4,14,0,0,0,1
+@magicgem
+#end
+:touch
+#give gems 1
+#give health 10
+#die
+Magic Gem (20 Health)
+6,4,14,0,0,0,1
+@magicgem
+#end
+:touch
+#give gems 1
+#give health 20
+#die
+Health (10)
+5,3,12,0,0,0,1
+@health
+#end
+:touch
+#give health 10
+#die
+Health (20)
+5,3,12,0,0,0,1
+@health
+#end
+:touch
+#give health 20
+#die
+Health (50)
+5,3,12,0,0,0,1
+@health
+#end
+:touch
+#give health 50
+#die
+Life
+13,7,11,0,0,0,1
+@life
+/i#char 196
+/i#char 7
+/i#char 47
+/i#char 7
+/i#char 179
+/i#char 7
+/i#char 92
+/i#char 7
+#restart
+:touch
+#give health 100
+#die
+Food
+8,159,12,0,0,0,1
+@food
+#end
+:touch
+#play t222
+Some food for strength.
+#give health 5
+:bombed
+#die
+Pouch
+22,149,6,0,0,0,1
+@pouch
+#end
+:touch
+#if blocked rndp rndne first
+#if blocked rndp rndne second
+#if blocked rndp rndne third
+The pouch contained 10 gems.
+#give gems 10
+#die
+:first
+The pouch contained 7 gems.
+#give gems 7
+#die
+:second
+The pouch contained 5 gems.
+#give gems 5
+#die
+:third
+The pouch contained 3 gems.
+#give gems 3
+:bombed
+#die
+Bear
+9,153,6,0,0,0,2
+@bear
+/i
+#if not alligned restart
+#try seek
+#if not contact restart
+#shoot seek
+:shot
+:bombed
+#die
+Bear Cub
+13,148,6,0,0,0,2
+@bearcub
+#if contact hurt
+#if alligned charge
+#try seek try rndp rndne
+#restart
+:charge
+#try seek try rndp seek
+#restart
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Ruffian
+39,5,5,0,0,0,1
+@ruffian
+:do
+:do
+#zap do
+#walk seek
+#if contact hurt
+/i#if contact hurt
+/i#if contact hurt
+/i#if contact hurt
+/i#if contact hurt
+/i#if contact hurt
+#walk idle
+#wait
+:wait
+/i/i
+:wait
+/i/i/i
+:wait
+/i#zap wait
+#do
+:wait
+/i/i/i/i#restore wait
+#walk seek
+#shortrun
+:do
+#restore do
+#walk rndp rndne
+:shortrun
+#if contact hurt
+/i#if contact hurt
+/i#if contact hurt
+/i#if contact hurt
+#walk idle
+/i/i/i#do
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Lion
+13,234,12,0,0,0,2
+@lion
+#try rndp rndne
+#if contact hurt
+#try seek
+#if contact hurt
+#try seek
+#if contact hurt
+#restart
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Tiger
+14,227,11,0,0,0,2
+@tiger
+#try rndp rndne
+#if contact hurt
+#try seek
+#if contact hurt
+#try seek
+#if contact hurt
+#shoot seek
+#restart
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Goblin
+12,5,2,0,0,0,1
+@goblin
+#try rndp rndne
+#if contact hurt
+#try rndp seek
+#if contact hurt
+/i#if contact hurt
+#restart
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Spider
+23,15,8,0,0,0,1
+#if contact hurt
+#try rndp rndne try rndp rndne
+#if blocked n climb
+#if blocked s climb
+#if blocked e climb
+#if blocked w climb
+#restart
+:climb
+:climb
+:climb
+#zap climb
+/i/i#if blocked n climb
+#if blocked s climb
+#if blocked e climb
+#if blocked w climb
+:climb
+#restore climb
+#restart
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Dragon
+23,21,4,0,0,0,3
+@dragon
+:do
+:do
+#try seek
+#if contact hurt
+#try rndp seek
+#if contact hurt
+#zap do
+#do
+:do
+#shoot seek
+#restore do
+#restart
+:shot
+:shot
+:shot
+#zap shot
+#do
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Dragon Pup
+15,145,4,0,0,0,1
+@dragonpup
+/i/i#if contact hurt
+#try seek
+/i/i#if contact hurt
+#try rndp seek
+/i/i#if contact hurt
+#try seek
+/i#if contact hurt
+#shoot seek
+#restart
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Runner (Starts West)
+13,2,12,0,0,0,1
+@runner
+#if contact hurt
+#try w reverse  'Change "w" to desired dir
+#restart
+:reverse
+#if contact hurt
+#try e restart  'Change "e" to desired dir
+#reverse
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Snake
+25,235,2,0,0,0,1
+@snake
+#if contact hurt
+#try n check
+#restart
+:check
+#if blocked rndp rndne restart
+#if blocked rndp rndne gos
+#if blocked rndp rndne gow
+:goe
+#if contact hurt
+#try e check
+#goe
+:gos
+#if contact hurt
+#try s check
+#gos
+:gow
+#if contact hurt
+#try w check
+#gow
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Eye
+9,236,15,0,0,0,1
+@eye
+#if contact hurt
+#try rndp rndne try rndp rndne
+#restart
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Fish
+13,224,14,0,0,0,1
+@fish
+#if contact hurt
+#try randp randne
+#if contact hurt
+#try seek
+#if contact hurt
+#try randp randne
+#restart
+:hurt
+#shoot seek
+:shot
+:bombed
+#die
+Pairer
+6,229,1,0,0,0,1
+@pairer
+/i#if not contact restart
+#shoot seek
+:shot
+:bombed
+#die
+Missle (North)
+59,30,8,0,0,0,1
+@missilen
+#if blocked n restart
+#walk n
+#end
+:thud
+#if contact explode
+:ew
+#zap thud
+#if blocked e w
+#char 16
+#walk e
+#end
+:w
+#if blocked w ns
+#char 17
+#walk w
+#end
+:thud
+#if contact explode
+:ns
+#restore thud
+#if blocked n s
+#char 30
+#walk n
+#end
+:s
+#if blocked s ew
+#char 31
+#walk s
+#end
+:explode
+#lock
+#wait idle
+#shoot seek
+#if blocked n exp1
+#put n red fake
+:exp1
+#if blocked s exp2
+#put s red fake
+:exp2
+#if blocked e exp3
+#put e red fake
+:exp3
+#if blocked w exp4
+#put w red fake
+:exp4
+/i#if blocked n exp5
+#put n empty
+:exp5
+#if blocked s exp6
+#put s empty
+:exp6
+#if blocked e exp7
+#put e empty
+:exp7
+#if blocked w die
+#put w empty
+:bombed
+#die
+Missle (South)
+59,31,8,0,0,0,1
+@missiles
+#if blocked s restart
+#walk s
+#end
+:thud
+#if contact explode
+:ew
+#zap thud
+#if blocked e w
+#char 16
+#walk e
+#end
+:w
+#if blocked w ns
+#char 17
+#walk w
+#end
+:thud
+#if contact explode
+:ns
+#restore thud
+#if blocked n s
+#char 30
+#walk n
+#end
+:s
+#if blocked s ew
+#char 31
+#walk s
+#end
+:explode
+#lock
+#walk idle
+#shoot seek
+#if blocked n exp1
+#put n red fake
+:exp1
+#if blocked s exp2
+#put s red fake
+:exp2
+#if blocked e exp3
+#put e red fake
+:exp3
+#if blocked w exp4
+#put w red fake
+:exp4
+/i#if blocked n exp5
+#put n empty
+:exp5
+#if blocked s exp6
+#put s empty
+:exp6
+#if blocked e exp7
+#put e empty
+:exp7
+#if blocked w die
+#put w empty
+:bombed
+#die
+Missile (East)
+59,16,8,0,0,0,1
+@missilee
+#if blocked e restart
+#walk e
+#end
+:thud
+#if contact explode
+:ns
+#zap thud
+#if blocked n s
+#char 30
+#walk n
+#end
+:s
+#if blocked s ew
+#char 31
+#walk s
+#end
+:thud
+#if contact explode
+:ew
+#restore thud
+#if blocked e w
+#char 16
+#walk e
+#end
+:w
+#if blocked w ns
+#char 17
+#walk w
+#end
+:explode
+#lock
+#walk idle
+#shoot seek
+#if blocked n exp1
+#put n red fake
+:exp1
+#if blocked s exp2
+#put s red fake
+:exp2
+#if blocked e exp3
+#put e red fake
+:exp3
+#if blocked w exp4
+#put w red fake
+:exp4
+/i#if blocked n exp5
+#put n empty
+:exp5
+#if blocked s exp6
+#put s empty
+:exp6
+#if blocked e exp7
+#put e empty
+:exp7
+#if blocked w die
+#put w empty
+:bombed
+#die
+Missile (West)
+59,17,8,0,0,0,1
+@missilew
+#if blocked w restart
+#walk w
+#end
+:thud
+#if contact explode
+:ns
+#zap thud
+#if blocked n s
+#char 30
+#walk n
+#end
+:s
+#if blocked s ew
+#char 31
+#walk s
+#end
+:thud
+#if contact explode
+:ew
+#restore thud
+#if blocked e w
+#char 16
+#walk e
+#end
+:w
+#if blocked w ns
+#char 17
+#walk w
+#end
+:explode
+#lock
+#walk idle
+#shoot seek
+#if blocked n exp1
+#put n red fake
+:exp1
+#if blocked s exp2
+#put s red fake
+:exp2
+#if blocked e exp3
+#put e red fake
+:exp3
+#if blocked w exp4
+#put w red fake
+:exp4
+/i#if blocked n exp5
+#put n empty
+:exp5
+#if blocked s exp6
+#put s empty
+:exp6
+#if blocked e exp7
+#put e empty
+:exp7
+#if blocked w die
+#put w empty
+:bombed
+#die
+Water
+4,176,9,15,0,0,1
+@water
+#end
+:touch
+Your way is blocked by water.
+Forest
+5,176,0,2,0,0,1
+@forest
+#end
+:touch
+A path is cleared through the forest.
+#die
+Breakable
+5,177,4,0,0,0,1
+@breakable
+#end
+:shot
+:bombed
+#die
+Boulder
+4,254,14,0,0,0,1
+@boulder
+#end
+:touch
+#try opp seek
+Crate
+7,254,6,0,0,0,1
+@crate
+#end
+:touch
+#try opp seek
+#end
+:bombed
+#die
+Invisible (To Normal)
+5,32,15,0,0,0,1
+@invisible
+#end
+:touch
+You are blocked by an invisible wall.
+#become normal
+Invisible (To Solid)
+5,32,15,0,0,0,1
+@invisible
+#end
+:touch
+You are blocked by an invisible wall.
+#become solid
+Fire
+30,176,4,0,0,0,1
+@fire
+/i#char 178
+#if contact hurt
+/i#char 177
+#if contact hurt
+/i#char 176
+#if contact hurt
+/i#char 177
+#if contact hurt
+/i#char 176
+#if contact hurt
+/i#char 178
+#if contact hurt
+/i#char 176
+#if contact hurt
+/i#char 177
+#if contact hurt
+/i#char 178
+#if contact hurt
+/i#char 176
+#if contact hurt
+#restart
+:hurt
+/i#char 177
+/i#char 176
+/i#char 177
+/i#char 178
+#if not contact restart
+#shoot seek
+#restart
+Mine
+8,7,12,0,0,0,1
+@mine
+/i/i/i/i/i#char 9
+/i/i/i/i/i#char 7
+#restart
+:touch
+#shoot seek
+:bombed
+#die
+Landmine
+5,32,8,0,0,0,1
+@landmine
+#end
+:touch
+#shoot seek
+#die
+Door (Opens To North)
+19,179,6,0,0,0,1
+@door
+#end
+:touch
+#lock
+#play 1
+#if blocked e gow
+#char 92
+/e#char 196
+/n/i/i/i/i/i/i/i#char 92
+/s#char 179
+/w#unlock
+#end
+:gow
+#char 47
+/w#char 196
+/n/i/i/i/i/i/i/i#char 47
+/s#char 179
+/e#unlock
+#end
+Door (Opens to South)
+19,179,6,0,0,0,1
+@door
+#end
+:touch
+#lock
+#play 1
+#if blocked e gow
+#char 47
+/e#char 196
+/s/i/i/i/i/i/i/i#char 47
+/n#char 179
+/w#unlock
+#end
+:gow
+#char 92
+/w#char 196
+/s/i/i/i/i/i/i/i#char 92
+/n#char 179
+/e#unlock
+#end
+Door (Opens To East)
+19,196,6,0,0,0,1
+@door
+#end
+:touch
+#lock
+#play 1
+#if blocked s gon
+#char 47
+/s#char 179
+/e/i/i/i/i/i/i/i#char 47
+/w#char 196
+/n#unlock
+#end
+:gon
+#char 92
+/n#char 179
+/e/i/i/i/i/i/i/i#char 92
+/w#char 196
+/s#unlock
+#end
+Door (Opens To West)
+19,196,6,0,0,0,1
+@door
+#end
+:touch
+#lock
+#play 1
+#if blocked s gon
+#char 92
+/s#char 179
+/w/i/i/i/i/i/i/i#char 92
+/e#char 196
+/n#unlock
+#end
+:gon
+#char 47
+/n#char 179
+/w/i/i/i/i/i/i/i#char 47
+/e#char 196
+/s#unlock
+#end
+Chest
+26,127,6,0,0,0,1
+@chest
+#end
+:touch
+#lock
+#if blocked rndp rndne first
+#if blocked rndp rndne second
+#if blocked rndp rndne third
+The chest contained an extra life.
+#give health 100
+#end
+:first
+The chest contained 3 gems and 10 health.
+#give gems 3
+#give health 10
+#end
+:second
+The chest contained a torch and 15 health.
+#give torches 1
+#give health 15
+#end
+:third
+The chest contained 10 rounds of ammo.
+#give ammo 10
+#end
+:bombed
+#die
+Potion
+56,173,11,0,0,0,1
+@potion
+#end
+:touch
+#lock
+#if blocked rndp rndne first
+#if blocked rndp rndne second
+#if blocked rndp rndne third
+* Poison *
+#take health 20 endgame 
+#die
+:first
+* Healing *
+#give health 20
+#die
+:second
+* Reveal Passages *
+#change fake white fake
+/i#change white fake cyan fake
+/i#change cyan fake blue fake
+/i#change blue fake empty
+#die
+:third
+* Transform Enemies *
+#if blocked rndp rndne maketiger
+#if blocked rndp rndne makelion
+#if blocked rndp rndne makeruffian
+#change tiger segment
+#change lion segment
+#change ruffian segment
+#change bear segment
+#change shark segment
+#die
+:maketiger
+#change lion tiger
+#change ruffian tiger
+#change bear tiger
+#change shark tiger
+#change segment tiger
+#change head tiger
+#die
+:makelion
+#change tiger lion
+#change ruffian lion
+#change bear lion
+#change shark lion
+#change segment lion
+#change head lion
+#die
+:makeruffian
+#change tiger ruffian
+#change lion ruffian
+#change bear ruffian
+#change shark ruffian
+#change segment ruffian
+#change head ruffian
+#die
+Bonus Points
+70,48,15,0,0,0,1
+@bonuspoints
+/i#zap touch
+#char 49
+/i#zap touch
+#char 50
+/i#zap touch
+#char 51
+/i#zap touch
+#char 52
+/i#zap touch
+#char 53
+/i#zap touch
+#char 54
+/i#zap touch
+#char 55
+/i#zap touch
+#char 56
+/i#zap touch
+#char 57
+/i#restore touch     'For some reason, it
+#restore touch       'doesn't seem to work
+#restore touch       'without ALL these
+#restore touch       'restores. You figure
+#restore touch       'it out. o_O
+#restore touch
+#restore touch
+#restore touch
+#restore touch
+#restore touch
+#char 48
+#restart
+:touch
+You get 0 bonus points.
+#die
+:touch
+You get 10 bonus points.
+#give scrore 10
+#die
+:touch
+You get 20 bonus points.
+#give score 20
+#die
+:touch
+You get 30 bonus points.
+#give score 30
+#die
+:touch
+You get 40 bonus points.
+#give score 40
+#die
+:touch
+You get 50 bonus points.
+#give score 50
+#die
+:touch
+You get 60 bonus points.
+#give score 60
+#die
+:touch
+You get 70 bonus points.
+#give score 70
+#die
+:touch
+You get 80 bonus points.
+#give score 80
+#die
+:touch
+You get 90 bonus points.
+#give score 90
+#die
+Candle
+9,105,14,0,0,0,1
+@candle
+/i#char 140
+/i#char 139
+/i#char 141
+/i#char 105
+#restart
+
+   This candle animation was originally
+   made by Gregory Janson for Code Red.
+Thief
+31,5,12,0,0,0,2
+@thief
+#try seek try rndp seek try rndp rndne
+#if contact steal
+#try rndp seek try seek try rndp rndne
+#if contact steal
+#restart
+:steal
+#if blocked rndp rndne steal1
+#if blocked rndp rndne steal2
+#if blocked rndp rndne steal1
+:steal2
+#take gems 1 retreat
+:steal1
+#take gems 1 retreat
+:retreat
+#cycle 2
+#try opp seek try rndp seek try rndp rndne
+#try opp seek try rndp seek try rndp rndne
+#try rndp rndne try rndp rndne
+#if contact steal
+#try rndp rndne
+#if contact steal
+#try rndp rndne
+#if contact steal
+#restart
+:shot
+#zap shot
+#retreat
+:shot
+:bombed
+#die
+Bee
+15,236,14,0,0,0,1
+@bee
+#play t0
+#try rndns
+/i/i/i#if contact hurt
+#try cw rndns
+/i/i/i#if contact hurt
+#if alligned shoot seek
+#restart
+:shot
+#play q7
+#give score 10
+#die
+:hurt
+#shoot seek
+#die
+SeaMonster
+28,146,2,0,0,0,1
+@seamonster
+:do
+:do
+:do
+:do
+:do
+:do
+:do
+:do
+:do
+#zap do
+#try rndp rndne try seek try rndp rndne
+#do
+:do
+#restore do
+#throwstar rndp rndne
+#do
+:shot
+:shot
+:shot
+#zap shot
+#do
+:bombed
+#zap shot
+#shot
+:shot
+:shot
+#die
+Snail
+9,64,3,0,0,0,1
+@snail
+:thud
+#walk rndp rndne
+/i#put opp flow cyan breakable
+#walk idle
+/i/i/i/i
+#restart
+:bombed
+#die
+Skeleton
+31,1,7,0,0,0,2
+@skeleton
+:do
+:do
+:do
+:do
+:do
+#try rndp rndne try seek try rndp seek
+#if contact hurt
+#zap do
+#do
+:do
+#shoot rndp rndne
+#restore do
+#do
+:hurt
+#if blocked cw seek straight
+#throwstar cw seek
+#try seek do
+#if contact hurt
+#do
+:straight
+#throwstar seek
+#try seek do
+#if contact hurt
+#do
+:shot
+#zap shot
+#do
+:bombed
+:shot
+#die
+Troll
+21,225,5,0,0,0,2
+@troll
+#try rndp rndne try rndp rndne try seek
+#if alligned charge
+#restart
+:charge
+#if contact hurt
+#try seek try rndp seek try rndp seek
+#if contact hurt
+#try seek try rndp seek try rndp seek
+#if contact hurt
+#try seek try rndp seek try rndp seek
+#if contact hurt
+#shoot seek
+#if alligned charge
+#restart
+:hurt
+#throwstar rndp seek
+#charge
+:shot
+:bombed
+#die
+Grue
+36,38,5,0,0,0,3
+@grue
+#try rndp seek try seek try rndp seek
+#if contact hurt
+#try rndp rndne try rndp rndne try seek
+#if contact hurt
+#try seek try rndp seek try rndp seek
+#if contact hurt
+#try rndp rndne try seek try rndp rndne
+#if contact hurt
+#restart
+:hurt
+#shoot seek
+#throwstar cw seek
+#throwstar ccw seek
+#try opp seek try rndp seek try rndp seek
+#try opp seek try rndp seek try rndp seek
+#try opp seek try rndp seek try rndp seek
+#if contact hurt
+#restart
+:shot
+:shot
+#zap shot
+#throwstar cw seek
+#throwstar ccw seek
+#restart
+:bombed
+#zap shot
+#shot
+:shot
+:shot
+#cycle 2
+#zap shot
+#hurt
+:shot
+:shot
+#die
+Brawler
+47,6,6,0,0,0,1
+@brawler
+/i/i#try ccw seek try seek try opp seek
+/i/i#try ccw seek try seek try opp seek
+/i/i#try ccw seek try seek try opp seek
+/i/i#try ccw seek try seek try opp seek
+/i/i#try ccw seek try seek try opp seek
+/i/i#try ccw seek try seek try opp seek
+/i/i/i/i/i#zap touch
+#char 5
+#try seek try rndp seek try rndp rndne
+#if contact touch
+#try seek try rndp seek try rndp rndne
+#if contact touch
+#try seek try rndp seek try rndp rndne
+#if contact touch
+#try seek try rndp seek try rndp rndne
+#if contact touch
+#char 6
+#restore touch
+/i/i/i/i#try opp seek try rndp seek
+:retreat
+#try opp seek try rndp seek try rndp rndne
+#try opp seek try rndp seek try rndp rndne
+#try opp seek try rndp seek try rndp rndne
+#restart
+:touch
+#shot
+:shot
+:shot
+:shot
+:shot
+#zap shot
+#char 33
+#try opp seek try rndp seek try rndp rndne
+#char 6
+#retreat
+:bombed
+#zap shot
+#shot
+:shot
+:shot
+#die
+:touch
+#char 6
+#shoot seek
+#restore touch
+/i#retreat
+SpinningGun
+56,24,15,0,0,0,2
+@spinninggun
+:dir
+#char 26
+#zap dir
+#zap shooter
+#zap check
+#check
+:dir
+#char 25
+#zap dir
+#zap shooter
+#zap check
+#check
+:dir
+#char 27
+#zap dir
+#zap shooter
+#zap check
+#check
+:dir
+#char 24
+#restore dir
+#restore shooter
+#zap check
+#check
+:check
+#shooter
+:check
+:check
+:check
+/i#dir
+:check
+:check
+#shooter
+:check
+/i#dir
+:check
+#shooter
+:check
+:check
+#shooter
+:check
+#restore check
+/i#dir
+:shooter
+#shoot n
+#dir
+:shooter
+#shoot e
+#dir
+:shooter
+#shoot s
+#dir
+:shooter
+#shoot w
+#dir
+StarGun
+56,24,15,0,0,0,2
+@stargun
+:dir
+#char 26
+#zap dir
+#zap shooter
+#zap check
+#check
+:dir
+#char 25
+#zap dir
+#zap shooter
+#zap check
+#check
+:dir
+#char 27
+#zap dir
+#zap shooter
+#zap check
+#check
+:dir
+#char 24
+#restore dir
+#restore shooter
+#zap check
+#check
+:check
+/i#dir
+:check
+:check
+:check
+/i#dir
+:check
+:check
+#shooter
+:check
+/i#dir
+:check
+/i#dir
+:check
+:check
+#shooter
+:check
+#restore check
+/i#dir
+:shooter
+#throwstar n
+#dir
+:shooter
+#throwstar e
+#dir
+:shooter
+#throwstar s
+#dir
+:shooter
+#throwstar w
+#dir
+Spike
+5,30,7,0,0,0,1
+@spike
+#end
+:touch
+#shoot seek
+#end
+Hydra
+27,156,12,1,0,0,1
+@hydra
+/i#if not alligned restart
+#shoot seek
+/i/i#if not alligned restart
+#shoot seek
+/i#if not alligned restart
+#throwstar seek
+/i/i/i#if not alligned restart
+#shoot seek
+#restart
+:shot
+:shot
+:shot
+:shot
+:shot
+:shot
+:shot
+#zap shot
+#throwstar seek
+#restart
+:bombed
+#zap shot
+#zap shot
+#zap shot
+#shot
+:shot
+#die
+Giant
+17,142,6,0,0,0,3
+@giant
+#try rndp rndne try rndp rndne try seek
+#if contact hurt
+#restart
+:hurt
+#throwstar seek
+#throwstar cw seek
+#throwstar ccw seek
+#if contact hurt
+:shot
+:shot
+:shot
+#zap shot
+#restart
+:bombed
+:shot
+#die
+Ogre
+11,128,2,0,0,0,3
+@ogre
+#try rndp seek try seek try rndp seek
+#try seek try rndp seek try rndp seek
+#if alligned shoot seek
+#restart
+:shot
+#zap shot
+#restart
+:bombed
+:shot
+#die
+Ogreling
+12,135,2,0,0,0,2
+@ogreling
+#try rndp seek try seek try rndp seek
+#if contact hurt
+#try seek try rndp seek try rndp seek
+#if contact hurt
+#if alligned shoot seek
+#restart
+:hurt
+#shoot seek
+:bombed
+:shot
+#die
+Tick
+9,249,7,0,0,0,1
+@tick
+#try rndp rndne try rndp seek try seek
+#if contact hurt
+#restart
+:hurt
+#shoot seek
+:bombed
+:shot
+#die
+Worm
+6,247,14,0,0,0,3
+@worms
+#try rndp rndne try rndp rndne
+#restart
+:bombed
+:shot
+#die
+Lava
+5,111,14,4,0,0,1
+@lava
+#end
+:touch
+Your way is blocked by lava.
+#end
+Lava (hurts)
+9,176,12,4,0,0,1
+@lava
+/i#char 177
+/i#char 178
+/i#char 177
+/i#char 176
+#restart
+:touch
+#shoot seek
+#restart
+Goop
+5,176,8,1,0,0,1
+@goop
+#end
+:touch
+There is goop in your way!
+#end
