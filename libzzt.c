@@ -1,5 +1,5 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.1 2000/06/15 03:58:16 kvance Exp $
+ * $Id: libzzt.c,v 1.2 2000/08/09 18:21:38 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -815,6 +815,8 @@ world *
 				wo->board[i]->params[t]->moredata = malloc(wo->board[i]->params[t]->length);
 				memcpy(wo->board[i]->params[t]->moredata, pointer, wo->board[i]->params[t]->length);
 				pointer += wo->board[i]->params[t]->length;
+			} else {
+				wo->board[i]->params[t]->moredata = NULL;
 			}
 		}
 
