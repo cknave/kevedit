@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.30 2002/03/24 08:39:54 bitman Exp $
+ * $Id: misc.c,v 1.31 2002/05/08 21:25:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -518,6 +518,10 @@ void importfromboard(displaymethod * mydisplay, ZZTworld * myworld)
 		return;
 
 	brd = zztBoardLoad(filename);
+
+	if (brd == NULL)
+		/* TODO: report the error to the user */
+		return;
 
 	/* Insert after current board and advance */
 	if (zztWorldInsertBoard(myworld, brd, zztBoardGetCurrent(myworld) + 1, 1))

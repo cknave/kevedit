@@ -13,6 +13,7 @@ Documentation on items, creatures, and terrain added to help
 Bug fixed: board move/delete no longer crash on passages w/o stats
 Aquire mode grows the backbuffer by default
 #play-back works on the back of other commands
+Bug fixed: importing a corrupt board crashed KevEdit
 
 0.4.0: February 19, 2002
 ------------------------
