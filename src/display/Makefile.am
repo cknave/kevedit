@@ -5,6 +5,7 @@ AUTOMAKE_OPTIONS = 1.7.4
 noinst_LIBRARIES = libdisplay.a
 
 libdisplay_a_SOURCES = display.c display.h display_stdio.c display_stdio.h \
+	textblock.c textblock.h \
 	keys.h colours.h
 
 if SDL

@@ -1,5 +1,5 @@
 /* test.c  -- Test display routines
- * $Id: test.c,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: test.c,v 1.2 2003/11/02 21:39:41 bitman Exp $
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,9 +18,10 @@
  */
 
 #include "display.h"
+#include "textblock.h"
 
-int
-main(int argc, char ** argv)
+void
+interactiveDisplayTest()
 {
 	displaymethod * mydisplay;
 	int key;
@@ -57,6 +58,29 @@ main(int argc, char ** argv)
 
 	/* End the display */
 	mydisplay->end();
+}
+
+void
+testTextBlock()
+{
+	textBlock * block = createTextBlock(80, 25);
+
+	textBlockPutch(block, 5, 7, 'c', 0x03);
+
+	printf("Char: %c, Color: %2X\n",
+				 textBlockChar(block, 5, 7), textBlockColour(block, 5, 7));
+
+	deleteTextBlock(block);
+}
+
+int
+main(int argc, char ** argv)
+{
+	interactiveDisplayTest();
+	/*
+	testTextBlock();
+	*/
 
 	return 0;
 }
+

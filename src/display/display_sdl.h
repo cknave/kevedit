@@ -1,5 +1,5 @@
 /* display_sdl.h    -- SDL display
- * $Id: display_sdl.h,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: display_sdl.h,v 1.2 2003/11/02 21:39:41 bitman Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
-#include <stdio.h>
+
 #include "SDL.h"
+
+#include "textblock.h"
+
+#include <stdio.h>
 
 #ifndef DISPLAY_SDL
 #define DISPLAY_SDL 1
@@ -31,7 +35,7 @@ typedef struct
 {
   SDL_Surface *video;            /* Pointer to the video surface in use */
   SDL_Surface *buffer_surface;   /* Everything gets drawn to here first */
-  Uint8 *buffer;                 /* Pointer to emualted VRAM            */
+  textBlock *buffer;             /* Emualted VRAM                       */
   Uint8 *char_set;               /* Pointer to character set            */
   Uint32 *palette;               /* Pointer to palette                  */
   Uint32 write_x;                /* Current x write position in VRAM    */

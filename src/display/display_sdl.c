@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: display_sdl.c,v 1.2 2003/11/02 21:39:41 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -558,8 +558,7 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32
 
 	vdest->video = SDL_SetVideoMode(width, height, depth, vflags);
 	vdest->buffer_surface = SDL_CreateRGBSurface(0, 640, 350, 32, 0, 0, 0, 0);
-	vdest->buffer = (Uint8 *)malloc(TEXT_MODE_VRAM);
-	memset(vdest->buffer, 0, TEXT_MODE_VRAM);
+	vdest->buffer = createTextBlock(80, 25);
 	vdest->char_set = (Uint8 *)malloc(256 * 14);
 	vdest->palette = (Uint32 *)malloc(4 * 16);
 	vdest->write_x = 0;
@@ -581,7 +580,7 @@ void display_end(video_info *vdest)
 {
 	SDL_FreeSurface(vdest->buffer_surface);
 
-	free(vdest->buffer);
+	deleteTextBlock(vdest->buffer);
 	free(vdest->char_set);
 	free(vdest->palette);
 
@@ -590,9 +589,7 @@ void display_end(video_info *vdest)
 
 void display_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
 {
-	Uint8 *vram = vdest->buffer;
-	*(vram + (((y * 80) + x) * 2)) = ch;
-	*(vram + (((y * 80) + x) * 2) + 1) = co;
+	textBlockPutch(vdest->buffer, x, y, ch, co);
 }
 
 void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
@@ -619,8 +616,8 @@ void display_redraw(video_info *vdest)
 	Uint32 fg, bg;
 	Uint32 i, i2, i3, i4;
 
-	char_pointer = vdest->buffer;
-	color_pointer = vdest->buffer + 1;
+	char_pointer = vdest->buffer->data;
+	color_pointer = vdest->buffer->data + 1;
 	current_char_pointer = charset_pointer + (*(char_pointer) * 14);
 
 	i = 25;
@@ -689,8 +686,8 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
 	SDL_Rect src_rect, dest_rect;
 	Uint32 rowsleft, colsleft;
 
-	Uint8 *char_pointer  = vdest->buffer + ((y*80+x)<<1);
-	Uint8 *color_pointer = vdest->buffer + ((y*80+x)<<1) + 1;
+	Uint8 *char_pointer  = vdest->buffer->data + ((y*80+x)<<1);
+	Uint8 *color_pointer = vdest->buffer->data + ((y*80+x)<<1) + 1;
 
 	/* Draw each row onto video memory */
 	for (rowsleft = height; rowsleft; rowsleft--) {
@@ -800,7 +797,7 @@ void display_curse(int x, int y)
 	int i1, i2;
 
 	/* Find out the color */
-	color = info.buffer[((x+y*80)<<1)+1];
+	color = textBlockColour(info.buffer, x, y);
 	fg = info.palette[color & 15];
 
 	/* Draw the cursor */
@@ -834,7 +831,7 @@ void display_curse_inactive(int x, int y)
 	int i;
 
 	/* Find out the color */
-	color = info.buffer[((x+y*80)<<1)+1];
+	color = textBlockColour(info.buffer, x, y);
 	fg = info.palette[color & 15];
 
 	/* Draw the cursor */
