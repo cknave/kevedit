@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.56 2002/11/11 13:18:02 bitman Exp $
+ * $Id: screen.c,v 1.57 2002/11/14 06:54:56 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -659,10 +659,10 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 	else if (filetypes | FTYPE_FILE)
 		drawsidepanel(mydisplay, PANEL_FILEDIALOG);
 
+	files = readdirectorytosvector(curdir, extension, filetypes);
+
 	while (!done) {
 		int response;
-
-		files = readdirectorytosvector(curdir, extension, filetypes);
 
 		response = browsedialog(title, &files, mydisplay);
 
@@ -685,6 +685,10 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 					free(curdir);
 					curdir = nextdirectory;
 
+					/* Update the files list */
+					deletestringvector(&files);
+					files = readdirectorytosvector(curdir, extension, filetypes);
+
 					free(subdir);
 				} else {
 					/* A file was chosen */
@@ -704,6 +708,10 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 					nextdirectory = fullpath(curdir, "..", SLASH_DEFAULT);
 					free(curdir);
 					curdir = nextdirectory;
+
+					/* Update the files list */
+					deletestringvector(&files);
+					files = readdirectorytosvector(curdir, extension, filetypes);
 				}
 				break;
 

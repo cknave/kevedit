@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.18 2002/01/12 06:31:58 bitman Exp $
+ * $Id: svector.c,v 1.19 2002/11/14 06:54:56 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -360,6 +360,8 @@ int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, i
 	if (longlen <= wrapwidth) {
 		/* no need to wordwrap; we can just copy longstr over sv->cur->s */
 		strcpy(sv->cur->s, longstr);
+		/* don't forget to free longstr before leaving */
+		free(longstr);
 		return newpos;
 	}
 
@@ -376,6 +378,8 @@ int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, i
 
 	if (j == -1) {
 		/* no space was found before wrap; reject insert */
+		/* longstr is no longer needed */
+		free(longstr);
 		return pos;
 	}
 

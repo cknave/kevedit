@@ -1,5 +1,5 @@
 /* hypertxt.c  -- hypertext link system
- * $Id: hypertxt.c,v 1.4 2001/12/12 22:08:02 bitman Exp $
+ * $Id: hypertxt.c,v 1.5 2002/11/14 06:54:56 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -115,10 +115,16 @@ char* gethypersection(char* msg)
 /* Retrieve the msg component of msg into malloc()ed string */
 char* gethypersectionmessage(char* msg)
 {
-	int start = 0;
+	char * colon;
 
-	while (msg[start] != '\0' && msg[start - 1] != ':')
-		start++;
+	/* Advance to the colon if it exists */
+	colon = strchr(msg, ':');
 
-	return str_dup(msg + start);
+	if (colon != NULL) {
+		/* Copy everything after the colon */
+		return str_dup(colon + 1);
+	} else {
+		/* No colon: return empty string */
+		return str_dup("");
+	}
 }
