@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.21 2002/12/04 23:53:06 kvance Exp $
+ * $Id: kevedit.h,v 1.22 2002/12/13 00:30:52 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -74,6 +74,9 @@ typedef struct keveditor {
 
 	/* Cursor position */
 	int cursorx, cursory;
+
+	/* Width and height of editing area */
+	int width, height;
 
 	/* Control flags */
 	int updateflags;

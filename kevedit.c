@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.11 2002/12/04 23:53:06 kvance Exp $
+ * $Id: kevedit.c,v 1.12 2002/12/13 00:30:52 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -79,6 +79,9 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 	/* Clear info to default values */
 	myeditor->cursorx = 0;
 	myeditor->cursory = 0;
+
+	myeditor->width = ZZT_BOARD_X_SIZE;
+	myeditor->height = ZZT_BOARD_Y_SIZE;
 
 	myeditor->updateflags = UD_ALL | UD_BOARDTITLE | UD_WORLDTITLE;
 	myeditor->quitflag = 0;
@@ -172,9 +175,8 @@ void kevedit(keveditor * myeditor)
 		drawspot(myeditor);
 		myeditor->updateflags |= UD_CURSOR;
 
-		keveditHandleSelection(myeditor);
-
 		keveditHandleTextEntry(myeditor);
+		keveditHandleSelection(myeditor);
 		keveditHandleKeybindings(myeditor);
 		keveditHandleNumberKeys(myeditor);
 
@@ -344,7 +346,18 @@ void keveditHandleTextEntry(keveditor * myeditor)
 		zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, textTile);
 
 		/* Now move right */
-		myeditor->cursorx++;
+		if (myeditor->cursorx < myeditor->width - 1) {
+			/* There's room */
+			myeditor->cursorx++;
+		} else {
+			/* Can't move past the edge of the screen, move down to the
+			 * next line if possible. */
+			if (myeditor->cursory < myeditor->height - 1) {
+				myeditor->cursorx = 0;
+				myeditor->cursory++;
+				myeditor->updateflags |= UD_BOARD;
+			}
+		}
 		myeditor->updateflags |= UD_SPOT;
 	} else {
 		/* Key could not be handled, pass it on */
@@ -805,7 +818,7 @@ void keveditHandleMovement(keveditor * myeditor)
 				case DKEY_RIGHT:     /* Right */
 				case DKEY_ALT_RIGHT: /* Alt+Right */
 					myeditor->cursorx++; repeat--;
-					if (myeditor->cursorx > 59) { myeditor->cursorx = 59; repeat = 0; }
+					if (myeditor->cursorx >= myeditor->width) { myeditor->cursorx = myeditor->width - 1; repeat = 0; }
 					break;
 				case DKEY_UP:        /* Up */
 				case DKEY_ALT_UP:    /* Alt+Up */
@@ -815,7 +828,7 @@ void keveditHandleMovement(keveditor * myeditor)
 				case DKEY_DOWN:      /* Down */
 				case DKEY_ALT_DOWN:  /* Alt+Down */
 					myeditor->cursory++; repeat--;
-					if (myeditor->cursory > 24) { myeditor->cursory = 24; repeat = 0; }
+					if (myeditor->cursory > myeditor->height) { myeditor->cursory = myeditor->height - 1; repeat = 0; }
 					break;
 			}
 
