@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.1 2002/02/20 00:01:59 bitman Exp $
+ * $Id: params.c,v 1.2 2002/03/16 22:37:05 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,8 +41,8 @@ const ZZTprofile _zzt_param_profile_table[] = {
 	/* ZZT_BOMB           */ { ZZT_PROPERTY_CYCLE, 6, { 0, 0, 0 } },   /* TODO: there must be more to it than this */
 	/* ZZT_ENERGIZER      */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_STAR           */ { ZZT_PROPERTY_STEP | ZZT_PROPERTY_CYCLE, 1, { ZZT_DATAUSE_OWNER, 0, 0 } }, /* TODO: does owner matter? */
-	/* ZZT_CWCONV         */ { 0, 0, { 0, 0, 0 } },
-	/* ZZT_CCWCONV        */ { 0, 0, { 0, 0, 0 } },
+	/* ZZT_CWCONV         */ { ZZT_PROPERTY_CYCLE, 3, { 0, 0, 0 } },
+	/* ZZT_CCWCONV        */ { ZZT_PROPERTY_CYCLE, 2, { 0, 0, 0 } },
 	/* ZZT_BULLET         */ { ZZT_PROPERTY_STEP | ZZT_PROPERTY_CYCLE, 1, { ZZT_DATAUSE_OWNER, 0, 0 } },
 	/* ZZT_WATER          */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_FOREST         */ { 0, 0, { 0, 0, 0 } },
