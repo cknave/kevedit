@@ -25,8 +25,8 @@ case "$make_cv_sys_gnu_glob" in
   yes) AC_MSG_RESULT(yes) ;;
   no)  AC_MSG_RESULT([no; using local copy])
        AC_SUBST(GLOBDIR) GLOBDIR=glob
-       AC_SUBST(GLOBINC) GLOBINC='-I$(srcdir)/glob'
-       AC_SUBST(GLOBLIB) GLOBLIB=glob/libglob.a
+       AC_SUBST(GLOBINC) GLOBINC='-I$(top_srcdir)/glob'
+       AC_SUBST(GLOBLIB) GLOBLIB='$(top_builddir)/glob/libglob.a'
        ;;
 esac
 ])
