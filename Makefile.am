@@ -1,4 +1,4 @@
-SUBDIRS = libzzt2 synth glob
+SUBDIRS = docs libzzt2 synth glob
 
 bin_PROGRAMS = kevedit
 
@@ -28,9 +28,9 @@ kevedit_DEPENDENCIES = $(GLOBLIB) libzzt2/libzzt2.a synth/libsynth.a
 
 INCLUDES = $(GLOBINC)
 
-EXTRA_DIST = docs copying.txt
+EXTRA_DIST = copying.txt soundfx.zzm
 
-pkgdata_DATA = kevedit.zml soundfx.zzm
+pkgdata_DATA = soundfx.zzm
 
 .rc.o:
 	$(WINDRES) -o $@ $<
@@ -39,8 +39,4 @@ icon.o: icon.rc
 
 icon.rc:
 	echo kevedit ICON \"$(srcdir)/kevedit.ico\" > icon.rc
-
-kevedit.zml: $(srcdir)/docs/*.hlp
-	chmod a+x $(srcdir)/docs/makehelp.sh
-	$(srcdir)/docs/makehelp.sh $(srcdir)/docs .
 
