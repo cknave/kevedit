@@ -20,11 +20,11 @@ moving the cursor with the arrow keys.
 Release shift, move the cursor, and repeat
 to add another block to the selection.
 
-To flood select a group of identical
-tiles, press lowercase 'x'. To select all
-tiles on the current board which are
-identical to the tile under the cursor,
-press SHIFT+'X'.
+To flood select a group of similar tiles,
+press lowercase 'x'. To select all tiles
+on the current board which are similar to
+the tile under the cursor, press
+SHIFT+'X'.
 
 The current selection can be reset by
 pressing ESCAPE.
