@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.48 2002/09/29 18:47:13 bitman Exp $
+ * $Id: editbox.c,v 1.49 2002/11/11 13:30:49 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1124,7 +1124,9 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 			musicalNote note = zzmGetDefaultNote();
 			musicSettings settings = zzmGetDefaultSettings();
 
+#ifdef DOS
 			int xoff = tune - sv->cur->s;
+#endif
 			tune += 6;  /* Advance to notes! */
 
 			/* Change the slur setting */
@@ -1134,8 +1136,10 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 			updateditbox(d, sv, U_EDITAREA, editwidth, flags, "", 1);
 
 			while (note.src_pos < strlen(tune) && !done) {
+#ifdef DOS
 				int oldpos = note.src_pos;
 				char* strpart;
+#endif
 
 				if (d->getkey() != DKEY_NONE)
 					done = 1;
