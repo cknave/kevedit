@@ -259,6 +259,8 @@ void zlaunchact(zlaunchinfo* zli)
 	zlaunchaction* curaction = zli->actions;
 	stringvector successfulcopies;
 
+	zlaunchcleanup(zli);
+
 	successfulcopies = filetosvector(ZL_RMFILENAME, 0, 0);
 
 	while (curaction != NULL) {
@@ -318,10 +320,14 @@ void zlaunchact(zlaunchinfo* zli)
 			case ZL_COPY:
 				copyfilepatternbydir(zli->datadir, ".", command, COPY_NOOVERWRITE,
 														 &successfulcopies);
+				/* Backup list of copied files */
+				svectortofile(&successfulcopies, ZL_RMFILENAME);
 				break;
 			case ZL_DISPLACE:
 				copyfilepatternbydir(zli->datadir, ".", command, COPY_DISPLACE,
 														 &successfulcopies);
+				/* Backup list of copied files */
+				svectortofile(&successfulcopies, ZL_RMFILENAME);
 				break;
 			case ZL_PERMCOPY:
 				copyfilepatternbydir(zli->datadir, ".", command, COPY_NOOVERWRITE, NULL);
@@ -336,8 +342,7 @@ void zlaunchact(zlaunchinfo* zli)
 		free(command);
 	}
 
-	/* Write filestoremove to a file */
-	svectortofile(&successfulcopies, ZL_RMFILENAME);
+	/* Clear out the successfulcopies list */
 	deletestringvector(&successfulcopies);
 }
 
