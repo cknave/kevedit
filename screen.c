@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.37 2002/02/17 22:41:51 bitman Exp $
+ * $Id: screen.c,v 1.38 2002/02/18 02:06:25 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -846,6 +846,7 @@ int switchboard(ZZTworld * w, displaymethod * mydisplay)
 int dothepanel_f1(displaymethod * d, editorinfo * e)
 {
 	int x, y, i = 0;
+	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
 
 	for (y = 3; y < 20; y++) {
 		for (x = 0; x < 20; x++) {
@@ -854,10 +855,10 @@ int dothepanel_f1(displaymethod * d, editorinfo * e)
 		}
 	}
 	d->putch(78, 4, 2, 0x1f);
-	d->putch(78, 5, 132, e->defc ? 0x03 : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 6, 157, e->defc ? 0x06 : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 7, 4, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 8, 12, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 5, 132, e->defc ? 0x03 : color);
+	d->putch(78, 6, 157, e->defc ? 0x06 : color);
+	d->putch(78, 7, 4, color);
+	d->putch(78, 8, 12, color);
 	if (e->defc == 1)
 		d->putch(78, 9, 10, e->forec > 7 ? ((e->forec - 8) << 4) + 0x0f : (e->forec << 4) + 0x0f);
 	else
@@ -867,11 +868,11 @@ int dothepanel_f1(displaymethod * d, editorinfo * e)
 		d->putch(78, 11, 240, e->forec > 7 ? ((e->forec - 8) << 4) + 0x0f : (e->forec << 4) + 0x0f);
 	else
 		d->putch(78, 11, 240, (e->backc << 4) + (e->forec));
-	d->putch(78, 12, 250, e->defc ? 0x0f : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 13, 11, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 14, 127, e->defc ? 0x05 : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 17, 47, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 18, 92, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 12, 250, e->defc ? 0x0f : color);
+	d->putch(78, 13, 11, color);
+	d->putch(78, 14, 127, e->defc ? 0x05 : color);
+	d->putch(78, 17, 47, color);
+	d->putch(78, 18, 92, color);
 
 	while (1) {
 		i = d->getch();
@@ -923,6 +924,7 @@ int dothepanel_f1(displaymethod * d, editorinfo * e)
 int dothepanel_f2(displaymethod * d, editorinfo * e)
 {
 	int x, y, i = 0;
+	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
 
 	for (y = 3; y < 20; y++) {
 		for (x = 0; x < 20; x++) {
@@ -930,11 +932,21 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 			i += 2;
 		}
 	}
-	d->putch(78, 4, 153,  e->defc ? 0x06 : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 5, 5,  e->defc ? 0x0d : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 6, 1, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 7, '*', (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 8, '^', e->defc ? 0x07 : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	/* Bear    */ d->putch(78, 4,  153,  e->defc ? 0x06 : color);
+	/* Ruffian */ d->putch(78, 5,  5,    e->defc ? 0x0d : color);
+	/* Object  */ d->putch(78, 6,  1,    color);
+	/* Slime   */ d->putch(78, 7,  '*',  color);
+	/* Shark   */ d->putch(78, 8,  '^',  e->defc ? 0x07 : color);
+	/* SpinGun */ d->putch(78, 9,  0x18, color);
+	/* Pusher  */ d->putch(78, 10, 0x10, color);
+	/* Lion    */ d->putch(78, 11, 0xEA, e->defc ? 0x0C : color);
+	/* Tiger   */ d->putch(78, 12, 0xE3, e->defc ? 0x0B : color);
+
+	/* Bullet  */ d->putch(78, 14, 0xF8, e->defc ? 0x0F : color);
+	/* Star    */ d->putch(78, 15, '*',  e->defc ? 0x0F : color);
+
+	/* Head    */ d->putch(78, 17, 0xE9, color);
+	/* Segment */ d->putch(78, 18, 'O',  color);
 
 	while (1) {
 		i = d->getch();
@@ -957,6 +969,30 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 		case 'Y':
 		case 'y':
 			return ZZT_SHARK;
+		case 'G':
+		case 'g':
+			return ZZT_SPINNINGGUN;
+		case 'P':
+		case 'p':
+			return ZZT_PUSHER;
+		case 'L':
+		case 'l':
+			return ZZT_LION;
+		case 'T':
+		case 't':
+			return ZZT_TIGER;
+		case 'U':
+		case 'u':
+			return ZZT_BULLET;
+		case 'A':
+		case 'a':
+			return ZZT_STAR;
+		case 'H':
+		case 'h':
+			return ZZT_CENTHEAD;
+		case 's':
+		case 'S':
+			return ZZT_CENTBODY;
 		}
 	}
 }
@@ -964,6 +1000,7 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 int dothepanel_f3(displaymethod * d, editorinfo * e)
 {
 	int x, y, i = 0;
+	int color = (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode);
 
 	for (y = 3; y < 20; y++) {
 		for (x = 0; x < 20; x++) {
@@ -971,17 +1008,19 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 			i += 2;
 		}
 	}
-	d->putch(78, 4, 176, e->defc ? 0x9f : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 5, 176, e->defc ? 0x20 : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 6, 219, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 7, 178, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 8, 177, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 9, 254, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 10, 18, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 11, 29, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 12, 178, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 13, 176, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
-	d->putch(78, 16, '*', e->defc ? 0x0a : (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 4, 176, e->defc ? 0x9f : color);
+	d->putch(78, 5, 176, e->defc ? 0x20 : color);
+	d->putch(78, 6, 219, color);
+	d->putch(78, 7, 178, color);
+	d->putch(78, 8, 177, color);
+	d->putch(78, 9, 254, color);
+	d->putch(78, 10, 18, color);
+	d->putch(78, 11, 29, color);
+	d->putch(78, 12, 178, color);
+	d->putch(78, 13, 176, color);
+	d->putch(78, 14, 0xCE, color);
+	d->putch(78, 15, '<', color);
+	d->putch(78, 16, '*', e->defc ? 0x0a : color);
 	d->putch(78, 18, 'E', 0x4c);
 	while (1) {
 		i = d->getch();
@@ -1017,6 +1056,12 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 		case 'I':
 		case 'i':
 			return ZZT_INVISIBLE;
+		case 'L':
+		case 'l':
+			return ZZT_BLINK;
+		case 'T':
+		case 't':
+			return ZZT_TRANSPORTER;
 		case 'R':
 		case 'r':
 			return ZZT_RICOCHET;

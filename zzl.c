@@ -1,5 +1,5 @@
 /* zzl.c  -- ZZT Object Library file routines
- * $Id: zzl.c,v 1.2 2002/02/16 10:25:22 bitman Exp $
+ * $Id: zzl.c,v 1.3 2002/02/18 02:06:25 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -123,7 +123,14 @@ ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 	/* Create the new pattern definition */
 	result.type = ZZT_OBJECT;
 	result.color = fgcolour | (bgcolour << 4);
-	result.param = NULL;
+	result.param = zztParamCreate(result);
+
+	result.param->length  = objcodeparam.length;
+	result.param->program = objcodeparam.program;
+
+	result.param->xstep = xstep;
+	result.param->ystep = ystep;
+	result.param->cycle = cycle;
 	/* TODO: param (use most of below): */
 #if 0
 	result.param = z_newparam_object(x, y, ch, undert, underc);

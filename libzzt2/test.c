@@ -77,6 +77,7 @@ int main(int argc, char * argv[])
 	else
 		printf("Saved test\n");
 
+
 	/* Clean up */
 	zztWorldFree(w);
 

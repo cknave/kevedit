@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.6 2002/02/17 07:26:03 bitman Exp $
+ * $Id: zzt.h,v 1.7 2002/02/18 02:06:25 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -64,6 +64,37 @@ typedef unsigned int u_int32_t;
 #define ZZT_KEY_PURPLE		4
 #define ZZT_KEY_YELLOW		5
 #define ZZT_KEY_WHITE		6
+
+/* Properties used/not-used by a tile with param data */
+#define ZZT_PROPERTY_NOPARAM 0x00
+#define ZZT_PROPERTY_NONE    0x01
+#define ZZT_PROPERTY_STEP    0x02
+#define ZZT_PROPERTY_CYCLE   0x04
+#define ZZT_PROPERTY_PROGRAM 0x08
+
+/* Uses for the data[] in a param */
+#define ZZT_DATAUSE_NONE         0
+#define ZZT_DATAUSE_PASSAGEDEST  1
+#define ZZT_DATAUSE_DUPRATE      2
+#define ZZT_DATAUSE_SENSITIVITY  3
+#define ZZT_DATAUSE_INTELLIGENCE 4
+#define ZZT_DATAUSE_RESTTIME     5
+#define ZZT_DATAUSE_CHAR         6
+#define ZZT_DATAUSE_SPEED        7
+#define ZZT_DATAUSE_FIRERATEMODE 8
+#define ZZT_DATAUSE_DEVIANCE     9
+#define ZZT_DATAUSE_STARTTIME   10
+#define ZZT_DATAUSE_PERIOD      11
+#define ZZT_DATAUSE_OWNER       12
+
+/* TODO: make table for default datause values */
+
+/* ZZT param profile -- description of tile with param data */
+typedef struct ZZTprofile {
+	u_int8_t properties;
+	u_int16_t cycledefault;
+	int datause[3];
+} ZZTprofile;
 
 /* ZZT board info -- settings for a board */
 typedef struct ZZTboardinfo {
@@ -184,6 +215,7 @@ ZZTworld *zztWorldLoad(char *filename);
 int zztWorldSave(ZZTworld *world);
 /* zztWorldGetSize(world)
  * Determine the total size of the world in bytes
+ * TODO: write this function
  */
 u_int32_t zztWorldGetSize(ZZTworld *world);
 /* zztWorldSetXXXXX()
@@ -367,6 +399,10 @@ void zztBlockFree(ZZTblock *block);
 ZZTblock *zztBlockDuplicate(ZZTblock *block);
 
 /***** PARAMETER MANIPULATORS *****/
+/* zztParamCreate(tile)
+ * Create a param structure for the given tile
+ */
+ZZTparam *zztParamCreate(ZZTtile tile);
 /* zztParamFree(param)
  * Free()s a param
  */
@@ -375,6 +411,14 @@ int zztParamFree(ZZTparam *param);
  * Create a duplicate of a param w/o any shared memory
  */
 ZZTparam *zztParamDuplicate(ZZTparam *param);
+/* zztParamDatauseGet(tile, which)
+ * Determine the use for data[which] in tile's param
+ */
+int zztParamDatauseGet(ZZTtile tile, int which);
+/* zztParamDatauseGetName(tile, which)
+ * Get a description of the data represented by data[which]
+ */
+const char *zztParamDatauseGetName(ZZTtile tile, int which);
 
 /***** TILE MANIPULATORS ******/
 /* zztTilePlot(block, x, y, tile)
@@ -426,6 +470,10 @@ u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y);
 u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile);
 u_int8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y);
 u_int8_t zztGetDisplayColor(ZZTworld * world, int x, int y);
+/* zztTileGetName(tile)
+ * Returns a descriptive name for a tile (do not modify!)
+ */
+const char * zztTileGetName(ZZTtile tile);
 
 
 /***** TILE TYPES *****/

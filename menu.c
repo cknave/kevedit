@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.9 2002/02/17 22:41:51 bitman Exp $
+ * $Id: menu.c,v 1.10 2002/02/18 02:06:25 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -37,348 +37,135 @@
 
 void itemmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
 {
-#if 0
-	int i, x, t;
-	param *pm;
-#endif
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
 	tile.color = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
 
-#if 0
-	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
-		return;
-#endif
-
 	choice = dothepanel_f1(mydisplay, myinfo);
 	tile.type = choice;
+
+	/* Create params -- zztParamCreate() returns NULL for types which have no params */
+	tile.param = zztParamCreate(tile);
+
 	if (tile.type == ZZT_PLAYER) {
 		/* The player is a special case */
 		zztPlotPlayer(myworld, myinfo->cursorx, myinfo->cursory);
-#if 0
-		bigboard[(myinfo->playerx + myinfo->playery * 60) * 2] = ZZT_EMPTY;
-		bigboard[(myinfo->playerx + myinfo->playery * 60) * 2 + 1] = 0x07;
-		if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-			/* We're overwriting a parameter */
-			param_remove(myworld->board[myinfo->curboard], paramlist, myinfo->cursorx, myinfo->cursory);
-		}
-		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = ZZT_PLAYER;
-		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x1f;
-		paramlist[myinfo->cursorx][myinfo->cursory] = 0;
-		myworld->board[myinfo->curboard]->params[0]->x = myinfo->playerx = myinfo->cursorx;
-		myworld->board[myinfo->curboard]->params[0]->y = myinfo->playery = myinfo->cursory;
-		myworld->board[myinfo->curboard]->params[0]->x++;
-		myworld->board[myinfo->curboard]->params[0]->y++;
-#endif
-	} else {
-		switch (choice) {
-		case -1:
-			break;
-		case ZZT_GEM:
-		case ZZT_KEY:
-#if 0
-			push(myinfo->backbuffer, i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
-#endif
-			break;
-		case ZZT_AMMO:
-		case ZZT_TORCH:
-		case ZZT_ENERGIZER:
-#if 0
-			if (myinfo->defc == 0)
-				tile.color = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-#endif
-			/* TODO: we can do better than if's in a switch */
-			if (myinfo->defc != 0) {
-				if (tile.type == ZZT_AMMO)
-					tile.color = 0x03;
-				if (tile.type == ZZT_TORCH)
-					tile.color = 0x06;
-				if (tile.type == ZZT_ENERGIZER)
-					tile.color = 0x05;
-			}
-#if 0
-			push(myinfo->backbuffer, i, x, NULL);
-#endif
-			break;
-		case ZZT_DOOR:
-			if (myinfo->defc != 0)
+		return;
+	}
+
+	/* Use default color if in default color mode */
+	if (myinfo->defc != 0) {
+		switch (tile.type) {
+			case ZZT_AMMO:      tile.color = 0x03; break;
+			case ZZT_TORCH:     tile.color = 0x06; break;
+			case ZZT_ENERGIZER: tile.color = 0x05; break;
+			case ZZT_DOOR:
 				tile.color = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
-#if 0
-			else
-				tile.color = (myinfo->backc << 4) + (myinfo->forec) + (myinfo->blinkmode * 0x80);
-			push(myinfo->backbuffer, i, x, NULL);
-#endif
-			break;
-		case ZZT_SCROLL:
-#if 0
-			/* This is all automatic now */
-			if (myworld->board[myinfo->curboard]->info->objectcount == 150) {
-				i = -1;
 				break;
-			} else {
-				/* Anything important under it? */
-				x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
-				switch (x) {
-				case ZZT_WATER:
-				case ZZT_FAKE:
-					break;
-				default:
-					x = ZZT_EMPTY;
-					break;
-				}
-			pm = z_newparam_scroll(myinfo->cursorx + 1, myinfo->cursory + 1, x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
-			t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-			push(myinfo->backbuffer, i, t, pm);
-			break;
-			}
-#endif
-			/* TODO: This is so not right */
-			tile.param = NULL;
-		case ZZT_PASSAGE:
-#if 0
-			pm = z_newparam_passage(myinfo->cursorx + 1, myinfo->cursory + 1, boarddialog(myworld, myinfo->curboard, 0, "Passage Destination", mydisplay));
-#endif
-			if (myinfo->defc != 0)
+			case ZZT_PASSAGE:
 				tile.color = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
-#if 0
-			else
-				x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-			push(myinfo->backbuffer, i, x, pm);
-#endif
-			break;
-		case ZZT_DUPLICATOR:
-#if 0
-			/* Anything important under it? */
-			t = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
-			switch (t) {
-				case ZZT_WATER:
-				case ZZT_FAKE:
-					break;
-				default:
-					t = ZZT_EMPTY;
-					break;
-			}
-			pm = z_newparam_duplicator(myinfo->cursorx + 1, myinfo->cursory + 1, -1, 0, 4, t, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2]);
-#endif
-			if(myinfo->defc != 0)
+				break;
+			case ZZT_DUPLICATOR:
 				tile.color = 0x0f;
-#if 0
-			else
-				x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-			push(myinfo->backbuffer, i, x, pm);
-#endif
-			/* TODO: actually create params for this thing */
-			tile.param = NULL;
-			break;
-		case ZZT_CWCONV:
-		case ZZT_CCWCONV:
-#if 0
-			pm = z_newparam_conveyer(myinfo->cursorx + 1, myinfo->cursory + 1);
-			push(myinfo->backbuffer, i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
-#endif
-			/* TODO: param */
-			break;
-		case ZZT_BOMB:
-#if 0
-			pm = z_newparam_bomb(myinfo->cursorx + 1, myinfo->cursory + 1);
-			push(myinfo->backbuffer, i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
-#endif
-			/* TODO: param */
-			break;
+				break;
 		}
-		if (choice != -1 && tile.type != ZZT_PLAYER) {
-			zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
-			push(myinfo->backbuffer, tile);
-			if (tile.param != NULL)
-				zztParamFree(tile.param);
-#if 0
-			plotbackbufferfirstslot(mydisplay, myworld, myinfo, bigboard, paramlist);
-#endif
-		}
+	}
+
+	/* Plot and push the created tile */
+	if (choice != -1) {
+		zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
+		push(myinfo->backbuffer, tile);
+
+		/* Free our copy of the params */
+		if (tile.param != NULL)
+			zztParamFree(tile.param);
 	}
 }
 
 
 void creaturemenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
 {
-#if 0
-	int i, x, t;
-	param *pm;
-#endif
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
 	tile.color = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
 
-#if 0
-	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
-		return;
-
-	/* All these need parameter space */
-	if (myworld->board[myinfo->curboard]->info->objectcount == 150)
-		return;
-#endif
-
 	choice = dothepanel_f2(mydisplay, myinfo);
 	tile.type = choice;
 
-#if 0
-	/* Anything important under it? */
-	x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
-	switch (x) {
-		case ZZT_WATER:
-		case ZZT_FAKE:
-			break;
-		default:
-			x = ZZT_EMPTY;
-			break;
-	}
-#endif
-	switch (choice) {
-	case -1:
-		break;
-	case ZZT_BEAR:
-#if 0
-		pm = z_newparam_bear(myinfo->cursorx + 1, myinfo->cursory + 1, x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], 4);
-#endif
-		if(myinfo->defc == 1)
-			tile.color = 0x06;
-#if 0
-		else
-			t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-		push(myinfo->backbuffer, i, t, pm);
-#endif
-		/* TODO: param */
-		break;
-	case ZZT_RUFFIAN:
-#if 0
-		pm = z_newparam_ruffian(myinfo->cursorx + 1, myinfo->cursory + 1, 4, 4);
-#endif
-		if(myinfo->defc == 1)
-			tile.color = 0x0d;
-#if 0
-		else
-			t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-		push(myinfo->backbuffer, i, t, pm);
-#endif
-		/* TODO: param */
-		break;
-	case ZZT_SLIME:
-#if 0
-		pm = z_newparam_slime(myinfo->cursorx + 1, myinfo->cursory + 1, 4);
-		t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-		push(myinfo->backbuffer, i, t, pm);
-#endif
-		/* TODO: param */
-		break;
-	case ZZT_SHARK:
-#if 0
-		pm = z_newparam_shark(myinfo->cursorx + 1, myinfo->cursory + 1, x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], 4);
-		if(myinfo->defc == 1) {
-			t = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] & 0xf0;
-			if(t > 0x70)
-				t -= 0x80;
-			t += 0x07;
-		} else
-			t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-		push(myinfo->backbuffer, i, t, pm);
-#endif
-		if (myinfo->defc == 1) {
-			tile.color = zztTileGet(myworld, myinfo->cursorx, myinfo->cursory).color & 0xf0;
-			if (tile.color > 0x70)
-				tile.color -= 0x80;
-			tile.color += 0x07;
+	/* Everything has params */
+	tile.param = zztParamCreate(tile);
+
+	/* Use default color if in default color mode */
+	if (myinfo->defc != 0) {
+		switch (choice) {
+			case ZZT_BEAR:
+				tile.color = 0x06;
+				break;
+			case ZZT_RUFFIAN:
+				tile.color = 0x0d;
+				break;
+			case ZZT_SHARK:
+				tile.color = zztTileGet(myworld, myinfo->cursorx, myinfo->cursory).color & 0xf0;
+				if (tile.color > 0x70)
+					tile.color -= 0x80;
+				tile.color += 0x07;
+				break;
+			case ZZT_LION:
+				tile.color = 0x0C;
+				break;
+			case ZZT_TIGER:
+				tile.color = 0x0B;
+				break;
+			case ZZT_BULLET:
+				tile.color = 0x0F;
+				break;
+			case ZZT_STAR:
+				tile.color = 0x0F;
+				break;
 		}
-		/* TODO: param */
-		break;
-	case ZZT_OBJECT:
-#if 0
-		pm = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay, -1), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
-		t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-		push(myinfo->backbuffer, i, t, pm);
-#endif
-		/* TODO: param */
-		break;
 	}
+
+	/* Plot and push the created tile */
 	if (choice != -1) {
 		zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
 		push(myinfo->backbuffer, tile);
+		
+		/* Free our copy of the params */
 		if (tile.param != NULL)
 			zztParamFree(tile.param);
-#if 0
-		plotbackbufferfirstslot(mydisplay, myworld, myinfo, bigboard, paramlist);
-#endif
 	}
 }
 
 
 void terrainmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
 {
-#if 0
-	int i, x;
-#endif
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
 	int choice; /* Need signed type */
 
 	tile.color = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
 
-#if 0
-	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
-		return;
-#endif
-
 	choice = dothepanel_f3(mydisplay, myinfo);
 	tile.type = choice;
 
+	/* Nothing has params, but why not? */
+	tile.param = zztParamCreate(tile);
+
 	switch (choice) {
-		case -1:
-			break;
-		case ZZT_FAKE:
-		case ZZT_SOLID:
-		case ZZT_NORMAL:
-		case ZZT_BREAKABLE:
-		case ZZT_BOULDER:
-		case ZZT_NSSLIDER:
-		case ZZT_EWSLIDER:
-		case ZZT_INVISIBLE:
-#if 0
-			push(myinfo->backbuffer, i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
-#endif
-			break;
-		case ZZT_WATER:
-		case ZZT_FOREST:
-		case ZZT_RICOCHET:
-#if 0
-			if (myinfo->defc == 0)
-				x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
-			else {
-				if (i == ZZT_WATER)
-					x = 0x9f;
-				if (i == ZZT_FOREST)
-					x = 0x20;
-				if (i == ZZT_RICOCHET)
-					x = 0x0a;
-			}
-			push(myinfo->backbuffer, i, x, NULL);
-#endif
-			break;
 		case ZZT_EDGE:
-#if 0
-			push(myinfo->backbuffer, i, 0x07, NULL);
-#endif
-			tile.color = 0x07;
+			tile.color = 0x0F;
 			break;
 	}
 
+	/* Plot and push the created tile */
 	if (choice != -1) {
 		zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
 		push(myinfo->backbuffer, tile);
+
+		/* Free our copy of the params */
 		if (tile.param != NULL)
 			zztParamFree(tile.param);
-#if 0
-		plotbackbufferfirstslot(mydisplay, myworld, myinfo, bigboard, paramlist);
-#endif
 	}
 }
 
@@ -389,14 +176,10 @@ void loadobjectlibrary(displaymethod * mydisplay, ZZTworld * myworld, editorinfo
 	stringvector zzlv;
 	ZZTtile tile;
 
-#if 0
-	patdef pd;
-
 	/* No fair drawing over the player */
-	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
+	if (zztBoardGetCurPtr(myworld)->plx == myinfo->cursorx &&
+	    zztBoardGetCurPtr(myworld)->ply == myinfo->cursory)
 		return;
-#endif
-	/* TODO: check for player under cursor */
 
 	/* Prompt for a file and load it */
 	filename =
@@ -417,12 +200,10 @@ void loadobjectlibrary(displaymethod * mydisplay, ZZTworld * myworld, editorinfo
 	if (tile.type == ZZT_OBJECT) {
 		zztPlot(myworld, myinfo->cursorx, myinfo->cursory, tile);
 		push(myinfo->backbuffer, tile);
+
+		/* Free our copy of the params */
 		if (tile.param != NULL)
 			zztParamFree(tile.param);
-#if 0
-		push(myinfo->backbuffer, pd.type, pd.color, pd.patparam);
-		plotbackbufferfirstslot(mydisplay, myworld, myinfo, bigboard, paramlist);
-#endif
 	}
 
 	/* Finish */
@@ -450,13 +231,6 @@ void saveobjecttolibrary(displaymethod * mydisplay, ZZTworld * myworld, editorin
 
 	/* Prompt for a title */
 	title = titledialog("Name Your Object", mydisplay);
-
-#if 0
-	/* Copy the object under the cursor onto obj */
-	obj.type  = ZZT_OBJECT;
-	obj.color = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1];
-	obj.patparam = myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]];
-#endif
 
 	/* Append the object to the library */
 	if (!zzlappendobject(&zzlv, obj, title, EDITBOX_ZZTWIDTH)) {
@@ -504,13 +278,6 @@ void saveobjecttonewlibrary(displaymethod * mydisplay, ZZTworld * myworld, edito
 
 	/* Prompt for an object title */
 	title = titledialog("Name Your Object", mydisplay);
-
-#if 0
-	/* Copy the object under the cursor onto obj */
-	obj.type  = ZZT_OBJECT;
-	obj.color = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1];
-	obj.patparam = myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]];
-#endif
 
 	/* Append the object to the library */
 	if (!zzlappendobject(&zzlv, obj, title, EDITBOX_ZZTWIDTH)) {

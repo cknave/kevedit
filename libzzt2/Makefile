@@ -18,7 +18,7 @@ CFLAGS = $(OPTIMIZE)
 # No more modifications below this line
 # -------------------------------------
 
-OBJS = board.o file.o tiles.o world.o
+OBJS = board.o file.o tiles.o params.o world.o
 
 all: libzzt2.a test
 
@@ -40,3 +40,4 @@ board.o: board.c zzt.h
 file.o: file.c zzt.h
 tiles.o: tiles.c zzt.h
 world.o: world.c zzt.h
+params.o: params.c zzt.h

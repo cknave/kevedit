@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.5 2002/02/17 07:26:03 bitman Exp $
+ * $Id: tiles.c,v 1.6 2002/02/18 02:06:25 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,64 @@
 #include <string.h>
 
 #include "zzt.h"
+
+/* Look-up table for tile type names */
+const char * _zzt_type_name_table[] = {
+	/* ZZT_EMPTY          */ "Empty",
+	/* ZZT_EDGE           */ "Board Edge",
+	/* Invalid            */ "Unknown",
+	/* Invalid            */ "Unknown",
+	/* ZZT_PLAYER         */ "Player",
+	/* ZZT_AMMO           */ "Ammo",
+	/* ZZT_TORCH          */ "Torch",
+	/* ZZT_GEM            */ "Gem",
+	/* ZZT_KEY            */ "Key",
+	/* ZZT_DOOR           */ "Door",
+	/* ZZT_SCROLL         */ "Scroll",
+	/* ZZT_PASSAGE        */ "Passage",
+	/* ZZT_DUPLICATOR     */ "Duplicator",
+	/* ZZT_BOMB           */ "Bomb",
+	/* ZZT_ENERGIZER      */ "Energizer",
+	/* ZZT_STAR           */ "Throwstar",
+	/* ZZT_CWCONV         */ "Clockwise Conveyor",
+	/* ZZT_CCWCONV        */ "Counter-Clockwise Conveyor",
+	/* ZZT_BULLET         */ "Bullet",
+	/* ZZT_WATER          */ "Water",
+	/* ZZT_FOREST         */ "Forest",
+	/* ZZT_SOLID          */ "Solid Wall",
+	/* ZZT_NORMAL         */ "Normal Wall",
+	/* ZZT_BREAKABLE      */ "Breakable Wall",
+	/* ZZT_BOULDER        */ "Boulder",
+	/* ZZT_NSSLIDER       */ "North-South Slider",
+	/* ZZT_EWSLIDER       */ "East-West Slider",
+	/* ZZT_FAKE           */ "Fake",
+	/* ZZT_INVISIBLE      */ "Invisible",
+	/* ZZT_BLINK          */ "Blink",
+	/* ZZT_TRANSPORTER    */ "Transporter",
+	/* ZZT_LINE           */ "Line",
+	/* ZZT_RICOCHET       */ "Richochet",
+	/* ZZT_BLINKHORIZ     */ "Horizontal Blink Wall",
+	/* ZZT_BEAR           */ "Bear",
+	/* ZZT_RUFFIAN        */ "Ruffian",
+	/* ZZT_OBJECT         */ "Object",
+	/* ZZT_SLIME          */ "Slime",
+	/* ZZT_SHARK          */ "Shark",
+	/* ZZT_SPINNINGGUN    */ "Spinning Gun",
+	/* ZZT_PUSHER         */ "Pusher",
+	/* ZZT_LION           */ "Lion",
+	/* ZZT_TIGER          */ "Tiger",
+	/* ZZT_BLINKVERT      */ "Vertical Blink Wall",
+	/* ZZT_CENTHEAD       */ "Centipede Head",
+	/* ZZT_CENTBODY       */ "Centipede Body",
+	/* ZZT_BLUETEXT       */ "Blue Text",
+	/* ZZT_GREENTEXT      */ "Green Text",
+	/* ZZT_CYANTEXT       */ "Cyan Text",
+	/* ZZT_REDTEXT        */ "Red Text",
+	/* ZZT_PURPLETEXT     */ "Purple Text",
+	/* ZZT_YELLOWTEXT     */ "Yellow Text",
+	/* ZZT_WHITETEXT      */ "White Text",
+	/* Invalid type       */ "Unknown",
+};
 
 /* Look-up table for converting zzt types to display chars */
 const u_int8_t _zzt_display_char_table[] = {
@@ -163,43 +221,6 @@ ZZTblock *zztBlockDuplicate(ZZTblock *block)
 	}
 	
 	return dest;
-}
-
-int zztParamCopyPtr(ZZTparam *dest, ZZTparam *src)
-{
-	if (src == NULL || dest == NULL)
-		return 0;
-
-	memcpy(dest, src, sizeof(ZZTparam));
-	if (src->program != NULL) {
-		/* dup. the data, too */
-		dest->program = (char *) malloc(src->length);
-		if (dest->program == NULL)
-			return 0;
-		memcpy(dest->program, src->program, src->length);
-	}
-	return 1;
-}
-
-int zztParamFree(ZZTparam *param)
-{
-	if (param->program)
-		free(param->program);
-	free(param);
-	return 1;
-}
-
-ZZTparam *zztParamDuplicate(ZZTparam *param)
-{
-	ZZTparam* dup = NULL;
-
-	/* don't duplicate null params */
-	if (param == NULL)
-		return NULL;
-
-	dup = (ZZTparam *) malloc(sizeof(ZZTparam));
-	zztParamCopyPtr(dup, param);
-	return dup;
 }
 
 int zztTilePlot(ZZTblock * block, int x, int y, ZZTtile tile)
@@ -472,5 +493,14 @@ u_int8_t zztGetDisplayColor(ZZTworld * world, int x, int y) {
 		return '?';
 
 	return zztTileGetDisplayColor(brd->bigboard, x, y);
+}
+
+const char * zztTileGetName(ZZTtile tile)
+{
+	if (tile.type <= ZZT_WHITETEXT) {
+		return _zzt_type_name_table[tile.type];
+	}
+	/* Default to string at end of table */
+	return _zzt_type_name_table[ZZT_WHITETEXT + 1];
 }
 
