@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.9 2001/11/10 07:42:39 bitman Exp $
+ * $Id: misc.h,v 1.10 2001/11/11 01:17:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,5 +63,6 @@ void previouspattern(editorinfo * myinfo);
 void nextpattern(editorinfo * myinfo);
 
 void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25], int randomflag);
+void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25]);
 
 #endif

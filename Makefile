@@ -40,7 +40,7 @@ endif
 # Objects
 
 CENTRALOBJS = main.o misc.o menu.o editbox.o screen.o
-LIBRARYOBJS = libzzt.o svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o
+LIBRARYOBJS = libzzt.o svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
 MISCOBJS    = patbuffer.o help.o infobox.o register.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o scroll.o tbox.o cbox.o
 DISPLAYOBJS = display.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
@@ -82,6 +82,7 @@ selection.o: selection.c
 zlaunch.o: zlaunch.c zlaunch.h svector.h
 helplist.o: helplist.c helplist.h svector.h
 hypertxt.o: hypertxt.c hypertxt.h svector.h
+gradient.o: gradient.c gradient.h
 
 # Misc
 patbuffer.o: patbuffer.c kevedit.h zzt.h display.h

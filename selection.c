@@ -1,5 +1,5 @@
 /* selection.h  -- selected area
- * $Id: selection.c,v 1.1 2001/10/22 02:48:23 bitman Exp $
+ * $Id: selection.c,v 1.2 2001/11/11 01:17:23 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -87,10 +87,8 @@ int  isselected  (selection sel, int x, int y)
 /* nextselected() - advances x and y to the next set position */
 int nextselected(selection sel, int * x, int * y)
 {
-	int position = (*x / fieldunitsize) + (*y * sel.fieldwidth);
-	int offset = *x % fieldunitsize;
-
-	offset++;
+	int position = ((*x + 1) / fieldunitsize) + (*y * sel.fieldwidth);
+	int offset = (*x + 1) % fieldunitsize;
 
 	do {
 		do {

@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.14 2001/11/10 07:42:39 bitman Exp $
+ * $Id: misc.c,v 1.15 2001/11/11 01:17:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include "svector.h"
 #include "hypertxt.h"
 #include "selection.h"
+#include "gradient.h"
 
 #include "patbuffer.h"
 
@@ -465,26 +466,13 @@ void floodselect(selection fillsel, int x, int y, char* bigboard, int brdwidth, 
 
 void fillbyselection(selection fillsel, patbuffer pbuf, int randomflag, board* destbrd, char* bigboard, unsigned char paramlist[60][25])
 {
-	int x = 0, y = 0;
+	int x = -1, y = 0;
 	patdef pattern = pbuf.patterns[pbuf.pos];
 
 	if (randomflag)
 		srand(time(0));
 
-	/* Plot the first pattern */
-	if (isselected(fillsel, x, y)) {
-		if (randomflag)
-			pattern = pbuf.patterns[rand() % pbuf.size];
-
-		/* Check for object overflow if we have params & aren't overwriting some */
-		if (destbrd->info->objectcount >= 150 && pattern.patparam != NULL &&
-		    paramlist[x][y] == 0)
-			return;
-
-		pat_plot(destbrd, pattern, x, y, bigboard, paramlist);
-	}
-
-	/* Plot remaining patterns */
+	/* Plot the patterns */
 	while (!nextselected(fillsel, &x, &y)) {
 		if (randomflag)
 			pattern = pbuf.patterns[rand() % pbuf.size];
@@ -518,4 +506,173 @@ void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo
 	deleteselection(&fillsel);
 }
 
+
+/*********** Gradient fill code *****************/
+void movebykeystroke(int key, int* x, int* y, int minx, int miny,
+										 int maxx, int maxy, displaymethod * mydisplay)
+{
+	switch (key) {
+		case DKEY_LEFT:      if (*x > minx) (*x)--; break;
+		case DKEY_RIGHT:     if (*x < maxx) (*x)++; break;
+		case DKEY_UP:        if (*y > miny) (*y)--; break;
+		case DKEY_DOWN:      if (*y < maxy) (*y)++; break;
+		case DKEY_ALT_LEFT:  (*x) -= 10; if (*x < minx) *x = minx; break;
+		case DKEY_ALT_RIGHT: (*x) += 10; if (*x > maxx) *x = maxx; break;
+		case DKEY_ALT_UP:    (*y) -= 10; if (*y < miny) *y = miny; break;
+		case DKEY_ALT_DOWN:  (*y) += 10; if (*y > maxy) *y = maxy; break;
+	}
+}
+
+
+int promptforselection(selection sel, editorinfo* myinfo, char* bigboard, displaymethod * mydisplay)
+{
+	int i, j;   /* Counters */
+	int x1, y1, x2, y2;
+	int key;
+
+	do {
+		mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+		key = mydisplay->getch();
+
+		movebykeystroke(key, &(myinfo->cursorx), &(myinfo->cursory),
+										0, 0, 59, 24, mydisplay);
+		if (key == DKEY_ESC) return 1;
+		/* Check for flood selection */
+		if (key == 'f' || key == 'F') {
+			floodselect(sel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
+			return 0;
+		}
+	} while (key != DKEY_ENTER);
+	x1 = myinfo->cursorx; y1 = myinfo->cursory;
+
+	do {
+		mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+		key = mydisplay->getch();
+
+		movebykeystroke(key, &(myinfo->cursorx), &(myinfo->cursory),
+										0, 0, 59, 24, mydisplay);
+		if (key == DKEY_ESC) return 1;
+		/* Check for flood selection */
+		if (key == 'f' || key == 'F') {
+			floodselect(sel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
+			return 0;
+		}
+	} while (key != DKEY_ENTER);
+	x2 = myinfo->cursorx; y2 = myinfo->cursory;
+
+	/* just select everything */
+	for (i = min(x1, x2); i < max(x1, x2); i++)
+		for (j = min(y1, y2); j < max(y1, y2); j++)
+			selectpos(sel, i, j);
+
+	return 0;
+}
+
+
+void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay);
+
+int pickgradientpoint(int* x, int* y, selection fillsel, patbuffer pbuf, gradline * grad, int randomseed, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay)
+{
+	int key;
+
+	do {
+		mydisplay->cursorgo(*x, *y);
+
+		/* Preview the gradient */
+		gradientfillbyselection(fillsel, pbuf, *grad, randomseed, 1,
+									destbrd, bigboard, paramlist, mydisplay);
+
+		key = mydisplay->getch();
+
+		movebykeystroke(key, x, y, 0, 0, 59, 24, mydisplay);
+
+		/* Check for change of gradient type */
+		switch (key) {
+			case 'l':
+			case 'L': grad->type = GRAD_LINEAR; break;
+			case 'b':
+			case 'B': grad->type = GRAD_BILINEAR; break;
+			case 'r':
+			case 'R': grad->type = GRAD_RADIAL; break;
+		}
+	} while (key != DKEY_ESC && key != DKEY_ENTER && key != DKEY_TAB);
+
+	return key;
+}
+
+void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay)
+{
+	int x = -1, y = 0;
+	patdef pattern = pbuf.patterns[pbuf.pos];
+
+	if (randomseed != 0)
+		srand(randomseed);
+
+	/* Plot the patterns */
+	while (!nextselected(fillsel, &x, &y)) {
+		pattern = pbuf.patterns[gradientscaledistance(grad, x, y, pbuf.size-1)];
+
+		/* Check for object overflow if we have params & aren't overwriting some */
+		if (destbrd->info->objectcount >= 150 && pattern.patparam != NULL &&
+		    paramlist[x][y] == 0)
+			return;
+
+		if (!preview) {
+			pat_plot(destbrd, pattern, x, y, bigboard, paramlist);
+		} else {
+			/* This is kinda sloppy for types which need to know who is next to
+			 * them, such as line-walls */
+			mydisplay->putch(x, y,
+							 z_getchar(pattern.type, pattern.color, pattern.patparam, bigboard, x, y),
+							 z_getcolour(pattern.type, pattern.color, pattern.patparam)
+							 );
+		}
+	}
+}
+
+void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
+{
+	int key;
+	selection sel;
+	gradline grad;
+
+	initselection(&sel, 60, 25);
+	if (promptforselection(sel, myinfo, bigboard, mydisplay)) {
+		/* Escape was pressed */
+		deleteselection(&sel);
+		return;
+	}
+	unselectpos(sel, myinfo->playerx, myinfo->playery);
+
+	/* Start out at the cursor position */
+	grad.x1 = grad.x2 = myinfo->cursorx;
+	grad.y1 = grad.y2 = myinfo->cursory;
+	grad.type = GRAD_RADIAL;
+
+	/* Choose ending point for the gradient, previewing as we go */
+	do {
+		/* Pick the ending point */
+		key = 
+		pickgradientpoint(&grad.x2, &grad.y2, sel, *(myinfo->backbuffer), &grad, 0,
+						myworld->board[myinfo->curboard], bigboard, paramlist, mydisplay);
+		myinfo->cursorx = grad.x2; myinfo->cursory = grad.y2;
+
+		if (key == DKEY_ESC) { deleteselection(&sel); return; }
+		if (key != DKEY_TAB) break;
+
+		/* Pick the starting point */
+		key = 
+		pickgradientpoint(&grad.x1, &grad.y1, sel, *(myinfo->backbuffer), &grad, 0,
+						myworld->board[myinfo->curboard], bigboard, paramlist, mydisplay);
+		myinfo->cursorx = grad.x1; myinfo->cursory = grad.y1;
+
+		if (key == DKEY_ESC) { deleteselection(&sel); return; }
+	} while (key == DKEY_TAB);
+
+	/* Fill the selection by the gradient line */
+	gradientfillbyselection(sel, *(myinfo->backbuffer), grad, 0, 0,
+						myworld->board[myinfo->curboard], bigboard, paramlist, mydisplay);
+
+	deleteselection(&sel);
+}
 

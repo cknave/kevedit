@@ -4,7 +4,9 @@ Bug fixed in help system
 General code cleanup and organization
 Display library keyboard handling improved
 File dialogs support multiple directories
-Goes directly to the title screen when running ZZT worlds
+ZZT goes directly to the title screen when run
+Text file loading allows for non-wordwrapping
+Gradient Tool
 
 0.3.3: October 27, 2001
 -----------------------
