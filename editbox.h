@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.2 2000/08/19 21:41:49 kvance Exp $
+ * $Id: editbox.h,v 1.3 2000/08/20 02:08:34 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,9 +32,47 @@ void editmoredata(displaymethod * d, param * p);
  * on new lines. If editwidth is zero, editsvector acts as a listbox and sets
  * sv->cur to selected node.  If zochighlight is nonzero, it does ZZT Object
  * Code (ZOC) highlighting. */
-void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, int zochighlight);
+void editbox(displaymethod * d, char* title, stringvector * sv, int editwidth, int zocformatting);
 
-/* displayzoc - display a string with zoc highlighting */
-void displayzoc(displaymethod * d, int x, int y, unsigned char *s);
+/* displayzoc - display a string with zoc highlighting. If firstline is true,
+ * "@" will be allowed to denote object name. */
+void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int firstline);
+
+
+/* REFERENCE -- editbox key actions
+ * - standard keys -
+ * up       : moves cursor up
+ * down     : moves cursor down
+ * pageup   : moves up 8 lines
+ * pagedown : moves down 8 lines
+ * escape   : exit editbox
+ * 
+ * - view only keys -
+ * enter    : exit editbox
+ * 
+ * - edit only keys -
+ * left     : moves cursor left
+ * right    : moves cursor right
+ * insert   : toggle insert/replace modes
+ * delete   : removes char under cursor
+ * home     : moves to beginning of line
+ * end      : moves to end of line
+ * tab      : inserts 4 spaces
+ * enter    : inserts newline
+ * backspace: deletes space before cursor, or blank lines
+ * ctrl-y   : deletes the current line
+ * ctrl-a   : inserts an ascii character (or a number on #char statements)
+ * 
+ * - coming soon from the desk of bitman -
+ * alt-s   : save zoc to file
+ * alt-o   : open zoc file (erases buffer)
+ * alt-i   : insert zoc from file
+ * alt-m   : insert zzm song from file
+ * shift   : highlighting
+ * alt-x   : cut
+ * alt-c   : copy
+ * alt-v   : paste
+ * 
+ */
 
 #endif

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.8 2000/08/19 21:41:49 kvance Exp $
+ * $Id: screen.c,v 1.9 2000/08/20 02:08:34 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -638,7 +638,7 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 	}
 }
 
-char charselect(displaymethod * d)
+unsigned char charselect(displaymethod * d)
 {
 	int z, e, i = 0;
 	static int x, y;
@@ -664,21 +664,29 @@ char charselect(displaymethod * d)
 			/* Up Arrow */
 			if (y > 0)
 				y--;
+			else
+				y = 7;
 		}
 		if (e == 1 && i == 80) {
 			/* Down Arrow */
 			if (y < 7)
 				y++;
+			else
+				y = 0;
 		}
 		if (e == 1 && i == 75) {
 			/* Left Arrow */
 			if (x > 0)
 				x--;
+			else
+				x = 31;
 		}
 		if (e == 1 && i == 77) {
 			/* Left Arrow */
 			if (x < 31)
 				x++;
+			else
+				x = 0;
 		}
 		if (e == 0 && i == 13) {
 			/* Enter */
