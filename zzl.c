@@ -1,5 +1,5 @@
 /* zzl.c  -- ZZT Object Library file routines
- * $Id: zzl.c,v 1.3 2002/02/18 02:06:25 bitman Exp $
+ * $Id: zzl.c,v 1.4 2002/02/20 00:38:00 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include "kevedit.h"
 #include "libzzt2/zzt.h"
 #include "misc.h"
+#include "paramed.h"
 
 #include <string.h>
 #include <stdio.h>
