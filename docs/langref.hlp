@@ -162,13 +162,10 @@ $RNDNS
 $RNDNE
     Either North or East, at random.
 $RND
-    Any direction, at random, 1.9 times as
-		likely to pick East or West as North
-		or South, opposing directions having
-		equal probability. North an South each
-		have very roughly a 1/5 probability of
-		being chosen. East and West each have
-		about a 3/10 probability.
+		Any direction, at random, with East
+		or West being twice as likely as
+		North or South. Opposite directions
+		hold equal probability.
 $CW <direction>
     Clockwise from the given direction,
     i.e. CW NORTH = EAST.
