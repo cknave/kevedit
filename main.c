@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.9 2000/08/18 04:39:47 bitman Exp $
+ * $Id: main.c,v 1.10 2000/08/18 18:30:18 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -217,7 +217,10 @@ void runzzt(char* args)
 	char runcommand[256];           /* [12] should be enough, but... */
 
 	strcpy(runcommand, "zzt ");
-	strcat(runcommand, args);
+
+	/* Now now, no naughty overflowing the buffer */
+	strncpy(&runcommand[4], args, 251);
+	runcommand[255] = '\0';
 
 	system(runcommand);
 }
@@ -598,6 +601,14 @@ int main(int argc, char **argv)
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			} else {
+			/* Plot an empty */	
+			x = myinfo->pattern;
+			myinfo->pattern = 4;	/* That's an empty */
+			plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+			myinfo->pattern = x;
+			updatepanel(mydisplay, myinfo, myworld);
+			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
 		case 'f':

@@ -1,5 +1,5 @@
 --------------------------------------------
-KevEdit 0.2
+KevEdit 0.3
 	A world file editor for the game ZZT
 --------------------------------------------
 Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
@@ -8,7 +8,7 @@ Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  * This README is even further from finished.
 
 ----------------------------
-Getting started with KevEdit
+Getting Started With KevEdit
 ----------------------------
 Copy the binary KEVEDIT.EXE to your ZZT directory.  You can run it with no
 arguments to get a blank new world, or give it a world on the command line to
@@ -21,7 +21,7 @@ This will load town.zzt into the editor if it exists.  Otherwise, a new world
 will be created.
 
 ---------------------------
-Basic movement and plotting
+Basic Movement and Plotting
 ---------------------------
 You control the blinking cursor around the 60x25 board with the arrow keys.
 Holding ALT with an arrow key will move faster.  Notice that the cursor
@@ -32,6 +32,9 @@ If you press the SPACEBAR, a white solid will be plotted where the cursor is.
 The TAB key will turn on or off drawing mode.  In drawing mode, the cursor
 plots automatically when moved.
 
+To plot an empty on the current space, deleting the tile on it, press the
+DELETE key.
+
 If you create an enclosed area and want to fill it in with one type of tile,
 place the cursor inside and press 'f' to flood fill the area.
 
@@ -39,7 +42,7 @@ There are many boards in a ZZT world.  Press 'b' to view the board list,
 where you can edit a different board or create a new one.
 
 -------------------
-The KevEdit sidebar
+The KevEdit Sidebar
 -------------------
 The blue bar to the right of the screen is the KEVEDIT SIDEBAR.  It displays
 information about the current state of the editor as well as keys for common
@@ -100,7 +103,7 @@ color selector.  This is a great way to customize game items and to change the
 color of objects.
 
 --------------
-Uncommon tiles
+Uncommon Tiles
 --------------
 Well, it's not that they're uncommon, just not used as much as the nice
 gradient on the pattern selector.  To choose among items, creatures, and
@@ -112,6 +115,15 @@ Objects are a special type of tile in the Creature menu.  Right now, you can
 choose a custom character for the object.  Later, an editor will be included
 to enter ZZT-OOP programming into the object.
 
+------------------
+Editing Parameters
+------------------
+If a tile has editable parameters, such as a built-in enemy, object, or
+scroll, pressing ENTER will allow you to modify them.  After you have done
+this, it will be placed in the backbufffer.
+
+To copy a tile to the backbuffer without editing it, press INSERT.
+
 ---------------
 File Operations
 ---------------
@@ -119,6 +131,15 @@ KevEdit can load and save normal ZZT worlds.  To load a world, press 'l' and
 you will be presented with a list of all world files in the current directory.
 To save your world, press 's'.  You will be prompted for an 8 letter name.
 This will be the title and filename of your world.
+
+----------------
+Working with ZZT
+----------------
+To aid in testing a game, you can press 'r' to run ZZT on the current world.
+It will not jump directly to the game, you still must choose your input
+device, etc.
+
+For this to work, zzt.exe and zzt.dat must be in the current directory.
 
 -----
 Help!
@@ -147,4 +168,4 @@ http://kevedit.sourceforge.net/ is where you can check for new releases, get
 the CVS code, post bug reports, etc.
 
     Kev Vance <kvance@tekktonik.net>
-    August 7, 2000
+    August 18, 2000

@@ -1,5 +1,6 @@
 0.3: August 17, 2000
 --------------------
+Bound DELETE to plot an empty
 ZZT OOP editor w/ syntax highlight implemented
 Bound modify to <enter>, grab only to <insert>
 Bound 'r' to run zzt on current world
