@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.34 2002/02/16 10:25:22 bitman Exp $
+ * $Id: editbox.c,v 1.35 2002/02/17 22:41:51 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -528,6 +528,10 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 					case DKEY_LEFT:
 						done = EDITBOX_BACKWARD;
+						break;
+
+					case DKEY_F1:
+						done = EDITBOX_HELP;
 						break;
 				}
 			}

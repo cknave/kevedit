@@ -16,6 +16,7 @@ well as + and - will increase and
 decrease each option, where possible.
 
 :title;Title
+
 Press enter to change the title of the
 board. The title may be up to 34
 characters and may use the $ and !; zzt
@@ -23,11 +24,13 @@ markup characters for special effects in
 the board dialogs.
 
 :darkness;Board is Dark
+
 Enter will toggle between darkness and
 brightness. The player must use torches to
 see in a dark room.
 
 :zap;Re-Enter When Zapped
+
 When this option is on and the player is
 shot or is touched by an enemy, he will
 be moved back to the position where he
@@ -35,6 +38,7 @@ entered the room.
 !-zap;Ways the player is "zapped"
 
 :timelimit;Time Limit
+
 A limit can be imposed on the amount the
 player may spend in a room. Once the time
 expires, the player is zapped and the
@@ -51,6 +55,7 @@ over the time limit, it does not work and
 the message in take is sent.
 
 :maxshots;Maximum Shots
+
 This option determines how many shots the
 player may fire at the same time on a
 board. A player cannot fire until less
@@ -58,11 +63,13 @@ than this number of his or her bullets
 remain on the board.
 
 :boards;Adjacent Boards
+
 This option links boards together so that
 the player can travel from one room to
 another by moving off the screen.
 
 :boardlink;* Link feature *
+
 KevEdit has a special feature to aid in
 the proper linkage of boards. An asterisk
 will appear next to any adjacent board

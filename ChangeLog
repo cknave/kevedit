@@ -5,11 +5,13 @@ Music testing
 Better running of ZZT
 Text editor loads from and stores to registers
 Backbuffer Locking
-Gradient tool improvements
+Pattern buffer quick keys 0-9
+Gradient draw tool improvements
 Terrain remains under creatures
 Board Movement and Deletion
 Board Transfer
 Board size statistics
+Quick key reference organized by key purpose
 
 0.3.4: November 14, 2001
 ------------------------

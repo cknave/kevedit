@@ -3,12 +3,13 @@ $New Features
 
 $New in Version 0.4.0
 :;  *  Libzzt2 - greater stability
+:;  *  Terrain remains under creatures
 !-kbasics:brdselect;Board Movement and Deletion
 !-kobjedit:play;Testing ZZT Music
-!-kbasics:zzt;Extended help in ZZT
+!-kbasics:zzt;Extended help when running ZZT
 !-kadvance:gradient;Improved gradient draw tool
 !-kadvance:buflock;Backbuffer locking
-:;  *  Terrain remains under creatures
+!-kkeys;Move useful quick key reference
 
 $New in Version 0.3.4
 !-kadvance:gradtool;Gradient Tool
@@ -19,7 +20,7 @@ $New in Version 0.3.4
 
 $Bugs fixed in 0.3.4
   *  Occasional crash of Help Dialog
-	*  Memory leak in backbuffer on Quit
+  *  Memory leak in backbuffer on Quit
 
 $New in Version 0.3.3
 !-kevedit:help;Hypertext help system

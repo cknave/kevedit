@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.36 2002/02/17 07:26:03 bitman Exp $
+ * $Id: screen.c,v 1.37 2002/02/17 22:41:51 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include "hypertxt.h"
 #include "zlaunch.h"
 #include "selection.h"
+#include "help.h"
 
 #include "panel.h"
 #include "panel_f1.h"
@@ -34,6 +35,7 @@
 #include "panel_dd.h"
 #include "panel_fd.h"
 #include "panel_fn.h"
+#include "panel_bd.h"
 #include "scroll.h"
 #include "tbox.h"
 #include "cbox.h"
@@ -316,6 +318,10 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 					drawscrollbox(0, 0, mydisplay);
 					/* Display the panel */
 					drawsidepanel(mydisplay, PANEL_FILENAME);
+
+					/* Display the prompt */
+					if (strlen(prompt) < 20)
+						mydisplay->print(61, 3, 0x1f, prompt);
 					/* Display the extension if static */
 					if (extlen > 0) {
 						mydisplay->putch(70, 4, '.', 0x1f);
@@ -771,8 +777,16 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 	boardlist = buildboardlist(w, firstnone);
 	svmoveby(&boardlist, curboard);
 
+	/* Draw the side panel */
+	drawsidepanel(mydisplay, PANEL_BOARD_DIALOG);
+
 	do {
 		response = browsedialog(title, &boardlist, mydisplay);
+
+		if (response == EDITBOX_HELP) {
+			helpsectiontopic("kbasics", "brdselect", mydisplay);
+			drawsidepanel(mydisplay, PANEL_BOARD_DIALOG);
+		}
 
 		if (response == EDITBOX_FORWARD ||  /* Move board forward */
 				response == EDITBOX_BACKWARD ||     /* Move board backward */

@@ -62,6 +62,7 @@ already in the editor. ALT+'i' will insert
 a file without destroying existing work.
 
 :zzm;Importing ZZT Music
+
 Music stored in ZZM formatted files can be
 loaded into the Object Editor quite
 easily. Simply press ALT+'m', select a ZZM
@@ -80,6 +81,7 @@ included file soundfx.zzm for an example
 of how to do this.
 
 :play;Testing ZZT Music
+
 To test a song in KevEdit, simply move the
 cursor to the beginning of the song and
 press CTRL-T. To hear the music without
@@ -87,6 +89,7 @@ the slurring problem (that is, with tiny
 breaks between notes), use ALT-T.
 
 :zoc;ZOC Mode
+
 It may be useful to turn ZOC mode off when
 editing files which are not ZZT Object
 Code. All it does is turn of syntax
@@ -96,12 +99,14 @@ use the editor to copy music from one ZZM
 file to another.
 
 :help;Context Sensitive Help
+
 Pressing F1 will bring up the ZZT-OOP
 Programming Reference. If the cursor is on
 the same line as a #command, it will look
 that command up in the help.
 
 :txted;Text Editor (! editor)
+
 Pressing '!' while editing a ZZT World
 will open a general text editor with
 similar functions to the object editor.

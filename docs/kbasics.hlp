@@ -42,6 +42,7 @@ to flood fill the area.
 !-kadvance:randfill;See Random Flood Fill
 
 :brdselect;Board Selection Dialog
+
 There are many boards in a ZZT world.
 Press 'b' to view the board list, where
 you can choose a different board to edit

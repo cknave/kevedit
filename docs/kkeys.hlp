@@ -1,22 +1,60 @@
 @Keystroke Quick Reference
 $Keystroke Quick Reference
 
-!general;General Keys
-!function;Function Keys
-!letter;Alphabet Keys
-!punct;Punctuation Keys
+!general;General
+!move;Movement
+!file;File Operations
+!color;Color
+!draw;Drawing
+!patbuf;Pattern Buffer
+!menu;Tile Menus
 
-:general;General Keys
-CURSOR KEYS
-  Move the cursor.
-ALT+CURSOR KEYS
-  Move the cursor faster.
+:general;General
+
 ENTER
   Modifies the tile under the cursor and
   copies it to the backbuffer.
 INSERT
   Copies the tile under the cursor to the
   backbuffer.
+ q - Quits KevEdit
+ n - Creates a new world
+ z - Clears the current board
+ i - Board Info
+ w - World Info
+ r - Runs zzt
+ h - Help
+ ! - Loads text editor
+
+:move;Movement
+
+CURSOR KEYS
+  Move the cursor.
+ALT+CURSOR KEYS
+  Move the cursor faster.
+PAGEUP
+  Previous Board
+PAGEDOWN
+  Next Board
+b - Switch/edit boards
+
+:file;File Operations
+
+ s - Saves the world
+ l - Loads a world
+ t - Board transfer
+ o - Object Library load/save
+
+:color;Color
+
+ c - Cycles through foreground colors
+ C - Cycles through background colors
+ k - Kolor dialog
+ v - Toggles blinking colors
+ d - Toggles default color mode
+
+:draw;Drawing
+
 SPACEBAR
   Plots the currently selected pattern in
   the backbuffer.
@@ -26,43 +64,28 @@ SHIFT-TAB
   Continuously plots with cursor movement
   while cycling through the backbuffer.
 BACKSPACE
-  Plots an empty.
+  Erases tile under the cursor.
 DELETE
-  Plots an empty.
+  Erases tile under the cursor.
+ f - Floodfills the current tile
+ F - Randomly floodfills the current tile
+ g - Draws a faded gradient
+ F4 - Text Entry
 
-:function;Function Keys
-F1 - Item Menu
-F2 - Creature Menu
-F3 - Terrain Menu
-F4 - Text Entry
+:patbuf;Pattern Buffer
 
-:letter;Alphabet Keys
-q - Quits KevEdit
-s - Saves the world
-l - Loads a world
-n - Creates a new world
-z - Clears the current board
-
-b - Switches to another board
-i - Board Info
-r - Runs zzt
-h - Help
-
-p - Cycles through backbuffer
-P - Cycles backward through backbuffer
-c - Cycles through foreground colors
-C - Cycles through background colors
-k - Kolor dialog
-v - Toggles blinking colors
-d - Toggles default color mode
-a - Aquires tiles to the backbuffer
-f - Floodfills the current tile
-F - Randomly floodfills the current tile
-o - Object Library load/save
-
-:punct;Punctuation Keys
+ p - Cycles through backbuffer
+ P - Cycles backward through backbuffer
+ a - Aquires tiles to the backbuffer
  < - Reduces size of backbuffer
  > - Increases size of backbuffer
- ! - Loads text editor
- ? - Displays creature information
+ / - Locks backbuffer
+ 0 - Selects solid wall pattern
+ 1-9 - Selects backbuffer position
+
+:menu;Tile Menus
+
+ F1 - Item Menu
+ F2 - Creature Menu
+ F3 - Terrain Menu
 

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.55 2002/02/17 07:26:03 bitman Exp $
+ * $Id: main.c,v 1.56 2002/02/17 22:41:51 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -263,6 +263,7 @@ int main(int argc, char **argv)
 			switchboard(myworld, mydisplay);
 
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			drawscreen(mydisplay, myworld);
 			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));

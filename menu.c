@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.8 2002/02/16 10:25:22 bitman Exp $
+ * $Id: menu.c,v 1.9 2002/02/17 22:41:51 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,24 +35,6 @@
 
 #include <stdlib.h>
 
-/* Should be obsolete now */
-#if 0
-void plotbackbufferfirstslot(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
-{
-	int oldpos;
-	patbuffer* prevbuf = myinfo->pbuf;
-
-	myinfo->pbuf = myinfo->backbuffer;
-	oldpos = myinfo->pbuf->pos;
-	myinfo->pbuf->pos = 0;
-
-	plot(myworld, myinfo, mydisplay);
-
-	myinfo->pbuf->pos = oldpos;
-	myinfo->pbuf = prevbuf;
-}
-#endif
-		
 void itemmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
 {
 #if 0
