@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.22 2001/05/20 15:43:08 bitman Exp $
+ * $Id: screen.c,v 1.23 2001/10/14 05:46:57 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,18 +23,19 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#include "panel_f1.h"
-#include "panel_f2.h"
-#include "panel_f3.h"
+#include "screen.h"
 #include "display.h"
 #include "kevedit.h"
-#include "panel.h"
-#include "tbox.h"
-#include "cbox.h"
 #include "zzt.h"
 #include "scroll.h"
 #include "editbox.h"
 
+#include "panel.h"
+#include "panel_f1.h"
+#include "panel_f2.h"
+#include "panel_f3.h"
+#include "tbox.h"
+#include "cbox.h"
 
 /* The following define tells updatepanel to draw the standard patterns
  * in the current colour, rather than plain ol' white */
@@ -47,9 +48,121 @@
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-/* okay most of this was stolen from case 's' in main(), but I needed a more
- * generic filename input function. case 's' could even be modified to use
- * this function if main() gets too bloated. --bitman */
+#define DDOSKEY_EXT      0x100
+
+#define DKEY_ENTER      13
+#define DKEY_ESC        27
+#define DKEY_BACKSPACE  '\b'
+#define DKEY_TAB        '\t'
+#define DKEY_CTRL_A     0x01
+#define DKEY_CTRL_Y     25
+#define DKEY_LEFT       0x4B | DDOSKEY_EXT
+#define DKEY_RIGHT      0x4D | DDOSKEY_EXT
+#define DKEY_HOME       0x47 | DDOSKEY_EXT
+#define DKEY_END        0x4F | DDOSKEY_EXT
+#define DKEY_INSERT     0x52 | DDOSKEY_EXT
+#define DKEY_DELETE     0x53 | DDOSKEY_EXT
+
+int line_editor(int x, int y, int color, int erasecolor,
+								char* str, int editwidth, int flags, displaymethod* d)
+{
+	int pos = strlen(str);   /* Position in str */
+	int key;                 /* Key being acted on */
+	int i;                   /* General counter */
+
+	while (1) {
+		/* Display the line */
+		d->print(x, y, color, str);
+		for (i = strlen(str); i <= editwidth; i++)
+			d->putch(x + i, y, ' ', erasecolor);
+
+		/* Move the cursor */
+		d->cursorgo(x + pos, y);
+
+		/* Get the key */
+		key = d->getch();
+		if (key == 0)
+			key = d->getch() | DDOSKEY_EXT;
+
+		switch (key) {
+			case DKEY_ENTER:
+				return LINED_OK;
+
+			case DKEY_ESC:
+				return LINED_CANCEL;
+
+			case DKEY_LEFT:  if (pos > 0)           pos--; break;
+			case DKEY_RIGHT: if (pos < strlen(str)) pos++; break;
+			case DKEY_HOME:  pos = 0;                      break;
+			case DKEY_END:   pos = strlen(str);            break;
+
+			case DKEY_BACKSPACE:
+				/* Move everything after pos backward */
+				if (pos > 0) {
+					for (i = pos - 1; i < strlen(str); i++)
+						str[i] = str[i + 1];
+					pos--;
+				}
+				break;
+
+			case DKEY_DELETE:
+				if (pos < strlen(str)) {
+					for (i = pos; i < strlen(str); i++)
+						str[i] = str[i+1];
+				}
+				break;
+
+			case DKEY_CTRL_Y:
+				/* Clear line */
+				pos = 0;
+				str[0] = '\0';
+				break;
+
+			case DKEY_TAB:
+				/* Insert 4 spaces */
+				if (strlen(str) > (editwidth - 4))
+					break;
+
+				for (i = strlen(str) + 4; i > pos; i--)
+					str[i] = str[i-4];
+				for (i = 0; i < 4; i++)
+					str[pos++] = ' ';
+				break;
+
+			default:
+				/* Directly from the keyboard, only standard ASCII chars are acceptable */
+				if (key < 0x20 || key > 0x7E) break;
+
+				/* Be sure we have room */
+				if (strlen(str) >= editwidth)
+					break;
+
+				/* Act on flags */
+				if ((flags & LINED_NOLOWER) && (flags & LINED_NOUPPER) &&
+						((key >= 0x41 && key <= 0x5A) || (key >= 0x61 && key <= 0x7A))) break;
+				if ((flags & LINED_NODIGITS) && (key >= 0x30 && key <= 0x39)) break;
+				if ((flags & LINED_NOPUNCT) && ((key >= 0x21 && key <= 0x2F) ||
+																				(key >= 0x3A && key <= 0x40) ||
+																				(key >= 0x5A && key <= 0x60) ||
+																				(key >= 0x7B && key <= 0x7E))) break;
+				if ((flags & LINED_NOSPACES) && (key == ' ')) break;
+				if ((flags & LINED_NOPERIOD) && (key == '.')) break;
+				if ((flags & LINED_FILENAME) && (key == '\"' || key == '?' || key == '*' ||
+																				 key == '<'  || key == '>' || key == '|')) break;
+				if ((flags & LINED_NOPATH)   && (key == '\\' || key == '/' || key == ':')) break;
+
+				if (flags & LINED_NOUPPER) key = tolower(key);
+				if (flags & LINED_NOLOWER) key = toupper(key);
+
+				/* Insert character */
+				for (i = strlen(str) + 1; i > pos; i--)
+					str[i] = str[i-1];
+				str[pos++] = key;
+				break;
+		}
+	}
+}
+
 char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, displaymethod * mydisplay)
 {
 	int i = 0, x = 0, c = 0;	/* general vars */
@@ -482,34 +595,7 @@ char *titledialog(displaymethod * d)
 			i += 2;
 		}
 	}
-	i = 0;
-	while (x != 13) {
-		d->cursorgo(12 + i, 13);
-		x = d->getch();
-		switch (x) {
-		case 8:
-			if (i > 0) {
-				i--;
-				t[i] = '\0';
-				d->putch(12 + i, 13, ' ', 0x0f);
-			}
-			break;
-		case 13:
-			if (i == 0)
-				x = 8;
-			break;
-		default:
-			if (i == 34)
-				break;
-			if (x < 32)
-				break;
-			t[i] = x;
-			d->putch(12 + i, 13, x, 0x0f);
-			i++;
-			d->cursorgo(12 + i, 13);
-			break;
-		}
-	}
+	line_editor(12, 13, 0x0f, 0x00, t, 34, LINED_NORMAL, d);
 	return t;
 }
 
