@@ -1,0 +1,59 @@
+AC_INIT(kevedit, 0.5.1, kev@kvance.com)
+AC_CONFIG_SRCDIR(kevedit.c)
+AM_INIT_AUTOMAKE(kevedit.c, 0.5)
+
+AC_REVISION([[$Id: configure.in,v 1.1 2003/02/18 08:16:32 bitman Exp $]])
+
+# This doesn't seem to work at all
+#AC_CONFIG_AUX_DIR(config)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_CHECK_HEADERS(malloc.h strings.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_FUNC_ALLOCA
+AC_FUNC_FNMATCH
+AC_TYPE_SIGNAL
+AC_FUNC_STRCOLL
+AC_CHECK_FUNCS(getcwd strdup strstr)
+
+dnl Check the system to see if it provides GNU glob.  If not, use
+dnl the implementation we stole from GNU make. :-)
+AC_MSG_CHECKING(if system libc has GNU glob)
+AC_CACHE_VAL(make_cv_sys_gnu_glob, [
+ AC_EGREP_CPP(gnu glob,[
+#include <features.h>
+#include <glob.h>
+#include <fnmatch.h>
+
+#define GLOB_INTERFACE_VERSION 1
+#if !defined _LIBC && defined __GNU_LIBRARY__ && __GNU_LIBRARY__ > 1
+# include <gnu-versions.h>
+# if _GNU_GLOB_INTERFACE_VERSION == GLOB_INTERFACE_VERSION
+   gnu glob
+# endif
+#endif
+ ], [AC_MSG_RESULT(yes)
+make_cv_sys_gnu_glob=yes], [AC_MSG_RESULT([no; using local copy])
+AC_SUBST(GLOBINC) GLOBINC='-I$(srcdir)/glob'
+AC_SUBST(GLOBLIB) GLOBLIB=glob/libglob.a
+make_cv_sys_gnu_glob=no])])
+# Tell automake about this, so it can build the right .c files.
+AM_CONDITIONAL(USE_LOCAL_GLOB, test "$make_cv_sys_gnu_glob" = no)
+
+
+AC_OUTPUT(glob/Makefile libzzt2/Makefile synth/Makefile Makefile)
+
