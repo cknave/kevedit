@@ -1,5 +1,5 @@
 /* register.c  -- text editor memory registers
- * $Id: register.c,v 1.6 2002/01/12 06:31:58 bitman Exp $
+ * $Id: register.c,v 1.7 2002/02/18 08:03:58 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -128,6 +128,10 @@ void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, in
  */
 int mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwidth, int editwidth)
 {
+	/* Do nothing if our source is empty */
+	if (src->first == NULL)
+		return inspos;
+
 	/* The destination must have at least one line! */
 	if (dest->first == NULL)
 		pushstring(dest, str_dupmin("", editwidth));
