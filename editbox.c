@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.42 2002/06/07 02:03:11 bitman Exp $
+ * $Id: editbox.c,v 1.43 2002/06/08 01:49:33 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1096,7 +1096,7 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 	/* Loop through the stringvector looking for #play statements */
 	while (sv->cur != NULL && !d->kbhit()) {
 		char* tune = strstr(sv->cur->s, "#");
-		if (str_equ(tune, "#play ", STREQU_UNCASE | STREQU_RFRONT)) {
+		if (tune != NULL && str_equ(tune, "#play ", STREQU_UNCASE | STREQU_RFRONT)) {
 			zzmplaystate s;
 			int xoff = tune - sv->cur->s;
 			tune += 6;  /* Advance to notes! */
