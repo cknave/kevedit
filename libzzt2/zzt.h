@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.2 2002/02/02 05:19:51 bitman Exp $
+ * $Id: zzt.h,v 1.3 2002/02/15 07:13:12 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,8 @@ typedef unsigned int u_int32_t;
 #define ZZT_BOARD_MAX_SIZE 	ZZT_BOARD_X_SIZE * ZZT_BOARD_Y_SIZE
 /* Board title size */
 #define ZZT_BOARD_TITLE_SIZE	50
+/* Maximum params for a board */
+#define ZZT_BOARD_MAX_PARAMS 150
 /* World title size */
 #define ZZT_WORLD_TITLE_SIZE	20
 /* Flag size */
@@ -98,12 +100,28 @@ typedef struct ZZTparam {
 	u_int8_t *program;	/* Program (if any) */
 } ZZTparam;
 
+/* ZZT tile info -- the basic building-block of a decompressed board */
+typedef struct ZZTtile {
+	u_int8_t type;
+	u_int8_t color;
+	ZZTparam * param;
+} ZZTtile;
+
+/* ZZT tile block -- usually a decompressed board */
+typedef struct ZZTblock {
+	ZZTtile * tiles;
+	int width, height;
+} ZZTblock;
+
 /* ZZT board -- fill a ZZT world with these */
 typedef struct ZZTboard {
 	u_int8_t title[ZZT_BOARD_TITLE_SIZE+1];	/* Board title */
 	ZZTboardinfo info;			/* Board info */
 	u_int8_t *packed;			/* RLE packed board data */
 	ZZTparam *params;			/* Array of parameters */
+	ZZTblock *bigboard;   /* Data & params when unpacked */
+
+	int plx, ply;         /* Player x and y */
 } ZZTboard;
 
 /* ZZT world info -- stuff from the ZZT file header */
@@ -132,7 +150,6 @@ typedef struct ZZTworld {
 	ZZTworldinfo *header;	/* World information */
 	/*** BOARD ARRAY ***/
 	ZZTboard *boards;	/* Array of boards */
-	u_int8_t *bigboard;	/* Fully expanded board (the current one) */
 	int cur_board;		/* Board we are accessing */
 	char *filename;		/* Filename */
 } ZZTworld;
@@ -222,6 +239,7 @@ void zztBoardCommit(ZZTworld *world);
  * Return the number of the currently selected board
  */
 int zztBoardGetCurrent(ZZTworld *world);
+
 /***** BOARD MANIPULATORS *****/
 /* zztWorldAddBoard(world, title)
  * Create a blank board at the end of the world with the given title
@@ -244,6 +262,14 @@ void zztBoardFree(ZZTboard *board);
  * Return a copy of an existing board
  */
 ZZTboard *zztBoardCopy(ZZTboard *board);
+/* zztBoardDecompress()
+ * Switch board to decompressed (bigboard) form (do not call manually)
+ */
+int zztBoardDecompress(ZZTboard *board);
+/* zztBoardCompress(board)
+ * Switch board to compressed (rle) form (do not call manually)
+ */
+int zztBoardCompress(ZZTboard *board);
 /* zztWorldInsertBoard(world, board, position, relink)
  * Insert a stand-alone board into the given world
  * Make relink non-zero to correct all the board links
@@ -282,6 +308,7 @@ u_int8_t *zztBoardGetMessage(ZZTworld *world);
 u_int16_t zztBoardGetTimelimit(ZZTworld *world);
 u_int16_t zztBoardGetParamcount(ZZTworld *world);
 
+/***** FILE I/O ******/
 /* zztWorldWrite(world, fp)
  * Write a whole world to an open file
  */
@@ -299,28 +326,77 @@ ZZTworld *zztWorldRead(FILE *fp);
  */
 ZZTboard *zztBoardRead(FILE *fp);
 
+/***** BLOCK MANIPULATORS ******/
+/* zztBlockCreate(width, height)
+ * Create an empty block of tiles
+ */
+ZZTblock *zztBlockCreate(int width, int height);
+/* zztBlockFree(block)
+ * Destroy a zztBlock
+ */
+void zztBlockFree(ZZTblock *block);
+/* zztBlockDuplicate(block)
+ * Create a copy of a block
+ */
+ZZTblock *zztBlockDuplicate(ZZTblock *block);
+
 /***** PARAMETER MANIPULATORS *****/
-/* zztInsertParam(world, param)
- * Insert the given parameter into the current board
+/* zztParamFree(param)
+ * Free()s a param
  */
-int zztParamInsert(ZZTworld *world, ZZTparam *param);
-/* zztDeleteParam(world, n)
- * Delete the nth parameter in the list -- not very useful
+int zztParamFree(ZZTparam *param);
+/* zztParamDuplicate(param)
+ * Create a duplicate of a param w/o any shared memory
  */
-int zztParamDelete(ZZTworld *world, int number);
-/* zztDeleteParamAt(world, x, y)
- * Delete the parameter at the given coordinates
+ZZTparam *zztParamDuplicate(ZZTparam *param);
+
+/***** TILE MANIPULATORS ******/
+/* zztTilePlot(block, x, y, tile)
+ * Plot a tile to the given block at (x, y)
+ * No protection against overwriting the player or too many params
  */
-int zztParamDeleteAt(ZZTworld *world, int x, int y);
-/* zztPlot(world, x, y, type, color)
- * Plot the given type/color at the given coords.
- * NO PARAMETERS ARE CREATED
+int zztTilePlot(ZZTblock * block, int x, int y, ZZTtile tile);
+/* zztPlot(world, x, y, tile)
+ * Plot a tile to world's current board
+ * The player will not be overwritten and param count is limited
  */
-int zztPlot(ZZTworld *world, int x, int y, u_int8_t type, u_int8_t color);
+int zztPlot(ZZTworld * world, int x, int y, ZZTtile tile);
 /* zztPlotPlayer(world, x, y)
- * Plot a player, create player param
+ * Plot the player
+ * This must be seperate from zztPlot to allow player clones
  */
-int zztPlotPlayer(ZZTworld *world, int x, int y);
+int zztPlotPlayer(ZZTworld * world, int x, int y);
+/* zztTileErase(block, x, y)
+ * Erase the tile at (x, y)
+ * If tile has terrain underneath, the terrain remains
+ * Plot an empty instead to completely erase a location
+ */
+int zztTileErase(ZZTblock * block, int x, int y);
+/* zztErase(world, x, y)
+ * Erase the tile at (x, y), protecting the player
+ */
+int zztErase(ZZTworld * world, int x, int y);
+/* zztTileAt(block, x, y)
+ * Macro to find the tile at a given coordinate in a block
+ */
+#define zztTileAt(block, x, y) (block->tiles[block->width*y + x])
+/* zztTileGet(world, x, y)
+ * Gets the tile at (x, y), but DOES NOT COPY PARAM DATA
+ */
+ZZTtile zztTileGet(ZZTworld * world, int x, int y);
+/* zztTileGetDisplayChar(block, x, y)
+ * zztGetDisplayChar(world, x, y)
+ * Gets the display character of the tile at (x, y)
+ */
+u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y);
+u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y);
+/* zztTileGetDisplayColor(block, x, y)
+ * zztGetDisplayColor(world, x, y)
+ * Gets the display colour of the tile at (x, y)
+ */
+u_int8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y);
+u_int8_t zztGetDisplayColor(ZZTworld * world, int x, int y);
+
 
 /***** TILE TYPES *****/
 #define ZZT_EMPTY         0x00

@@ -1,5 +1,5 @@
 /* file.c	-- File routines
- * $Id: file.c,v 1.2 2002/02/02 05:18:44 bitman Exp $
+ * $Id: file.c,v 1.3 2002/02/15 07:13:12 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -159,10 +159,9 @@ ZZTworld *zztWorldRead(FILE *fp)
 	/* Allocate memory for world */
 	world = malloc(sizeof(ZZTworld));
 	world->header = malloc(sizeof(ZZTworldinfo));
-	world->bigboard = malloc(ZZT_BOARD_MAX_SIZE*2);
 	world->boards = NULL;
 	world->filename = NULL;
-#define freeworld { free(world->bigboard); free(world->header); free(world); return NULL; }
+#define freeworld { free(world->header); free(world); return NULL; }
 
 	/* Load header */
 	_zzt_inw_or(&bcount, fp) freeworld;
@@ -205,6 +204,9 @@ ZZTworld *zztWorldRead(FILE *fp)
 	world->cur_board = 0;
 	for(i = 1; i < bcount; i++) {
 		board = zztBoardRead(fp);
+		if (board == NULL) {
+			board = zztBoardCreate("Error Loading Board");
+		}
 		zztWorldInsertBoard(world, board, i, 0);
 		zztBoardFree(board);
 	}
@@ -245,6 +247,9 @@ ZZTboard *zztBoardRead(FILE *fp)
 	u_int8_t number, code, color;
 
 	int i;
+
+	/* Boards read from a file are initially compressed */
+	board->bigboard = NULL;
 
 #define freeboard { _zzt_boardread_freestuff(board, packed, NULL, 0); return NULL; }
 
@@ -334,6 +339,10 @@ ZZTboard *zztBoardRead(FILE *fp)
 			board->params[i].program[w] = '\0';
 		}
 	}
+
+	/* Read the player x and y positions */
+	board->plx = board->params[0].x;
+	board->ply = board->params[0].y;
 
 	return board;
 }

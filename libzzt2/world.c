@@ -1,5 +1,5 @@
 /* world.c	-- World functions
- * $Id: world.c,v 1.1 2002/01/30 07:20:57 kvance Exp $
+ * $Id: world.c,v 1.2 2002/02/15 07:13:12 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -58,14 +58,10 @@ ZZTworld *zztWorldCreate(char *filename, char *title)
 		world->filename = malloc(strlen("untitled.zzt")+1);
 		strcpy(world->filename, "untitled.zzt");
 	}
-	/* Allocate bigboard, create simple board */
-	world->bigboard = malloc(ZZT_BOARD_MAX_SIZE*2);
-	memset(world->bigboard, 0, ZZT_BOARD_MAX_SIZE*2);
+	/* Decompress the current/first board */
 	world->cur_board = 0;
-	for(i = 0; i < ZZT_BOARD_MAX_SIZE; i++)
-		world->bigboard[(i*2)+1] = 0x0F;
-	world->bigboard[0] = ZZT_PLAYER;
-	world->bigboard[1] = 0x1F;
+	zztBoardDecompress(&(world->boards[0]));
+
 	/* Finished, return the world */
 	return world;
 }
@@ -85,16 +81,18 @@ ZZTworld *zztWorldLoad(char *filename)
 
 	/* Read from file */
 	world = zztWorldRead(fp);
+	fclose(fp);
+
 	if(world != NULL) {
 		free(world->filename);
 		world->filename = malloc(strlen(filename)+1);
 		strcpy(world->filename, filename);
 	}
-	/* Unpack first board */
-	_zzt_rle_decode(world->boards[0].packed, world->bigboard);
+	/* Decompress the current/first board */
+	world->cur_board = 0;
+	zztBoardDecompress(&(world->boards[0]));
 
 	/* Done */
-	fclose(fp);
 	return world;
 }
 
@@ -106,7 +104,6 @@ void zztWorldFree(ZZTworld *world)
 
 	/* Free everything else */
 	free(world->header);
-	free(world->bigboard);
 	free(world->filename);
 	free(world);
 }
@@ -125,9 +122,12 @@ int zztWorldSave(ZZTworld *world)
 	zztBoardCommit(world);
 	/* Write to file */
 	result = zztWorldWrite(world, fp);
+	fclose(fp);
+
+	/* Decompress the current board */
+	zztBoardDecompress(&(world->boards[zztBoardGetCurrent(world)]));
 
 	/* Done */
-	fclose(fp);
 	return result;
 }
 

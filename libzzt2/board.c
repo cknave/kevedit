@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.1 2002/01/30 07:20:57 kvance Exp $
+ * $Id: board.c,v 1.2 2002/02/15 07:13:12 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,71 +22,272 @@
 
 #include "zzt.h"
 
-int _zzt_rle_decode(u_int8_t *packed, u_int8_t *unpacked)
+/* zztParamCopyPtr(dest, src)
+ * Copies param onto pre-reserved memory
+ * Found in tiles.c
+ */
+int zztParamCopyPtr(ZZTparam *dest, ZZTparam *src);
+
+int _zzt_rle_decode(u_int8_t *packed, ZZTblock *block)
 {
 	int ofs = 0, count = 0;
+	int maxcount = block->width * block->height;
 	u_int8_t i;
+
+	/* NOTE: we assume that the decompressed rle string is not smaller than the
+	 * size of the block. A larger rle string will safely generate an error */
 
 	do {
 		for(i = 0; i < packed[ofs]; i++) {
-			unpacked[count++] = packed[ofs+1];
-			if(count == ZZT_BOARD_MAX_SIZE*2)
-				return 1;
-			unpacked[count++] = packed[ofs+2];
-			if(count == ZZT_BOARD_MAX_SIZE*2)
-				return 1;
+			if (count >= maxcount)   /* Do not exceed the block size */
+				return 0;
+			block->tiles[count].type = packed[ofs+1];
+			block->tiles[count++].color = packed[ofs+2];
 		}
 		ofs += 3;
-	} while(count < ZZT_BOARD_MAX_SIZE*2);
-	return 0;
+	} while(count < maxcount);
+	return 1;
 }
 
-u_int8_t *_zzt_rle_encode(u_int8_t *unpacked)
+int _zzt_rle_encoded_size(ZZTblock *block)
+{
+	int size = 0, ofs = 0;
+	int maxcount = block->width * block->height;
+	u_int8_t blocks;
+	u_int8_t type;
+	u_int8_t color;
+
+	/* Get size of RLE data */
+	do {
+		/* Start with one block */
+		blocks = 1;
+		type = block->tiles[ofs].type;
+		color = block->tiles[ofs++].color;
+
+		while(type == block->tiles[ofs].type && color == block->tiles[ofs].color && blocks < 255) {
+			blocks++;
+			ofs++;
+			if (ofs >= maxcount)
+				break;
+		}
+		size++;
+	} while(ofs < maxcount);
+
+	return size;
+}
+
+u_int8_t *_zzt_rle_encode(ZZTblock *block)
 {
 	int size = 0, ofs = 0, ofs2 = 0;
+	int maxcount = block->width * block->height;
 	u_int8_t blocks = 1;
 	u_int8_t type;
 	u_int8_t color;
 
 	u_int8_t *packed;
 
-	/* Get size of RLE data */
-	do {
-		type = unpacked[ofs++];
-		color = unpacked[ofs++];
-		if(ofs < ZZT_BOARD_MAX_SIZE*2) {
-			while(type == unpacked[ofs] && color == unpacked[ofs+1] && blocks < 255) {
-				blocks++;
-				ofs += 2;
-				if(ofs >= ZZT_BOARD_MAX_SIZE*2)
-					break;
-			}
-		}
-		size++;
-		blocks = 1;
-	} while(ofs < ZZT_BOARD_MAX_SIZE*2);
+	/* NOTE: the compressed string will only represent as many tiles as
+	 * are in the given block. If the block is not ZZT size, the encoded
+	 * string will not be ZZT size either. */
+
+	size = _zzt_rle_encoded_size(block);
 
 	/* Reallocate data */
 	packed = malloc(size*3);
 	/* RLE encode from unpacked */
-	ofs = ofs2 = 0; blocks = 1;
+	ofs = ofs2 = 0;
 	do {
-		type = unpacked[ofs++];
-		color = unpacked[ofs++];
-		if(ofs < ZZT_BOARD_MAX_SIZE*2) {
-			while(type == unpacked[ofs] && color == unpacked[ofs+1] && blocks < 255) {
+		blocks = 1;
+		type = block->tiles[ofs].type;
+		color = block->tiles[ofs++].color;
+		if(ofs < maxcount) {
+			while(type == block->tiles[ofs].type && color == block->tiles[ofs].color && blocks < 255) {
 				blocks++;
-				ofs += 2;
-				if(ofs >= ZZT_BOARD_MAX_SIZE*2)
+				ofs++;
+				if(ofs >= maxcount)
 					break;
 			}
 		}
 		packed[ofs2++] = blocks;
 		packed[ofs2++] = type;
 		packed[ofs2++] = color;
-		blocks = 1;
-	} while (ofs < ZZT_BOARD_MAX_SIZE*2);
+	} while (ofs < maxcount);
 	return packed;
+}
+
+int _zzt_param_decode(ZZTparam* params, int paramcount, ZZTblock *block)
+{
+	int i;
+	for (i = 0; i < paramcount; i++) {
+		if (params[i].x < block->width && params[i].y < block->height)
+			zztTileAt(block, params[i].x, params[i].y).param =
+				zztParamDuplicate(params + i);
+		/* TODO: show some kind of error for params at an invalid location? */
+	}
+	return 1;
+}
+
+int _zzt_param_encoded_size(ZZTblock *block)
+{
+	int i, size = 0;
+	int maxcount = block->width * block->height;
+
+	/* Count the params */
+	for (i = 0; i < maxcount; i++) {
+		if (block->tiles[i].param != NULL)
+			size++;
+	}
+	return size;
+}
+
+ZZTparam *_zzt_param_encode(int *paramsize, int playerx, int playery, ZZTblock *block)
+{
+	int i, size, ofs;
+	int maxcount = block->width * block->height;
+	int playerindex = block->width * playery + playerx;
+	ZZTparam *params;
+
+	size = _zzt_param_encoded_size(block);
+	if (size == 0)
+		return NULL;
+
+	/* Copy the params */
+	params = (ZZTparam *) malloc(sizeof(ZZTparam) * size);
+	/* Copy the player params first */
+	if (block->tiles[playerindex].param == NULL)
+		return NULL;
+	zztParamCopyPtr(params + 0, block->tiles[playerindex].param);
+	/* Loop through the rest */
+	for (i = 0, ofs = 1; i < maxcount && ofs < size; i++) {
+		if (block->tiles[i].param != NULL && i != playerindex) {
+			zztParamCopyPtr(params + ofs, block->tiles[i].param);
+			/* TODO: Set param x and y to indicate position in tiles[],
+			 * rather than assume they have not been tampered with. */
+			ofs++;
+		}
+	}
+
+	*paramsize = size;
+	return params;
+}
+
+void _zztBoardFree(ZZTboard board)
+{
+	int i;
+
+	/* Delete the bigboard */
+	if (board.bigboard != NULL)
+		zztBlockFree(board.bigboard);
+	/* Delete the packed board */
+	if (board.packed != NULL)
+		free(board.packed);
+	/* Delete all params */
+	if(board.params != NULL) {
+		for(i = 0; i < board.info.paramcount; i++) {
+			if(board.params[i].length != 0)
+				free(board.params[i].program);
+		}
+		free(board.params);
+	}
+	board.bigboard = NULL;
+	board.packed = NULL;
+	board.params = NULL;
+}
+
+int zztBoardDecompress(ZZTboard *board)
+{
+	int i;
+
+	/* Do not decompress if already decompressed */
+	if (board->bigboard != NULL || board->packed == NULL || board->params == NULL)
+		/* Consider giving an error if one but not all of the above are true */
+		return 1;
+
+	board->bigboard = zztBlockCreate(ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
+	
+	if (board->bigboard == NULL)
+		return 0;
+
+	/* Decode packed & params onto bigboard */
+	_zzt_rle_decode(board->packed, board->bigboard);
+	_zzt_param_decode(board->params, board->info.paramcount, board->bigboard);
+
+	/* Free packed & params */
+	free(board->packed);
+	for(i = 0; i < board->info.paramcount; i++) {
+		if(board->params[i].length != 0)
+			free(board->params[i].program);
+	}
+
+	board->packed = NULL;
+	board->params = NULL;
+
+	return 1;
+}
+
+int zztBoardCompress(ZZTboard *board)
+{
+	int paramcount;
+
+	/* Do not compress if alread compressed */
+	if (board->packed != NULL || board->params != NULL || board->bigboard == NULL)
+		/* Consider giving an error if one but not all of the above are true */
+		return 1;
+
+	/* Pack the bigboard back into packed and params */
+	board->packed = _zzt_rle_encode(board->bigboard);
+	if (board->packed == NULL)
+		return 0;
+	board->params = _zzt_param_encode(&paramcount, board->plx, board->ply,
+																		board->bigboard);
+	if (board->params == NULL)
+		return 0;
+	board->info.paramcount = paramcount;
+
+	zztBlockFree(board->bigboard);
+	board->bigboard = NULL;
+
+	return 1;
+}
+
+void zztBoardCopyPtr(ZZTboard *dest, ZZTboard *src)
+{
+	int tiles = 0, ofs = 0;
+	int i;
+
+	/* Base board junk */
+	memcpy(dest, src, sizeof(ZZTboard));
+	/* Packed board */
+	if (src->packed != NULL) {
+		do {
+			tiles += src->packed[ofs];
+			ofs += 3;
+		} while(tiles < ZZT_BOARD_MAX_SIZE);
+		dest->packed = malloc(ofs);
+		memcpy(dest->packed, src->packed, ofs);
+	}
+	/* Parameters */
+	if(dest->params != NULL) {
+		dest->params = malloc(sizeof(ZZTparam)*dest->info.paramcount);
+		memcpy(dest->params, src->params, dest->info.paramcount*sizeof(ZZTparam));
+		for(i = 0; i < src->info.paramcount; i++) {
+			if(dest->params[i].length != 0) {
+				dest->params[i].program = malloc(dest->params[i].length);
+				memcpy(dest->params[i].program, src->params[i].program, dest->params[i].length);
+			}
+		}
+	}
+	/* Bigboard */
+	if (src->bigboard != NULL) {
+		dest->bigboard = zztBlockDuplicate(src->bigboard);
+	}
+}
+
+ZZTboard *zztBoardCopy(ZZTboard *board)
+{
+	ZZTboard *new = malloc(sizeof(ZZTboard));
+	zztBoardCopyPtr(new, board);
+	return new;
 }
 
 void zztWorldAddBoard(ZZTworld *world, char *title)
@@ -115,95 +316,88 @@ void zztWorldAddBoard(ZZTworld *world, char *title)
 	free(new);	/* Don't ever free a board like this */
 }
 
+/* _zzt_board_relink(brd, offset, start, end movefrom, moveto)
+ * Add offset to all links in a board between start and end, except
+ * links to "movefrom" which become "moveto" instead
+ */
+void _zzt_board_relink(ZZTboard *brd, int offset, int start, int end, int movefrom, int moveto)
+{
+	int j, board_length;
+
+	/* Cool macro to save major space */
+#define relink(link) if ((link) == movefrom) (link) = moveto; else if ((link) >= start && (link) <= end) (link) += offset;
+
+	/* Relink board connections */
+	relink(brd->info.board_n);
+	relink(brd->info.board_s);
+	relink(brd->info.board_e);
+	relink(brd->info.board_w);
+
+	/* Do the same for passages */
+	if (!zztBoardDecompress(brd)) {
+		fprintf(stderr, "Error decompressing board\n");
+		return;
+	}
+	board_length = brd->bigboard->width * brd->bigboard->height;
+	for (j = 0; j < board_length; j++) {
+		if (brd->bigboard->tiles[j].type == ZZT_PASSAGE) {
+			relink(brd->bigboard->tiles[j].param->data[2]);
+		}
+	}
+}
+
 int zztWorldDeleteBoard(ZZTworld *world, int number, int relink)
 {
 	ZZTboard *backup;
 	int bcount = zztWorldGetBoardcount(world);
-	int i, j, k;
-	int x, y;
-
-	u_int8_t *bigboard;
+	int i;
 
 	/* Check that it's in range */
 	if(number < 0 || number >= bcount)
 		return 0;
 
+	/* Clear the current board from memory */
+	_zztBoardFree(world->boards[number]);
 
-	/* Delete the board */
-	free(world->boards[number].packed);
-	/* Delete all params */
-	if(world->boards[number].params != NULL) {
-		for(i = 0; i < world->boards[number].info.paramcount; i++) {
-			if(world->boards[number].params[i].length != 0)
-				free(world->boards[number].params[i].program);
-		}
-		free(world->boards[number].params);
-	}
 	if(bcount != 1) {
-		/* Make backup array */
-		backup = malloc(sizeof(ZZTboard)*bcount);
-		memcpy(backup, world->boards, sizeof(ZZTboard)*bcount);
-		free(world->boards);
+		/* Remember where the old board array is */
+		backup = world->boards;
+
 		/* Resize new array */
 		zztWorldSetBoardcount(world, --bcount);
 		world->boards = malloc(sizeof(ZZTboard)*bcount);
+
 		/* Copy boards before deleted one */
 		for(i = 0; i < number; i++)
 			memcpy(&world->boards[i], &backup[i], sizeof(ZZTboard));
+
 		/* Copy boards after deleted one */
 		for(i = number+1; i < bcount+1; i++)
 			memcpy(&world->boards[i-1], &backup[i], sizeof(ZZTboard));
+
+		/* Free the old board array */
 		free(backup);
+
+		/* Move back one if we're over it */
+		/* Do this before relinking so we know which board not to compress */
+		if(world->cur_board > number) {
+			world->cur_board--;
+		}
+
 		/* Relink boards */
 		if(relink) {
-			bigboard = malloc(ZZT_BOARD_MAX_SIZE*2);
 			for(i = 0; i < bcount; i++) {
-				/* If linked to deleted board, no more link */
-				if(world->boards[i].info.board_n == number)
-					world->boards[i].info.board_n = 0;
-				if(world->boards[i].info.board_s == number)
-					world->boards[i].info.board_s = 0;
-				if(world->boards[i].info.board_e == number)
-					world->boards[i].info.board_e = 0;
-				if(world->boards[i].info.board_w == number)
-					world->boards[i].info.board_w = 0;
-				/* If after deleted board, shift down one */
-				if(world->boards[i].info.board_n > number)
-					world->boards[i].info.board_n--;
-				if(world->boards[i].info.board_s > number)
-					world->boards[i].info.board_s--;
-				if(world->boards[i].info.board_e > number)
-					world->boards[i].info.board_e--;
-				if(world->boards[i].info.board_w > number)
-					world->boards[i].info.board_w--;
-				/* Do the same for passages */
-				_zzt_rle_decode(world->boards[i].packed, bigboard);
-				for(j = 0; j < ZZT_BOARD_MAX_SIZE; j++) {
-					if(bigboard[j*2] == ZZT_PASSAGE) {
-						y = j / ZZT_BOARD_X_SIZE;
-						x = j % ZZT_BOARD_X_SIZE;
-						/* Find its param */
-						for(k = 0; k < world->boards[i].info.paramcount; k++) {
-							if(world->boards[i].params[k].x == x &&
-							   world->boards[i].params[k].y == y) {
-								if(world->boards[i].params[k].data[2] == number)
-									world->boards[i].params[k].data[2] = 0;
-								else if(world->boards[i].params[k].data[2] > number)
-									world->boards[i].params[k].data[2]--;
-							}
-						}
-					}
-				}
+				ZZTboard* brd = &(world->boards[i]);
+				_zzt_board_relink(brd, -1, number + 1, zztWorldGetBoardcount(world) - 1, number, 0);
+
+				/* Recompress the board unless it is the current board */
+				if (i != world->cur_board)
+					zztBoardCompress(brd);
 			}
 			if(world->header->startboard == number)
 				world->header->startboard = 0;
 			if(world->header->startboard > number)
 				world->header->startboard--;
-			free(bigboard);
-		}
-		/* Move back one if we're over it */
-		if(world->cur_board > number) {
-			world->cur_board--;
 		}
 	} else {
 		/* Delete the last board */
@@ -214,48 +408,11 @@ int zztWorldDeleteBoard(ZZTworld *world, int number, int relink)
 	return 1;
 }
 
-void zztBoardCopyPtr(ZZTboard *dest, ZZTboard *src)
-{
-	int tiles = 0, ofs = 0;
-	int i;
-
-	/* Base board junk */
-	memcpy(dest, src, sizeof(ZZTboard));
-	/* Packed board */
-	do {
-		tiles += src->packed[ofs];
-		ofs += 3;
-	} while(tiles < ZZT_BOARD_MAX_SIZE);
-	dest->packed = malloc(ofs);
-	memcpy(dest->packed, src->packed, ofs);
-	/* Parameters */
-	if(dest->params != NULL) {
-		dest->params = malloc(sizeof(ZZTparam)*dest->info.paramcount);
-		memcpy(dest->params, src->params, dest->info.paramcount*sizeof(ZZTparam));
-		for(i = 0; i < src->info.paramcount; i++) {
-			if(dest->params[i].length != 0) {
-				dest->params[i].program = malloc(dest->params[i].length);
-				memcpy(dest->params[i].program, src->params[i].program, dest->params[i].length);
-			}
-		}
-	}
-}
-
-ZZTboard *zztBoardCopy(ZZTboard *board)
-{
-	ZZTboard *new = malloc(sizeof(ZZTboard));
-	zztBoardCopyPtr(new, board);
-	return new;
-}
-
 int zztWorldInsertBoard(ZZTworld *world, ZZTboard *board, int number, int relink)
 {
 	ZZTboard *backup;
 	int bcount = zztWorldGetBoardcount(world);
-	int i, j, k;
-	int x, y;
-
-	u_int8_t *bigboard;
+	int i;
 
 	/* Check that it's in range */
 	if(number < 0 || number > bcount)
@@ -265,10 +422,9 @@ int zztWorldInsertBoard(ZZTworld *world, ZZTboard *board, int number, int relink
 	if(relink && number == 0)
 		return 0;
 
-	/* Make backup array */
-	backup = malloc(sizeof(ZZTboard)*bcount);
-	memcpy(backup, world->boards, sizeof(ZZTboard)*bcount);
-	free(world->boards);
+	/* Remember where the original board array is */
+	backup = world->boards;
+
 	/* Resize new array */
 	zztWorldSetBoardcount(world, ++bcount);
 	world->boards = malloc(sizeof(ZZTboard)*bcount);
@@ -279,221 +435,110 @@ int zztWorldInsertBoard(ZZTworld *world, ZZTboard *board, int number, int relink
 	/* Copy boards after new one */
 	for(i = number+1; i < bcount; i++)
 		memcpy(&world->boards[i], &backup[i-1], sizeof(ZZTboard));
-	free(backup);
-
-	/* Relink boards */
-	if(relink) {
-		bigboard = malloc(ZZT_BOARD_MAX_SIZE*2);
-		for(i = 0; i < bcount; i++) {
-			/* Don't do the number yet */
-			if(i == number)
-				continue;
-			/* If after number, shift up one */
-			if(world->boards[i].info.board_n >= number && world->boards[i].info.board_n != 0)
-				world->boards[i].info.board_n++;
-			if(world->boards[i].info.board_s >= number && world->boards[i].info.board_s != 0)
-				world->boards[i].info.board_s++;
-			if(world->boards[i].info.board_e >= number && world->boards[i].info.board_e != 0)
-				world->boards[i].info.board_e++;
-			if(world->boards[i].info.board_w >= number && world->boards[i].info.board_w != 0)
-				world->boards[i].info.board_w++;
-			/* Do the same for passages */
-			_zzt_rle_decode(world->boards[i].packed, bigboard);
-			for(j = 0; j < ZZT_BOARD_MAX_SIZE; j++) {
-				if(bigboard[j*2] == ZZT_PASSAGE) {
-					y = j / ZZT_BOARD_X_SIZE;
-					x = j % ZZT_BOARD_X_SIZE;
-					/* Find its param */
-					for(k = 0; k < world->boards[i].info.paramcount; k++) {
-						if(world->boards[i].params[k].x == x &&
-						   world->boards[i].params[k].y == y) {
-							if(world->boards[i].params[k].data[2] >= number && world->boards[i].params[k].data[2] != 0)
-								world->boards[i].params[k].data[2]++;
-						}
-					}
-				}
-			}
-		}
-		if(world->header->startboard >= number)
-			world->header->startboard++;
-		free(bigboard);
-	}
 	
-	/* Insert the new board (finally!) */
-	zztBoardCopyPtr(&world->boards[number], board);
+	/* Free the old array */
+	free(backup);
+	backup = NULL;
 
 	/* Move up one if we're over it */
+	/* Must be done before relinking */
 	if(world->cur_board >= number) {
 		world->cur_board++;
 	}
+
+	/* Relink boards */
+	if(relink) {
+		for(i = 0; i < bcount; i++) {
+			ZZTboard* brd = &(world->boards[i]);
+			
+			/* This board has yet to be inserted -- avoid */
+			if(i == number)
+				continue;
+			
+			_zzt_board_relink(brd, 1, number, zztWorldGetBoardcount(world), 0, 0);
+
+			/* Recompress the board unless it is the current board */
+			if (i != world->cur_board)
+				zztBoardCompress(brd);
+		}
+		if(world->header->startboard >= number)
+			world->header->startboard++;
+	}
+
+	/* Insert the new board (finally!) */
+	zztBoardCopyPtr(&world->boards[number], board);
+
+	/* Make sure curboard is decompressed */
+	zztBoardDecompress(&world->boards[world->cur_board]);
+
 	return 1;
 }
 
-/* This is black magick */
+/* This is blue magick */
 int zztWorldMoveBoard(ZZTworld *world, int src, int dest)
 {
-	ZZTboard *copy, *ptr;
 	int bcount = zztWorldGetBoardcount(world);
-	int i, j, k, x, y, high, low, coefficient;
-
-	int maxlinks = 50, links = 0;
-	u_int8_t *bigboard;
-	struct linkpacket {
-		enum { END = 0, NORTH, SOUTH, EAST, WEST, PASSAGE, STARTBOARD };
-		int type;
-		int board;
-		int param;
-	} *linkpacket = malloc(sizeof(linkpacket)*50);
-
-	int type, board, param;
+	int high, low, offset;
+	int i;
+	ZZTboard* copy;
 
 	if(src == dest) {
-		free(linkpacket);
 		return 1; /* ;) */
 	}
 	if(src < 1 || src >= bcount) {
-		free(linkpacket);
 		return 0;
 	}
 	if(dest < 1 || dest >= bcount) {
-		free(linkpacket);
 		return 0;
 	}
 
 	if(src < dest) {
 		high = dest;
 		low = src;
-		coefficient = -1;
+		offset = -1;
 	} else {
 		high = src;
 		low = dest;
-		coefficient = 1;
+		offset = 1;
 	}
+
+	/* Consider the current board */
+	if (world->cur_board == src)
+		world->cur_board = dest;
+	else if (world->cur_board >= low && world->cur_board <= high)
+		world->cur_board += offset;
+
+	/* Consider the starting board */
+	if (world->header->startboard == src)
+		world->header->startboard = dest;
+	else if (world->header->startboard >= low && world->header->startboard <= high)
+		world->header->startboard += offset;
+
+	/* Run thourgh all boards and relink them */
+	for (i = 0; i < bcount; i++) {
+		ZZTboard* brd = &(world->boards[i]);
+		_zzt_board_relink(brd, offset, low, high, src, dest);
+
+		/* Recompress the board unless it is the current board */
+		if (i != world->cur_board)
+			zztBoardCompress(brd);
+	}
+
+	/* MOVE IT */
 
 	/* Make a copy of the board-to-be-moved */
 	if((copy = zztBoardCopy(&world->boards[src])) == NULL) {
-		free(linkpacket);
 		return 0;
 	}
 
-	/* Run through all links and record those that link to the board-to-be-moved */
-	memset(linkpacket, 0, sizeof(linkpacket)*50);
-	bigboard = malloc(ZZT_BOARD_MAX_SIZE*2);
-	for(i = 0; i <= bcount; i++) {
-		if(i == src)
-			continue;
-		/* Enough link space? */
-		if(links >= maxlinks-5) {
-			maxlinks += 50;
-			linkpacket = realloc(linkpacket, sizeof(linkpacket)*maxlinks);
-		}
-		ptr = (i == bcount) ? copy : &world->boards[i];
-		/* Board n/s/e/w links */
-		if(ptr->info.board_n == src) {
-			linkpacket[links].type = NORTH;
-			linkpacket[links++].board = (i >= low && i <= high) ? i+coefficient : i;
-		}
-		if(ptr->info.board_s == src) {
-			linkpacket[links].type = SOUTH;
-			linkpacket[links++].board = (i >= low && i <= high) ? i+coefficient : i;
-		}
-		if(ptr->info.board_e == src) {
-			linkpacket[links].type = EAST;
-			linkpacket[links++].board = (i >= low && i <= high) ? i+coefficient : i;
-		}
-		if(ptr->info.board_w == src) {
-			linkpacket[links].type = WEST;
-			linkpacket[links++].board = (i >= low && i <= high) ? i+coefficient : i;
-		}
-		if(i == bcount) {
-			if(ptr->info.board_n >= low && ptr->info.board_n <= high)
-				ptr->info.board_n+=coefficient;
-			if(ptr->info.board_s >= low && ptr->info.board_s <= high)
-				ptr->info.board_s+=coefficient;
-			if(ptr->info.board_e >= low && ptr->info.board_e <= high)
-				ptr->info.board_e+=coefficient;
-			if(ptr->info.board_w >= low && ptr->info.board_w <= high)
-				ptr->info.board_w+=coefficient;
-		}
-		/* Passage links */
-		_zzt_rle_decode(ptr->packed, bigboard);
-		for(j = 0; j < ZZT_BOARD_MAX_SIZE; j++) {
-			if(bigboard[j*2] == ZZT_PASSAGE) {
-				y = j / ZZT_BOARD_X_SIZE;
-				x = j % ZZT_BOARD_X_SIZE;
-				/* Find its param */
-				for(k = 0; k < ptr->info.paramcount; k++) {
-					if(i != bcount && 
-					   ptr->params[k].x == x &&
-					   ptr->params[k].y == y &&
-					   ptr->params[k].data[2] == src) {
-						linkpacket[links].type = PASSAGE;
-						linkpacket[links].board = (i >= low && i <= high) ? i+coefficient : i;
-						linkpacket[links++].param = k;
-						if(links >= maxlinks-5) {
-							maxlinks += 50;
-							linkpacket = realloc(linkpacket, sizeof(linkpacket)*maxlinks);
-						}
-					}
-					else if(i == bcount &&
-					  ptr->params[k].x == x &&
- 					  ptr->params[k].y == y &&
-					  ptr->params[k].data[2] >= low &&
-					  ptr->params[k].data[2] <= high) {
-						ptr->params[k].data[2]+=coefficient;
-					}
-				}
-			}
-		}
-	}
-	if(links >= maxlinks-1) {
-		maxlinks += 2;
-		linkpacket = realloc(linkpacket, sizeof(linkpacket)*maxlinks);
-	}
-	if(world->header->startboard == src) {
-		linkpacket[links].type = STARTBOARD;
-		links++;
-	}
-	linkpacket[links].type = END;
-	free(bigboard);
+	/* Delete the src board from it's current position */
+	zztWorldDeleteBoard(world, src, 0);
 
-	/* Delete and reinsert board */
-	if(!zztWorldDeleteBoard(world, src, 1)) {
-		zztBoardFree(copy);
-		free(linkpacket);
-		return 0;
-	}
-	if(!zztWorldInsertBoard(world, copy, dest, 1)) {
-		/* shit! */
-		fprintf(stderr, "\a\nNO NO NO!$((!$  aUGH!&*%% NO@!&*!@\nI'm sorry\nI'm so sorry!%%(@\n");
-		zztBoardFree(copy);
-		free(linkpacket);
-		return 0;
-	}
+	/* Insert copy of src board at destination */
+	zztWorldInsertBoard(world, copy, dest, 0);
 
-	/* Relink stuff pointing to the board we just moved */
-	links = 0;
-	while(linkpacket[links].type != END) {
-		type = linkpacket[links].type;
-		board = linkpacket[links].board;
-		param = linkpacket[links].param;
-		if(type == NORTH)
-			world->boards[board].info.board_n = dest;
-		else if(type == SOUTH)
-			world->boards[board].info.board_s = dest;
-		else if(type == EAST)
-			world->boards[board].info.board_e = dest;
-		else if(type == WEST)
-			world->boards[board].info.board_w = dest;
-		else if(type == PASSAGE)
-			world->boards[board].params[param].data[2] = dest;
-		else if(type == STARTBOARD)
-			world->header->startboard = dest;
-		links++;
-	}
-
+	/* Free the copy! */
 	zztBoardFree(copy);
-	free(linkpacket);
 
 	return 1;
 }
@@ -509,6 +554,7 @@ ZZTboard *zztBoardCreate(char *title)
 	strncpy(board->title, title, ZZT_BOARD_TITLE_SIZE);
 	board->title[ZZT_BOARD_TITLE_SIZE] = '\0';
 	board->info.maxshots = 255;
+	board->bigboard = NULL;
 	/* Make packed blank board */
 	blocks = (ZZT_BOARD_MAX_SIZE-1)/255;
 	remainder = (ZZT_BOARD_MAX_SIZE-1)%255;
@@ -528,25 +574,16 @@ ZZTboard *zztBoardCreate(char *title)
 	memset(board->params, 0, sizeof(ZZTparam));
 	board->params->cycle = 1;
 	board->info.paramcount = 1;
+	/* Player position: (0, 0) */
+	board->plx = board->ply = 0;
 
 	return board;
 }
 
 void zztBoardFree(ZZTboard *board)
 {
-	int i;
-
-	/* Delete the board */
-	free(board->packed);
-	/* Delete all params */
-	if(board->params != NULL) {
-		for(i = 0; i < board->info.paramcount; i++) {
-			if(board->params[i].length != 0)
-				free(board->params[i].program);
-		}
-		free(board->params);
-	}
-	/* Delete the rest */
+	_zztBoardFree(*board);
+	/* Delete the board pointer */
 	free(board);
 }
 
@@ -562,7 +599,7 @@ int zztBoardSelect(ZZTworld *world, int number)
 	/* Set new current board */
 	world->cur_board = number;
 	/* Uncompress to bigboard */
-	_zzt_rle_decode(world->boards[number].packed, world->bigboard);
+	zztBoardDecompress(&world->boards[number]);
 
 	return 1;
 }
@@ -571,9 +608,8 @@ void zztBoardCommit(ZZTworld *world)
 {
 	int curboard = zztBoardGetCurrent(world);
 
-	/* Replaced packed data with new stuff from bigboard */
-	free(world->boards[curboard].packed);
-	world->boards[curboard].packed = _zzt_rle_encode(world->bigboard);
+	/* Compress the current board */
+	zztBoardCompress(&(world->boards[curboard]));
 }
 
 int zztBoardGetCurrent(ZZTworld *world)
