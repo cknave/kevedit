@@ -28,6 +28,9 @@ INSTALL = /usr/bin/install -c
 CFLAGS =
 LDFLAGS =
 
+# Link in windows resources (i.e. the KevEdit icon)
+PLATFORMOBJS = resources.o
+
 # Build glob because it's not available in libc
 BUILDGLOB = ON
 

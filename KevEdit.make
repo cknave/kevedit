@@ -39,16 +39,19 @@ MISCOBJS    = patbuffer.o help.o dialog.o infobox.o paramed.o register.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o panel_bd.o panel_sd.o panel_ti.o scroll.o tbox.o cbox.o tdialog.o
 DISPLAYOBJS = display.o $(SDLOBJ) $(VCSAOBJ) $(DOSOBJ)
 
-OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS) $(GLOBLIB)
+OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS) $(GLOBLIB) $(PLATFORMOBJS)
 
 # Documents
 
 DOCS = README AUTHORS TODO COPYING ChangeLog *.txt
 
-.SUFFIXES: .o .c .h
+.SUFFIXES: .o .c .h .rc
 
 .c.o:
 	$(CC) -o $@ $< $(CFLAGS) -c
+
+.rc.o:
+	windres -o $@ $<
 
 # Targets
 all: kevedit kevedit.zml
@@ -155,3 +158,6 @@ display.o: display.c display.h
 display_ggi.o: display_ggi.c display.h display_ggi.h
 display_vcsa.o: display_vcsa.c display.h display_vcsa.h
 display_dos.o: display_dos.c display.h display_dos.h
+
+# Windows resources
+resources.o: resources.rc
