@@ -1,8 +1,8 @@
 # Makefile for KevEdit
 
 # Choose your compiler
-#CC = i586-pc-msdosdjgpp-gcc
-CC = gcc
+CC = i586-pc-msdosdjgpp-gcc
+#CC = gcc
 
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
@@ -32,7 +32,7 @@ ifeq ($(DOS),ON)
 	DOSOBJ = display_dos.o
 endif
 
-CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.1\"
+CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.2\"
 
 # No more modifications below this line
 # -------------------------------------
