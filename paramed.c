@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.12 2002/05/04 04:17:43 bitman Exp $
+ * $Id: paramed.c,v 1.13 2002/05/09 00:53:33 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -51,7 +51,8 @@
 #define ID_DATA0        0x0900
 #define ID_DATA1        0x0A00
 #define ID_DATA2        0x0B00
-#define ID_INSTRUCTION  0x0C00
+#define ID_BIND         0x0C00
+#define ID_INSTRUCTION  0x0D00
 /* The other IDs come from the ZZT_DATAUSE_* set */
 
 /* Option IDs used in tile info */
@@ -430,10 +431,18 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 	}
 
 	/* Advanced configuration */
-	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, 7, 0x0F, "Advanced Tweaking", ID_NONE));
-
-	label.y = option.y = 8;
+	label.y = option.y += 2;
 	label.x = 0; option.x = 8;
+
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, label.y - 1, 0x0F, "Advanced Tweaking", ID_NONE));
+
+	/* If cycle is not a normal property, add it as an advanced tweak */
+	if (!(properties & ZZT_PROPERTY_CYCLE)) {
+		_addlabel("Cycle");
+		sprintf(buffer, "%d", tile.param->cycle);
+		_addoption(buffer, ID_CYCLE);
+		label.y++; option.y++;
+	}
 
 	_addlabel("X Step");
 	_addlabel("Y Step");
@@ -447,10 +456,12 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 	sprintf(buffer, "%d", tile.param->data[1]); _addoption(buffer, ID_DATA1);
 	sprintf(buffer, "%d", tile.param->data[2]); _addoption(buffer, ID_DATA2);
 
-	if (properties & ZZT_PROPERTY_PROGRAM) {
+	if (properties & ZZT_PROPERTY_PROGRAM || tile.param->length != 0 || tile.param->bindindex != 0) {
 		option.x = 20;
 		_addlabel("Program Instruction");
 		sprintf(buffer, "%d", (int16_t) tile.param->instruction); _addoption(buffer, ID_INSTRUCTION);
+		_addlabel("Bind Index");
+		sprintf(buffer, "%d", (int16_t) tile.param->bindindex);   _addoption(buffer, ID_BIND);
 	}
 
 	return dia;
@@ -548,15 +559,19 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			}
 			return 1;
 		case ID_INSTRUCTION:
+		case ID_BIND:
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
 			if (dialogComponentEdit(d, opt, 6, LINED_SNUMBER) == LINED_OK) {
-				/* TODO: handle signed-ness better */
 				sscanf(opt->text, "%d", &num);
 				/* zero's are special */
 				if (opt->text[0] == '\x0') num = 0;
 
-				tile.param->instruction = num;
+				/* Figure out which param we just edited */
+				if (opt->id == ID_INSTRUCTION)
+					tile.param->instruction = num;
+				else
+					tile.param->bindindex = num;
 			}
 			return 1;
 		case ID_PROJECTILE:
@@ -624,6 +639,7 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 
 		case ID_FIRERATE:
 		case ID_INSTRUCTION:
+		case ID_BIND:
 			/* TODO: implement */
 			return 0;
 	}

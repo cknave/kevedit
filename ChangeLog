@@ -14,6 +14,9 @@ Bug fixed: board move/delete no longer crash on passages w/o stats
 Aquire mode grows the backbuffer by default
 #play-back works on the back of other commands
 Bug fixed: importing a corrupt board crashed KevEdit
+Bug fixed: special bind index is now recognized in program length
+zztParam.magic1 broken into "leader" and "follower" for centipedes
+zztParam.magic2 renamed to just magic (it's all alone now)
 
 0.4.0: February 19, 2002
 ------------------------
