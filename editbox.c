@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.46 2002/08/24 23:00:55 bitman Exp $
+ * $Id: editbox.c,v 1.47 2002/09/17 03:18:41 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -762,7 +762,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 							svectortofile(sv, filename);
 							/* Remember the file name */
 							strncpy(savefilename, filename, SAVEFILENAME_LEN - 1);
-							savefilename[SAVEFILENAME_LEN] = '\x0';
+							savefilename[SAVEFILENAME_LEN - 1] = '\x0';
 
 							free(filename);
 						}
@@ -1108,7 +1108,9 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 #ifdef SDL
 	SDL_AudioSpec spec;
 
-	OpenSynth(&spec);
+	/* IF opening the audio device fails, return now before we crash something. */
+	if (OpenSynth(&spec))
+		return;
 #endif
 
 	/* Loop through the stringvector looking for #play statements */
