@@ -210,16 +210,20 @@ World Info dialog to modify the title.
 :zzt;Working with ZZT
 
 To aid in testing a game, pressing 'r'
-will run ZZT on the current world.  It
-will not jump directly to the game; you
-still must choose your input device, etc.
-
-When you return to KevEdit, you will be
-asked if you want to reload the world, in
-case ZZT was used to edit the world in
-some way.
+will run ZZT on the current world, jumping
+directly to the title screen.
 
 For this to work, zzt.exe and zzt.dat must
 be either in the current directory, the
 same directory as kevedit.exe, or, for
 zzt.exe only, on the path.
+
+KevEdit now supports extended help
+systems when running ZZT. Simply extract
+an extended help package (such as
+Chronos's ZZTWeb) into the same folder as
+kevedit.exe and run the installation batch
+file. Be sure to delete any zzt.dat files
+on your hard-drive, EXCEPT the one in the
+KevEdit folder, as these may interfere
+with the process.

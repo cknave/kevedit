@@ -25,11 +25,10 @@ http://members.aol.com/chronos30/ and unzip the .hlp files into the same folder 
 
 New Features / Bug Fixes
 ------------------------
-New features in 0.3.4
-  * Multi-directory file dialogs
-	* Goes directly to the title screen when running ZZT worlds
-Bugs fixed in 0.3.4
-  * Infrequent help system crash repaired
+New features in 0.3.5
+  * ZZT Music Testing
+	* Support for extended help when running ZZT
+Bugs fixed in 0.3.5
 
 Blatant Plug of ZZT Under Windows
 ---------------------------------

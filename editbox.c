@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.32 2001/12/12 22:08:02 bitman Exp $
+ * $Id: editbox.c,v 1.33 2001/12/15 00:54:53 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 
 /* What portion of display box needs update? */
@@ -78,6 +79,14 @@
 #define ZOC_LABEL_COLOUR       RED_F
 #define ZOC_FLAG_COLOUR        YELLOW_F
 
+#define ZOC_MTIME_COLOUR       CYAN_F
+#define ZOC_MTIMEMOD_COLOUR    CYAN_F | BRIGHT_F
+#define ZOC_MOCTAVE_COLOUR     YELLOW_F | BRIGHT_F
+#define ZOC_MPITCH_COLOUR      BROWN_F
+#define ZOC_MREST_COLOUR       GREEN_F
+#define ZOC_MNOTE_COLOUR       GREEN_F | BRIGHT_F
+#define ZOC_MDRUM_COLOUR       MAGENTA_F | BRIGHT_F
+#define ZOC_MPLAY_COLOUR       WHITE_F | BRIGHT_F
 
 /* zzt components for special highlighting */
 
@@ -184,6 +193,11 @@ int iszztkind(char *token);
 int iszztdir(char *token);
 int iszztcolour(char *token);
 
+void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymethod* d);
+
+/* how to display a line of text in updateditbox() */
+#define displayline(x, y, s, edit, flags, firstline, d) ((flags & EDITBOX_ZOCMODE) ? displayzoc((x), (y), (s), !(edit), (firstline), (d)) : d->print((x), (y), ZOC_TEXT_COLOUR, (s)))
+
 
 /***** draweditpanel() ***********/
 void draweditpanel(int insertflag, int wrapwidth, int zocmode, displaymethod * d)
@@ -200,6 +214,53 @@ void draweditpanel(int insertflag, int wrapwidth, int zocmode, displaymethod * d
 		d->print(76, 6, YELLOW_F | BRIGHT_F | BLUE_B, buf);
 	else
 		d->print(72, 6, YELLOW_F | BRIGHT_F | BLUE_B, "off");
+}
+
+void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,
+									char* title, displaymethod* d)
+{
+	/* update title if needed */
+	if (updateflags & U_TITLE) {
+		drawscrollbox(1, 17, d);
+		d->print(30 - (strlen(title) / 2), 4, 0x0a, title);
+	}
+
+	/* clear the scrollbox */
+	if (updateflags & U_TOP)
+		drawscrollbox(3, 9, d);
+	if (updateflags & U_CENTER)
+		drawscrollbox(10, 8, d);
+	if (updateflags & U_BOTTOM)
+		drawscrollbox(11, 1, d);
+
+	if (updateflags & (U_CENTER)) {
+		/* Draw the center */
+		displayline(9, 13, sv->cur->s, editwidth, flags, sv->cur->prev == NULL, d);
+	}
+
+	if (updateflags & (U_BOTTOM)) {
+		/* Draw bottom half */
+		int i;
+		stringnode* loopstr = sv->cur->next;
+		for (i = 1; i < 8 && loopstr != NULL; i++, loopstr = loopstr->next)
+			displayline(9, i + 13, loopstr->s, editwidth, flags, 0, d);
+
+		if (i < 8)
+			d->print(9, i + 13, 0x07, SLEADER);
+	}
+	if (updateflags & U_TOP) {
+		/* Draw top half */
+		int i;
+		stringnode* loopstr = sv->cur->prev;
+		for (i = -1; i > -8 && loopstr != NULL; i--, loopstr = loopstr->prev)
+			displayline(9, i + 13, loopstr->s, editwidth, flags, loopstr->prev == NULL, d);
+
+		if (!editwidth && loopstr == NULL && sv->first->s[0] == '@')
+			i++;
+
+		if (i > -8)
+			d->print(9, i + 13, 0x07, SLEADER);
+	}
 }
 
 stringvector moredatatosvector(param * p, int editwidth)
@@ -315,9 +376,6 @@ void editmoredata(param * p, displaymethod * d)
 }
 
 
-/* how to display a line of text in editbox */
-#define displayline(x, y, s, edit, flags, firstline, d) ((flags & EDITBOX_ZOCMODE) ? displayzoc((x), (y), (s), !(edit), (firstline), (d)) : d->print((x), (y), ZOC_TEXT_COLOUR, (s)))
-
 /* Space to reserve for the saved file name */
 #define SAVEFILENAME_LEN 1024
 
@@ -383,49 +441,11 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 		if (selPos != -1)
 			updateflags |= U_CENTER;
 
-		/* update title & panel if needed */
-		if (updateflags & U_TITLE) {
-			drawscrollbox(1, 17, d);
-			d->print(30 - (strlen(title) / 2), 4, 0x0a, title);
-		}
 		if (updateflags & U_PANEL && editwidth)
 			draweditpanel(insertflag, wrapwidth, flags & EDITBOX_ZOCMODE, d);
 
-		/* clear the scrollbox */
-		if (updateflags & U_TOP)
-			drawscrollbox(3, 9, d);
-		if (updateflags & U_CENTER)
-			drawscrollbox(10, 8, d);
-		if (updateflags & U_BOTTOM)
-			drawscrollbox(11, 1, d);
-
-		if (updateflags & (U_CENTER)) {
-			/* Draw the center */
-			displayline(9, 13, centerstr->s, editwidth, flags, centerstr->prev == NULL, d);
-		}
-
-		if (updateflags & (U_BOTTOM)) {
-			/* Draw bottom half */
-			loopstr = centerstr->next;
-			for (i = 1; i < 8 && loopstr != NULL; i++, loopstr = loopstr->next)
-				displayline(9, i + 13, loopstr->s, editwidth, flags, 0, d);
-
-			if (i < 8)
-				d->print(9, i + 13, 0x07, SLEADER);
-		}
-		if (updateflags & U_TOP) {
-			/* Draw top half */
-			loopstr = centerstr->prev;
-			for (i = -1; i > -8 && loopstr != NULL; i--, loopstr = loopstr->prev)
-				displayline(9, i + 13, loopstr->s, editwidth, flags, loopstr->prev == NULL, d);
-
-			if (!editwidth && loopstr == NULL && sv->first->s[0] == '@')
-				i++;
-
-			if (i > -8)
-				d->print(9, i + 13, 0x07, SLEADER);
-		}
-
+		sv->cur = centerstr;
+		updateditbox(sv, updateflags, editwidth, flags, title, d);
 		updateflags = U_NONE;
 
 		/* Draw highlighted text if applicable */
@@ -755,6 +775,14 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 					}
 
 					updateflags = U_ALL;
+					break;
+
+				/********* ZZM Testing ********************/
+				case DKEY_CTRL_T:
+				case DKEY_ALT_T:
+					sv->cur = centerstr;
+					testMusic(sv, key == DKEY_CTRL_T, editwidth, flags, d);
+					updateflags = U_EDITAREA;
 					break;
 
 				/********* File access operations *********/
@@ -1167,6 +1195,47 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 	return done;
 }
 
+void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymethod* d)
+{
+	/* Loop through the stringvector looking for #play statements */
+	while (sv->cur != NULL && !d->kbhit()) {
+		if (str_equ(sv->cur->s, "#play ", STREQU_UNCASE | STREQU_RFRONT)) {
+			char* tune = sv->cur->s + 6;
+
+			/* Get ready to parse that play line */
+			zzmplaystate s;
+			resetzzmplaystate(&s);
+			s.slur = slur;
+
+			/* Update everything because we have likely shifted to a new line. */
+			updateditbox(sv, U_EDITAREA, editwidth, flags, "", d);
+
+			while (s.pos < strlen(tune) && !d->kbhit()) {
+				int oldpos = s.pos;
+				char* strpart;
+
+				zzmnote note = zzmgetnote(tune, &s);
+
+				/* Display the whole line */
+				updateditbox(sv, U_CENTER, editwidth, flags, "", d);
+
+				/* Display the part of the string which will be played now */
+				strpart = str_duplen(tune + oldpos, s.pos - oldpos);
+				d->print(oldpos + 15, 13, ZOC_MPLAY_COLOUR, strpart);
+				free(strpart);
+				d->cursorgo(oldpos + 15, 13);
+
+				zzmPCspeakerPlaynote(note);
+			}
+
+			zzmPCspeakerFinish();
+		}
+		sv->cur = sv->cur->next;
+	}
+
+	if (d->kbhit())
+		d->getch();
+}
 
 /***************************************************************************/
 /**** Syntax highlighting functions ****************************************/
@@ -1400,7 +1469,6 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 					displayzoc(x + j - k, y, args + j - k, 1, 0, d);
 					j = strlen(args);  /* Avoid overwriting */
 				} else {
-					/* TODO: Thenmessage may or may not be a command. Arg. */
 					if (iszztcommand(token)) {
 						d->print(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
 						displaycommand(x + j, y, token, args + j, d);
@@ -1414,7 +1482,7 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 				break;
 
 			case CTAX_SOUND:
-				d->print(x + j - k, y, ZOC_TEXT_COLOUR, token);
+				displayzzm(x + j - k, y, token, d);
 				break;
 		}
 
@@ -1458,6 +1526,43 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 	/* Finish anything we haven't dealt with */
 	for (; j < strlen(args); j++)
 		d->putch(x + j, y, args[j], ZOC_DEFAULT_COLOUR);
+}
+
+/* displayzzm() - displays zzm music highlighted */
+void displayzzm(int x, int y, char *music, displaymethod * d)
+{
+	int i;
+
+	for (i = 0; i < strlen(music); i++) {
+		int colour = ZOC_DEFAULT_COLOUR;
+
+		switch (toupper(music[i])) {
+			/* Time determiners */
+			case 'T':
+			case 'S':
+			case 'I':
+			case 'Q':
+			case 'H':
+			case 'W': colour = ZOC_MTIME_COLOUR; break;
+			/* Time modifiers */
+			case '3':
+			case '.': colour = ZOC_MTIMEMOD_COLOUR; break;
+			/* Octave switch */
+			case '+':
+			case '-': colour = ZOC_MOCTAVE_COLOUR; break;
+			/* Sharp/flat: pitch modifiers */
+			case '!':
+			case '#': colour = ZOC_MPITCH_COLOUR; break;
+			/* Rest */
+			case 'X': colour = ZOC_MREST_COLOUR; break;
+			default:
+				if (toupper(music[i]) >= 'A' && toupper(music[i]) <= 'G')
+					colour = ZOC_MNOTE_COLOUR;
+				if (toupper(music[i]) >= '0' && toupper(music[i]) <= '9')
+					colour = ZOC_MDRUM_COLOUR;
+		}
+		d->putch(x + i, y, music[i], colour);
+	}
 }
 
 

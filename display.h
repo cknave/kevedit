@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.9 2001/11/10 04:48:12 bitman Exp $
+ * $Id: display.h,v 1.10 2001/12/15 00:54:53 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,8 @@ typedef struct displaymethod {
 	void (*putch) (int x, int y, int ch, int co);	/* Put ch[ar] of co[lour] at x,y */
 
 	int (*getch) (void);	/* DOS style getch */
+
+	int (*kbhit) (void);  /* TRUE when key waits in buffer */
 
 	void (*cursorgo) (int x, int y);	/* Move the cursor */
 
@@ -105,9 +107,12 @@ extern void RegisterDisplays();
 /* Ctrl-letter keys */
 /* TODO: replace with 'a' | DKEY_CTRL, etc */
 #define DKEY_CTRL_A     ('a' - 0x60)
+#define DKEY_CTRL_B     ('b' - 0x60)
 #define DKEY_CTRL_C     ('c' - 0x60)
 #define DKEY_CTRL_D     ('d' - 0x60)
+#define DKEY_CTRL_E     ('e' - 0x60)
 #define DKEY_CTRL_F     ('f' - 0x60)
+#define DKEY_CTRL_T     ('t' - 0x60)
 #define DKEY_CTRL_V     ('v' - 0x60)
 #define DKEY_CTRL_X     ('x' - 0x60)
 #define DKEY_CTRL_Y     ('y' - 0x60)
@@ -120,6 +125,7 @@ extern void RegisterDisplays();
 #define DKEY_ALT_M      (50 | DDOSKEY_EXT)
 #define DKEY_ALT_O      (24 | DDOSKEY_EXT)
 #define DKEY_ALT_S      (31 | DDOSKEY_EXT)
+#define DKEY_ALT_T      (20 | DDOSKEY_EXT)
 #define DKEY_ALT_Z      (44 | DDOSKEY_EXT)
 
 #define DKEY_ALT_MINUS  (130 | DDOSKEY_EXT) 

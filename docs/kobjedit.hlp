@@ -6,6 +6,7 @@ $The Object Code Editor
 !ascii;ASCII Charater Insertion
 !files;Loading and Saving Text Files
 !zzm;Importing ZZT Music
+!play;Testing ZZT Music
 !zoc;ZOC Mode
 !help;Context Sensitive Help
 
@@ -75,6 +76,13 @@ provide titles, so ripped files will have
 to be editted before using. See the
 included file soundfx.zzm for an example
 of how to do this.
+
+:play;Testing ZZT Music
+To test a song in KevEdit, simply move the
+cursor to the beginning of the song and
+press CTRL-T. To hear the music without
+the slurring problem (that is, with tiny
+breaks between notes), use ALT-T.
 
 :zoc;ZOC Mode
 It may be useful to turn ZOC mode off when

@@ -2,7 +2,7 @@
 
 # Choose your compiler
 CC = i586-pc-msdosdjgpp-gcc
-#CC = gcc
+CC = gcc
 
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
@@ -39,7 +39,7 @@ endif
 
 # Objects
 
-CENTRALOBJS = main.o misc.o menu.o editbox.o screen.o
+CENTRALOBJS = misc.o menu.o editbox.o screen.o
 LIBRARYOBJS = libzzt.o svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
 MISCOBJS    = patbuffer.o help.o infobox.o register.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o scroll.o tbox.o cbox.o
@@ -52,8 +52,8 @@ OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS)
 # Targets
 all: kevedit
 
-kevedit: $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) $(CFLAGS)
+kevedit: $(OBJECTS) main.o
+	$(CC) -o $@ $(OBJECTS) main.o $(CFLAGS)
 
 .cpp.o:
 	$(CC) -o $@ $< $(CFLAGS) -c

@@ -1,6 +1,10 @@
 @New Features
 $New Features
 
+$New in Version 0.3.5
+!-kobject:play;Testing ZZT Music
+!-kbasics:zzt;Extended help in ZZT
+
 $New in Version 0.3.4
 !-kadvance:gradtool;Gradient Tool
 !-kbasics:zzt;Run ZZT at title screen

@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.12 2001/11/10 07:42:39 bitman Exp $
+ * $Id: display_dos.c,v 1.13 2001/12/15 00:54:53 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -171,6 +171,11 @@ int display_dos_getch()
 		return key;
 }
 
+int display_dos_kbhit()
+{
+	return kbhit();
+}
+
 void display_dos_gotoxy(int x, int y)
 {
 	gotoxy(x + 1, y + 1);
@@ -238,6 +243,7 @@ displaymethod display_dos =
 	display_dos_end,
 	display_dos_putch,
 	display_dos_getch,
+	display_dos_kbhit,
 	display_dos_gotoxy,
 	display_dos_print,
 	display_dos_titlebar,

@@ -1,5 +1,5 @@
 /* zzm.h  -- zzm file routines
- * $Id: zzm.h,v 1.3 2001/10/22 02:48:23 bitman Exp $
+ * $Id: zzm.h,v 1.4 2001/12/15 00:54:53 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,10 +23,41 @@
 #include "svector.h"
 #include "display.h"
 
+typedef struct zzmplaystate {
+	int octave;     /* Current octave */
+	int duration;   /* Current note duration */
+	int pos;        /* Position on zzm line */
+	int slur;       /* Are we slurring presently? */
+} zzmplaystate;
+
+/* ZZM note types */
+#define ZZM_ERROR 0   /* Usually end-of-string */
+#define ZZM_NOTE  1   /* Just a note */
+#define ZZM_REST  2   /* Rest for a moment */
+#define ZZM_DRUM  3   /* Tick-tock */
+
+typedef struct zzmnote {
+	int type;       /* Type of note */
+	int duration;   /* Millisecond duration */
+	int index;      /* Frequency index or drum index */
+	int octave;     /* Octave of note below MAXOCTAVE */
+	int slur;       /* TRUE if note is to slur with the next */
+} zzmnote;
+
 /* zzmpullsong() - pulls song #songnum out of zzmv and returns it */
 stringvector zzmpullsong(stringvector * zzmv, int songnum);
 
 /* zzmpicksong() - presents a dialog to choose a song based on title */
 int zzmpicksong(stringvector * zzmv, displaymethod * d);
+
+/* resetzzmplaystate() - clears state to default settings */
+void resetzzmplaystate(zzmplaystate * s);
+
+/* zzmplaynote() - plays a single note from a tune */
+zzmnote zzmgetnote(char * tune, zzmplaystate * s);
+
+/* Play music to PC speaker */
+void zzmPCspeakerPlaynote(zzmnote note);
+void zzmPCspeakerFinish(void);
 
 #endif

@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.12 2001/11/10 07:42:39 bitman Exp $
+ * $Id: editbox.h,v 1.13 2001/12/15 00:54:53 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -66,6 +66,9 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 
 /* displaycommand() - displays highlighting for zzt #command arguments */
 void displaycommand(int x, int y, char *command, char *args, displaymethod * d);
+
+/* displayzzm() - displays zzm music highlighted */
+void displayzzm(int x, int y, char *music, displaymethod * d);
 
 
 /* EDITBOX REFERENCE -- editbox key actions
