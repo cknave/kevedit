@@ -1,6 +1,6 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.45 2002/03/19 19:28:06 kvance Exp $
- * Copyright (C) 2000 Kev Vance <kev@kvance.com>
+ * $Id: screen.c,v 1.46 2002/03/19 19:31:22 kvance Exp $
+ * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
