@@ -10,6 +10,7 @@ Add monitor & blink rays to terrain documentation
 Respond to exit event from SDL
 Option: shift+arrow draws like tab
 BUG: Inserting char 0 in the ZZT-OOP editor destroys the line.  Bad!
+BUG: syntax highlighting: "#if flag !msg;text" displays incorrectly
 
 Number boards in the board selector
 Char dialog: Alpha keys select characters 
