@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.6 2002/02/16 23:42:28 bitman Exp $
+ * $Id: files.c,v 1.7 2002/03/19 19:44:36 kvance Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,7 @@
 #include <string.h>
 #include <glob.h>
 #include <unistd.h>   /* For getcwd() */
+#include <sys/stat.h>
 
 #define BUFFERSIZE 42     /* Expanding buffer for text files */
 #define CWDMAXLEN 4096    /* Max to allow getcwd() to reserve */
@@ -186,6 +187,7 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 	while (1) {
 		char * fulld_name;
 		struct dirent *dirent;
+		struct stat statent;
 
 		dirent = readdir(dp);
 
@@ -193,8 +195,9 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 			break;
 
 		fulld_name = fullpath(dir, dirent->d_name, SLASH_DEFAULT);
-
-		if (access(fulld_name, D_OK)) {
+		stat(fulld_name, &statent);
+		
+		if (access(fulld_name, X_OK) && !S_ISDIR(statent.st_mode)) {
 			if (filetypes & FTYPE_FILE) {
 				/* The current file is not a directory, check the extension */
 				if (extension[0] == '*' ||
@@ -212,7 +215,7 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 						pushstring(&files, str_dup(dirent->d_name));
 				}
 			}
-		} else if (!str_equ(dirent->d_name, ".", 0)) {
+		} else if (!str_equ(dirent->d_name, ".", 0) && S_ISDIR(statent.st_mode)) {
 			if (filetypes & FTYPE_DIR) {
 				/* Current file is a directory */
 				char* dirline = (char*) malloc(sizeof(char) *
