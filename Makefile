@@ -1,13 +1,13 @@
 # Makefile for KevEdit
 
 # Choose your compiler
-#CC = i586-pc-msdosdjgpp-gcc
-CC = gcc
+CC = i586-pc-msdosdjgpp-gcc
+#CC = gcc
 
 # Uncomment next line to optimize kevedit
 # Uncomment second line to not optimize and include debugging information
-#OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-OPTIMIZE = -g -Wall
+OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+#OPTIMIZE = -g -Wall
 
 # Set CGI to ON to enable GGI display
 GGI =
