@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.14 2001/01/26 02:05:49 bitman Exp $
+ * $Id: editbox.c,v 1.15 2001/04/08 18:45:05 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+
+/* Uncomment the following line when display->shift() actually works! */
+//#define _SHIFTDETECTWORKS 1
+
 
 #include "zzm.h"
 #include "editbox.h"
@@ -344,7 +349,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 	static char savefilename[15] = "temp.zoc";
 
 	/* selection variables */
-	int shiftState = 0;     /* Status of the shift key */
+	int selectFlag = 0;     /* Status of the shift key */
 	int selPos = -1;        /* Position of cursor when selection started; -1 when no selection */
 	int selLineOffset = 0;  /* Offset of line where selection started;
 	                           positive when below centerstr, negative when above */
@@ -482,57 +487,126 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 			c = d->getch();
 		}
 
-/*	Uncomment next line to set shift based on shift key, otherwise F1 can be used to toggle */
-//		if (editwidth) shiftState = d->shift();
-		if (shiftState && selPos == -1)
+		/* Check for alt-arrows and change to select mode if they are used */
+		if ((e == 1) && (c == 155 || c == 157 || c == 152 || c == 160)) {
+			selectFlag = 1;
+			c -= 80;
+		} else {
+#ifdef _SHIFTDETECTWORKS
+			selectflag = d->shift();
+#else
+			selectFlag = 0;
+#endif
+		}
+		/* If we just started selecting, remember where we started */
+		if (selectFlag && selPos == -1)
 			selPos = pos;
 
-		if (e == 1 && c == 0x48) {
-			/* Up Arrow */
-			if (centerstr->prev != NULL && !(!editwidth && centerstr->prev == sv->first && sv->first->s[0] == '@')) {
-				centerstr = centerstr->prev;
-				if (pos > strlen(centerstr->s))
-					pos = strlen(centerstr->s);
-				if (shiftState)
-					selLineOffset++;
-				updateflags = U_EDITAREA;
+		if (e == 1) {
+			/* Keep keypress from being used after this, unless switch defaults. */
+			e = -1;
+			switch (c) {
+				case 0x48:  /* Up Arrow */
+					if (centerstr->prev != NULL && !(!editwidth && centerstr->prev == sv->first && sv->first->s[0] == '@')) {
+						centerstr = centerstr->prev;
+						if (pos > strlen(centerstr->s))
+							pos = strlen(centerstr->s);
+						if (selectFlag)
+							selLineOffset++;
+						updateflags = U_EDITAREA;
+					}
+					break;
+
+				case 0x50:  /* Down Arrow */
+					if (centerstr->next != NULL) {
+						centerstr = centerstr->next;
+						if (pos > strlen(centerstr->s))
+							pos = strlen(centerstr->s);
+						if (selectFlag)
+							selLineOffset--;
+						updateflags = U_EDITAREA;
+					}
+					break;
+
+				case 0x49:  /* Page Up */
+					for (i = 0; i < 7 && centerstr->prev != NULL && !(!editwidth && centerstr->prev == sv->first && sv->first->s[0] == '@'); i++) {
+						centerstr = centerstr->prev;
+						if (selectFlag)
+							selLineOffset++;
+					}
+					if (pos > strlen(centerstr->s))
+						pos = strlen(centerstr->s);
+					updateflags = U_EDITAREA;
+					break;
+
+				case 0x51:  /* Page Down */
+					for (i = 0; i < 7 && centerstr->next != NULL; i++) {
+						centerstr = centerstr->next;
+						if (selectFlag)
+							selLineOffset--;
+					}
+					if (pos > strlen(centerstr->s))
+						pos = strlen(centerstr->s);
+					updateflags = U_EDITAREA;
+					break;
+
+				/******* Copy & Cut **********/
+
+				/* Shift-delete registers the same as plain delete.
+				 * For now, we won't consider shift-delete. */
+//				case 83:     /* shift-delete: cut selected text */
+				case 45:     /* alt-x: cut selected text */
+				case 46:     /* alt-c: copy selected text */
+				case 146:    /* ctrl-insert: copy selected text */
+					/* Copy to register */
+					if (selPos != -1) {
+						stringnode *selStart = centerstr, *selEnd = centerstr;
+						int selStartPos, selEndPos;
+
+						if (selLineOffset > 0) {
+							/* Other end of selection is below current line, move end down to meet it. */
+							selStartPos = pos;
+							selEndPos = selPos;
+							for (i = 0; i < selLineOffset; i++)
+								if (selEnd->next != NULL)
+									selEnd = selEnd->next;
+						} else if (selLineOffset < 0) {
+							/* Other end of selection is above current line, move end up to meet it. */
+							selStartPos = selPos;
+							selEndPos = pos;
+							for (i = 0; i > selLineOffset; i--)
+								if (selStart->prev != NULL)
+									selStart = selStart->prev;
+						} else {
+							/* Selection is only on current line: selStartPos gets the lesser of selPos & pos */
+							if (selPos > pos) {
+								selStartPos = pos;
+								selEndPos = selPos;
+							} else {
+								selStartPos = selPos;
+								selEndPos = pos;
+							}
+						}
+
+						regyank('\"', selStart, selEnd, selStartPos, selEndPos);
+
+						/* Consider cut operation now */
+						if (editwidth && (c == 45 || c == 147)) {
+							/* Pass key on to editwidth only operations */
+							e = 1;
+						}
+					}
+					break;
+
+				default:
+					e = 1;
 			}
-		} else if (e == 1 && c == 0x50) {
-			/* Down Arrow */
-			if (centerstr->next != NULL) {
-				centerstr = centerstr->next;
-				if (pos > strlen(centerstr->s))
-					pos = strlen(centerstr->s);
-				if (shiftState)
-					selLineOffset--;
-				updateflags = U_EDITAREA;
-			}
-		} else if (e == 1 && c == 0x49) {
-			/* Page Up */
-			for (i = 0; i < 7 && centerstr->prev != NULL && !(!editwidth && centerstr->prev == sv->first && sv->first->s[0] == '@'); i++) {
-				centerstr = centerstr->prev;
-				if (shiftState)
-					selLineOffset++;
-			}
-			if (pos > strlen(centerstr->s))
-				pos = strlen(centerstr->s);
-			updateflags = U_EDITAREA;
-		} else if (e == 1 && c == 0x51) {
-			/* Page Down */
-			for (i = 0; i < 7 && centerstr->next != NULL; i++) {
-				centerstr = centerstr->next;
-				if (shiftState)
-					selLineOffset--;
-			}
-			if (pos > strlen(centerstr->s))
-				pos = strlen(centerstr->s);
-			updateflags = U_EDITAREA;
-		} else if (e == 0 && c == 27) {
+		} else if (c == 27 || (!editwidth && c == 13)) {
+			e = -1;
 			done = c;
-		} else if (!editwidth) {
-			if (e == 0 && c == 13)
-				done = c;
-		} else {
+		}
+
+		if (editwidth) {
 			/* We are edititing! Yea! Fun time! */
 			
 			if (e == 1) {
@@ -552,7 +626,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								updateflags = U_EDITAREA;
 							}
 							pos = strlen(centerstr->s);
-							if (shiftState)
+							if (selectFlag)
 								selLineOffset++;
 						}
 						break;
@@ -568,7 +642,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								updateflags = U_EDITAREA;
 							}
 							pos = 0;
-							if (shiftState)
+							if (selectFlag)
 								selLineOffset--;
 						}
 						break;
@@ -740,64 +814,58 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						updateflags = U_EDITAREA | U_TITLE;
 						break;
 
-					/******** Copy & Paste operations *********/
+					/******** Cut & Paste operations *********/
 
-					/* Testing */
-					case 59:     /* F1: toggle shiftState */
-						shiftState = !shiftState;
-						break;
-
+//					case 83:     /* shift-delete: cut selected text */
 					case 45:     /* alt-x: cut selected text */
-					case 147:    /* ctrl-delete: cut selected text*/
-					case 46:     /* alt-c: copy selected text */
-					case 146:    /* ctrl-insert: copy selected text */
+					case 147:    /* ctrl-delete: clear selected text */
+						/* Clear selected area */
+						sv->cur = centerstr;
+						/* Destroy the meat of the selection */
 						if (selPos != -1) {
-							stringnode *selStart = centerstr, *selEnd = centerstr;
-							int selStartPos, selEndPos;
-
-							if (selLineOffset > 0) {
-								/* Other end of selection is below current line, move end down to meet it. */
-								selStartPos = pos;
-								selEndPos = selPos;
-								for (i = 0; i < selLineOffset; i++)
-									if (selEnd->next != NULL)
-										selEnd = selEnd->next;
-							} else if (selLineOffset < 0) {
-								/* Other end of selection is above current line, move end up to meet it. */
+							int selStartPos, selEndPos, offset = selLineOffset;
+							if (offset < 0) {
+								/* Other end is above centerstr */
+								offset = -offset;
 								selStartPos = selPos;
 								selEndPos = pos;
-								for (i = 0; i > selLineOffset; i--)
-									if (selStart->prev != NULL)
-										selStart = selStart->prev;
-							} else {
-								/* Selection is only on current line: selStartPos gets the lesser of selPos & pos */
-								if (selPos > pos) {
-									selStartPos = pos;
-									selEndPos = selPos;
-								} else {
-									selStartPos = selPos;
-									selEndPos = pos;
+								/* Move back to top of selection */
+								for (i = 0; i < offset; i++) {
+									if (sv->cur->prev != NULL)
+										sv->cur = sv->cur->prev;
 								}
+							} else {
+								selStartPos = pos;
+								selEndPos = selPos;
 							}
-
-							regyank('\"', selStart, selEnd, selStartPos, selEndPos);
-
-							/* Consider cut operation now */
-							if (c == 45 || c == 147) {
-								/* TODO: cut was used, so clear the selected area as well */
+							centerstr = sv->cur;
+							sv->cur = sv->cur->next;
+							for (i = 0; i + 1 < offset; i++) {
+								deletestring(sv);
 							}
+							sv->cur = centerstr;
+							/* TODO: cut off the end of sv->cur and the beginning of sv->cur->next,
+							 * then wordwrap the remainder together. */
 						}
 						break;
 
 					case 47:
 						/* alt-v: paste register */
 						sv->cur = centerstr;
-						regput('\"', sv, pos, wrapwidth, editwidth);
+						pos = regput('\"', sv, pos, wrapwidth, editwidth);
+						centerstr = sv->cur;
+						/* This next line should not be needed */
+						if (pos > strlen(sv->cur->s)) {
+							insertstring(sv, strcpy((char *) malloc(100),
+							                        "Bug: regput() distorted pos. "
+							                        "Report to <bitman@scn.org>"));
+							pos = strlen(sv->cur->s);
+						}
 						updateflags = U_EDITAREA;
 						break;
 
 					default:
-						/* act as if ext key is really not. This way, people used to
+						/* act as if ext key is really not ext. This way, people used to
 						 * using alt key combos to plot special chars will not be
 						 * disappointed. */
 						e = 0;
@@ -989,7 +1057,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 		}		/* esle in editmode */
 		/* if the shift key is not still held down and we are selecting, then stop select mode */
 		/* also stop if non-extended key was pressed and selection is active */
-		if ((!shiftState && selPos != -1) || (e == 0 && selPos != -1)) {
+		if ((!selectFlag && selPos != -1) || (e == 0 && selPos != -1)) {
 			selPos = -1;
 			selLineOffset = 0;
 			updateflags |= U_EDITAREA;

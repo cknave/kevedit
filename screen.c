@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.17 2001/02/15 04:59:09 bitman Exp $
+ * $Id: screen.c,v 1.18 2001/04/08 18:45:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -198,8 +198,10 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 	/* Draw Mode? */
 	if (e->drawmode == 0)
 		i = 0x1f;
-	else
+	else if (e->gradmode == 0)
 		i = 0x1e;
+	else
+		i = 0x1c;
 	d->print(69, 15, i, "Draw");
 
 	/* Blink Mode? */
@@ -238,6 +240,12 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 		d->putch(78, 23, 'D', 0x1e);
 	else
 		d->putch(78, 23, 'd', 0x18);
+
+	/* Get mode? */
+	if (e->getmode == 1)
+		d->putch(78, 21, 'G', 0x1e);
+	else
+		d->putch(78, 21, 'g', 0x18);
 
 	/* Too long title */
 	if (strlen(e->currenttitle) > 8) {

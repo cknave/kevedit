@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.6 2001/01/07 23:55:42 bitman Exp $
+ * $Id: svector.h,v 1.7 2001/04/08 18:45:05 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,10 @@ typedef struct stringvector {
 void initstringvector(stringvector * v);
 
 /* The string() functions return 1 on error, 0 on success.
- * In each function, the pointer s is copied, not the string. */
+ * In each function, the pointer s is copied, not the string.
+ * Insert functions do not change cur.
+ * Delete functions move to the next node, unless there isn't one.
+ */
 
 /* pushstring - pushes string s to end of vector v */
 int pushstring(stringvector * v, char *s);

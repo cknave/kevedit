@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.2 2000/09/02 04:33:23 kvance Exp $
+ * $Id: kevedit.h,v 1.3 2001/04/08 18:45:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,8 @@
 typedef struct editorinfo {
 	int cursorx, cursory;
 	int drawmode;
+	int gradmode;
+	int getmode;
 	int blinkmode;
 	int textentrymode;
 	int defc;

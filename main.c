@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.28 2001/01/07 23:55:42 bitman Exp $
+ * $Id: main.c,v 1.29 2001/04/08 18:45:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -125,24 +125,38 @@ void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int
 		updatepanel(mydisplay, myinfo, myworld);
 }
 
-void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16], int xpos, int ypos, char code, u_int8_t colour)
+void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16], int xpos, int ypos, char code, u_int8_t colour, int fillmethod)
 {
 	int i, x, t, targetcolour;
 	int u = 0;
+	int pattern = myinfo->pattern;
 #define CURRENTFLOODPARAM	myworld->board[myinfo->curboard]->params[paramlist[xpos][ypos]]
 
+	/* If fillmethod is positive, cycle through patterns backward. */
+	if (fillmethod > 0) {
+		fillmethod = fillmethod - 1;
+		if (fillmethod < 6)
+			fillmethod = pattern;
+		pattern = fillmethod;
+	} else
+	/* If fillmethod is negative, select a random pattern less than
+	 * or equal to myinfo->pattern, if not a built-in pattern */
+	if (fillmethod < 0 && pattern >= 6) {
+		pattern = 6 + (rand() % (pattern - 5));
+	}
+
 	/* Find the target colour */
-	if (myinfo->pattern < 6 || myinfo->defc == 0) {
+	if (pattern < 6 || myinfo->defc == 0) {
 		i = (myinfo->backc << 4) + myinfo->forec;
 		if (myinfo->blinkmode == 1)
 			i += 0x80;
 		targetcolour = i;
 	} else
-		targetcolour = patdefs[myinfo->pattern].color;
+		targetcolour = patdefs[pattern].color;
 
 	/* Is there any parameter space left? */
-	if (myinfo->pattern > 5) {
-		if (patparams[myinfo->pattern - 6] != NULL && paramlist[xpos][ypos] == 0) {
+	if (pattern > 5) {
+		if (patparams[pattern - 6] != NULL && paramlist[xpos][ypos] == 0) {
 			if (myworld->board[myinfo->curboard]->info->objectcount == 150)
 				return;
 		}
@@ -167,18 +181,18 @@ void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, 
 		paramlist[xpos][ypos] = 0;
 	}
 	/* Plot the type */
-	bigboard[(xpos + ypos * 60) * 2] = patdefs[myinfo->pattern].type;
+	bigboard[(xpos + ypos * 60) * 2] = patdefs[pattern].type;
 	/* Plot the colour */
 	bigboard[(xpos + ypos * 60) * 2 + 1] = targetcolour;
 	/* Plot the parameter if applicable */
-	if (myinfo->pattern > 5 && patparams[myinfo->pattern - 6] != NULL) {
+	if (pattern > 5 && patparams[pattern - 6] != NULL) {
 		myworld->board[myinfo->curboard]->info->objectcount++;
 		if (myworld->board[myinfo->curboard]->info->objectcount < 151) {
 			NEWPARAM = malloc(sizeof(param));
-			memcpy(NEWPARAM, patparams[myinfo->pattern - 6], sizeof(param));
-			if (patparams[myinfo->pattern - 6]->moredata != NULL) {
-				NEWPARAM->moredata = (char *) malloc(patparams[myinfo->pattern - 6]->length);
-				memcpy(NEWPARAM->moredata, patparams[myinfo->pattern - 6]->moredata, patparams[myinfo->pattern - 6]->length);
+			memcpy(NEWPARAM, patparams[pattern - 6], sizeof(param));
+			if (patparams[pattern - 6]->moredata != NULL) {
+				NEWPARAM->moredata = (char *) malloc(patparams[pattern - 6]->length);
+				memcpy(NEWPARAM->moredata, patparams[pattern - 6]->moredata, patparams[pattern - 6]->length);
 			}
 			paramlist[xpos][ypos] = myworld->board[myinfo->curboard]->info->objectcount;
 			NEWPARAM->x = xpos + 1;
@@ -193,19 +207,19 @@ void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, 
 	}
 	if (xpos != 0) {
 		if (bigboard[((xpos - 1) + ypos * 60) * 2] == code && (bigboard[((xpos - 1) + ypos * 60) * 2 + 1] == colour || bigboard[((xpos - 1) + ypos * 60) * 2] == Z_EMPTY))
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos - 1, ypos, code, colour);
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos - 1, ypos, code, colour, fillmethod);
 	}
 	if (xpos != 59) {
 		if (bigboard[((xpos + 1) + ypos * 60) * 2] == code && (bigboard[((xpos + 1) + ypos * 60) * 2 + 1] == colour || bigboard[((xpos + 1) + ypos * 60) * 2] == Z_EMPTY))
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos + 1, ypos, code, colour);
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos + 1, ypos, code, colour, fillmethod);
 	}
 	if (ypos != 0) {
 		if (bigboard[(xpos + (ypos - 1) * 60) * 2] == code && (bigboard[(xpos + (ypos - 1) * 60) * 2 + 1] == colour || bigboard[(xpos + (ypos - 1) * 60) * 2] == Z_EMPTY))
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos - 1, code, colour);
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos - 1, code, colour, fillmethod);
 	}
 	if (ypos != 24) {
 		if (bigboard[(xpos + (ypos + 1) * 60) * 2] == code && (bigboard[(xpos + (ypos + 1) * 60) * 2 + 1] == colour || bigboard[(xpos + (ypos + 1) * 60) * 2] == Z_EMPTY))
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos + 1, code, colour);
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos + 1, code, colour, fillmethod);
 	}
 }
 
@@ -216,10 +230,39 @@ void runzzt(char *args)
 	strcpy(runcommand, "zzt ");
 
 	/* Now now, no naughty overflowing the buffer */
-	strncpy(&runcommand[4], args, 251);
+	strncpy(runcommand+4, args, 251);
 	runcommand[255] = '\0';
 
 	system(runcommand);
+}
+
+void help(displaymethod* d)
+{
+	stringvector helpdialog, readmefile;
+
+	initstringvector(&helpdialog);
+	readmefile = filetosvector("readme", 42, 42);
+
+	pushstring(&helpdialog, "KevEdit R5, Version " VERSION);
+	pushstring(&helpdialog, "Copyright (C) 2000 Kev Vance, et al.");
+	pushstring(&helpdialog, "Distribute under the terms of the GNU GPL");
+
+	if (readmefile.first != NULL) {
+		pushstring(&helpdialog, "");
+		pushstring(&helpdialog, "$=-=-=-=-=-=-=-=- README =-=-=-=-=-=-=-=-=");
+		pushstring(&helpdialog, "");
+
+		helpdialog.last->next = readmefile.first;
+		helpdialog.last->next->prev = helpdialog.last;
+	}
+
+	editbox("About KevEdit", &helpdialog, 0, 1, d);
+
+	/* Don't destroy helpdialog, as most of it is in the data segment */
+	if (readmefile.first != NULL) {
+		readmefile.first->prev = NULL;  /* Disconnect from helpdialog */
+		deletestringvector(&readmefile);
+	}
 }
 
 
@@ -296,6 +339,8 @@ int main(int argc, char **argv)
 	myinfo->cursorx = myinfo->playerx = 0;
 	myinfo->cursory = myinfo->playery = 0;
 	myinfo->drawmode = 0;
+	myinfo->gradmode = 0;
+	myinfo->getmode = 0;
 	myinfo->blinkmode = 0;
 	myinfo->textentrymode = 0;
 	myinfo->defc = 1;
@@ -310,6 +355,9 @@ int main(int argc, char **argv)
 	myinfo->curboard = 0;
 
 	/* Did we get a world on the command line? */
+	/* TODO: strip full path if given (as Windows would give it to us)
+	 * and change to that directory, putting only the name of the file itself
+	 * in myinfo->currentfile. */
 	myworld = NULL;
 	if (argc > 1) {
 		myworld = loadworld(argv[1]);
@@ -627,6 +675,58 @@ int main(int argc, char **argv)
 		case 9:
 			/* Toggle draw mode */
 			myinfo->drawmode ^= 1;
+			myinfo->getmode = 0;
+			if (myinfo->gradmode != 0) {
+				/* Turn grad mode off */
+				myinfo->pattern = myinfo->gradmode;
+				myinfo->gradmode = 0;
+			}
+			updatepanel(mydisplay, myinfo, myworld);
+			if (myinfo->drawmode == 1) {
+				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+			}
+			break;
+		case 'g':
+		case 'G':
+			/* Toggle get mode - cursor movement loads pattern buffer automatically */
+			myinfo->getmode ^= 1;
+
+			/* drawmode & gradmode can't be on while in getmode */
+			myinfo->drawmode = 0;
+			if (myinfo->gradmode != 0) {
+				myinfo->pattern = myinfo->gradmode;
+				myinfo->gradmode = 0;
+			}
+			if (myinfo->getmode != 0) {
+				/* Grab if getmode is on */
+				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
+					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+				else
+					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+			}
+			updatepanel(mydisplay, myinfo, myworld);
+			break;
+		case 15:
+			/* Shift-tab */
+			if (e == 0)
+				break;
+			/* Toggle gradient mode - pattern changes with each cursor
+			 * movement & drawmode is turned on. */
+			if (myinfo->pattern < 6)
+				break;
+
+			myinfo->getmode = 0;
+			if (myinfo->gradmode != 0) {
+				/* Turn gradmode & drawmode off, restoring the current pattern */
+				myinfo->pattern = myinfo->gradmode;
+				myinfo->drawmode = myinfo->gradmode = 0;
+			} else {
+				/* Turn gradmode & drawmode on, moving to the first buffer pattern */
+				myinfo->drawmode = 1;
+				myinfo->gradmode = myinfo->pattern;
+			}
+
 			updatepanel(mydisplay, myinfo, myworld);
 			if (myinfo->drawmode == 1) {
 				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
@@ -816,7 +916,22 @@ int main(int argc, char **argv)
 
 			if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == patdefs[myinfo->pattern].type && (patdefs[myinfo->pattern].type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == x))
 				break;
-			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, myinfo->cursorx, myinfo->cursory, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
+			{
+				int randflag = 0;
+				if (c == 'F' && myinfo->pattern >= 6) {
+					/* Set randflag to a positive number for bitman's patented
+					 * cycle fill (it almost generates even patterns). For the
+					 * moment, no keys are mapped to do this. */
+					randflag = -1;
+					for (i = 6; i <= myinfo->pattern; i++)
+						if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == patdefs[i].type && (patdefs[i].type == Z_EMPTY || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == patdefs[i].color)) {
+							randflag = 0;
+							break;
+						}
+					srand(time(0));
+				}
+				floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, myinfo->cursorx, myinfo->cursory, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], randflag);
+			}
 			updatepanel(mydisplay, myinfo, myworld);
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			break;
@@ -848,18 +963,13 @@ int main(int argc, char **argv)
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			mydisplay->print(30 - strlen(myworld->board[myinfo->curboard]->title) / 2, 0, 0x70, myworld->board[myinfo->curboard]->title);
 			break;
+		/* Code common to all movement keys can be found after this switch statement */
 		case 75:
 			/* Left arrow */
 			if (e == 1) {
 				if (myinfo->cursorx > 0) {
 					myinfo->cursorx--;
-					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					updatepanel(mydisplay, myinfo, myworld);
 				}
-				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-				}
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
 		case 155:
@@ -868,9 +978,6 @@ int main(int argc, char **argv)
 				myinfo->cursorx -= 10;
 				if (myinfo->cursorx < 0)
 					myinfo->cursorx = 0;
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
 		case 77:
@@ -878,13 +985,7 @@ int main(int argc, char **argv)
 			if (e == 1) {
 				if (myinfo->cursorx < 59) {
 					myinfo->cursorx++;
-					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					updatepanel(mydisplay, myinfo, myworld);
 				}
-				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-				}
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
 		case 157:
@@ -893,9 +994,6 @@ int main(int argc, char **argv)
 				myinfo->cursorx += 10;
 				if (myinfo->cursorx > 59)
 					myinfo->cursorx = 59;
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
 		case 72:
@@ -905,26 +1003,10 @@ int main(int argc, char **argv)
 				/* Move cursor up */
 				if (myinfo->cursory > 0) {
 					myinfo->cursory--;
-					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					updatepanel(mydisplay, myinfo, myworld);
 				}
-				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-				}
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			} else {
 				/* Help */
-				/* Actually, just an about box now */
-				drawscrollbox(0, 0, mydisplay);
-				mydisplay->print(24, 4, 0x0a, "About KevEdit");
-				mydisplay->print(9, 12, 0x0a, "KevEdit R5, Version");
-				mydisplay->print(29, 12, 0x0a, VERSION);
-				mydisplay->print(9, 13, 0x0a, "Copyright (C) 2000 Kev Vance, et al.");
-				mydisplay->print(9, 14, 0x0a, "Distribute under the terms of the GNU GPL");
-				mydisplay->cursorgo(9, 13);
-				do {
-					i = mydisplay->getch();
-				} while (i != 13 && i != 27);
+				help(mydisplay);
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			}
@@ -935,9 +1017,6 @@ int main(int argc, char **argv)
 				myinfo->cursory -= 5;
 				if (myinfo->cursory < 0)
 					myinfo->cursory = 0;
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
 		case 80:
@@ -945,13 +1024,7 @@ int main(int argc, char **argv)
 			if (e == 1) {
 				if (myinfo->cursory < 24) {
 					myinfo->cursory++;
-					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					updatepanel(mydisplay, myinfo, myworld);
 				}
-				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
-				}
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			} else {
 				/* Select new pattern backwards */
 				myinfo->pattern--;
@@ -966,9 +1039,6 @@ int main(int argc, char **argv)
 				myinfo->cursory += 5;
 				if (myinfo->cursory > 24)
 					myinfo->cursory = 24;
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
 		case 'p':
@@ -1299,6 +1369,51 @@ int main(int argc, char **argv)
 				}
 			}
 			break;
+
+		default:
+			/* Consider digits 0-9 */
+			/* When the user presses a digit, the coresponding buffer
+			 * pattern is plotted, without moving the pattern cursor.
+			 * Users can thus "scale" the buffer by tapping number
+			 * keys like a piano. */
+			if (e == 0 && c >= 0x30 && c <= 0x39) {
+				int oldPattern = myinfo->pattern;
+				/* Change the pattern to whichever position in the buffer
+				 * the user entered, 1 low and 0 high, as on the keyboard.
+				 * We programmers can cringe at not starting at zero,
+				 * but I think most users will like it best this way. */
+				myinfo->pattern = (c != 0x30 ? c - 0x2B : 0x0F);
+				/* Plot the pattern and update the screen */
+				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+				/* Restore the pattern */
+				myinfo->pattern = oldPattern;
+			}
+		}
+
+		if ((e == 1) && (c == 75  || c == 77 || c == 72 || c == 80 ||
+										 c == 155 || c == 157 || c == 152 || c == 160)) {
+			/* Common code for all movement actions */
+			if (myinfo->getmode != 0) {
+				/* Grab if getmode is on */
+				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
+					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+				else
+					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+				updatepanel(mydisplay, myinfo, myworld);
+			}
+			if (myinfo->gradmode != 0) {
+				/* If gradmode has a value, cycle down the pattern buffer
+				 * and return to the gradmode value if we bottom out */
+				if (--myinfo->pattern < 6)
+					myinfo->pattern = myinfo->gradmode;
+			}
+			if (myinfo->drawmode == 1) {
+				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+			}
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 		}
 	}
 

@@ -1,5 +1,5 @@
-/* register.c  -- text editor registers
- * $Id: register.c,v 1.2 2001/02/15 04:59:09 bitman Exp $
+/* register.c  -- text editor memory registers
+ * $Id: register.c,v 1.3 2001/04/08 18:45:05 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 #include <stdio.h>
 
 void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, int startpos, int endpos);
-void mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwidth, int editwidth);
+int mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwidth, int editwidth);
 
 static stringvector reg = { NULL, NULL, NULL };
 
@@ -44,9 +44,9 @@ void regyank(char whichreg, stringnode * startn, stringnode * endn, int startpos
 }
 
 
-void regput(char whichreg, stringvector * dest, int inspos, int wrapwidth, int editwidth)
+int regput(char whichreg, stringvector * dest, int inspos, int wrapwidth, int editwidth)
 {
-	mergesvector(dest, &reg, inspos, wrapwidth, editwidth);
+	return mergesvector(dest, &reg, inspos, wrapwidth, editwidth);
 }
 
 
@@ -68,9 +68,10 @@ void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, in
 	stringnode * curnode = NULL;
 	char * tempstr = NULL;
 
+	/* We should be able to delete the following commented code */
 	/* If starting on 0, start with blank line */
-	if (startpos == 0)
-		pushstring(dest, strcpy((char *) malloc(1), ""));
+//	if (startpos == 0)
+//		pushstring(dest, strcpy((char *) malloc(1), ""));
 
 	if (startn == endn) {
 		if (startpos < strlen(startn->s) && endpos <= strlen(startn->s)) {
@@ -110,20 +111,58 @@ void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, in
 }
 
 
-void mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwidth, int editwidth)
+/* mergesvector
+ *
+ * args:    dest:       destination vector
+ *          src:        source vector (entirety is dumped into dest)
+ *          inspos:     where on dest->cur to insert src
+ *          wrapwidth:  position used in wrapping
+ *          editwidth:  edit size of new strings
+ * return:  new position of inspos. sv->cur is changed to reflect the line on
+ *          which pos now resides.
+ */
+int mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwidth, int editwidth)
 {
 	if (src->first == src->last) {
 		/* Insert inside current line of dest */
-		wordwrap(dest, src->first->s, inspos, 0, wrapwidth, editwidth);
+		return wordwrap(dest, src->first->s, inspos, inspos, wrapwidth, editwidth);
 	} else {
-		/* Insert src into new line above dest->cur */
-		for (src->cur = src->first; src->cur != NULL; src->cur = src->cur->next) {
-			preinsertstring(dest, strcpy((char *) malloc(editwidth + 2), src->cur->s));
+		/* TODO: chop dest->cur->s in half at inspos. wordwrap the src->first onto
+		 * the end of the left half. Insert the remainder of src into dest, then
+		 * wordwrap the right half onto the end of that. */
+		stringnode* insertionLine = dest->cur;
+//		int lastLen = strlen(dest->cur->s) - inspos;
+//		char* lastHalf = (char *) malloc(lastLen + 2);
+
+//		strcpy(lastHalf, dest->cur->s + inspos);
+//		dest->cur->s[inspos] = 0;
+
+		/* Make a new line after dest->cur and put the last string in src in */
+		insertstring(dest, strcpy((char *) malloc(editwidth + 2), src->last->s));
+
+		/* Wordwrap the last half of the insertion line onto the new line */
+		dest->cur = dest->cur->next;
+		wordwrap(dest, insertionLine->s + inspos, strlen(dest->cur->s), 0, wrapwidth, editwidth);
+
+		/* Return to insertion line and truncate it */
+		dest->cur = insertionLine;
+		dest->cur->s[inspos] = 0;
+
+		/* Insert meat of src below the current line in dest, backward to keep
+		 * it in order. */
+		for (src->cur = src->last->prev; src->cur->prev != NULL; src->cur = src->cur->prev) {
+			insertstring(dest, strcpy((char *) malloc(editwidth + 2), src->cur->s));
 		}
+
+		/* Finally, wordwrap the first line in src onto the insertion line */
+		wordwrap(dest, src->first->s, inspos, 0, wrapwidth, editwidth);
+
+		dest->cur = insertionLine;
+		return inspos;
 	}
 }
 
-/* testing */
+/* testing - DOS only code just to make bitman's life easier */
 /*
 #include <conio.h>
 #include <stdlib.h>

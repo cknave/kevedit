@@ -41,6 +41,9 @@ CFLAGS = -s $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) $(LFN) -DVERSION=\"0.3.1\"
 # No more modifications below this line
 # -------------------------------------
 
+run: kevedit
+	./kevedit
+
 all: kevedit
 
 clean:

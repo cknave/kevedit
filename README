@@ -1,15 +1,17 @@
---------------------------------------------
+$-----------------------------------------
 KevEdit 0.3.1
-	A world file editor for the game ZZT
---------------------------------------------
+     A world file editor for the game ZZT
+$-----------------------------------------
 Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
 
  * KevEdit is nowhere near finished.
  * This README is even further from finished.
 
-----------------------------
-Getting Started With KevEdit
-----------------------------
+$Best Viewed In KevEdit
+
+$----------------------------
+$Getting Started With KevEdit
+$----------------------------
 Copy the binary KEVEDIT.EXE to your ZZT directory.  You can run it with no
 arguments to get a blank new world, or give it a world on the command line to
 load it.
@@ -20,9 +22,9 @@ C> kevedit town.zzt
 This will load town.zzt into the editor if it exists.  Otherwise, a new world
 will be created.
 
----------------------------
-Basic Movement and Plotting
----------------------------
+$---------------------------
+$Basic Movement and Plotting
+$---------------------------
 You control the blinking cursor around the 60x25 board with the arrow keys.
 Holding ALT with an arrow key will move faster.  Notice that the cursor
 changes the colour of the tile under it.  This is to help you find it when
@@ -36,14 +38,15 @@ To plot an empty on the current space, deleting the tile on it, press the
 DELETE key.
 
 If you create an enclosed area and want to fill it in with one type of tile,
-place the cursor inside and press 'f' to flood fill the area.
+place the cursor inside and press lowercase 'f' to flood fill the area. See
+"Advanced Tile Editing" for information on random floodfill.
 
 There are many boards in a ZZT world.  Press 'b' to view the board list,
 where you can edit a different board or create a new one.
 
--------------------
-The KevEdit Sidebar
--------------------
+$-------------------
+$The KevEdit Sidebar
+$-------------------
 The blue bar to the right of the screen is the KEVEDIT SIDEBAR.  It displays
 information about the current state of the editor as well as keys for common
 actions.
@@ -68,12 +71,12 @@ is the PATTERN SELECTOR.  Press 'p' to move the arrow forwards along the
 selector and shift+'p' to move it backwards.  In order, the tiles in the
 pattern selector are:
 
-	* Solid block
-	* Normal block
-	* Breakable block
-	* Water
-	* Empty space
-	* Line
+        * Solid block
+        * Normal block
+        * Breakable block
+        * Water
+        * Empty space
+        * Line
 
 Press space to plot any of these common patterns that the arrow is over.  Next
 to the patterns is the 10 character BACKBUFFER.  When you plot an uncommon
@@ -90,9 +93,9 @@ pressing shift+'c'.
 
 To make the foreground color blink on and off, press 'v' before you plot.
 
-------------------
-Default Color Mode
-------------------
+$------------------
+$Default Color Mode
+$------------------
 Next to the color selector lies the letter D.  When it is bright and capital,
 DEFAULT COLOR MODE is on.  When it is lowercase and dim, it is off.  Default
 color mode (or DefC) is a great idea that I stole from MegaZeux 1.0.  When it
@@ -102,9 +105,9 @@ When you turn DefC off, anything you plot will be the color chosen in the
 color selector.  This is a great way to customize game items and to change the
 color of objects.
 
---------------
-Uncommon Tiles
---------------
+$--------------
+$Uncommon Tiles
+$--------------
 Well, it's not that they're uncommon, just not used as much as the nice
 gradient on the pattern selector.  To choose among items, creatures, and
 terrains, press F1, F2, or F3.  If you want to plot any of these, press its
@@ -115,9 +118,9 @@ Objects are a special type of tile in the Creature menu.  Right now, you can
 choose a custom character for the object.  Later, an editor will be included
 to enter ZZT-OOP programming into the object.
 
-------------------
-Editing Parameters
-------------------
+$------------------
+$Editing Parameters
+$------------------
 If a tile has editable parameters, such as a built-in enemy, object, or
 scroll, pressing ENTER will allow you to modify them.  After you have done
 this, it will be placed in the backbufffer.
@@ -128,6 +131,10 @@ Objects and scrolls are programmed in the ZZT-OOP language.  When you edit
 these types, you will be presented with the object editor.  This is a simple
 text editor with features specific to ZZT programming.  ARROW KEYS move the
 cursor, ESCAPE quits, ctrl+'y' deletes a line.
+
+Text may be highlighted by holding down ALT and using the arrow keys. Use
+alt+'c' to copy the selected text and alt+'v' to paste. Cut can also be used
+via alt+'x', though it does not yet work fully.
 
 The ZZT-OOP editor has a configurable word wrap.  alt+'+' and alt+'-' will
 increase or decrease the maximum length of a line of text.  You can also
@@ -140,48 +147,85 @@ your program to a file and alt+'o' will open an already saved program,
 replacing the current one.  alt+'i' will insert a saved program where the
 cursor is.  alt+'m' will load a ZZM format music file.
 
--------------------------
-Placing Text on the Board
--------------------------
+$-------------------------
+$Placing Text on the Board
+$-------------------------
 To add readable text tiles to the board, press F4 to activate text entry mode.
 Every character you type will be written on the board.  To add a non-typable
 character, press ctrl+'a' for the ASCII selection dialog box.  To leave text
 entry mode, press F4 again.
 
----------------
-File Operations
----------------
+$---------------
+$File Operations
+$---------------
 KevEdit can load and save normal ZZT worlds.  To load a world, press 'l' and
 you will be presented with a list of all world files in the current directory.
 To save your world, press 's'.  You will be prompted for an 8 letter name.
 This will be the title and filename of your world.
 
-----------------
-Working with ZZT
-----------------
-To aid in testing a game, you can press 'r' to run ZZT on the current world.
+$----------------
+$Working with ZZT
+$----------------
+To aid in testing a game, pressing 'r' will run ZZT on the current world.
 It will not jump directly to the game, you still must choose your input
 device, etc.
 
 For this to work, zzt.exe and zzt.dat must be in the current directory.
 
------
-Help!
------
-Someday, KevEdit will have an online help system.  For now, pressing 'h' will
-present you with a dialog box with copyright and version information.
+$---------------------
+$Advanced Tile Editing
+$---------------------
+KevEdit includes several advanced tile editting features, including gradient
+draw mode, get mode, and random flood fill.
 
---------
-Quitting
---------
+Gradient draw mode works much the same as drawing mode (activated by the TAB
+key), except that KevEdit cycles through the backbuffer with each cursor
+movement. This can be used to easily plot cool gradients or other patterns. Use
+SHIFT-TAB to activate gradient mode and TAB to turn it off. KevEdit will cycle
+through the backbuffer backward, using only the current tile and those before
+it. The cycle moves backward so that tiles are laid down in the same order
+they enter the buffer. To cycle forward instead, press SHIFT-TAB a second time
+while in gradient mode. This can be useful when "painting" a gradient from
+right to left, then backward left to right across several lines.
+
+Get mode acts exactly in the opposite manner as drawing mode, lifting tiles into
+the backbuffer as the cursor moves. By using get mode, one can load a large
+gradient or line of objects into the backbuffer with relatively few keystrokes.
+Press 'g' to toggle get mode. The 'g' next to the backbuffer will indicate
+whether get mode is on.
+
+Random flood fill works much like normal flood fill except that tiles are
+chosen at random from the backbuffer when filling. Use capitalized 'F' to
+random flood fill a region. Only tiles at or before the current tile will be
+used in the random flood fill (much like in gradient mode). IMPORTANT: the type
+of tile you flood fill onto should not be present in the portion of the
+backbuffer being used. Because of the way flood fill is implemented, this would
+result in instability, and so such cases are treated as a normal floodfill by
+KevEdit. BEWARE: once an area is flood filled with random tiles, it is
+difficult to undo.
+
+In a random flood fill, all tiles used are given equal probability. To increase
+the occurance of a certain kind of tile, put more than one copy in the
+backbuffer to increase the likelyhood that it will be used.
+
+$-----
+$Help!
+$-----
+Someday, KevEdit will have an online help system.  For now, pressing 'h' will
+present you with a dialog box with copyright and version information, as well
+as this readme file if it is in the current directory.
+
+$--------
+$Quitting
+$--------
 For your safety, pressing 'q' will ask if you really want to quit.  If you
 answer in the affirmative, KevEdit will terminate.  It will not ask you if
 you really /really/ want to quit, or perhaps you would just like to save your
 work instead, because I hate it when programs doubt my quititude.
 
--------
-The End
--------
+$-------
+$The End
+$-------
 That's all I can think of.  KevEdit is not supported at this time, please do
 not send me email asking how to use it.
 

@@ -6,6 +6,8 @@ Editing an object also edits its character
 Duplicators, ruffians, slimes, sharks implemented
 Getcolour function fixed for sharks
 Copy and paste in ZOC Editor
+Random floodfill, get mode, gradient mode
+Help displays readme file & interprets ZOC markup
 
 0.3.1: October 21, 2000
 ----
