@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.5 2000/10/20 02:17:18 bitman Exp $
+ * $Id: svector.h,v 1.6 2001/01/07 23:55:42 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,5 +63,18 @@ int deletestringvector(stringvector * v);
 
 /* removestringvector - empties a stringvector without free()ing any s */
 void removestringvector(stringvector * v);
+
+
+/* This really belongs somewhere else, but this function is so small I can't
+ * justify giving it its own header & .c file. */
+
+#include <malloc.h>
+
+#define STREQU_UNCASE  0x01
+#define STREQU_FRONT   0x02
+
+/* strequ - compares two strings, ignoring case & length based on flags */
+int strequ(const char *str1, const char *str2, int flags);
+
 
 #endif

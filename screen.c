@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.14 2001/01/07 19:54:06 kvance Exp $
+ * $Id: screen.c,v 1.15 2001/01/07 23:55:42 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -82,6 +82,9 @@ char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, 
 	while (x != 27) {
 		mydisplay->cursorgo(61 + t, 4);
 		x = mydisplay->getch();
+		/* On left arrow, backspace */
+		if (x == 0 && getch() == 0x4B)
+			x = 8;
 		switch (x) {
 		case 8:
 			if (t > 0) {

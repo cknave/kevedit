@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.27 2001/01/07 19:54:06 kvance Exp $
+ * $Id: main.c,v 1.28 2001/01/07 23:55:42 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 #include "scroll.h"
 #include "zzt.h"
 #include "editbox.h"
+#include "register.h"
 
 patdef patdefs[16];
 param *patparams[10];
@@ -223,6 +224,8 @@ void runzzt(char *args)
 
 
 char filelist[500][13];		/* lalala, wastey wastey */
+
+/* remove */
 
 int main(int argc, char **argv)
 {
@@ -459,6 +462,32 @@ int main(int argc, char **argv)
 			}
 		}
 
+		/* bitman's addition: vi keys, only when envar "KVI" is set will
+		 * these apply. */
+		if ((e == 0) && (getenv("KVI") != NULL)) {
+			switch (c) {
+			/* Look for vi keys */
+			case 'h':
+					e = 1;
+					c = 75;
+				break;
+			case 'j':
+					e = 1;
+					c = 80;
+				break;
+			case 'k':
+					e = 1;
+					c = 72;
+				break;
+			case 'l':
+					e = 1;
+					c = 77;
+				break;
+			/* perhaps bitman will someday add alt movement for these keys as well? */
+			}
+		}
+
+		/* Act on key pressed */
 		switch (c) {
 		case '!':
 			/* open text file for edit */
@@ -659,6 +688,11 @@ int main(int argc, char **argv)
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 			mydisplay->print(30 - strlen(myworld->board[myinfo->curboard]->title) / 2, 0, 0x70, myworld->board[myinfo->curboard]->title);
 			break;
+		case '\b':
+			/* backspace: same action as delete */
+			c = 's';
+			e = 1;
+			/* NO BREAK here; continue into following code */
 		case 's':
 		case 'S':
 			if (e != 1) {
@@ -1269,6 +1303,9 @@ int main(int argc, char **argv)
 	}
 
 	mydisplay->end();
+
+	/* Free the registers used by copy & paste in the ZOC editor */
+	deleteregisters();
 
 	free(myinfo);
 	free(string);

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.12 2000/10/21 06:23:46 bitman Exp $
+ * $Id: editbox.c,v 1.13 2001/01/07 23:55:41 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "zzm.h"
 #include "editbox.h"
 
 #include <stdlib.h>
@@ -26,7 +27,8 @@
 #include "scroll.h"
 #include "colours.h"
 #include "panel_ed.h"
-#include "zzm.h"
+#include "register.h"
+#include "svector.h"
 
 
 /* What portion of display box needs update? */
@@ -54,10 +56,11 @@
 #define ZOC_OBJNAME_COLOUR     BLUE_F | BRIGHT_F
 #define ZOC_COMMENT_COLOUR     CYAN_F | BRIGHT_F
 #define ZOC_TEXT_COLOUR        GREEN_F | BRIGHT_F
+#define ZOC_HIGHLIGHT_COLOUR   BLACK_F | WHITE_B
 
 #define ZOC_STDCOMMAND_COLOUR  GREEN_F
 #define ZOC_STDITEM_COLOUR     WHITE_F | BRIGHT_F
-#define ZOC_STDKIND_COLOUR     WHITE_F | BRIGHT_F
+#define ZOC_STDKIND_COLOUR     CYAN_F | BRIGHT_F
 #define ZOC_STDDIR_COLOUR      WHITE_F | BRIGHT_F
 #define ZOC_STDMESSAGE_COLOUR  MAGENTA_F | BRIGHT_F
 #define ZOC_STDLABEL_COLOUR    RED_F | BRIGHT_F
@@ -66,6 +69,103 @@
 #define ZOC_MESSAGE_COLOUR     MAGENTA_F
 #define ZOC_LABEL_COLOUR       RED_F
 #define ZOC_FLAG_COLOUR        YELLOW_F
+
+
+/* zzt components for special highlighting */
+
+#define ZZTCOMMANDCOUNT 27
+const char zztcommands[ZZTCOMMANDCOUNT][12] =
+{
+	"become",  "bind",    "change", "char",
+	"clear",   "cycle",   "die",    "end",
+	"endgame", "give",    "go",     "idle",
+	"if",      "lock",    "play",   "put",
+	"restart", "restore", "send",   "set",
+	"shoot",   "take",    "throwstar",
+	"try",     "unlock",  "walk",   "zap"
+};
+
+
+/* Command syntax:
+ * Each type of argument to a command is given a letter and stored
+ * in a string in zztcommandtax[], which corresponds to that same
+ * numbered element in zztcommands */
+
+#define CTAX_KIND 'k'
+#define CTAX_OBJECTNAME 'o'
+#define CTAX_NUMBER 'n'
+#define CTAX_FLAG 'f'
+#define CTAX_ITEM 'i'
+#define CTAX_DIRECTION 'd'
+#define CTAX_THENMESSAGE 't'
+#define CTAX_SOUND 's'
+#define CTAX_MESSAGE 'm'
+
+const char zztcommandtax[ZZTCOMMANDCOUNT][30] =
+{
+	"k",  "o",   "kk", "n",
+	"f",  "n",   "",   "",
+	"",   "in",  "d",  "",
+	"ft", "",    "s",  "dk",
+	"",   "m",   "m",  "f",
+	"d",  "inm", "d",
+	"dm", "",    "d",  "m"
+};
+
+#define ZZTMESSAGECOUNT 5
+const char zztmessages[ZZTMESSAGECOUNT][10] =
+{
+	"touch", "shot", "bombed", "thud", "energize"
+};
+
+#define ZZTFLAGCOUNT 6
+const char zztflags[ZZTFLAGCOUNT][12] =
+{
+	"alligned", "contact", "blocked", "energized", "exists", "any"
+};
+
+#define ZZTITEMCOUNT 5
+const char zztitems[ZZTITEMCOUNT][8] =
+{
+	"ammo", "gems", "torches", "health", "score"
+};
+
+#define ZZTKINDCOUNT 41
+const char zztkinds[ZZTKINDCOUNT][12] =
+{
+	"empty", "player", "ammo", "torch",
+	"gem", "key", "door", "scroll",
+	"passage", "duplicator", "bomb", "energizer",
+	"star", "clockwise", "counter", "bullet",
+	"water", "forest", "solid", "normal",
+	"breakable", "boulder", "sliderns", "sliderew",
+	"fake", "invisible", "blinkwall", "transporter",
+	"line", "ricochet", "bear", "ruffian",
+	"object", "slime", "shark", "spinninggun",
+	"pusher", "lion", "tiger", "head",
+	"segment"
+};
+
+#define ZZTCOLOURCOUNT 7
+const char zztcolours[ZZTCOLOURCOUNT][8] =
+{
+	"blue", "green", "red", "cyan", "purple", "yellow", "white"
+};
+
+#define ZZTDIRCOUNT 14
+const char zztdirs[ZZTDIRCOUNT][6] =
+{
+	"north", "south", "east", "west", "idle",
+	"seek", "flow", "rndns", "rndne",
+	"n", "s", "e", "w", "i"
+};
+
+#define ZZTDIRMODCOUNT 4
+const char zztdirmods[ZZTDIRMODCOUNT][5] =
+{
+	"cw", "ccw", "rndp", "opp"
+};
+
 
 /* token testing functions */
 int iszztcommand(char *token);
@@ -80,57 +180,8 @@ int iszztcolour(char *token);
 extern char filelist[500][13];
 
 
-/***** strequ() *****************/
-/* TODO: Move this function to a more appropriate file & add prototype */
-
-#include <malloc.h>
-
-#define STREQU_UNCASE  0x01
-#define STREQU_FRONT   0x02
-
-int strequ(const char *str1, const char *str2, int flags)
-{
-	char *lwr1, *lwr2;
-	int i;
-	int isequ = 1;		/* Strings are equal until proven otherwise */
-
-	if (str1[0] == 0 && str2[0] == 0)
-		return 1;
-   else if (str1[0] == 0 || str2[0] == 0)
-   	return 0;
-
-	lwr1 = (char *) malloc(strlen(str1) * sizeof(char) + 1);
-	lwr2 = (char *) malloc(strlen(str2) * sizeof(char) + 1);
-	if (lwr1 == NULL || lwr2 == NULL)
-		return -1;
-
-	strcpy(lwr1, str1);
-	strcpy(lwr2, str2);
-
-	if (flags & STREQU_UNCASE) {
-		strlwr(lwr1);
-		strlwr(lwr2);
-	}
-
-	for (i = 0; lwr1[i] != 0 && lwr2[i] != 0; i++)
-		if (lwr1[i] != lwr2[i]) {
-			isequ = 0;
-			break;
-		}
-
-	/* Strings must be equal */
-	if (lwr1[i] != lwr2[i] && !(flags & STREQU_FRONT))
-		isequ = 0;
-
-	free(lwr1);
-	free(lwr2);
-
-	return isequ;
-}
-
 
 /***** draweditpanel() ***********/
-
 void draweditpanel(int insertflag, int wrapwidth, int zocformatting, displaymethod * d)
 {
 	int x, y, i = 0;
@@ -278,20 +329,28 @@ void editmoredata(param * p, displaymethod * d)
 
 int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, displaymethod * d)
 {
-	int c = 0, e = 0;	/* Char & ext flag */
-	int i, j;		/* general counters */
-	int done = 0;		/* true when editing/viewing is done */
-	int updateflags;	/* flags to determine what needs update */
-	stringnode *centerstr;	/* str in center of dialog */
+	int c = 0, e = 0;       /* Char & ext flag */
+	int i, j;               /* general counters */
+	int done = 0;           /* true when editing/viewing is done */
+	int updateflags;        /* flags to determine what needs update */
+	stringnode *centerstr;  /* str in center of dialog */
+	stringnode *loopstr;    /* node pointer for use in looping */
 
 	/* vars only relating to editing */
-	int pos = 0;			/* position in sv->cur->s */
-	char *tmpstr;		/* temporary string for pushing */
-	char strbuf[80] = "";  /* general buffer */
+	int pos = 0;            /* position in sv->cur->s */
+	char *tmpstr;           /* temporary string for pushing */
+	char strbuf[80] = "";   /* general buffer */
+	static char savefilename[15] = "temp.zoc";
+
+	/* selection variables */
+	int shiftState = 0;     /* Status of the shift key */
+	int selPos = -1;        /* Position of cursor when selection started; -1 when no selection */
+	int selLineOffset = 0;  /* Offset of line where selection started;
+	                           positive when below centerstr, negative when above */
 
 	/* statics */
-	static int insertflag = 1;	/* nonzero when in insert mode */
-	static int wrapwidth = 42;	/* where to wrap */
+	static int insertflag = 1;   /* nonzero when in insert mode */
+	static int wrapwidth = 42;   /* where to wrap */
 
 	/* if there is no string, add one */
 	if (sv->cur == NULL || sv->first == NULL || sv->last == NULL)
@@ -316,9 +375,12 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 	updateflags = U_ALL;
 
 	while (!done) {
-
 		if (editwidth)
 			d->cursorgo(9 + pos, 13);
+
+		/* If in select mode, center line should be updated no matter what */
+		if (selPos != -1)
+			updateflags |= U_CENTER;
 
 		/* update title & panel if needed */
 		if (updateflags & U_TITLE) {
@@ -340,22 +402,23 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 			/* Draw the center */
 			displayline(9, 13, centerstr->s, editwidth, zocformatting, centerstr->prev == NULL, d);
 		}
+
 		if (updateflags & (U_BOTTOM)) {
 			/* Draw bottom half */
-			sv->cur = centerstr->next;
-			for (i = 1; i < 8 && sv->cur != NULL; i++, sv->cur = sv->cur->next)
-				displayline(9, i + 13, sv->cur->s, editwidth, zocformatting, 0, d);
+			loopstr = centerstr->next;
+			for (i = 1; i < 8 && loopstr != NULL; i++, loopstr = loopstr->next)
+				displayline(9, i + 13, loopstr->s, editwidth, zocformatting, 0, d);
 
 			if (i < 8)
 				d->print(9, i + 13, 0x07, SLEADER);
 		}
 		if (updateflags & U_TOP) {
 			/* Draw top half */
-			sv->cur = centerstr->prev;
-			for (i = -1; i > -8 && sv->cur != NULL; i--, sv->cur = sv->cur->prev)
-				displayline(9, i + 13, sv->cur->s, editwidth, zocformatting, sv->cur->prev == NULL, d);
+			loopstr = centerstr->prev;
+			for (i = -1; i > -8 && loopstr != NULL; i--, loopstr = loopstr->prev)
+				displayline(9, i + 13, loopstr->s, editwidth, zocformatting, loopstr->prev == NULL, d);
 
-			if (!editwidth && sv->cur == NULL && sv->first->s[0] == '@')
+			if (!editwidth && loopstr == NULL && sv->first->s[0] == '@')
 				i++;
 
 			if (i > -8)
@@ -364,6 +427,52 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 
 		updateflags = U_NONE;
 
+		/* Draw highlighted text if applicable */
+		if (selPos != -1) {
+			int startPos = 0, endPos = 0;
+			if (selLineOffset > 0) {
+				startPos = pos;
+				endPos = strlen(centerstr->s);
+			} else if (selLineOffset < 0) {
+				startPos = 0;
+				endPos = pos;
+			} else {
+				if (selPos > pos) {
+					startPos = pos;
+					endPos = selPos;
+				} else {
+					startPos = selPos;
+					endPos = pos;
+				}
+			}
+			for (j = startPos; j < endPos; j++)
+				d->putch(9 + j, 13, centerstr->s[j], ZOC_HIGHLIGHT_COLOUR);
+
+			if (selLineOffset != 0) {
+				/* Draw meat lines */
+				if (selLineOffset > 0) {
+					for (i = 1, loopstr = centerstr->next; i < selLineOffset && i < 8 && loopstr != NULL; i++, loopstr = loopstr->next)
+						d->print(9, 13 + i, ZOC_HIGHLIGHT_COLOUR, loopstr->s);
+				} else {
+					for (i = -1, loopstr = centerstr->prev; i > selLineOffset && i > -8 && loopstr != NULL; i--, loopstr = loopstr->prev)
+						d->print(9, 13 + i, ZOC_HIGHLIGHT_COLOUR, loopstr->s);
+				}
+
+				/* Draw farthest line from centerstr */
+				if (i < 8 && i > -8 && loopstr != NULL) {
+					if (selLineOffset < 0) {
+						startPos = selPos;
+						endPos = strlen(loopstr->s);
+					} else if (selLineOffset > 0) {
+						startPos = 0;
+						endPos = selPos;
+					}
+					for (j = startPos; j < endPos; j++)
+						d->putch(9 + j, 13 + i, loopstr->s[j], ZOC_HIGHLIGHT_COLOUR);
+				}
+			}
+		}
+
 		/* Input */
 		e = 0;
 		c = d->getch();
@@ -371,12 +480,20 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 			e = 1;
 			c = d->getch();
 		}
+
+/*	Uncomment next line to set shift based on shift key, otherwise F1 can be used to toggle */
+//		if (editwidth) shiftState = d->shift();
+		if (shiftState && selPos == -1)
+			selPos = pos;
+
 		if (e == 1 && c == 0x48) {
 			/* Up Arrow */
 			if (centerstr->prev != NULL && !(!editwidth && centerstr->prev == sv->first && sv->first->s[0] == '@')) {
 				centerstr = centerstr->prev;
 				if (pos > strlen(centerstr->s))
 					pos = strlen(centerstr->s);
+				if (shiftState)
+					selLineOffset++;
 				updateflags = U_EDITAREA;
 			}
 		} else if (e == 1 && c == 0x50) {
@@ -385,19 +502,27 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 				centerstr = centerstr->next;
 				if (pos > strlen(centerstr->s))
 					pos = strlen(centerstr->s);
+				if (shiftState)
+					selLineOffset--;
 				updateflags = U_EDITAREA;
 			}
 		} else if (e == 1 && c == 0x49) {
 			/* Page Up */
-			for (i = 0; i < 7 && centerstr->prev != NULL && !(!editwidth && centerstr->prev == sv->first && sv->first->s[0] == '@'); i++)
+			for (i = 0; i < 7 && centerstr->prev != NULL && !(!editwidth && centerstr->prev == sv->first && sv->first->s[0] == '@'); i++) {
 				centerstr = centerstr->prev;
+				if (shiftState)
+					selLineOffset++;
+			}
 			if (pos > strlen(centerstr->s))
 				pos = strlen(centerstr->s);
 			updateflags = U_EDITAREA;
 		} else if (e == 1 && c == 0x51) {
 			/* Page Down */
-			for (i = 0; i < 7 && centerstr->next != NULL; i++)
+			for (i = 0; i < 7 && centerstr->next != NULL; i++) {
 				centerstr = centerstr->next;
+				if (shiftState)
+					selLineOffset--;
+			}
 			if (pos > strlen(centerstr->s))
 				pos = strlen(centerstr->s);
 			updateflags = U_EDITAREA;
@@ -412,6 +537,9 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 			if (e == 1) {
 				/* ext keys */
 				switch (c) {
+
+					/****** Movement ***********/
+
 					case 0x4B:
 						/* Left Arrow */
 						if (pos > 0)
@@ -423,6 +551,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								updateflags = U_EDITAREA;
 							}
 							pos = strlen(centerstr->s);
+							if (shiftState)
+								selLineOffset++;
 						}
 						break;
 
@@ -437,8 +567,22 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								updateflags = U_EDITAREA;
 							}
 							pos = 0;
+							if (shiftState)
+								selLineOffset--;
 						}
 						break;
+
+					case 0x47:
+						/* Home */
+						pos = 0;
+						break;
+
+					case 0x4F:
+						/* End */
+						pos = strlen(centerstr->s);
+						break;
+
+					/****** Insert & Delete ***********/
 
 					case 0x52:
 						/* Insert */
@@ -458,15 +602,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						}
 						break;
 
-					case 0x47:
-						/* Home */
-						pos = 0;
-						break;
-
-					case 0x4F:
-						/* End */
-						pos = strlen(centerstr->s);
-						break;
+					/****** ZOC Mode & Wordwrap settings **********/
 					
 					case 44:
 						/* alt-z - toggle ZOC mode */
@@ -492,6 +628,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						updateflags = U_PANEL;
 						break;
 
+					/********* File access operations *********/
+
 					case 24:
 						/* alt+o: open file */
 					case 23:
@@ -505,6 +643,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 							pushstring(&filetypelist, "*.zoc");
 							pushstring(&filetypelist, "*.txt");
 							pushstring(&filetypelist, "*.hlp");
+							pushstring(&filetypelist, "*.zzm");
 							pushstring(&filetypelist, "*.*");
 							if (editbox("Select A File Type", &filetypelist, 0, 1, d) == 27) {
 								updateflags = U_EDITAREA | U_TITLE;
@@ -521,6 +660,11 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 								newsvector = filetosvector(filelist[listpos], wrapwidth, editwidth);
 								if (newsvector.first != NULL) {
 									if (c == 24) {
+										strcpy(savefilename, filelist[listpos]);
+										if (strequ(filetypelist.cur->s, "*.zoc", 0))
+											zocformatting = 1;
+										else
+											zocformatting = 0;
 										/* erase & replace sv */
 										deletestringvector(sv);
 										memcpy(sv, &newsvector, sizeof(stringvector));
@@ -555,7 +699,6 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 					case 31:
 						/* alt-s: save to file */
 						{
-							static char savefilename[15] = "temp.zoc";
 							if (filenamedialog(savefilename, "Save Object Code As", "", 1, d) != NULL)
 								svectortofile(sv, savefilename);
 							updateflags = U_EDITAREA | U_PANEL;
@@ -594,6 +737,62 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 							}
 						}
 						updateflags = U_EDITAREA | U_TITLE;
+						break;
+
+					/******** Copy & Paste operations *********/
+
+					/* Testing */
+					case 59:     /* F1: toggle shiftState */
+						shiftState = !shiftState;
+						break;
+
+					case 45:     /* alt-x: cut selected text */
+					case 147:    /* ctrl-delete: cut selected text*/
+					case 46:     /* alt-c: copy selected text */
+					case 146:    /* ctrl-insert: copy selected text */
+						if (selPos != -1) {
+							stringnode *selStart = centerstr, *selEnd = centerstr;
+							int selStartPos, selEndPos;
+
+							if (selLineOffset > 0) {
+								/* Other end of selection is below current line, move end down to meet it. */
+								selStartPos = pos;
+								selEndPos = selPos;
+								for (i = 0; i < selLineOffset; i++)
+									if (selEnd->next != NULL)
+										selEnd = selEnd->next;
+							} else if (selLineOffset < 0) {
+								/* Other end of selection is above current line, move end up to meet it. */
+								selStartPos = selPos;
+								selEndPos = pos;
+								for (i = 0; i > selLineOffset; i--)
+									if (selStart->prev != NULL)
+										selStart = selStart->prev;
+							} else {
+								/* Selection is only on current line: selStartPos gets the lesser of selPos & pos */
+								if (selPos > pos) {
+									selStartPos = pos;
+									selEndPos = selPos;
+								} else {
+									selStartPos = selPos;
+									selEndPos = pos;
+								}
+							}
+
+							regyank('\"', selStart, selEnd, selStartPos, selEndPos);
+
+							/* Consider cut operation now */
+							if (c == 45 || c == 147) {
+								/* TODO: cut was used, so clear the selected area as well */
+							}
+						}
+						break;
+
+					case 47:
+						/* alt-v: paste register */
+						sv->cur = centerstr;
+						regput('\"', sv, pos, wrapwidth, editwidth);
+						updateflags = U_EDITAREA;
 						break;
 
 					default:
@@ -719,7 +918,6 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 						strlwr(strbuf);
 						updateflags = U_EDITAREA;
 
-//						if ((char*)strstr(strbuf, "#char") == strbuf) {
 						if (strequ(strbuf, "#char", STREQU_UNCASE | STREQU_FRONT)) {
 							/* append dec value for ascii char */
 
@@ -787,6 +985,13 @@ int editbox(char *title, stringvector * sv, int editwidth, int zocformatting, di
 				}	/* esac */
 			}	/* fi extended keys */
 		}		/* esle in editmode */
+		/* if the shift key is not still held down and we are selecting, then stop select mode */
+		/* also stop if non-extended key was pressed and selection is active */
+		if ((!shiftState && selPos != -1) || (e == 0 && selPos != -1)) {
+			selPos = -1;
+			selLineOffset = 0;
+			updateflags |= U_EDITAREA;
+		}
 	}			/* elihw */
 
 	sv->cur = centerstr;
@@ -837,6 +1042,13 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 
 		case ':':
 			/* message */
+			if (firstline) {
+				/* This requires some explaination: When a message label occurs at the
+				 * beginning of an object's code, it cannot be sent to. So, we shall
+				 * display it in the default colour to make this apparent. */
+				d->print(x, y, ZOC_DEFAULT_COLOUR, s);
+				break;
+			}
 			if (format) {
 				s = strstr(s, ";");
 				if (s != NULL)
@@ -878,22 +1090,7 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 
 			if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ')
 				displayzoc(x + i, y, s + i, format, 0, d);
-/*
-			k = iszztdir(s+1);
 
-			if (k) {
-				for (i = 1; i <= k; i++)
-					d->putch(x + i, y, s[i], ZOC_STDDIR_COLOUR);
-*/
-				/* Recursiveness is an art. */
-/*				if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ')
-					displayzoc(x + i, y, s + i, format, 0, d);
-				else
-					d->print(x + i, y, BLACK_F | RED_B, s + i);
-			} else {
-				d->print(x + 1, y, ZOC_DEFAULT_COLOUR, s + 1);
-			}
-*/
 			break;
 
 		case '!':
@@ -958,101 +1155,6 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 	}
 }
 
-
-/* zzt components for special highlighting */
-
-#define ZZTCOMMANDCOUNT 27
-const char zztcommands[ZZTCOMMANDCOUNT][12] =
-{
-	"become",  "bind",    "change", "char",
-	"clear",   "cycle",   "die",    "end",
-	"endgame", "give",    "go",     "idle",
-	"if",      "lock",    "play",   "put",
-	"restart", "restore", "send",   "set",
-	"shoot",   "take",    "throwstar",
-	"try",     "unlock",  "walk",   "zap"
-};
-
-
-/* Command syntax:
- * Each type of argument to a command is given a letter and stored
- * in a string in zztcommandtax[], which corresponds to that same
- * numbered element in zztcommands */
-
-#define CTAX_KIND 'k'
-#define CTAX_OBJECTNAME 'o'
-#define CTAX_NUMBER 'n'
-#define CTAX_FLAG 'f'
-#define CTAX_ITEM 'i'
-#define CTAX_DIRECTION 'd'
-#define CTAX_THENMESSAGE 't'
-#define CTAX_SOUND 's'
-#define CTAX_MESSAGE 'm'
-
-const char zztcommandtax[ZZTCOMMANDCOUNT][30] =
-{
-	"k",  "o",   "kk", "n",
-	"f",  "n",   "",   "",
-	"",   "in",  "d",  "",
-	"ft", "",    "s",  "dk",
-	"",   "m",   "m",  "f",
-	"d",  "inm", "d",
-	"dm", "",    "d",  "m"
-};
-
-#define ZZTMESSAGECOUNT 5
-const char zztmessages[ZZTMESSAGECOUNT][10] =
-{
-	"touch", "shot", "bombed", "thud", "energize"
-};
-
-#define ZZTFLAGCOUNT 6
-const char zztflags[ZZTFLAGCOUNT][12] =
-{
-	"alligned", "contact", "blocked", "energized", "exists", "any"
-};
-
-#define ZZTITEMCOUNT 5
-const char zztitems[ZZTITEMCOUNT][8] =
-{
-	"ammo", "gems", "torches", "health", "score"
-};
-
-#define ZZTKINDCOUNT 41
-const char zztkinds[ZZTKINDCOUNT][12] =
-{
-	"empty", "player", "ammo", "torch",
-	"gem", "key", "door", "scroll",
-	"passage", "duplicator", "bomb", "energizer",
-	"star", "clockwise", "counter", "bullet",
-	"water", "forest", "solid", "normal",
-	"breakable", "boulder", "sliderns", "sliderew",
-	"fake", "invisible", "blinkwall", "transporter",
-	"line", "ricochet", "bear", "ruffian",
-	"object", "slime", "shark", "spinninggun",
-	"pusher", "lion", "tiger", "head",
-	"segment"
-};
-
-#define ZZTCOLOURCOUNT 7
-const char zztcolours[ZZTCOLOURCOUNT][8] =
-{
-	"blue", "green", "red", "cyan", "purple", "yellow", "white"
-};
-
-#define ZZTDIRCOUNT 14
-const char zztdirs[ZZTDIRCOUNT][6] =
-{
-	"north", "south", "east", "west", "idle",
-	"seek", "flow", "rndns", "rndne",
-	"n", "s", "e", "w", "i"
-};
-
-#define ZZTDIRMODCOUNT 4
-const char zztdirmods[ZZTDIRMODCOUNT][5] =
-{
-	"cw", "ccw", "rndp", "opp"
-};
 
 
 /* advance token in source from pos, returning token length */
@@ -1219,7 +1321,7 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 }
 
 
-/* token testers */
+/******** token testers **************/
 int iszztcommand(char *token)
 {
 	int i = 0;
@@ -1548,6 +1650,7 @@ stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
 
 	return v;
 }
+
 
 /* Copies a stringvector into a file. sv is not changed */
 void svectortofile(stringvector * sv, char *filename)

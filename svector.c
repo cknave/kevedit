@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.6 2000/10/20 02:17:18 bitman Exp $
+ * $Id: svector.c,v 1.7 2001/01/07 23:55:42 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,11 +88,11 @@ int preinsertstring(stringvector * v, char *s)
 	if (v == NULL || s == NULL)
 		return 1;
 
-	if (v->cur == NULL)
-		return 1;
-
 	if (v->first == NULL)
 		return pushstring(v, s);
+
+	if (v->cur == NULL)
+		return 1;
 
 	newnode = (stringnode *) malloc(sizeof(stringnode));
 	newnode->s = s;
@@ -199,4 +199,48 @@ void removestringvector(stringvector * v)
 
 	return;
 }
+
+
+/* strequ - string comparison */
+int strequ(const char *str1, const char *str2, int flags)
+{
+	char *lwr1, *lwr2;
+	int i;
+	int isequ = 1;		/* Strings are equal until proven otherwise */
+
+	if (str1[0] == 0 && str2[0] == 0)
+		return 1;
+   else if (str1[0] == 0 || str2[0] == 0)
+   	return 0;
+
+	lwr1 = (char *) malloc(strlen(str1) * sizeof(char) + 1);
+	lwr2 = (char *) malloc(strlen(str2) * sizeof(char) + 1);
+	if (lwr1 == NULL || lwr2 == NULL)
+		return -1;
+
+	strcpy(lwr1, str1);
+	strcpy(lwr2, str2);
+
+	if (flags & STREQU_UNCASE) {
+		strlwr(lwr1);
+		strlwr(lwr2);
+	}
+
+	for (i = 0; lwr1[i] != 0 && lwr2[i] != 0; i++)
+		if (lwr1[i] != lwr2[i]) {
+			isequ = 0;
+			break;
+		}
+
+	/* Strings must be equal */
+	if (lwr1[i] != lwr2[i] && !(flags & STREQU_FRONT))
+		isequ = 0;
+
+	free(lwr1);
+	free(lwr2);
+
+	return isequ;
+}
+
+
 

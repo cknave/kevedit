@@ -1,5 +1,5 @@
 /* display.c    -- Functions for the modular display
- * $Id: display.c,v 1.1 2000/06/15 03:58:05 kvance Exp $
+ * $Id: display.c,v 1.2 2001/01/07 23:55:41 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,6 +19,8 @@
 
 #include "display.h"
 
+#ifdef LONG_FILES
+
 #ifdef GGI
 #include "display_ggi.h"
 #endif
@@ -27,6 +29,20 @@
 #endif
 #ifdef DOS
 #include "display_dos.h"
+#endif
+
+#else
+
+#ifdef GGI
+#include "d_ggi.h"
+#endif
+#ifdef VCSA
+#include "d_vcsa.h"
+#endif
+#ifdef DOS
+#include "d_dos.h"
+#endif
+
 #endif
 
 displaymethod display;

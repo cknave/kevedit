@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.7 2000/10/20 02:17:18 bitman Exp $
+ * $Id: editbox.h,v 1.8 2001/01/07 23:55:42 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,32 +24,33 @@
 #include "display.h"
 #include "svector.h"
 
-/* editmoredata - edits p->moredata in a scroll box */
-void editmoredata(param * p, displaymethod * d);
+/* editmoredata() - edits p->moredata in a scroll box */
 
-/* editbox - display/edit a string vector in a scroll box, starting
+/* editbox() - display/edit a string vector in a scroll box, starting
  * at sv->cur. editwidth tells how long a line can be & how much memory to use
  * on new lines. If editwidth is zero, editsvector acts as a listbox and sets
  * sv->cur to selected node.  If zochighlight is nonzero, it does ZZT Object
  * Code (ZOC) highlighting.
  *
  * Return code: ascii code for exit keypress (i.e. 13 or 27) */
+
+void editmoredata(param * p, displaymethod * d);
 int editbox(char* title, stringvector * sv, int editwidth, int zocformatting, displaymethod * d);
 
-/* displayzoc - display a string with zoc highlighting. If firstline is true,
+
+/* Internal use functions */
+
+/* displayzoc() - display a string with zoc highlighting. If firstline is true,
  * "@" will be allowed to denote object name. */
+/* displayzcommand() - displays highlighting for zzt #command arguments */
+/* wordwrap() - wrap text in sv */
+/* filetosvector() - loads a textfile into a new stringvector */
+/* svectortofile() = copies a stringvector into a file. sv is not changed */
+
 void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod * d);
-
-/* displayzcommand - displays highlighting for zzt #command arguments */
 void displaycommand(int x, int y, char *command, char *args, displaymethod * d);
-
-/* wordwrap - wrap text in sv */
 int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth);
-
-/* filetosvector - loads a textfile into a new stringvector */
 stringvector filetosvector(char* filename, int wrapwidth, int editwidth);
-
-/* Copies a stringvector into a file. sv is not changed */
 void svectortofile(stringvector * sv, char *filename);
 
 

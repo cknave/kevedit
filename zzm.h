@@ -1,5 +1,5 @@
 /* zzm.h  -- zzm file routines
- * $Id: zzm.h,v 1.1 2000/09/09 02:33:51 bitman Exp $
+ * $Id: zzm.h,v 1.2 2001/01/07 23:55:42 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "svector.h"
+#include "display.h"
 
 /* zzmpullsong() - pulls song #songnum out of zzmv and returns it */
 stringvector zzmpullsong(stringvector * zzmv, int songnum);
