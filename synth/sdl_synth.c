@@ -1,5 +1,5 @@
 /* sdl_synth.c	-- SDL music synthesizer
- * $Id: sdl_synth.c,v 1.2 2002/08/23 22:41:25 bitman Exp $
+ * $Id: sdl_synth.c,v 1.3 2002/08/23 22:58:47 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,15 +24,6 @@
 
 #include "notes.h"
 #include "sdl_synth.h"
-
-/* Note length in seconds */
-/* TODO: obsolete? */
-#define LEN_T	0.05
-#define LEN_S	0.11
-#define LEN_I 0.22
-#define LEN_Q	0.44
-#define LEN_H	0.88
-#define LEN_W	1.76
 
 Uint8 *masterplaybuffer = NULL;
 static size_t playbuffersize = 0, playbufferloc = 0, playbuffermax = 0;
