@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.14 2002/02/17 07:26:03 bitman Exp $
+ * $Id: misc.h,v 1.15 2002/02/18 08:04:40 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,16 +34,6 @@ void initeditorinfo(editorinfo * myinfo);
 
 /* TODO: Everything from this point on needs to be sorted
  * very thoroughly. Most should be moved to other files. */
-
-/* editprogram() - edit program in param p */
-void editprogram(displaymethod * d, ZZTparam * p);
-
-/* programtosvector() - creates a string vector from the given param */
-stringvector programtosvector(ZZTparam * p, int editwidth);
-
-/* svectortoprogram() - copies the contents of the given svector into a new
- *              param. Only the program and length variables are used! */
-ZZTparam svectortoprogram(stringvector sv);
 
 /* Running zzt */
 void runzzt(char* path, char* world);

@@ -41,7 +41,7 @@ endif
 
 CENTRALOBJS = misc.o menu.o editbox.o screen.o
 LIBRARYOBJS = libzzt2/libzzt2.a svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
-MISCOBJS    = patbuffer.o help.o infobox.o register.o
+MISCOBJS    = patbuffer.o help.o infobox.o paramed.o register.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o panel_bd.o scroll.o tbox.o cbox.o tdialog.o
 DISPLAYOBJS = display.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
 
@@ -94,6 +94,7 @@ gradient.o: gradient.c gradient.h
 patbuffer.o: patbuffer.c kevedit.h libzzt2/zzt.h display.h
 help.o: help.c help.h svector.h editbox.h hypertxt.h panel_hl.h helplist.h
 infobox.o: infobox.c infobox.h libzzt2/zzt.h display.h
+paramed.o: paramed.c paramed.h libzzt2/zzt.h display.h
 register.o: register.c register.h editbox.h
 
 # Draw data structures

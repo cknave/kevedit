@@ -1,5 +1,5 @@
-/* infobox.c  -- 
- * $Id: infobox.c,v 1.10 2002/02/17 07:26:03 bitman Exp $
+/* infobox.c - board/world information dialogs
+ * $Id: infobox.c,v 1.11 2002/02/18 08:04:40 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify

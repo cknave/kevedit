@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.56 2002/02/17 22:41:51 bitman Exp $
+ * $Id: main.c,v 1.57 2002/02/18 08:04:40 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,8 +34,9 @@
 
 #include "patbuffer.h"
 #include "help.h"
-#include "register.h"
 #include "infobox.h"
+#include "paramed.h"
+#include "register.h"
 
 #include "display.h"
 
@@ -562,40 +563,16 @@ int main(int argc, char **argv)
 			break;
 		case DKEY_ENTER:
 			/* Modify / Grab */
-			/* TODO: This deserves its own function */
-			{
-				ZZTtile tile = zztTileGet(myworld, myinfo->cursorx, myinfo->cursory);
-				if (tile.param != NULL) {
-					/* We have params; have at 'em! */
-					if (tile.type == ZZT_OBJECT) {
-						/* Modify object char */
-						int csel = charselect(mydisplay, tile.param->data[0]);
-						if (csel != -1)
-							tile.param->data[0] = csel;
-					}
+			modifyparam(mydisplay, myworld, myinfo->cursorx, myinfo->cursory);
 
-					if (tile.type == ZZT_OBJECT || tile.type == ZZT_SCROLL) {
-						/* Edit the program/text */
-						editprogram(mydisplay, tile.param);
-					}
+			/* When all is said and done, push the tile */
+			push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
 
-					if (tile.type == ZZT_PASSAGE) {
-						/* Change the passage's destination */
-						tile.param->data[2] = boarddialog(myworld, tile.param->data[2], "Passage Destination", 0, mydisplay);
-					}
-					/* TODO: modify other params */
-
-				}
-				
-				/* When all is said and done, push the tile */
-				push(myinfo->backbuffer, zztTileGet(myworld, myinfo->cursorx, myinfo->cursory));
-
-				/* redraw everything */
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				drawscreen(mydisplay, myworld);
-			}
+			/* redraw everything */
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			drawscreen(mydisplay, myworld);
 			break;
 
 		case DKEY_INSERT:

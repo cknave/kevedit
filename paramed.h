@@ -1,5 +1,5 @@
-/* infobox.h - board/world information dialogs
- * $Id: infobox.h,v 1.5 2002/02/18 08:04:40 bitman Exp $
+/* paramed.h  -- Parameter editor
+ * $Id: paramed.h,v 1.1 2002/02/18 08:04:40 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,17 +17,33 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __INFOBOX_H
-#define __INFOBOX_H
+#ifndef __PARAMED_H
+#define __PARAMED_H
 
 #include "libzzt2/zzt.h"
+#include "svector.h"
+
 #include "display.h"
-#include "kevedit.h"
 
-/* editboardinfo() - brings up dialog box for editing board info */
-void editboardinfo(ZZTworld* myworld, displaymethod* d);
+/* modifyparam(display, world, x, y)
+ * Modify the parameter for the given tile
+ */
+void modifyparam(displaymethod * d, ZZTworld * w, int x, int y);
 
-/* editworldinfo() - brings up dialog box for editing world info */
-void editworldinfo(ZZTworld* myworld, displaymethod* d);
+/* editprogram(display, param)
+ * edit program in param p
+ */
+void editprogram(displaymethod * d, ZZTparam * p);
+
+/* programtosvector(param, editwidth)
+ * creates a string vector from the given param
+ */
+stringvector programtosvector(ZZTparam * p, int editwidth);
+
+/* svectortoprogram(stringvector)
+ * copies the contents of the given svector into a new
+ * param. Only the program and length variables are used!
+ */
+ZZTparam svectortoprogram(stringvector sv);
 
 #endif
