@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.15 2002/05/09 00:52:11 bitman Exp $
+ * $Id: zzt.h,v 1.16 2002/05/31 22:17:26 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -92,12 +92,13 @@ typedef unsigned int u_int32_t;
 #define ZZT_DATAUSE_INTELLIGENCE 4
 #define ZZT_DATAUSE_RESTTIME     5
 #define ZZT_DATAUSE_CHAR         6
-#define ZZT_DATAUSE_SPEED        7
-#define ZZT_DATAUSE_FIRERATEMODE 8
-#define ZZT_DATAUSE_DEVIANCE     9
-#define ZZT_DATAUSE_STARTTIME   10
-#define ZZT_DATAUSE_PERIOD      11
-#define ZZT_DATAUSE_OWNER       12
+#define ZZT_DATAUSE_LOCKED       7
+#define ZZT_DATAUSE_SPEED        8
+#define ZZT_DATAUSE_FIRERATEMODE 9
+#define ZZT_DATAUSE_DEVIANCE    10
+#define ZZT_DATAUSE_STARTTIME   11
+#define ZZT_DATAUSE_PERIOD      12
+#define ZZT_DATAUSE_OWNER       13
 
 /* ZZT param profile -- description of tile with param data */
 typedef struct ZZTprofile {

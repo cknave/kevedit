@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.4 2002/05/09 00:52:11 bitman Exp $
+ * $Id: params.c,v 1.5 2002/05/31 22:17:26 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -61,7 +61,7 @@ const ZZTprofile _zzt_param_profile_table[] = {
 	/* ZZT_BLINKHORIZ     */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_BEAR           */ { ZZT_PROPERTY_CYCLE, 3, { ZZT_DATAUSE_SENSITIVITY, 0, 0 } },
 	/* ZZT_RUFFIAN        */ { ZZT_PROPERTY_CYCLE, 1, { ZZT_DATAUSE_INTELLIGENCE, ZZT_DATAUSE_RESTTIME, 0 } },
-	/* ZZT_OBJECT         */ { ZZT_PROPERTY_CYCLE | ZZT_PROPERTY_PROGRAM, 3, { ZZT_DATAUSE_CHAR, 0, 0 } },
+	/* ZZT_OBJECT         */ { ZZT_PROPERTY_CYCLE | ZZT_PROPERTY_PROGRAM, 3, { ZZT_DATAUSE_CHAR, ZZT_DATAUSE_LOCKED, 0 } },
 	/* ZZT_SLIME          */ { ZZT_PROPERTY_CYCLE, 3, { 0, ZZT_DATAUSE_SPEED, 0 } },
 	/* ZZT_SHARK          */ { ZZT_PROPERTY_CYCLE, 3, { ZZT_DATAUSE_INTELLIGENCE, 0, 0 } },
 	/* ZZT_SPINNINGGUN    */ { ZZT_PROPERTY_CYCLE, 3, { ZZT_DATAUSE_INTELLIGENCE, ZZT_DATAUSE_FIRERATEMODE, 0 } },
@@ -82,6 +82,7 @@ u_int16_t _zzt_datause_default_table[] = {
 	/* ZZT_DATAUSE_INTELLIGENCE */ 4,
 	/* ZZT_DATAUSE_RESTTIME     */ 4,
 	/* ZZT_DATAUSE_CHAR         */ 1,
+	/* ZZT_DATAUSE_LOCKED       */ 0,
 	/* ZZT_DATAUSE_SPEED        */ 4,
 	/* ZZT_DATAUSE_FIRERATEMODE */ 4,
 	/* ZZT_DATAUSE_DEVIANCE     */ 4,
@@ -99,6 +100,7 @@ char * _zzt_datause_name_table[] = {
 	/* ZZT_DATAUSE_INTELLIGENCE */ "Intelligence",
 	/* ZZT_DATAUSE_RESTTIME     */ "Rest Time",
 	/* ZZT_DATAUSE_CHAR         */ "Character",
+	/* ZZT_DATAUSE_LOCKED       */ "Locked",
 	/* ZZT_DATAUSE_SPEED        */ "Speed",
 	/* ZZT_DATAUSE_FIRERATEMODE */ "Fire Rate",
 	/* ZZT_DATAUSE_DEVIANCE     */ "Deviance",

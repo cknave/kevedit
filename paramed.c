@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.13 2002/05/09 00:53:33 bitman Exp $
+ * $Id: paramed.c,v 1.14 2002/05/31 22:17:26 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -356,9 +356,14 @@ char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w
 		case ZZT_DATAUSE_CHAR:
 			sprintf(buffer, "%c - #char %d - %02Xh", (data != 0 ? data : ' '), data, data);
 			break;
+		case ZZT_DATAUSE_LOCKED:
+			sprintf(buffer, (data == 0 ? "#unlock-ed": "#lock-ed"));
+			break;
 		case ZZT_DATAUSE_OWNER:
 			strcpy(buffer, data == 0 ? "Player" : "Creature");
 			break;
+		default:
+			strcpy(buffer, "");
 	}
 
 	return buffer;
@@ -483,6 +488,9 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			num = charselect(d, tile.param->data[0]);
 			if (num != -1)
 				tile.param->data[0] = num;
+			return 1;
+		case ZZT_DATAUSE_LOCKED:
+			tile.param->data[1] = !tile.param->data[1];
 			return 1;
 		/* 8-bit numbers */
 		case ZZT_DATAUSE_DUPRATE:
@@ -619,6 +627,9 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 			return 1;
 		case ZZT_DATAUSE_CHAR:
 			tile.param->data[dul] += delta;
+			return 1;
+		case ZZT_DATAUSE_LOCKED:
+			tile.param->data[1] = !tile.param->data[1];
 			return 1;
 
 		case ID_CYCLE:
