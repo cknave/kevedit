@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.13 2001/12/15 00:54:53 bitman Exp $
+ * $Id: display_dos.c,v 1.14 2002/02/19 17:54:42 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,9 @@
 #include "display_dos.h"
 
 #define KBD_INT 0x09
+
+/* Locking for ISR */
+#define LOCK_VARIABLE(x)    _go32_dpmi_lock_data((void *)&x,(long)sizeof(x));
 
 _go32_dpmi_seginfo old_kb_handler;
 _go32_dpmi_seginfo new_kb_handler;
@@ -125,6 +128,11 @@ int display_dos_init()
 		windows = 2;
 
 	lshift = rshift = 0;
+
+	/* Lock the vars used by the handler -- prevents memory swapping */
+	LOCK_VARIABLE(lshift)
+	LOCK_VARIABLE(rshift)
+
 	/* Save the old handler */
 	_go32_dpmi_get_protected_mode_interrupt_vector(KBD_INT, &old_kb_handler);
 

@@ -15,6 +15,7 @@ Quick key reference organized by key purpose
 All F-menu tiles implemented
 Dynamic dialog system introduced
 Param editing implemented! After all these years!!!
+Added variable locking in display_dos to prevent swapping in ISR
 
 0.3.4: November 14, 2001
 ------------------------
