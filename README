@@ -1,5 +1,5 @@
 --------------------------------------------
-KevEdit 0.3
+KevEdit 0.3.1
 	A world file editor for the game ZZT
 --------------------------------------------
 Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
@@ -135,6 +135,19 @@ insert arbitrary ASCII characters into your program by pressing ctrl+'a'.  If
 the cursor is after a #char command, it will place the number of the character
 into the program instead.
 
+You can also use the editor to interface with other files.  alt+'s' will save
+your program to a file and alt+'o' will open an already saved program,
+replacing the current one.  alt+'i' will insert a saved program where the
+cursor is.  alt+'m' will load a ZZM format music file.
+
+-------------------------
+Placing Text on the Board
+-------------------------
+To add readable text tiles to the board, press F4 to activate text entry mode.
+Every character you type will be written on the board.  To add a non-typable
+character, press ctrl+'a' for the ASCII selection dialog box.  To leave text
+entry mode, press F4 again.
+
 ---------------
 File Operations
 ---------------
@@ -179,4 +192,4 @@ http://kevedit.sourceforge.net/ is where you can check for new releases, get
 the CVS code, post bug reports, etc.
 
     Kev Vance <kvance@tekktonik.net>
-    August 22, 2000
+    October 21, 2000
