@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.30 2001/11/13 07:22:40 bitman Exp $
+ * $Id: editbox.c,v 1.31 2001/11/14 00:58:13 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1079,7 +1079,10 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						/* append dec value for ascii char */
 
 						sscanf(strbuf + 5, "%d", &selChar);
-						selChar = charselect(d, selChar);
+						key = charselect(d, selChar);
+						if (key == -1)
+							break;
+						selChar = key;
 						centerstr->s[5] = ' ';
 						centerstr->s[6] = 0;
 
