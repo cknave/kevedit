@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.4 2000/09/02 04:33:23 kvance Exp $
+ * $Id: display_dos.c,v 1.5 2000/10/28 01:52:06 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,8 +31,14 @@
 #include "display.h"
 #include "display_dos.h"
 
+#define KBD_INT 0x09
+
+_go32_dpmi_seginfo old_kb_handler;
+_go32_dpmi_seginfo new_kb_handler;
+
 short videomem;
 int windows;
+int lshift, rshift; /* 0 = shift not pressed, 1 = shift pressed */
 
 void release_time_slice()
 {
@@ -59,6 +65,30 @@ void release_time_slice()
 	__dpmi_int(0x2f, &r);
 }
 
+int kb_isr()
+{
+	__dpmi_regs r;
+	unsigned char key;
+
+	/* Get the key from port 60h */
+	asm("sti");
+	r.h.al = inp(0x60);
+	r.h.ah = 0;
+	key = r.x.ax;
+	asm("cli");
+
+	/* Check for shifts */
+	if(key == 0x2A)
+		lshift = 1;
+	if(key == 0x36)
+		rshift = 1;
+	if(key == 0xAA)
+		lshift = 0;
+	if(key == 0xB6)
+		rshift = 0;
+}
+
+
 int display_dos_init()
 {
 	__dpmi_regs r;
@@ -84,18 +114,31 @@ int display_dos_init()
 	if ((getenv("OS") != NULL) && !strcmp(getenv("OS"), "Windows_NT"))
 		windows = 2;
 
+	lshift = rshift = 0;
+	// Save the old handler
+	_go32_dpmi_get_protected_mode_interrupt_vector(KBD_INT, &old_kb_handler);
+
+	// Create new handler, chain it to old
+	new_kb_handler.pm_offset = (int) kb_isr;
+	new_kb_handler.pm_selector = _go32_my_cs();
+	_go32_dpmi_chain_protected_mode_interrupt_vector(KBD_INT, &new_kb_handler);
+	
 	return -1;
 }
 
 void display_dos_end()
 {
 	__dpmi_regs r;
+	// Restore video mode
 	r.x.ax = 0x1202;
 	r.h.bl = 0x30;
 	__dpmi_int(0x10, &r);
 	r.x.ax = 0x0003;
 	__dpmi_int(0x10, &r);
+	// Restore cursor
 	_setcursortype(_NORMALCURSOR);
+	// Restore keyboard handler
+	_go32_dpmi_set_protected_mode_interrupt_vector(KBD_INT, &old_kb_handler);
 }
 
 void display_dos_putch(int x, int y, int ch, int co)
@@ -166,6 +209,11 @@ void display_dos_titlebar(char *title)
 	}
 }
 
+int display_dos_shift()
+{
+	return lshift | rshift;
+}
+
 displaymethod display_dos =
 {
 	NULL,
@@ -177,5 +225,6 @@ displaymethod display_dos =
 	display_dos_getch,
 	display_dos_gotoxy,
 	display_dos_print,
-	display_dos_titlebar
+	display_dos_titlebar,
+	display_dos_shift	
 };

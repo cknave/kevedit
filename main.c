@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.23 2000/10/21 18:55:44 kvance Exp $
+ * $Id: main.c,v 1.24 2000/10/28 01:52:06 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -393,9 +393,31 @@ int main(int argc, char **argv)
 				/* Leave text entry mode */
 				c = 62;
 				e = 1;
+			} else if(c == 8 && myinfo->cursorx > 0) {
+				myinfo->cursorx--;
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
+					/* We're overwriting a parameter */
+					if (CURRENTPARAM->moredata != NULL)
+						free(CURRENTPARAM->moredata);
+					free(CURRENTPARAM);
+					for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
+						myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
+					}
+					for (x = 0; x < 25; x++) {
+						for (i = 0; i < 60; i++) {
+							if (paramlist[i][x] > t)
+								paramlist[i][x]--;
+						}
+					}
+					myworld->board[myinfo->curboard]->info->objectcount--;
+					paramlist[myinfo->cursorx][myinfo->cursory] = 0;
+				}
+				bigboard[(myinfo->cursorx+myinfo->cursory*60)*2] = Z_EMPTY;
+				bigboard[(myinfo->cursorx+myinfo->cursory*60)*2+1] = 0x07;
+				updatepanel(mydisplay, myinfo, myworld);
 			} else {
-				if (c == 1) {
-					/* ASCII selection */
+				if (c == 1) { /* ASCII selection */
 					c = charselect(mydisplay);
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				}

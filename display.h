@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.3 2000/08/12 18:13:22 kvance Exp $
+ * $Id: display.h,v 1.4 2000/10/28 01:52:06 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@ typedef struct displaymethod {
 	void (*print) (int x, int y, int c, char *ch);	// Simple print function
 
 	void (*titlebar) (char *);	// Set the titlebar if in MS-Windows or X11
+	int (*shift) (void);	// Is shift pressed?
 
 } displaymethod;
 
