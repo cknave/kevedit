@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.72 2002/09/12 07:48:00 bitman Exp $
+ * $Id: main.c,v 1.73 2002/09/12 21:21:16 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -36,8 +36,7 @@ void sigInt(int i)
 {
 }
 
-#define MAIN_BUFLEN 1024
-
+ZZTworld * getWorldFromArg(char * arg, char * datapath);
 displaymethod * pickdisplay(displaymethod * rootdisplay);
 
 int main(int argc, char **argv)
@@ -57,40 +56,26 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	/* Assume DOS model of keeping program data the same dir as kevedit.exe */
+	/* Trap ctrl+c */
+	signal(SIGINT, sigInt);
+
+	/* Assume DOS model of keeping program data the same dir as kevedit binary */
 	datapath = locateself(argv[0]);  
 	inithelpsystem(datapath);
 
 	/* Did we get a world on the command line? */
-	myworld = NULL;
-	if (argc > 1) {
-		char buffer[MAIN_BUFLEN];
-		/* Switch to the directory given within the filename */
-		pathof(buffer, argv[1], MAIN_BUFLEN);
-		chdir(buffer);
+	if (argc > 1)
+		myworld = getWorldFromArg(argv[1], datapath);
 
-		/* Open the file */
-		fileof(buffer, argv[1], MAIN_BUFLEN - 5);
-		myworld = zztWorldLoad(buffer);
-		if (myworld == NULL) {
-			/* Maybe they left off the .zzt extension? */
-			strcat(buffer, ".zzt");
-			myworld = zztWorldLoad(buffer);
-		}
-	}
 	/* Create the blank world */
-	if (myworld == NULL) {
+	if (myworld == NULL)
 		myworld = zztWorldCreate(NULL, NULL);
-	}
 
 	/* Create the editor */
 	editor = createkeveditor(myworld, mydisplay, datapath);
 
 	/* Switch to the start board */
 	zztBoardSelect(myworld, zztWorldGetStartboard(myworld));
-
-	/* Trap ctrl+c */
-	signal(SIGINT, sigInt);
 
 	/* Update everything initially */
 	editor->updateflags = UD_ALL | UD_BOARDTITLE;
@@ -112,6 +97,30 @@ int main(int argc, char **argv)
 	zztWorldFree(myworld);
 
 	return 0;
+}
+
+ZZTworld * getWorldFromArg(char * arg, char * datapath)
+{
+	int buflen = strlen(arg) + 4;
+	char * buffer = str_duplen("", buflen);
+	ZZTworld * myworld;
+
+	/* Switch to the directory given within the filename */
+	pathof(buffer, arg, buflen);
+	chdir(buffer);
+
+	/* Open the file */
+	fileof(buffer, arg, buflen - 4);
+	myworld = zztWorldLoad(buffer);
+	if (myworld == NULL) {
+		/* Maybe they left off the .zzt extension? */
+		strcat(buffer, ".zzt");
+		myworld = zztWorldLoad(buffer);
+	}
+
+	free(buffer);
+
+	return myworld;
 }
 
 displaymethod * pickdisplay(displaymethod * rootdisplay)
