@@ -1,5 +1,5 @@
 /* display_stdio.c   -- Dummy display using stdio
- * $Id: display_stdio.c,v 1.2 2003/11/02 22:21:53 bitman Exp $
+ * $Id: display_stdio.c,v 1.3 2003/11/09 20:57:28 bitman Exp $
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ static int cursory = 0;
 static textBlock * textbuffer = NULL;
 
 void display_stdio_print_help(void);
-void display_stdio_print_buffer(void);
+void display_stdio_print_buffer(int newlineFlag);
 
 
 int display_stdio_init(void)
@@ -114,7 +114,7 @@ int display_stdio_getch(void)
 		if (!strcmp(command, "verbose")) { brief = 0; return display_stdio_getch(); }
 
 		/* Print the buffer */
-		if (!strcmp(command, "print"))   { display_stdio_print_buffer(); return display_stdio_getch(); }
+		if (!strcmp(command, "print"))   { display_stdio_print_buffer(1); return display_stdio_getch(); }
 
 		/* Help */
 		if (!strcmp(command, "help")) { display_stdio_print_help(); return display_stdio_getch(); }
@@ -223,7 +223,7 @@ void display_stdio_print_help(void)
 	printf(message);
 }
 
-void display_stdio_print_buffer(void)
+void display_stdio_print_buffer(int newlineFlag)
 {
 	int x, y;
 
@@ -243,6 +243,8 @@ void display_stdio_print_buffer(void)
 
 			printf("%c", ch);
 		}
+		if (newlineFlag)
+			printf("\n");
 	}
 }
 
