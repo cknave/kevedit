@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.17 2002/09/13 17:51:20 bitman Exp $
+ * $Id: kevedit.h,v 1.18 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -56,7 +56,6 @@
 #define SELECT_OFF     0  /* Select mode is off */
 #define SELECT_ON      1  /* An area is selected */
 #define SELECT_BLOCK   2  /* Select by block */
-#define SELECT_CLEAR  -1  /* Selection must be cleared */
 
 
 typedef struct kevoptions {
@@ -98,9 +97,14 @@ typedef struct keveditor {
 	backbuffers buffers;
 
 	/* Selection mode */
+	int clearselectflag;
 	int selectmode;
 	int selx, sely;
-	selection sel;
+	selection selPersistant, selCurrent;
+
+	/* Copied block */
+	ZZTblock * copyBlock;
+	selection copySelection;
 
 	/* Options */
 	kevoptions options;

@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.19 2002/08/24 22:59:08 bitman Exp $
+ * $Id: zzt.h,v 1.20 2002/09/16 06:47:25 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -300,6 +300,9 @@ int zztBoardGetCurrent(ZZTworld *world);
  * Return the currently selected board itself -- be careful
  */
 ZZTboard * zztBoardGetCurPtr(ZZTworld *world);
+/* zztBoardGetBlock(world)
+ * Return the block of tiles for current board */
+ZZTblock * zztBoardGetBlock(ZZTworld *world);
 
 /***** BOARD MANIPULATORS *****/
 /* zztBoardCreate(title)

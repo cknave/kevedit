@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.19 2002/09/12 22:05:49 bitman Exp $
+ * $Id: misc.h,v 1.20 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,8 +28,13 @@
 #include "gradient.h"
 #include "svector.h"
 
-/* TODO: Everything from this point on needs to be sorted
+/* TODO: Everything in this file needs to be sorted
  * very thoroughly. Most should be moved to other files. */
+
+/* Copy and paste */
+void copy(keveditor * myeditor);
+void paste(keveditor * myeditor);
+int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcsel, int x, int y);
 
 /* Plot from the backbuffer to the cursor */
 void plot(keveditor * myeditor);
@@ -65,6 +70,8 @@ patbuffer* createfillpatterns(keveditor* myeditor);
 patbuffer* createstandardpatterns(void);
 
 void floodselect(ZZTblock* block, selection fillsel, int x, int y);
+void tileselect (ZZTblock* block, selection fillsel, ZZTtile tile);
+
 void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag);
 void fillbyselection(ZZTworld* world, selection fillsel, patbuffer pbuf, int randomflag);
 

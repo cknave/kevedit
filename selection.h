@@ -1,5 +1,5 @@
 /* selection.h  -- selected area
- * $Id: selection.h,v 1.2 2002/09/13 17:51:21 bitman Exp $
+ * $Id: selection.h,v 1.3 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -39,7 +39,18 @@ void initselection(selection * sel, int width, int height);
 void deleteselection(selection * sel);
 
 /* clearselection() - unsets all values */
-void clearselection(selection * sel);
+void clearselection(selection sel);
+
+/* setselection() - sets all values */
+void setselection(selection sel);
+
+
+/* copyselection() - copy one selection onto another of the same size.
+ *                   Returns zero on success. */
+int copyselection(selection dest, selection src);
+
+/* mergeselection() - merges selected areas in src onto dest */
+int mergeselection(selection dest, selection src);
 
 
 /* selectpos() - sets a given position to selected */
@@ -50,6 +61,11 @@ void unselectpos (selection sel, int x, int y);
 
 /* isselected() - determines whether a given position is set as selected */
 int  isselected  (selection sel, int x, int y);
+
+
+/* selectblock() - select a block of positions */
+void selectblock(selection sel, int x1, int y1, int x2, int y2);
+
 
 /* nextselected() - advances x and y to the next set position, returning false
  *                  on success and true on failure (end of bitfield) */

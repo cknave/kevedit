@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.29 2002/09/12 22:05:49 bitman Exp $
+ * $Id: screen.h,v 1.30 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -72,21 +72,24 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 										int* position, int flags, displaymethod* d);
 
-/* Drawing functions */
+/* Component drawing functions */
 void drawsidepanel(displaymethod * d, unsigned char panel[]);
 void drawscrollbox(displaymethod * mydisplay, int yoffset, int yendoffset, int updateflag);
 void drawscrolltitle(displaymethod * d, char * title);
 void drawpanel(displaymethod * d);
+
+/* Keveditor drawing functions */
 void updatepanel(keveditor * e);
-void drawscreen(displaymethod * d, ZZTworld * w);
+void drawscreen(keveditor * e);
 void cursorspace(keveditor * e);
 void drawspot(keveditor * e);
 
 /* Block drawing functions */
-void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
+void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy, int invertflag);
 void drawblock(displaymethod * d, ZZTblock * b, int offx, int offy);
-void cursorspaceblock(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
-void drawblockspot(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
+void drawblockshowselection(displaymethod * d, ZZTblock * b, selection sel, int offx, int offy);
+void drawblockcursorspace(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy);
+void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y, int offx, int offy);
 
 /* file dialogs */
 char * filedialog(char * dir, char * extension, char * title, int filetypes,

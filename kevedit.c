@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.4 2002/09/13 18:01:37 bitman Exp $
+ * $Id: kevedit.c,v 1.5 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -42,6 +42,12 @@
 
 /* Update the interface */
 void keveditUpdateInterface(keveditor * myeditor);
+
+/* Handle selection mode */
+void keveditHandleSelection(keveditor * myeditor);
+
+/* Update the current selection */
+void keveditUpdateSelection(keveditor * myeditor);
 
 /* Handle text entry mode */
 void keveditHandleTextEntry(keveditor * myeditor);
@@ -96,9 +102,14 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 	/* Don't color standard patterns by default */
 	myeditor->options.colorStandardPatterns = 0;
 
+	myeditor->clearselectflag = 0;
 	myeditor->selectmode = SELECT_OFF;
 	myeditor->selx = -1; myeditor->sely = -1;
-	initselection(&myeditor->sel, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
+	initselection(&myeditor->selPersistant, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
+	initselection(&myeditor->selCurrent, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
+
+	myeditor->copyBlock = NULL;
+	initselection(&myeditor->copySelection, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
 
 	/* Use KVI environment variable to decide if vi keys should be used */
 	if (getenv("KVI") == NULL) {
@@ -129,7 +140,13 @@ void deletekeveditor(keveditor * myeditor)
 	free(myeditor->buffers.backbuffer);
 
 	/* Free the selection */
-	deleteselection(&myeditor->sel);
+	deleteselection(&myeditor->selPersistant);
+	deleteselection(&myeditor->selCurrent);
+
+	/* Free the copied block */
+	if (myeditor->copyBlock != NULL)
+		zztBlockFree(myeditor->copyBlock);
+	deleteselection(&myeditor->copySelection);
 
 	/* Free everything! Free! Free! Free! Let freedom ring! */
 	free(myeditor);
@@ -137,9 +154,14 @@ void deletekeveditor(keveditor * myeditor)
 
 void kevedit(keveditor * myeditor)
 {
+	if (myeditor == NULL)
+		return;
+
 	/* Loop until it is time to quit */
 	while (myeditor->quitflag == 0) {
 
+		/* Update the selection */
+		keveditUpdateSelection(myeditor);
 		/* Update the interface */
 		keveditUpdateInterface(myeditor);
 
@@ -149,6 +171,8 @@ void kevedit(keveditor * myeditor)
 		/* Undo the cursorspace (draw as a normal tile) */
 		drawspot(myeditor);
 		myeditor->updateflags |= UD_CURSOR;
+
+		keveditHandleSelection(myeditor);
 
 		keveditHandleTextEntry(myeditor);
 		keveditHandleKeybindings(myeditor);
@@ -175,7 +199,7 @@ void keveditUpdateInterface(keveditor * myeditor)
 
 	if (uf & UD_BOARD) {
 		/* Draw the whole board */
-		drawscreen(mydisplay, myeditor->myworld);
+		drawscreen(myeditor);
 	} else {
 		/* Otherwise, possibly draw parts of the board */
 
@@ -203,6 +227,77 @@ void keveditUpdateInterface(keveditor * myeditor)
 		myeditor->updateflags = UD_NONE;  /* Everything should be updated now */
 	}
 }
+
+void keveditHandleSelection(keveditor * myeditor)
+{
+	/* Block selection is based on whether the shift key is down */
+	int selectblockflag = myeditor->mydisplay->shift();
+
+	/* Except for shift + ASCII key */
+	if (myeditor->key < 0x7F)
+		selectblockflag = 0;
+
+	if (selectblockflag && myeditor->selectmode != SELECT_BLOCK) {
+		/* Begin block selection */
+		myeditor->selx = myeditor->cursorx;
+		myeditor->sely = myeditor->cursory;
+		myeditor->clearselectflag = 0;
+		myeditor->selectmode = SELECT_BLOCK;
+	}
+
+	if (!selectblockflag && myeditor->selectmode == SELECT_BLOCK) {
+		/* Block selection has ended: update selPersistant */
+		copyselection(myeditor->selPersistant, myeditor->selCurrent);
+
+		myeditor->selectmode = SELECT_ON;
+		myeditor->updateflags |= UD_BOARD;
+	}
+
+	/* Flood selection */
+	if (myeditor->key == 'x' || myeditor->key == 'X') {
+		if (myeditor->key == 'x') {
+			/* Persistantly select an area by flooding around the cursor */
+			floodselect(zztBoardGetBlock(myeditor->myworld), myeditor->selPersistant,
+									myeditor->cursorx, myeditor->cursory);
+		} else {
+			/* Select all tiles of the type under the cursor */
+			tileselect(zztBoardGetBlock(myeditor->myworld), myeditor->selPersistant,
+			           zztTileGet(myeditor->myworld, myeditor->cursorx, myeditor->cursory));
+		}
+
+		/* Current and persistant selections should be the same now */
+		copyselection(myeditor->selCurrent, myeditor->selPersistant);
+
+		myeditor->selx = myeditor->cursorx;
+		myeditor->sely = myeditor->cursory;
+
+		myeditor->selectmode = SELECT_ON;
+		myeditor->updateflags |= UD_BOARD;
+	}
+}
+
+void keveditUpdateSelection(keveditor * myeditor)
+{
+	if (myeditor->selectmode == SELECT_BLOCK) {
+		/* Block selection is on: update selCurrent */
+		copyselection(myeditor->selCurrent, myeditor->selPersistant);
+		selectblock(myeditor->selCurrent,
+		            myeditor->selx, myeditor->sely,
+		            myeditor->cursorx, myeditor->cursory);
+
+		myeditor->updateflags |= UD_BOARD;
+	}
+
+	if (myeditor->selectmode && myeditor->clearselectflag) {
+		/* Clear any selection in progress */
+		clearselection(myeditor->selPersistant);
+		clearselection(myeditor->selCurrent);
+		myeditor->selectmode = SELECT_OFF;
+		myeditor->clearselectflag = 0;
+		myeditor->updateflags |= UD_BOARD;
+	}
+}
+
 
 void keveditHandleTextEntry(keveditor * myeditor)
 {
@@ -308,6 +403,10 @@ void keveditHandleKeypress(keveditor * myeditor)
 	/* Act on key pressed */
 	switch (myeditor->key) {
 		case DKEY_NONE:
+			break;
+
+		case DKEY_ESC:
+			myeditor->clearselectflag = 1;
 			break;
 
 		/****************** Major actions ****************/
@@ -520,7 +619,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case DKEY_BACKSPACE:
 		case DKEY_DELETE:
 			zztErase(myeditor->myworld, myeditor->cursorx, myeditor->cursory);
-			myeditor->updateflags |= UD_OBJCOUNT;
+			myeditor->updateflags |= UD_OBJCOUNT | UD_SPOT;
 			break;
 		case 'f':
 		case 'F':
@@ -531,6 +630,14 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case 'G':
 			dogradient(myeditor);
 			myeditor->updateflags |= UD_ALL;
+			break;
+
+		case DKEY_CTRL_C:
+			copy(myeditor);
+			break;
+
+		case DKEY_CTRL_V:
+			paste(myeditor);
 			break;
 
 		/***************** Backbuffer Actions ****************/

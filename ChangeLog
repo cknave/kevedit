@@ -4,6 +4,7 @@ Native Linux and Windows via SDL display
 Linux and Windows automatic installer generation
 Param Editor interface improvements
 Tile Info with ability to add/remove stats (params) for any type
+Block/flood Selection, Copy, and Paste
 Monitor type recognized
 Monitor and blink wall rays added to Terrain menu (but not the displayed panel!)
 Object editor panel updated (CTRL-C instead of ALT-C)

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.52 2002/09/12 22:05:49 bitman Exp $
+ * $Id: screen.c,v 1.53 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -562,81 +562,32 @@ void updatepanel(keveditor * e)
 	}
 }
 
-void drawscreen(displaymethod * d, ZZTworld * w)
+void drawscreen(keveditor * e)
 {
-	int x, y;
-
-	for (y = 0; y < 25; y++) {
-		for (x = 0; x < 60; x++) {
-			d->putch_discrete(x, y, zztGetDisplayChar(w, x, y), zztGetDisplayColor(w, x, y));
-		}
-	}
-	d->update(0, 0, 60, 25);
+	drawblockshowselection(e->mydisplay, zztBoardGetBlock(e->myworld), e->selCurrent, 0, 0);
 }
 
 /* Make the cursor more visible */
 void cursorspace(keveditor * e)
 {
-	displaymethod * d = e->mydisplay;
-	ZZTworld * w = e->myworld;
-	char c, b, f;
-	c = zztGetDisplayColor(w, e->cursorx, e->cursory);
-	f = c & 0x0f;
-	b = (c & 0xf0) >> 4;
-	if (f < 8)
-		f += 8;
-	else
-		f -= 8;
-	if (f == b)
-		c = 7;
-	else
-		c = (b << 4) + f;
-
-	/* Print the char */
-	d->putch(e->cursorx, e->cursory, zztGetDisplayChar(w, e->cursorx, e->cursory), c);
+	drawblockcursorspace(e->mydisplay, zztBoardGetBlock(e->myworld), e->cursorx, e->cursory, 0, 0);
 }
 
 /* Update a spot around the cursor */
 void drawspot(keveditor * e)
 {
-	displaymethod * d = e->mydisplay;
-	ZZTworld * w = e->myworld;
-	int x, y;
-	x = e->cursorx;
-	y = e->cursory;
-
-	if (y - 1 >= 0) {
-		if (x - 1 >= 0) {
-			d->putch(x - 1, y - 1, zztGetDisplayChar(w, x - 1, y - 1), zztGetDisplayColor(w, x - 1, y - 1));
-		}
-		d->putch(x, y - 1, zztGetDisplayChar(w, x, y - 1), zztGetDisplayColor(w, x, y - 1));
-		if (x + 1 < ZZT_BOARD_X_SIZE) {
-			d->putch(x + 1, y - 1, zztGetDisplayChar(w, x + 1, y - 1), zztGetDisplayColor(w, x + 1, y - 1));
-		}
-	}
-	if (x - 1 >= 0) {
-		d->putch(x - 1, y, zztGetDisplayChar(w, x - 1, y), zztGetDisplayColor(w, x - 1, y));
-	}
-
-	d->putch(x, y, zztGetDisplayChar(w, x, y), zztGetDisplayColor(w, x, y));
-	if (x + 1 < ZZT_BOARD_X_SIZE) {
-		d->putch(x + 1, y, zztGetDisplayChar(w, x + 1, y), zztGetDisplayColor(w, x + 1, y));
-	}
-	if (y + 1 < ZZT_BOARD_Y_SIZE) {
-		if (x - 1 >= 0) {
-			d->putch(x - 1, y + 1, zztGetDisplayChar(w, x - 1, y + 1), zztGetDisplayColor(w, x - 1, y + 1));
-		}
-		d->putch(x, y + 1, zztGetDisplayChar(w, x, y + 1), zztGetDisplayColor(w, x, y + 1));
-		if (x + 1 < 60) {
-			d->putch(x + 1, y + 1, zztGetDisplayChar(w, x + 1, y + 1), zztGetDisplayColor(w, x + 1, y + 1));
-		}
-	}
+	drawblockspot(e->mydisplay, zztBoardGetBlock(e->myworld), e->selCurrent, e->cursorx, e->cursory, 0, 0);
 }
 
-void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
+void drawblocktile(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy, int invertflag)
 {
-	/* TODO: protect drawing region */
-	d->putch_discrete(x + offx, y + offy, zztTileGetDisplayChar(b, x, y), zztTileGetDisplayColor(b, x, y));
+	char c = zztTileGetDisplayColor(b, x, y);
+
+	/* Invert the color */
+	if (invertflag)
+		c ^= 0x7F;
+
+	d->putch_discrete(x + offx, y + offy, zztTileGetDisplayChar(b, x, y), c);
 }
 
 void drawblock(displaymethod * d, ZZTblock * b, int offx, int offy)
@@ -645,60 +596,72 @@ void drawblock(displaymethod * d, ZZTblock * b, int offx, int offy)
 
 	for (x = 0; x < b->width; x++) {
 		for (y = 0; y < b->height; y++) {
-			drawblocktile(d, b, x, y, offx, offy);
+			drawblocktile(d, b, x, y, offx, offy, 0);
 		}
 	}
-	d->update(0, 0, 60, 25);
+	d->update(offx, offy, offx + b->width, offy + b->height);
 }
 
-void cursorspaceblock(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
+void drawblockshowselection(displaymethod * d, ZZTblock * b, selection sel, int offx, int offy)
 {
-	char c, back, f;
+	int x, y;
+
+	for (x = 0; x < b->width; x++) {
+		for (y = 0; y < b->height; y++) {
+			drawblocktile(d, b, x, y, offx, offy, isselected(sel, x, y));
+		}
+	}
+	d->update(offx, offy, offx + b->width, offy + b->height);
+}
+
+void drawblockcursorspace(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
+{
+	char c;
 	c = zztTileGetDisplayColor(b, x, y);
-	f = c & 0x0f;
-	back = (c & 0xf0) >> 4;
-	if (f < 8)
-		f += 8;
-	else
-		f -= 8;
-	if (f == back)
-		c = 7;
-	else
-		c = (back << 4) + f;
+
+	/* Invert brightness of foreground */
+	c ^= 0x08;
+	/* If foreground and background are the same, use grey */
+	if ((c >> 4) == (c & 0x0F))
+		c = 0x07;
 
 	/* Print the char */
 	d->putch(x + offx, y + offy, zztTileGetDisplayChar(b, x, y), c);
 }
 
-void drawblockspot(displaymethod * d, ZZTblock * b, int x, int y, int offx, int offy)
+#define drawat(x, y)  drawblocktile(d, b, (x), (y), offx, offy, isselected(sel, (x), (y)))
+
+void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y, int offx, int offy)
 {
-	drawblocktile(d, b, x, y, offx, offy);
+	drawat(x, y);
 
 	if (y - 1 >= 0) {
 		if (x - 1 >= 0) {
-			drawblocktile(d, b, x - 1, y - 1, offx, offy);
+			drawat(x - 1, y - 1);
 		}
-		drawblocktile(d, b, x, y - 1, offx, offy);
+		drawat(x, y - 1);
 		if (x + 1 < ZZT_BOARD_X_SIZE) {
-			drawblocktile(d, b, x + 1, y - 1, offx, offy);
+			drawat(x + 1, y - 1);
 		}
 	}
 	if (x - 1 >= 0) {
-		drawblocktile(d, b, x - 1, y, offx, offy);
+		drawat(x - 1, y);
 	}
 	if (x + 1 < ZZT_BOARD_X_SIZE) {
-		drawblocktile(d, b, x + 1, y, offx, offy);
+		drawat(x + 1, y);
 	}
 	if (y + 1 < ZZT_BOARD_Y_SIZE) {
 		if (x - 1 >= 0) {
-			drawblocktile(d, b, x - 1, y + 1, offx, offy);
+			drawat(x - 1, y + 1);
 		}
-		drawblocktile(d, b, x, y + 1, offx, offy);
+		drawat(x, y + 1);
 		if (x + 1 < 60) {
-			drawblocktile(d, b, x + 1, y + 1, offx, offy);
+			drawat(x + 1, y + 1);
 		}
 	}
 }
+
+#undef drawat
 
 char * filedialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay)
 {

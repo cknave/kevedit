@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.8 2002/08/24 06:36:19 bitman Exp $
+ * $Id: board.c,v 1.9 2002/09/16 06:47:25 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -753,6 +753,11 @@ int zztBoardGetCurrent(ZZTworld *world)
 ZZTboard * zztBoardGetCurPtr(ZZTworld *world)
 {
 	return &(world->boards[world->cur_board]);
+}
+
+ZZTblock * zztBoardGetBlock(ZZTworld *world)
+{
+	return world->boards[world->cur_board].bigboard;
 }
 
 void zztBoardSetTitle(ZZTworld *world, char *title)

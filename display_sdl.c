@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.9 2002/08/30 02:20:34 bitman Exp $
+ * $Id: display_sdl.c,v 1.10 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -1166,6 +1166,9 @@ int display_sdl_kbhit()
 {
 	SDL_Event event;
 	int retval;
+
+	/* Make sure pending events get into the event queue */
+	SDL_PumpEvents();
 
 	/* Get number of KEYDOWN events in the queue */
 	retval = SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYDOWN);

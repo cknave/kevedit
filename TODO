@@ -11,7 +11,7 @@ Add monitor & blink rays to terrain documentation
 
 For the 0.6 release:
 --------------------
-Block copy/paste/move/export/import
+Undo
 ANSI file support (as much as ZZT can do)
 Multiple backbuffers and toolkit file format
 Object library sidebar menu
@@ -19,14 +19,13 @@ Object library sidebar menu
 For the 0.7 release:
 --------------------
 Configurable keybindings
+Configuration file
 UNIX, here we come!
 
 If Ever:
 --------
 Skins -- possibly using zzt file format as base
 F4 textwrapping
-Undo
 Font editor
 Scripting
-Change all of one kind to another
 ZZT-OOP shortcut keys

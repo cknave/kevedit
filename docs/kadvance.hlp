@@ -1,136 +1,19 @@
 @Advanced Editing Tools
 $Advanced Editing Tools
 
-!backbuffer;Resizable Backbuffer
-!buflock;Backbuffer Locking
-!gradtool;Gradient Tool
-!gradient;Gradient Draw Mode
-!aquire;Aquire Mode
-!randfill;Random Flood Fill
-
 :backbuffer;Resizable Backbuffer
-
-The backbuffer may  be  resized  using
-the '<' and '>' keys. Some gradients may
-not fit in the default ten-tile
-backbuffer, so this may prove useful. Only
-ten tiles will be visible at once, but the
-backbuffer will scroll automatically.
-
-Both gradient draw mode and random flood
-fill use the ENTIRE backbuffer, so feel
-free to resize the backbuffer as necessary
-using '<' and '>'.
-
 :buflock;Backbuffer Locking
-
-By default, using ENTER to modify a tile,
-plotting an uncommon tile from the F1 - F3
-menus, or pressing INSERT will copy a tile
-into the backbuffer. Backbuffer locking
-prevents the backbuffer from being
-modified, except that when INSERT is
-pressed, the tile under the cursor will be
-inserted into the currently selected
-backbuffer slot, if the pattern selector
-is over the backbuffer. This mimics ZZTAE
-behavior.
-
-To toggle backbuffer locking, press '/'.
-
-:gradtool;Gradient Tool
-
-One of the most versatile drawing tools
-offered by KevEdit, the Gradient tool
-allows a custom or built-in gradient to be
-drawn in a variety of ways. Press 'g' to
-activate the Gradient Tool and follow the
-provided instructions.
-
-If the pattern selector is above the
-standard patterns (left of the
-backbuffer), then the gradient tool will
-use the current colour settings to create
-a gradient of walls fading from the
-foreground colour to the background
-colour.
-
-If the pattern selector is above the
-backbuffer, the patterns in the backbuffer
-will be used by the gradient tool.
-
-Note: as an extension to the flood
-selection option of the gradient tool, 'm'
-may be used to flood select multiple
-areas. Because the areas are not
-highlighted in any way, this feature is,
-at present, only useful to the die-hard.
-
+:aquire;Aquire Mode
 :gradient;Gradient Draw Mode
 
-Gradient draw mode works much in the same
-way as draw mode (activated by the TAB
-key), except that KevEdit cycles through
-the backbuffer with each cursor movement.
-This can be used to easily plot gradients
-or other patterns. Use SHIFT-TAB to
-activate gradient mode and TAB to turn it
-off. When gradient mode is on, KevEdit
-will cycle through the backbuffer backward
-so that tiles are laid down in the same
-order they enter the buffer. To cycle
-forward, press SHIFT-TAB a second time.
+Information on backbuffer functions can
+now be found in:
+!-kbackbuf;The Backbuffer
 
-Holding down ALT while moving will
-continuously paint the gradient for ten
-spaces at a time horizontally and five
-tiles at a time vertically.
-
-If the one of the standard patterns is
-selected, a fade from foreground color to
-background color will be used instead of
-the backbuffer.
-
-:aquire;Aquire Mode
-
-Aquire mode acts exactly in the opposite
-manner as drawing mode, lifting tiles into
-the backbuffer as the cursor is moved. By
-using aquire mode, one can load a large
-gradient or line of objects into the
-backbuffer with relatively few keystrokes.
-Press 'a' to toggle aquire mode. The 'a'
-next to the backbuffer will indicate
-whether aquire mode is on.
-
-By default, the backbuffer will be resized
-so that no non-empty tiles are lost. To
-force the backbuffer to stay the same
-size, use SHIFT+'A'.
-
-Holding down ALT while moving the cursor
-will aquire several tiles at once.
-
+:gradtool;Gradient Tool
 :randfill;Random Flood Fill
 
-Random flood fill works much like normal
-flood fill except that tiles are chosen at
-random from the backbuffer when filling.
-Use capitalized 'F' to random flood fill a
-region.
+Information on tools involving selected
+areas can now be found in:
+!-kselect.hlp;Tile Selection
 
-If the standard patterns are selected, a
-gradient from foreground colour to
-background colour will be used instead of
-the backbuffer.
-
-BEWARE: once an area is flood filled with
-random tiles, it is difficult to undo.
-Save beforehand if possible. An undo
-feature is in the works, but don't get
-your hopes up too high.
-
-In a random flood fill, all tiles used are
-given equal probability. To increase the
-occurance of a certain kind of tile, put
-more than one copy in the backbuffer.

@@ -1,5 +1,5 @@
 /* selection.h  -- selected area
- * $Id: selection.c,v 1.3 2002/09/13 17:51:21 bitman Exp $
+ * $Id: selection.c,v 1.4 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,13 @@
 #include "selection.h"
 
 #include <stdlib.h>
+#include <string.h>
+
+/* The all-powerful min/max macros */
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define swap(a, b, t) { (t) = (a); (a) = (b); (b) = (t); }
+
 
 const int fieldunitsize = (int) sizeof(bitfieldtype) * 8;
 
@@ -38,7 +45,7 @@ void initselection(selection * sel, int width, int height)
 	sel->field = (bitfieldtype *) malloc(fieldunitsize *
 																			 (sel->fieldlength));
 
-	clearselection(sel);
+	clearselection(*sel);
 }
 
 /* deleteselection() - free()s any memory used by the selection */
@@ -52,20 +59,60 @@ void deleteselection(selection * sel)
 }
 
 /* clearselection() - unsets all values */
-void clearselection(selection * sel)
+void clearselection(selection sel)
 {
 	int i;
 
 	/* Run through each element of the field and clear it */
-	for (i = 0; i < sel->fieldlength; i++)
-		sel->field[i] = 0;
+	for (i = 0; i < sel.fieldlength; i++)
+		sel.field[i] = 0;
 }
 
-#define selectionindex(sel, x, y) ()
+/* setselection() - sets all values */
+void setselection(selection sel)
+{
+	int i;
+
+	/* Run through each element of the field and set it */
+	for (i = 0; i < sel.fieldlength; i++)
+		sel.field[i] = -1;
+}
+
+
+/* copyselection() - copy one selection onto another of the same size.
+ *                   Returns zero on success. */
+int copyselection(selection dest, selection src)
+{
+	if (dest.fieldlength != src.fieldlength ||
+			dest.width       != src.width ||
+			dest.height      != src.height)
+		return 1;
+
+	memcpy(dest.field, src.field, fieldunitsize * dest.fieldlength);
+
+	return 0;
+}
+
+int mergeselection(selection dest, selection src)
+{
+	int i;
+
+	if (dest.fieldlength != src.fieldlength ||
+			dest.width       != src.width ||
+			dest.height      != src.height)
+		return 1;
+
+	for (i = 0; i < dest.fieldlength; i++)
+		dest.field[i] &= src.field[i];
+
+	return 0;
+}
+
 
 /* selectpos() - sets a given position to selected */
 void selectpos   (selection sel, int x, int y)
 {
+	if (x < 0 || y < 0 || x >= sel.width || y >= sel.height) return;
 	sel.field[(x / fieldunitsize) + (y * sel.fieldwidth)]
 		|= (1 << x % fieldunitsize);
 }
@@ -73,6 +120,7 @@ void selectpos   (selection sel, int x, int y)
 /* unselectpos() - unsets a given position */
 void unselectpos (selection sel, int x, int y)
 {
+	if (x < 0 || y < 0 || x >= sel.width || y >= sel.height) return;
 	sel.field[(x / fieldunitsize) + (y * sel.fieldwidth)]
 		&= ~(1 << x % fieldunitsize);
 }
@@ -80,9 +128,33 @@ void unselectpos (selection sel, int x, int y)
 /* isselected() - determines whether a given position is set as selected */
 int  isselected  (selection sel, int x, int y)
 {
+	if (x < 0 || y < 0 || x >= sel.width || y >= sel.height) return 0;
 	return sel.field[(x / fieldunitsize) + (y * sel.fieldwidth)]
 		& (1 << x % fieldunitsize);
 }
+
+
+/* selectblock() - select a block of positions */
+void selectblock(selection sel, int x1, int y1, int x2, int y2)
+{
+	int x, y, temp;
+
+	/* Make sure that the lowest values come first */
+	if (x1 > x2) swap(x1, x2, temp);
+	if (y1 > y2) swap(y1, y2, temp);
+
+	/* Make sure the values are in bounds */
+	x1 = min(x1, sel.width);
+	x2 = min(x2, sel.width);
+	y1 = min(y1, sel.height);
+	y2 = min(y2, sel.height);
+
+	/* This could be more efficient, but who cares? */
+	for (x = x1; x <= x2; x++)
+		for (y = y1; y <= y2; y++)
+			selectpos(sel, x, y);
+}
+
 
 /* nextselected() - advances x and y to the next set position */
 int nextselected(selection sel, int * x, int * y)

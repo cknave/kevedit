@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.35 2002/09/13 17:51:21 bitman Exp $
+ * $Id: misc.c,v 1.36 2002/09/16 06:47:24 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,125 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <time.h>
+
+void copy(keveditor * myeditor)
+{
+	/* Only copy if a block is selected */
+	if (myeditor->selectmode) {
+		if (myeditor->copyBlock != NULL)
+			zztBlockFree(myeditor->copyBlock);
+
+		myeditor->copyBlock = zztBlockDuplicate(zztBoardGetBlock(myeditor->myworld));
+		copyselection(myeditor->copySelection, myeditor->selCurrent);
+
+		myeditor->clearselectflag = 1;
+	}
+}
+
+void paste(keveditor * myeditor)
+{
+	ZZTworld * myworld = myeditor->myworld;
+	int done = 0;
+	int x = 0, y = 0;
+	selection pasteselection;
+
+	if (myeditor->copyBlock == NULL)
+		return;
+
+	/* Initialize valid pasting region selection */
+	initselection(&pasteselection, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
+
+	if (myeditor->selectmode) {
+		/* Only paste within the selected region */
+		copyselection(pasteselection, myeditor->selCurrent);
+	} else {
+		/* Paste everywhere */
+		setselection(pasteselection);
+	}
+
+	/* Don't paste over the player */
+	unselectpos(pasteselection, myworld->boards[zztBoardGetCurrent(myworld)].plx,
+							myworld->boards[zztBoardGetCurrent(myworld)].ply);
+
+	while (!done) {
+		int key;
+		ZZTblock * previewBlock;
+
+		/* Merge the current board and copyBlock onto the previewBlock */
+		previewBlock = zztBlockDuplicate(zztBoardGetBlock(myeditor->myworld));
+		pasteblock(previewBlock, myeditor->copyBlock, pasteselection, myeditor->copySelection, x, y);
+
+		/* Draw the preview */
+		drawblock(myeditor->mydisplay, previewBlock, 0, 0);
+
+		key = myeditor->mydisplay->getch();
+
+		movebykeystroke(key, &x, &y,
+		                -myeditor->copyBlock->width, -myeditor->copyBlock->height,
+		                 myeditor->copyBlock->width,  myeditor->copyBlock->height,
+		                myeditor->mydisplay);
+
+		if (key == ' ' || key == DKEY_ENTER) {
+			/* TODO: use the preview block to save time. */
+			pasteblock(zztBoardGetBlock(myeditor->myworld),
+								 myeditor->copyBlock, pasteselection, myeditor->copySelection, x, y);
+			done = 1;
+		}
+
+		if (key == DKEY_ESC)
+			done = 1;
+
+		zztBlockFree(previewBlock);
+	}
+
+	deleteselection(&pasteselection);
+	myeditor->clearselectflag = 1;
+	myeditor->updateflags = UD_BOARD;
+}
+
+/* TODO: should this go in libzzt2? selection.c/h has to go with it... */
+/* TODO: make a new type "alphablock" containing a block and a selection */
+int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcsel, int x, int y)
+{
+	int srcpos;     /* Current index in source */
+	int row, col;   /* Current row and col in dest */
+
+	/* Paste */
+
+	srcpos = 0;     /* Start at beginning of source object */
+	for (row = y; row < src->height + y && row < dest->height; row++) {
+		for (col = x; col < src->width + x && col < dest->width; col++, srcpos++) {
+			/* Paste the currently indexed tile from source to (row, col) in dest */
+
+			if (row < 0 || col < 0)
+				continue;
+
+			/* Only copy selected tiles */
+			if (!isselected(destsel, col, row) || !isselected(srcsel, col - x, row - y))
+				continue;
+
+			/* Can't use plot because we want to maintain terrain under creatures
+			 * from the source block, not the destination block */
+
+			/* TODO: there should be a libzzt2 call which handles the following
+			 * on one line. */
+			
+			/* Free existing tile param */
+			if (zztTileAt(dest, col, row).param != NULL)
+				zztParamFree(zztTileAt(dest, col, row).param);
+
+			/* Copy (I love this macro) */
+			zztTileAt(dest, col, row) = src->tiles[srcpos];
+			zztTileAt(dest, col, row).param = zztParamDuplicate(src->tiles[srcpos].param);
+		}
+		/* If the loop stopped short of using every column in src, advance
+		 * the srcpos index to ignore these columns */
+		while (col < src->width + x) { col++; srcpos++; }
+	}
+
+	/* Success! */
+	return 1;
+}
 
 void plot(keveditor * myeditor)
 {
@@ -593,6 +712,18 @@ void floodselect(ZZTblock* block, selection fillsel, int x, int y)
 	}
 }
 
+void tileselect(ZZTblock* block, selection fillsel, ZZTtile tile)
+{
+	int x, y;
+
+	for (x = 0; x < block->width; x++)
+		for (y = 0; y < block->width; y++)
+			if ( zztTileAt(block, x, y).type  == tile.type &&
+			    (zztTileAt(block, x, y).color == tile.color ||
+			     tile.type == ZZT_EMPTY))
+				selectpos(fillsel, x, y);
+}
+
 void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag)
 {
 	int x = -1, y = 0;
@@ -639,16 +770,22 @@ void dofloodfill(keveditor * myeditor, int randomflag)
 	if (randomflag && myeditor->buffers.pbuf == myeditor->buffers.standard_patterns)
 		fillbuffer = createfillpatterns(myeditor);
 
-	/* Don't floodfill onto the player! It's not nice! */
-	if (myeditor->cursorx == zztBoardGetCurPtr(myworld)->plx &&
-			myeditor->cursory == zztBoardGetCurPtr(myworld)->ply)
-		return;
-
 	/* New selection as large as the board */
 	initselection(&fillsel, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
 
-	/* Flood select then fill using the selection */
-	floodselect(block, fillsel, myeditor->cursorx, myeditor->cursory);
+	if (myeditor->selectmode) {
+		copyselection(fillsel, myeditor->selCurrent);
+		myeditor->clearselectflag = 1;
+	} else {
+		/* Flood select */
+		floodselect(block, fillsel, myeditor->cursorx, myeditor->cursory);
+	}
+
+	/* Unselect the player */
+	unselectpos(fillsel, myworld->boards[zztBoardGetCurrent(myworld)].plx,
+							myworld->boards[zztBoardGetCurrent(myworld)].ply);
+
+	/* Fill using the selected area */
 	fillbyselection(myworld, fillsel, *fillbuffer, randomflag);
 
 	/* Delete the fill buffer if we created it above */
@@ -747,7 +884,7 @@ int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, pat
 
 		key = mydisplay->getch();
 
-		drawblocktile(mydisplay, zztBoardGetCurPtr(myworld)->bigboard, *x, *y, 0, 0);
+		drawblocktile(mydisplay, zztBoardGetCurPtr(myworld)->bigboard, *x, *y, 0, 0, 0);
 
 		movebykeystroke(key, x, y, 0, 0, 59, 24, mydisplay);
 
@@ -815,7 +952,7 @@ void dogradient(keveditor * myeditor)
 	gradline grad;
 	patbuffer* fillbuffer;
 
-	initselection(&sel, 60, 25);
+	initselection(&sel, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
 
 	/* Set up the fill buffer */
 	if (myeditor->buffers.pbuf == myeditor->buffers.standard_patterns)
@@ -833,11 +970,20 @@ void dogradient(keveditor * myeditor)
 	/* Draw the first panel */
 	drawsidepanel(mydisplay, PANEL_GRADTOOL1);
 
-	if (promptforselection(sel, &grad, myeditor)) {
-		/* Escape was pressed */
-		deleteselection(&sel);
-		return;
+	if (myeditor->selectmode) {
+		copyselection(sel, myeditor->selCurrent);
+		grad.x1 = myeditor->selx;
+		grad.y1 = myeditor->sely;
+		grad.x2 = myeditor->cursorx;
+		grad.y2 = myeditor->cursory;
+	} else {
+		if (promptforselection(sel, &grad, myeditor)) {
+			/* Escape was pressed */
+			deleteselection(&sel);
+			return;
+		}
 	}
+
 	unselectpos(sel, myworld->boards[zztBoardGetCurrent(myworld)].plx,
 							myworld->boards[zztBoardGetCurrent(myworld)].ply);
 
@@ -873,6 +1019,7 @@ void dogradient(keveditor * myeditor)
 		free(fillbuffer);
 	}
 
+	myeditor->clearselectflag = 1;
 	deleteselection(&sel);
 }
 

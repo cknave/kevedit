@@ -12,6 +12,11 @@ With many contributions by
 !-kbasics;Basics of Using KevEdit
 !-kkeys;Keystroke Quick Reference
 
+!-kbackbuf;The Backbuffer
+!-kselect;Tile Selection
+!-kstats;Stats Editor
+!-kobjedit;The Object Code Editor
+
 !-kbrdinfo;Board Information
 !-kwldinfo;World Information
 !-ktileinf;Tile Information
@@ -19,10 +24,6 @@ With many contributions by
 !-item;Items
 !-creature;Creatures
 !-terrain;Terrain
-
-!-kstats;Stats Editor
-!-kobjedit;The Object Code Editor
-!-kadvance;Advanced Editing Tools
 
 !help;The Help System
 !quit;Quitting
