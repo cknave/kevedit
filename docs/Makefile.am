@@ -8,6 +8,8 @@ HELPFILES = creature.hlp index.hlp item.hlp kadvance.hlp kbackbuf.hlp kbasics.hl
 
 EXTRA_DIST = makehelp.sh $(HELPFILES)
 
+MOSTLYCLEANFILES = kevedit.zml
+
 kevedit.zml: $(srcdir)/*.hlp
 	chmod a+x $(srcdir)/makehelp.sh
 	$(srcdir)/makehelp.sh $(srcdir) .
