@@ -4,4 +4,8 @@ $Help
 !-kevedit;Using Kevedit
 !-kkeys;Keystroke Quick Reference
 !-langref;ZZT OOP Language reference
-!-about;ZZTWeb (if installed)
+
+$ZZT Documentation
+!-about;About ZZT   / ZZTWeb
+!-game;Playing ZZT / In-Game Help
+!-editor;ZZT Editor
