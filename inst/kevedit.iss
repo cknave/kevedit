@@ -28,7 +28,8 @@ Source: "..\kevedit.zml";  DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\README.txt";   DestDir: "{app}"; CopyMode: alwaysoverwrite; Flags: isreadme
 Source: "..\README-SDL.txt"; Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\SDL.dll";      Destdir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\default.zln";  Destdir: "{app}"; CopyMode: alwaysskipifsameorolder
+;Stop releasing this file with KevEdit: it will be built automatically if needed
+;Source: "..\default.zln";  Destdir: "{app}"; CopyMode: alwaysskipifsameorolder
 
 [Icons]
 Name: "{group}\KevEdit"; Filename: "{app}\kevedit.exe"; WorkingDir: "{userdocs}"
