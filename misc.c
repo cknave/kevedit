@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.16 2001/11/11 06:38:07 bitman Exp $
+ * $Id: misc.c,v 1.17 2001/11/11 09:30:01 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -512,6 +512,12 @@ void fillbyselection(selection fillsel, patbuffer pbuf, int randomflag, board* d
 void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25], int randomflag)
 {
 	selection fillsel;
+	patbuffer* fillbuffer;
+
+	/* Set up the fill buffer */
+	fillbuffer = myinfo->pbuf;
+	if (randomflag && myinfo->pbuf == myinfo->standard_patterns)
+		fillbuffer = createfillpatterns(myinfo);
 
 	/* Don't floodfill onto the player! It's not nice! */
 	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
@@ -522,8 +528,14 @@ void dofloodfill(displaymethod * mydisplay, world * myworld, editorinfo * myinfo
 
 	/* Flood select then fill using the selection */
 	floodselect(fillsel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
-	fillbyselection(fillsel, (randomflag ? *myinfo->backbuffer : *myinfo->pbuf),
+	fillbyselection(fillsel, *fillbuffer,
 									randomflag, myworld->board[myinfo->curboard], bigboard, paramlist);
+
+	/* Delete the fill buffer if we created it above */
+	if (randomflag && myinfo->pbuf == myinfo->standard_patterns) {
+		deletepatternbuffer(fillbuffer);
+		free(fillbuffer);
+	}
 
 	/* Cleanup */
 	deleteselection(&fillsel);
@@ -600,7 +612,7 @@ int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, char*
 
 void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay);
 
-int pickgradientpoint(int* x, int* y, selection fillsel, patbuffer pbuf, gradline * grad, int randomseed, board* destbrd, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay)
+int pickgradientpoint(int* x, int* y, selection fillsel, patbuffer pbuf, gradline * grad, int randomseed, board* destbrd, world* myworld, editorinfo* myinfo, char* bigboard, unsigned char paramlist[60][25], displaymethod* mydisplay)
 {
 	int key;
 
@@ -610,8 +622,13 @@ int pickgradientpoint(int* x, int* y, selection fillsel, patbuffer pbuf, gradlin
 		/* Preview the gradient */
 		gradientfillbyselection(fillsel, pbuf, *grad, randomseed, 1,
 									destbrd, bigboard, paramlist, mydisplay);
+		mydisplay->putch(*x, *y, '*', 0x0F);
 
 		key = mydisplay->getch();
+
+		/* Refress the cursor location */
+		myinfo->cursorx = *x; myinfo->cursory = *y;
+		drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 
 		movebykeystroke(key, x, y, 0, 0, 59, 24, mydisplay);
 
@@ -622,7 +639,12 @@ int pickgradientpoint(int* x, int* y, selection fillsel, patbuffer pbuf, gradlin
 			case 'b':
 			case 'B': grad->type = GRAD_BILINEAR; break;
 			case 'r':
-			case 'R': grad->type = GRAD_RADIAL; break;
+			case 'R': grad->type = GRAD_SCALEDRADIAL; break;
+			case 'u':
+			case 'U': grad->type = GRAD_RADIAL; break;
+			case '=': /* (lowercase plus sign) */
+			case '+': if (grad->randomness < 256) grad->randomness++; break;
+			case '-': if (grad->randomness > 0)  grad->randomness--; break;
 		}
 	} while (key != DKEY_ESC && key != DKEY_ENTER &&
 					 key != DKEY_TAB && key != ' ');
@@ -663,18 +685,25 @@ void gradientfillbyselection(selection fillsel, patbuffer pbuf, gradline grad, i
 void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
 {
 	int key;
+	int randomseed;
 	selection sel;
 	gradline grad;
 	patbuffer* fillbuffer;
 
 	initselection(&sel, 60, 25);
-	grad.type = GRAD_LINEAR;
 
 	/* Set up the fill buffer */
 	if (myinfo->pbuf == myinfo->standard_patterns)
 		fillbuffer = createfillpatterns(myinfo);
 	else
 		fillbuffer = myinfo->backbuffer;
+
+	/* Prepare for randomness */
+	randomseed = time(0);
+	grad.randomness = 0;
+	grad.type = GRAD_LINEAR;
+
+	/*********** Make the selection ***************/
 
 	/* Draw the first panel */
 	drawsidepanel(mydisplay, PANEL_GRADTOOL1);
@@ -686,6 +715,8 @@ void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo,
 	}
 	unselectpos(sel, myinfo->playerx, myinfo->playery);
 
+	/************ Build the gradient **************/
+
 	/* Draw the second panel */
 	drawsidepanel(mydisplay, PANEL_GRADTOOL2);
 
@@ -693,8 +724,8 @@ void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo,
 	do {
 		/* Pick the ending point */
 		key = 
-		pickgradientpoint(&grad.x2, &grad.y2, sel, *fillbuffer, &grad, 0,
-						myworld->board[myinfo->curboard], bigboard, paramlist, mydisplay);
+		pickgradientpoint(&grad.x2, &grad.y2, sel, *fillbuffer, &grad, randomseed,
+						myworld->board[myinfo->curboard], myworld, myinfo, bigboard, paramlist, mydisplay);
 		myinfo->cursorx = grad.x2; myinfo->cursory = grad.y2;
 
 		if (key == DKEY_ESC) { deleteselection(&sel); return; }
@@ -702,15 +733,15 @@ void dogradient(displaymethod * mydisplay, world * myworld, editorinfo * myinfo,
 
 		/* Pick the starting point */
 		key = 
-		pickgradientpoint(&grad.x1, &grad.y1, sel, *fillbuffer, &grad, 0,
-						myworld->board[myinfo->curboard], bigboard, paramlist, mydisplay);
+		pickgradientpoint(&grad.x1, &grad.y1, sel, *fillbuffer, &grad, randomseed,
+						myworld->board[myinfo->curboard], myworld, myinfo, bigboard, paramlist, mydisplay);
 		myinfo->cursorx = grad.x1; myinfo->cursory = grad.y1;
 
 		if (key == DKEY_ESC) { deleteselection(&sel); return; }
 	} while (key == DKEY_TAB || key == ' ');
 
 	/* Fill the selection by the gradient line */
-	gradientfillbyselection(sel, *fillbuffer, grad, 0, 0,
+	gradientfillbyselection(sel, *fillbuffer, grad, randomseed, 0,
 						myworld->board[myinfo->curboard], bigboard, paramlist, mydisplay);
 
 	/* Delete the fillbuffer if we createded it custom */

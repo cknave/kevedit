@@ -65,7 +65,7 @@ clean:
 
 # Central KevEditing routines
 main.o: main.c kevedit.h misc.h menu.h editbox.h screen.h zzt.h patbuffer.h help.h register.h infobox.h display.h
-misc.o: misc.c misc.h kevedit.h editbox.h screen.h svector.h hypertxt.h selection.h patbuffer.h display.h
+misc.o: misc.c misc.h kevedit.h editbox.h screen.h svector.h hypertxt.h selection.h gradient.h patbuffer.h display.h
 menu.o: menu.c menu.h kevedit.h screen.h editbox.h zzt.h svector.h files.h zzl.h hypertxt.h patbuffer.h display.h
 editbox.o: editbox.c editbox.h screen.h svector.h zzm.h colours.h register.h help.h scroll.h panel_ed.h display.h
 screen.o: screen.c screen.h kevedit.h editbox.h zzt.h hypertxt.h zlaunch.h panel.h panel_f1.h panel_f2.h panel_f3.h scroll.h tbox.h cbox.h

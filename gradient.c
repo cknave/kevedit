@@ -1,5 +1,5 @@
 /* gradient.c  -- mathematical routines for drawing a gradient
- * $Id: gradient.c,v 1.1 2001/11/11 01:17:53 bitman Exp $
+ * $Id: gradient.c,v 1.2 2001/11/11 09:30:01 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,6 +40,8 @@ float gradientdistance(gradline grad, int x, int y)
 
 	if (grad.type == GRAD_RADIAL)
 		return distanceformula(grad.x1, grad.y1, x, y);
+	if (grad.type == GRAD_SCALEDRADIAL)
+		return distanceformula(grad.x1, grad.y1*2, x, y*2);
 
 	/* Special cases: slopes of zero and infinity */
 	if (grad.y1 == grad.y2) { /* zero slope */
@@ -69,10 +71,12 @@ float gradientdistance(gradline grad, int x, int y)
 		 * g2 and pos and that distance is greater than the gradient length, then
 		 * pos is before point one */
 		if (dg1topos < dg2topos && dg2topos > dg1tog2)
-			return 0;
+			return -dg1topos;
+#if 0
 		/* In this case, pos is after g2 */
 		if (dg1topos > dg2topos && dg1topos > dg1tog2)
 			return dg1tog2;
+#endif
 	}
 
 	/* Return the distance from the starting point */
@@ -87,11 +91,24 @@ int gradientscaledistance(gradline grad, int x, int y, int length)
 	gradlength = distanceformula(grad.x1, grad.y1, grad.x2, grad.y2);
 	radius = gradientdistance(grad, x, y);
 
-	result = (int)gROUND(length * (radius / gradlength));
+#if 0
+	if (grad.randomness > 0)
+		radius += (grad.randomness - rand() % (grad.randomness * 2 + 1));
+#endif
+	if (grad.randomness > 0)
+		radius += rand() % (grad.randomness + 1) - (grad.randomness + 1) / 2;
 
-	if (result > length)
-		return length;
+	/* Ensure that we do not surpass our boundaries */
+	if (radius > gradlength)
+		gradlength = radius;
+	if (radius < 0)
+		radius = 0;
+
+	if (gradlength != 0)
+		result = (int)gROUND(length * (radius / gradlength));
 	else
+		result = 0;
+
 		return result;
 }
 

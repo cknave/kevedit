@@ -2,6 +2,7 @@
 $Advanced Editing Tools
 
 !backbuffer;Resizable Backbuffer
+!gradtool;Gradient Tool
 !gradient;Gradient Draw Mode
 !aquire;Aquire Mode
 !randfill;Random Flood Fill
@@ -20,6 +21,28 @@ fill use the ENTIRE backbuffer, so feel
 free to resize the backbuffer as necessary
 using '<' and '>'.
 
+:gradtool;Gradient Tool
+
+One of the most versatile drawing tools
+offered by KevEdit, the Gradient tool
+allows a custom or built-in gradient to be
+drawn in a variety of ways. Press 'g' to
+activate the Gradient Tool and follow the
+provided instructions.
+
+To use the standard gradient, put the
+pattern selector over one of the standard
+patterns (on the left). The gradient tool
+will use the current colour settings to
+create a gradient which fades from
+the foreground colour to the background
+colour.
+
+For a custom gradient, load a gradient
+into the backbuffer and put the pattern
+selector there before using the gradient
+tool.
+
 :gradient;Gradient Draw Mode
 
 Gradient draw mode works much the same as
@@ -35,6 +58,11 @@ tiles are laid down in the same order they
 enter the buffer. To cycle forward, press
 SHIFT-TAB a second time.
 
+This feature may, at present, only be
+used with a custom gradient. The
+backbuffer must be selected by the pattern
+selector.
+
 :aquire;Aquire Mode
 
 Aquire mode acts exactly in the opposite
@@ -49,9 +77,8 @@ get mode is on.
 
 NOTE: Aquire mode was formerly "get mode"
 but the name didn't have much ring to it
-and I hope to use the 'g' key for
-something else in the future. The 'g' key
-may no longer be used.
+and the key 'g' is now used for the
+gradient tool.
 
 :randfill;Random Flood Fill
 
@@ -61,12 +88,11 @@ random from the backbuffer when filling.
 Use capitalized 'F' to random flood fill a
 region.
 
-With version 0.3.3, the floodfill
-algorithm is completely new. Random
-floodfill can now fill onto tiles present
-in the backbuffer. Also, the standard
-patterns are never used for random
-floodfill.
+In version 0.3.4, random flood fill may
+now use the standard patterns. A standard
+gradient from foreground colour to
+background colour will be used when one of
+the standard patterns is selected.
 
 BEWARE: once an area is flood filled with
 random tiles, it is difficult to undo.

@@ -1,5 +1,5 @@
 /* gradient.h  -- mathematical routines for drawing a gradient
- * $Id: gradient.h,v 1.1 2001/11/11 01:17:53 bitman Exp $
+ * $Id: gradient.h,v 1.2 2001/11/11 09:30:01 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,14 +23,14 @@
 /* Types of gradients */
 #define GRAD_LINEAR   0
 #define GRAD_BILINEAR 1
-/* TODO: implement: */
 #define GRAD_RADIAL   2
-#define GRAD_CONICAL  3
+#define GRAD_SCALEDRADIAL   3
 
 typedef struct gradline {
 	int x1, y1;
 	int x2, y2;
 	int type;
+	int randomness;
 } gradline;
 
 float gradientdistance(gradline grad, int x, int y);

@@ -2,15 +2,17 @@
 $New Features
 
 $New in Version 0.3.4
+!-kadvance:gradtool;Gradient Tool
 !-kbasics:zzt;Run ZZT at title screen
 !-langtut;OOP Language Tutorial
 :;  *  Multi-directory file dialogs
 
 $Bugs fixed in 0.3.4
   *  Occasional crash of Help Dialog
+	*  Memory leak in backbuffer on Quit
 
 $New in Version 0.3.3
-!-kevedit:help;Hypertext help system!!!
+!-kevedit:help;Hypertext help system
 !-kbrdinfo;Board Info Dialog
 !-kwldinfo;World Info Dialog
 !-kbasics:color;Kolor Dialog
