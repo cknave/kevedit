@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.15 2002/09/17 20:01:24 bitman Exp $
+ * $Id: menu.c,v 1.16 2002/09/23 21:24:14 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -47,14 +47,15 @@ void itemmenu(keveditor * myeditor)
 	choice = dothepanel_f1(myeditor);
 	tile.type = choice;
 
-	/* Create params -- zztParamCreate() returns NULL for types which have no params */
-	tile.param = zztParamCreate(tile);
-
 	if (tile.type == ZZT_PLAYER) {
 		/* The player is a special case */
 		zztPlotPlayer(myworld, myeditor->cursorx, myeditor->cursory);
 		return;
 	}
+
+	/* Create params -- zztParamCreate() returns NULL for types which have no params */
+	tile.param = zztParamCreate(tile);
+
 
 	/* Use default color if in default color mode */
 	if (myeditor->defcmode != 0) {
@@ -78,11 +79,11 @@ void itemmenu(keveditor * myeditor)
 	if (choice != -1) {
 		zztPlot(myworld, myeditor->cursorx, myeditor->cursory, tile);
 		push(myeditor->buffers.backbuffer, tile);
-
-		/* Free our copy of the params */
-		if (tile.param != NULL)
-			zztParamFree(tile.param);
 	}
+
+	/* Free our copy of the params */
+	if (tile.param != NULL)
+		zztParamFree(tile.param);
 }
 
 
