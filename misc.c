@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.40 2002/09/23 21:27:27 bitman Exp $
+ * $Id: misc.c,v 1.41 2002/09/24 01:05:37 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,12 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <time.h>
+
+#ifdef DOSEMU
+/* Need PATH_MAX */
+#include <sys/param.h>
+#include "dosemu.h"
+#endif
 
 void copy(keveditor * myeditor)
 {
@@ -256,6 +262,9 @@ void showObjects(keveditor * myeditor)
 
 void runzzt(char* path, char* world)
 {
+#ifndef DOSEMU
+
+	/* The DOS/WINDOWS way */
 	stringvector actions, files;
 	stringvector info;
 	zlaunchinfo zli;
@@ -284,6 +293,28 @@ void runzzt(char* path, char* world)
 
 	deletestringvector(&info);
 	/* DO NOT delete actions and files. deletezlinfo() did this already */
+#else
+	/* The LINUX way */
+	char cwd[PATH_MAX];
+	char *no_extension = NULL;
+
+	/* ZZT world is always in current dir */
+	getcwd(cwd, PATH_MAX);
+
+	/* No .zzt is required */
+	if(strlen(world) > 4 && world[strlen(world)-4] == '.') {
+		no_extension = strdup(world);
+		no_extension[strlen(world)-4] = '\0';
+	}
+
+	/* And run dosemu on something */
+	if(no_extension != NULL) {
+		dosemu_launch(path, cwd, no_extension);
+		free(no_extension);
+	} else {
+		dosemu_launch(path, cwd, world);
+	}
+#endif /* DOSEMU */
 }
 
 

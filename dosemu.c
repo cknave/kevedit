@@ -1,5 +1,5 @@
 /* dosemu.c		-- Routines for calling dosemu to run ZZT
- * $Id: dosemu.c,v 1.1 2002/03/30 23:39:49 kvance Exp $
+ * $Id: dosemu.c,v 1.2 2002/09/24 01:05:37 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,11 +28,12 @@
 
 #ifdef DOSEMU
 
-int dosemu_launch(char *path, char *world)
+int dosemu_launch(char *datapath, char *worldpath, char *world)
 {
 	char zztpath[DEXE_PATH_LENGTH+1];
 	char chopworld[DEXE_WORLD_LENGTH+1];
 	char zztworld[DEXE_WORLD_LENGTH+1];
+	char olddexe[PATH_MAX];
 	char newdexe[PATH_MAX];
 	char cmdline[PATH_MAX];
 	FILE *fp;
@@ -41,14 +42,14 @@ int dosemu_launch(char *path, char *world)
 	struct stat statbuf;
 
 	/* Make path padded with spaces */
-	if(strlen(path) > DEXE_PATH_LENGTH) {
+	if(strlen(worldpath) > DEXE_PATH_LENGTH) {
 		fprintf(stderr, "ERROR: Path is too long!\n");
 		return 0;
 	}
-	for(i = 0, j = strlen(path); j < DEXE_PATH_LENGTH; i++, j++)
+	for(i = 0, j = strlen(worldpath); j < DEXE_PATH_LENGTH; i++, j++)
 		zztpath[i] = ' ';
 	for(j = 0; i < DEXE_PATH_LENGTH+1; i++, j++)
-		zztpath[i] = path[j];
+		zztpath[i] = worldpath[j];
 	zztpath[i] = '\0';
 
 	/* Strip ZZT from world name */
@@ -66,10 +67,13 @@ int dosemu_launch(char *path, char *world)
 	zztworld[i] = '\0';
 	
 	/* Make a temporary DEXE */
+	sprintf(olddexe, "%s/dexe/zzt.dexe", datapath);
 	sprintf(newdexe, "/tmp/zzt%i.dexe", getpid());
-	if(stat("zzt.dexe", &statbuf) != 0)
+	if(stat(olddexe, &statbuf) != 0) {
+		fprintf(stderr, "ERROR: %s not found!\n", olddexe);
 		return 0;
-	sprintf(cmdline, "cp zzt.dexe %s", newdexe);
+	}
+	sprintf(cmdline, "cp %s %s", olddexe, newdexe);
 	system(cmdline);
 
 	/* Apply changes to DEXE */
@@ -80,11 +84,12 @@ int dosemu_launch(char *path, char *world)
 	fputs(zztworld, fp);
 	fclose(fp);
 
-	printf("zp=\"%s\"\nzw=\"%s\"\n", zztpath, zztworld);
-
 	/* Run DEXE */
 	sprintf(cmdline, "dosexec %s", newdexe);
 	system(cmdline);
+
+	/* Remove temporary DEXE */
+	unlink(newdexe);
 
 	/* Done */
 	return 1;

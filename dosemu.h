@@ -1,5 +1,5 @@
 /* dosemu.h		-- Routines for calling dosemu to run ZZT
- * $Id: dosemu.h,v 1.1 2002/03/30 23:39:49 kvance Exp $
+ * $Id: dosemu.h,v 1.2 2002/09/24 01:05:37 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/* Only need this if DOSEMU support is to be included */
+#ifdef DOSEMU
+
 #ifndef _DOSEMU_H
 #define _DOSEMU_H 1
 
@@ -25,10 +28,12 @@
 #define DEXE_PATH_LENGTH 56
 
 /* Location of the world name in the DEXE */
-#define DEXE_WORLD_LOCATION 0x2A896
+#define DEXE_WORLD_LOCATION 0x2A89F
 #define DEXE_WORLD_LENGTH 8
 
 /* DOSEMU launch function */
-int dosemu_launch(char *path, char *world);
+int dosemu_launch(char *datapath, char *worldpath, char *world);
 
 #endif	/* _DOSEMU_H */
+
+#endif /* DOSEMU */

@@ -25,7 +25,7 @@ BINARY = kevedit
 INSTALL = /usr/bin/install -c
 
 # Compile and link flags
-CFLAGS = -DCANGLOB
+CFLAGS = -DCANGLOB -DDOSEMU
 LDFLAGS =
 
 # Makefile rules
