@@ -1,5 +1,5 @@
 /* sdl_synth.c	-- SDL music synthesizer
- * $Id: sdl_synth.c,v 1.3 2002/08/23 22:58:47 bitman Exp $
+ * $Id: sdl_synth.c,v 1.4 2002/09/17 06:12:38 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,9 +32,12 @@ int OpenSynth(SDL_AudioSpec * spec)
 {
 	SDL_AudioSpec desired, obtained;
 
-	if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
-		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
-		return 1;
+	if (!SDL_WasInit(SDL_INIT_AUDIO)) {
+		/* If the audio subsystem isn't ready, initialize it */
+		if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+			fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+			return 1;
+		}
 	}
 
 	/* Set desired sound opts */
@@ -60,7 +63,6 @@ int OpenSynth(SDL_AudioSpec * spec)
 void CloseSynth(void)
 {
 	SDL_CloseAudio();
-	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	AudioCleanUp();
 }
 
