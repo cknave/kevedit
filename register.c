@@ -1,5 +1,5 @@
 /* register.c  -- text editor registers
- * $Id: register.c,v 1.1 2001/01/07 23:58:21 bitman Exp $
+ * $Id: register.c,v 1.2 2001/02/15 04:59:09 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -124,6 +124,7 @@ void mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapw
 }
 
 /* testing */
+/*
 #include <conio.h>
 #include <stdlib.h>
 
@@ -158,5 +159,6 @@ void regtest(void) {
 	getch();
 	exit(0);
 }
+*/
 /* end testing */
 

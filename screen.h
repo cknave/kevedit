@@ -1,5 +1,5 @@
-/* kevedit.h    -- Editor definitions
- * $Id: screen.h,v 1.7 2001/01/07 19:54:06 kvance Exp $
+/* screen.h    -- Functions for drawing
+ * $Id: screen.h,v 1.8 2001/02/15 04:59:09 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify

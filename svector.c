@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.7 2001/01/07 23:55:42 bitman Exp $
+ * $Id: svector.c,v 1.8 2001/02/15 04:59:09 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -200,6 +200,21 @@ void removestringvector(stringvector * v)
 	return;
 }
 
+/* strlowercase - used by strequ to convert a string to lowercase,
+ *                same as strlwr() in djgpp, but more compatible.
+ *                introduced by Elchonon Edelson for linux port */
+
+char* strlowercase(char* string)
+{
+	char* s = string;
+	while (*s) {
+		*s = tolower(*s);
+		s++;
+	}
+
+	return string;
+}
+
 
 /* strequ - string comparison */
 int strequ(const char *str1, const char *str2, int flags)
@@ -222,8 +237,8 @@ int strequ(const char *str1, const char *str2, int flags)
 	strcpy(lwr2, str2);
 
 	if (flags & STREQU_UNCASE) {
-		strlwr(lwr1);
-		strlwr(lwr2);
+		strlowercase(lwr1);
+		strlowercase(lwr2);
 	}
 
 	for (i = 0; lwr1[i] != 0 && lwr2[i] != 0; i++)
@@ -241,6 +256,5 @@ int strequ(const char *str1, const char *str2, int flags)
 
 	return isequ;
 }
-
 
 
