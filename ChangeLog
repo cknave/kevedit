@@ -1,5 +1,12 @@
+0.2.1: August 12, 2000
+----------------------
+Player position bugfix
+Memory holes plugged
+Startup segfault fixed
+Blinking floodfill allowed
+
 0.2: August 7, 2000
--------
+-------------------
 Many bugfixes
 Floodfill implimented
 Win95/Win98 support

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.4 2000/08/10 13:23:19 kvance Exp $
+ * $Id: main.c,v 1.5 2000/08/12 18:13:22 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -125,7 +125,7 @@ void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int
 		updatepanel(mydisplay, myinfo, myworld);
 }
 
-void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16], int xpos, int ypos, char code, char colour)
+void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int9_t * bigboard, patdef patdefs[16], int xpos, int ypos, char code, u_int8_t colour)
 {
 	int i, x, t, targetcolour;
 	int u = 0;
@@ -730,7 +730,7 @@ int main(int argc, char **argv)
 				/* Actually, just an about box now */
 				drawscrollbox(0, mydisplay);
 				mydisplay->print(24, 4, 0x0a, "About KevEdit");
-				mydisplay->print(9, 12, 0x0a, "KevEdit Build 5, Version");
+				mydisplay->print(9, 12, 0x0a, "KevEdit R5, Version");
 				mydisplay->print(34, 12, 0x0a, VERSION);
 				mydisplay->print(9, 13, 0x0a, "Copyright (C) 2000 Kev Vance");
 				mydisplay->print(9, 14, 0x0a, "Distribute under the terms of the GNU GPL");

@@ -1,6 +1,5 @@
-
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.2 2000/08/08 01:57:38 kvance Exp $
+ * $Id: display_dos.c,v 1.3 2000/08/12 18:13:22 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -57,7 +56,7 @@ int display_dos_init()
 	if (getenv("winbootdir") != NULL)
 		windows = 1;
 	// Check for WinNT/Win2k
-	if (!strcmp(getenv("OS"), "Windows_NT"))
+	if ((getenv("OS") != NULL) && !strcmp(getenv("OS"), "Windows_NT"))
 		windows = 2;
 
 	return -1;

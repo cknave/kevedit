@@ -1,6 +1,5 @@
-
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.2 2000/08/08 01:57:38 kvance Exp $
+ * $Id: display.h,v 1.3 2000/08/12 18:13:22 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
