@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.7 2000/08/27 02:19:03 bitman Exp $
+ * $Id: editbox.c,v 1.8 2000/08/31 03:36:48 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -211,9 +211,13 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 
 	int wrapwidth = editwidth;
 
+	/* if there is no string, add one */
+	if (sv->cur == NULL || sv->first == NULL || sv->last == NULL)
+		pushstring(sv, strcpy((char *) malloc(editwidth + 2), ""));
 
 	if (sv->cur == NULL)
 		return;
+
 	centerstr = sv->cur;
 
 	drawscrollbox(0, 0, d);
@@ -455,8 +459,8 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 						/* alt-s: save to file */
 						{
 							static char savefilename[15] = "temp.zoc";
-							filenamedialog(savefilename, "Save Object Code As", "", 1, d);
-							svectortofile(sv, savefilename);
+							if (filenamedialog(savefilename, "Save Object Code As", "", 1, d) != NULL)
+								svectortofile(sv, savefilename);
 							updateflags = U_EDITAREA | U_PANEL;
 						}
 						break;

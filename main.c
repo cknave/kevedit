@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.15 2000/08/27 02:19:03 bitman Exp $
+ * $Id: main.c,v 1.16 2000/08/31 03:36:48 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -390,12 +390,13 @@ int main(int argc, char **argv)
 			case '!':
 				/* open text file for edit */
 				strcpy(buffer, "");
-				filenamedialog(buffer, "Text File For Edit", "", 0, mydisplay);
 				{
 					stringvector editvector;
-					editvector = filetosvector(buffer, 42, 42);
-					editbox(mydisplay, "Edit Text File", &editvector, 42, 0);
-					svectortofile(&editvector, buffer);
+					initstringvector(&editvector);
+					editbox(mydisplay, "Text Editor", &editvector, 42, 0);
+					if (filenamedialog(buffer, "Save As", "", 1, mydisplay) != NULL)
+						svectortofile(&editvector, buffer);
+					deletestringvector(&editvector);
 				}
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.11 2000/08/27 02:19:03 bitman Exp $
+ * $Id: screen.c,v 1.12 2000/08/31 03:36:48 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -91,6 +91,9 @@ char* filenamedialog(char * filename, char * prompt, char * ext, int askoverwrit
 				mydisplay->putch(61 + t, 4, ' ', 0x0f);
 			}
 			break;
+		case 27:
+			return NULL;
+			break;
 		case 13:
 			if (t > 0) {
 				FILE *fp = NULL;
@@ -106,6 +109,8 @@ char* filenamedialog(char * filename, char * prompt, char * ext, int askoverwrit
 					do {
 						c = mydisplay->getch();
 					} while (!(c == 'y' || c == 'Y' || c == 'n' || c == 'N'));
+					mydisplay->print(61, 5, 0x1f, "          ");
+					mydisplay->print(72, 5, 0x1f, "   ");
 				} else {
 					c = 'y';
 				}
