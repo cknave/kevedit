@@ -45,9 +45,9 @@ Root: HKCR; Subkey: ".zzt"; ValueType: string; ValueData: "zztfile"
 Root: HKCR; Subkey: ".sav"; ValueType: string; ValueData: "zztsave"; Flags: createvalueifdoesntexist
 
 Root: HKCR; Subkey: "zztfile\Shell\KevEdit"; ValueType: string; ValueData: "KevEdit"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "zztfile\Shell\KevEdit\Command"; ValueType: string; ValueData: "{app}\kevedit.exe %1"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "zztfile\Shell\KevEdit\Command"; ValueType: string; ValueData: "{app}\kevedit.exe ""%1"""; Flags: uninsdeletekey
 
 Root: HKCR; Subkey: "zztsave\Shell"; ValueType: string; ValueData: "KevEdit"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "zztsave\Shell\KevEdit"; ValueType: string; ValueData: "KevEdit"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "zztsave\Shell\KevEdit\Command"; ValueType: string; ValueData: "{app}\kevedit.exe %1"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "zztsave\Shell\KevEdit\Command"; ValueType: string; ValueData: "{app}\kevedit.exe ""%1"""; Flags: uninsdeletekey
 
