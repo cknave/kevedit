@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.4 2000/08/08 01:57:38 kvance Exp $
+ * $Id: screen.c,v 1.5 2000/08/14 19:57:07 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -566,7 +566,44 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 			i += 2;
 		}
 	}
-	d->getch();
+	d->putch(78, 6, 219, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 7, 178, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 8, 177, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 9, 254, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 10, 18, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 11, 29, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 12, 178, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	d->putch(78, 13, 176, (e->backc << 4) + (e->forec) + (0x80 * e->blinkmode));
+	while (1) {
+		i = d->getch();
+		switch (i) {
+		case 27:
+		case 13:
+			return -1;
+		case 'S':
+		case 's':
+			return Z_SOLID;
+		case 'N':
+		case 'n':
+			return Z_NORMAL;
+		case 'B':
+		case 'b':
+			return Z_BREAKABLE;
+		case 'O':
+		case 'o':
+			return Z_BOULDER;
+		case '1':
+			return Z_NSSLIDER;
+		case '2':
+			return Z_EWSLIDER;
+		case 'A':
+		case 'a':
+			return Z_FAKE;
+		case 'I':
+		case 'i':
+			return Z_INVISIBLE;
+		}
+	}
 }
 
 char charselect(displaymethod * d)

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.6 2000/08/12 18:17:28 kvance Exp $
+ * $Id: main.c,v 1.7 2000/08/14 19:57:07 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -241,6 +241,7 @@ int main(int argc, char **argv)
 
 	world *myworld;
 	FILE *fp;
+	param *pm;
 
 	RegisterDisplays();
 	mydisplay = &display;
@@ -422,16 +423,6 @@ int main(int argc, char **argv)
 				}
 			}
 			break;
-		case 'U':
-			fp = fopen("test.out", "wb");
-			for (i = 0; i < 25; i++) {
-				for (x = 0; x < 60; x++) {
-					fprintf(fp, "%1X", paramlist[x][i]);
-				}
-				fprintf(fp, "\n");
-			}
-			fclose(fp);
-			break;
 		case 'd':
 		case 'D':
 			/* Toggle DefC mode */
@@ -510,7 +501,8 @@ int main(int argc, char **argv)
 			break;
 		case 's':
 		case 'S':
-			/* Save world */
+			if(e != 1) {
+			/* Save World */
 			free(myworld->board[myinfo->curboard]->data);
 			myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
 			for (i = 3; i < 25; i++) {
@@ -607,6 +599,7 @@ int main(int argc, char **argv)
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			}
 			break;
 		case 'f':
 		case 'F':
@@ -797,10 +790,8 @@ int main(int argc, char **argv)
 				break;
 			if (e == 1) {
 				i = dothepanel_f1(mydisplay, myinfo);
-				switch (i) {
-				case -1:
-					break;
-				case Z_PLAYER:
+				if(i == Z_PLAYER) {
+					/* The player is a special case */
 					bigboard[(myinfo->playerx + myinfo->playery * 60) * 2] = Z_EMPTY;
 					bigboard[(myinfo->playerx + myinfo->playery * 60) * 2 + 1] = 0x07;
 					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = Z_PLAYER;
@@ -810,48 +801,54 @@ int main(int argc, char **argv)
 					myworld->board[myinfo->curboard]->params[0]->y = myinfo->playery = myinfo->cursory;
 					myworld->board[myinfo->curboard]->params[0]->x++;
 					myworld->board[myinfo->curboard]->params[0]->y++;
+				} else {
+				switch (i) {
+				case -1:
 					break;
 				case Z_GEM:
 				case Z_KEY:
 				case Z_CWCONV:
 				case Z_CCWCONV:
-					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = i;
-					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = (myinfo->backc << 4) + myinfo->forec;
+					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
 					break;
 				case Z_AMMO:
 				case Z_TORCH:
 				case Z_ENERGIZER:
-					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = i;
 					if (myinfo->defc == 0)
-						bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = (myinfo->backc << 4) + myinfo->forec;
+						x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
 					else {
 						if (i == Z_AMMO)
-							bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x03;
+							x = 0x03;
 						if (i == Z_DUPLICATOR)
-							bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x0f;
+							x = 0x0f;
 						if (i == Z_TORCH)
-							bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x06;
+							x = 0x06;
 						if (i == Z_ENERGIZER)
-							bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x05;
+							x = 0x05;
 					}
+					push(i, x, NULL);
 					break;
 				case Z_DOOR:
-					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = i;
 					if (myinfo->defc == 1)
-						bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
+						x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
 					else
-						bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = (myinfo->backc << 4) + (myinfo->forec);
+						x = (myinfo->backc << 4) + (myinfo->forec) + (myinfo->blinkmode * 0x80);
+					push(i, x, NULL);
+					break;
+				default:
 					break;
 				}
-				if (i != -1) {
-					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-						push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-					else
-						push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+				if (i != -1 && i != Z_PLAYER) {
+					x = myinfo->pattern;
+					myinfo->pattern = 6;
+					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+					myinfo->pattern = x;
+				}
 				}
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			}
 			break;
 		case 60:
@@ -864,46 +861,31 @@ int main(int argc, char **argv)
 				case -1:
 					break;
 				case Z_OBJECT:
-					if (myworld->board[myinfo->curboard]->info->objectcount == 150)
+					if (myworld->board[myinfo->curboard]->info->objectcount == 150) {
+						i = -1;
 						break;
-					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
-						/* We're overwriting a parameter */
-						if (CURRENTPARAM->moredata != NULL)
-							free(CURRENTPARAM->moredata);
-						free(CURRENTPARAM);
-						for (t = x = paramlist[myinfo->cursorx][myinfo->cursory]; x < myworld->board[myinfo->curboard]->info->objectcount; x++)
-							myworld->board[myinfo->curboard]->params[x] = myworld->board[myinfo->curboard]->params[x + 1];
-						for (x = 0; x < 25; x++) {
-							for (e = 0; e < 60; e++) {
-								if (paramlist[e][x] > t)
-									paramlist[e][x]--;
-							}
-						}
-						e = 1;
 					} else {
-						myworld->board[myinfo->curboard]->info->objectcount++;
-					}
+					/* Anything important under it? */
 					x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
 					switch (x) {
 					case Z_WATER:
-					case Z_FOREST:
 					case Z_FAKE:
 						break;
 					default:
 						x = Z_EMPTY;
 						break;
 					}
-					myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount] = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
-					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = i;
-					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = (myinfo->backc << 4) + myinfo->forec;
-					paramlist[myinfo->cursorx][myinfo->cursory] = myworld->board[myinfo->curboard]->info->objectcount;
+					pm = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
+					t = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+					push(i, t, pm);
 					break;
+					}
 				}
 				if (i != -1) {
-					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-						push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-					else
-						push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+					x = myinfo->pattern;
+					myinfo->pattern = 6;
+					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+					myinfo->pattern = x;
 				}
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
@@ -913,10 +895,35 @@ int main(int argc, char **argv)
 			break;
 		case 61:
 			/* F3 panel */
+			if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
+				break;
 			if (e == 1) {
-				dothepanel_f3(mydisplay, myinfo);
+				i = dothepanel_f3(mydisplay, myinfo);
+				switch (i) {
+				case -1:
+					break;
+				case Z_FAKE:
+				case Z_SOLID:
+				case Z_NORMAL:
+				case Z_BREAKABLE:
+				case Z_BOULDER:
+				case Z_NSSLIDER:
+				case Z_EWSLIDER:
+				case Z_INVISIBLE:
+					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
+					break;
+				}
+				if(i != -1) {
+					x = myinfo->pattern;
+					myinfo->pattern = 6;
+					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
+					myinfo->pattern = x;
+				}
+
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			}
 			break;
 		case 'i':

@@ -1,5 +1,3 @@
-Reimpliment F# menus -- place the item on the backbuffer and then plot() it
-Objects need blink, too.  This gets fixed in the previous item.
 ZZT-OOP editor!  Real Soon Now!
 Seperate keys for modify (ENTER) and grab (INS) ala MegaZeux
 DELETE plots an empty.
