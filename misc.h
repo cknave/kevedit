@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.20 2002/09/16 06:47:24 bitman Exp $
+ * $Id: misc.h,v 1.21 2002/09/22 00:49:29 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@
 /* Copy and paste */
 void copy(keveditor * myeditor);
 void paste(keveditor * myeditor);
+int countparams(ZZTblock *block);
 int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcsel, int x, int y);
 
 /* Plot from the backbuffer to the cursor */
