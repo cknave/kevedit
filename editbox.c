@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.9 2000/09/09 02:37:56 bitman Exp $
+ * $Id: editbox.c,v 1.10 2000/09/11 00:25:39 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -778,13 +778,13 @@ void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int format, i
 		case '/':
 			/* movement */
 			d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
-			for (i = 1; s[i] != '?' && s[i] != '/' && s[i] != '\'' && s[i] != 0; i++) 
+			for (i = 1; s[i] != '?' && s[i] != '/' && s[i] != '\'' && s[i] != ' ' && s[i] != 0; i++) 
 				token[i-1] = s[i];
 			token[i-1] = 0;
 
 			d->print(x + 1, y, (iszztdir(token) ? ZOC_STDDIR_COLOUR : ZOC_DEFAULT_COLOUR), token);
 
-			/* Recursively display next movement/comment if there is one */
+			/* Recursively display next movement/comment/text if there is any */
 			if (s[i] != 0)
 				displayzoc(d, x + i, y, s + i, format, 0);
 			

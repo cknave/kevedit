@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.19 2000/09/09 02:33:51 bitman Exp $
+ * $Id: main.c,v 1.20 2000/09/11 00:25:39 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -507,6 +507,17 @@ int main(int argc, char **argv)
 						free(myworld->board[myinfo->curboard]);
 						myworld->board[myinfo->curboard] = z_newboard(buffer);
 						rle_decode(myworld->board[myinfo->curboard]->data, bigboard);
+						for (i = 0; i < 25; i++)
+							for (x = 0; x < 60; x++)
+								paramlist[x][i] = 0;
+						/* Okay, so we just need paramlist[0][0] filled in, but do I feel
+						 * like rewriting this code I stole from switch board? No. */
+						for (i = 0; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
+							if (myworld->board[myinfo->curboard]->params[i]->x > 0 && myworld->board[myinfo->curboard]->params[i]->x < 61 && myworld->board[myinfo->curboard]->params[i]->y > 0 && myworld->board[myinfo->curboard]->params[i]->y < 26)
+								paramlist[myworld->board[myinfo->curboard]->params[i]->x - 1][myworld->board[myinfo->curboard]->params[i]->y - 1] = i;
+						}
+						myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
+						myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
 						break;
 					} else if (i == 'n' || i == 'N') {
 						break;
