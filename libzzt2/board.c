@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.9 2002/09/16 06:47:25 bitman Exp $
+ * $Id: board.c,v 1.10 2002/09/23 21:21:22 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -406,6 +406,7 @@ int zztBoardDecompress(ZZTboard *board)
 		if(board->params[i].length != 0)
 			free(board->params[i].program);
 	}
+	free(board->params);
 
 	board->packed = NULL;
 	board->params = NULL;
