@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.46 2002/03/19 19:31:22 kvance Exp $
+ * $Id: screen.c,v 1.47 2002/03/20 04:52:25 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -315,7 +315,7 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 											 FTYPE_DIR, mydisplay);
 
 					/* TODO: Refresh the screen or something */
-					drawscrollbox(0, 0, mydisplay);
+					drawscrollbox(mydisplay, 0, 0, 1);
 					/* Display the panel */
 					drawsidepanel(mydisplay, PANEL_FILENAME);
 
@@ -346,7 +346,7 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 }
 
 
-void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
+void drawscrollbox(displaymethod * mydisplay, int yoffset, int yendoffset, int updateflag)
 {
 	int t, x, i;
 	/* start at yoffset */
@@ -358,7 +358,9 @@ void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
 			i += 2;
 		}
 	}
-	mydisplay->update(4, 3 + yoffset, SCROLL_BOX_WIDTH, SCROLL_BOX_DEPTH - yendoffset - yoffset);
+
+	if (updateflag)
+		mydisplay->update(4, 3 + yoffset, SCROLL_BOX_WIDTH, SCROLL_BOX_DEPTH - yendoffset - yoffset);
 }
 
 void drawscrolltitle(displaymethod * d, char * title)

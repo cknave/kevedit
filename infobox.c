@@ -1,5 +1,5 @@
 /* infobox.c - board/world information dialogs
- * $Id: infobox.c,v 1.11 2002/02/18 08:04:40 bitman Exp $
+ * $Id: infobox.c,v 1.12 2002/03/20 04:52:25 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 
 #include "libzzt2/zzt.h"
 #include "help.h"
+#include "dialog.h"
 
 #include "panel_bi.h"
 #include "panel_wi.h"
@@ -33,165 +34,140 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Label colorings */
+#define LABEL_COLOR  0x0A
+#define OPTION_COLOR 0x0B
+
+/* addBoundedDelta()
+ * Adds delta to value without going over max or under zero */
+#define addBoundedDelta(value, delta, max) if ((value) < -(delta)) (value) = 0; else if ((value) <= (max) && (value) > (max) - (delta)) (value) = (max); else (value) += (delta);
 
 /*************** Board Info *******************/
 
 /* Types of board info */
-#define BRDINFO_TITLE    0
+#define ID_NONE          0
+#define BRDINFO_TITLE    1
 
-#define BRDINFO_DARKNESS 1
-#define BRDINFO_REENTER  2
-#define BRDINFO_TIMELIM  3
-#define BRDINFO_MAXSHOTS 4
+#define BRDINFO_DARKNESS 2
+#define BRDINFO_REENTER  3
+#define BRDINFO_TIMELIM  4
+#define BRDINFO_MAXSHOTS 5
 
-#define BRDINFO_BRDNORTH 5
-#define BRDINFO_BRDSOUTH 6
-#define BRDINFO_BRDEAST  7
-#define BRDINFO_BRDWEST  8
+#define BRDINFO_BRDNORTH 6
+#define BRDINFO_BRDSOUTH 7
+#define BRDINFO_BRDEAST  8
+#define BRDINFO_BRDWEST  9
 
-/* Functions used by editboardinfo */
-void drawstaticboardinfo(displaymethod* d);
-void drawboardinfo(ZZTworld* myworld, displaymethod* d);
-int boardinfoeditoption(int curoption, ZZTworld* myworld,
-												int cursorx, int cursory, displaymethod* d);
-int boardinfodirectionoption(int curoption, ZZTworld* myworld,
-												int cursorx, int cursory, int dir, displaymethod* d);
-void boardinfostaroption(int curoption, ZZTworld* myworld);
+dialog buildboardinfodialog(ZZTworld * myworld);
+int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt);
+int boardinfodeltaoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt, int delta);
+int boardinfostaroption(ZZTworld* myworld, dialogComponent* opt);
 
-/* editboardinfo() - brings up dialog box for editing board info */
 void editboardinfo(ZZTworld* myworld, displaymethod* d)
 {
-	int curoption = BRDINFO_TITLE;
-	int cursorx, cursory;
-	int done = 0;
-	drawstaticboardinfo(d);
+	dialog dia;
+	int key;
 
-	drawboardinfo(myworld, d);
+	/* Build the dialog */
+	dia = buildboardinfodialog(myworld);
+
+	/* Draw the side panel */
+	drawsidepanel(d, PANEL_BOARDINFO);
 
 	do {
-		int key;
-
-		/* Position the cursors */
-		cursory = curoption + 7;
-		if (curoption > BRDINFO_TITLE)
-			cursory++;
-		if (curoption >= BRDINFO_BRDNORTH)
-			cursory += 2;
-
-		if (curoption == BRDINFO_TITLE)
-			cursorx = 30 - (strlen(zztBoardGetTitle(myworld)) / 2);
-		else if (curoption >= BRDINFO_BRDNORTH)
-			cursorx = 14;
-		else
-			cursorx = 36;
-
-		/* Draw the selector */
-		d->putch( 7, cursory, '\xAF', 0x02);
-		d->putch(51, cursory, '\xAE', 0x02);
-		d->cursorgo(cursorx, cursory);
+		int rebuild = 0;
+		/* Draw the dialog each time around */
+		dialogDraw(d, dia);
 
 		/* Get the key */
 		key = d->getch();
 
-		/* Erase the selector */
-		d->putch( 7, cursory, ' ', 0x00);
-		d->putch(51, cursory, ' ', 0x00);
-
 		switch (key) {
-			case DKEY_UP:
-				if (curoption > 0) curoption--; else curoption = BRDINFO_BRDWEST;
-				break;
-
-			case DKEY_DOWN:
-				if (curoption < BRDINFO_BRDWEST) curoption++; else curoption = 0;
-				break;
-
-			case DKEY_ESC:
-				done = 1;
-				break;
+			case DKEY_DOWN: dialogNextOption(&dia); break;
+			case DKEY_UP:   dialogPrevOption(&dia); break;
 
 			case DKEY_ENTER:
-				if (boardinfoeditoption(curoption, myworld,
-																cursorx, cursory, d)) {
-					drawstaticboardinfo(d);
-					drawboardinfo(myworld, d);
-				}
+				rebuild = boardinfoeditoption(d, myworld, dialogGetCurOption(dia));
 				break;
 
 			case DKEY_LEFT:
-			case '-':
-				if (boardinfodirectionoption(curoption, myworld,
-																		 cursorx, cursory, -1, d)) {
-					drawstaticboardinfo(d);
-					drawboardinfo(myworld, d);
-				}
+				rebuild = boardinfodeltaoption(d, myworld, dialogGetCurOption(dia), -10);
 				break;
 
 			case DKEY_RIGHT:
+				rebuild = boardinfodeltaoption(d, myworld, dialogGetCurOption(dia), 10);
+				break;
+
+			case '-':
+				rebuild = boardinfodeltaoption(d, myworld, dialogGetCurOption(dia), -1);
+				break;
+
 			case '+':
-				if (boardinfodirectionoption(curoption, myworld,
-																		 cursorx, cursory, 1, d)) {
-					drawstaticboardinfo(d);
-					drawboardinfo(myworld, d);
-				}
+				rebuild = boardinfodeltaoption(d, myworld, dialogGetCurOption(dia), 1);
 				break;
 
 			case '*':
-				boardinfostaroption(curoption, myworld);
-				drawstaticboardinfo(d);
-				drawboardinfo(myworld, d);
+				rebuild = boardinfostaroption(myworld, dialogGetCurOption(dia));
 				break;
 
 			case DKEY_F1:
 				helpsectiontopic("kbrdinfo", NULL, d);
-				drawstaticboardinfo(d);
-				drawboardinfo(myworld, d);
+				/* Draw the side panel again */
+				rebuild = 2;
 				break;
 		}
-	} while (!done);
+
+		/* Rebuild of 2 means update panel as well as dialog */
+		if (rebuild == 2)
+			drawsidepanel(d, PANEL_BOARDINFO);
+
+		if (rebuild) {
+			/* Rebuild dialog */
+			int curoption;
+			rebuild = 0;
+
+			curoption = dia.curoption;
+			dialogFree(&dia);
+			dia = buildboardinfodialog(myworld);
+			dia.curoption = curoption;
+		}
+	} while (key != DKEY_ESC);
+
+	dialogFree(&dia);
 }
 
-void drawstaticboardinfo(displaymethod* d)
+dialog buildboardinfodialog(ZZTworld * myworld)
 {
-	/* Draw the side panel */
-	drawsidepanel(d, PANEL_BOARDINFO);
-
-	/* Draw the scroll box */
-	drawscrollbox(0, 0, d);
-	d->putch( 7, 13, ' ', 0x00);
-	d->putch(51, 13, ' ', 0x00);
-
-	/* Draw the static contents */
-	d->print(25, 4, 0x0a, "Board Info");
-
-	d->print(28, 6, 0x0f, "Title");
-
-	d->print(14,  9, 0x0a, "       Board is dark:");
-	d->print(14, 10, 0x0a, "Re-Enter When Zapped:");
-	d->print(14, 11, 0x0a, "          Time Limit:");
-	d->print(14, 12, 0x0a, "       Maximum Shots:");
-
-	d->print(23, 14, 0x0f, "Adjacent Boards");
-	d->print(11, 15, 0x0a, "\x18:");
-	d->print(11, 16, 0x0a, "\x19:");
-	d->print(11, 17, 0x0a, "\x1A:");
-	d->print(11, 18, 0x0a, "\x1B:");
-
-	d->print(18, 19, 0x0a, "Board Size:");
-}
-
-void drawboardinfo(ZZTworld* myworld, displaymethod* d)
-{
-	char buffer[10];    /* Buffer for translating numbers to strings */
+	char buffer[20];   /* Number to string buffer */
 	int curboard = zztBoardGetCurrent(myworld);
 	int boardsize = zztBoardGetSize(zztBoardGetCurPtr(myworld));
+	dialog dia;
 
-	/* Title */
-	d->print(30 - (strlen(zztBoardGetTitle(myworld)) / 2), 7, 0x0B, zztBoardGetTitle(myworld));
+	dialogComponent label  = dialogComponentMake(DIALOG_COMP_LABEL,   3, 3, LABEL_COLOR,  NULL, ID_NONE);
+	dialogComponent option = dialogComponentMake(DIALOG_COMP_OPTION, 25, 3, OPTION_COLOR, NULL, ID_NONE);
 
-	/* Boolean */
-	d->print(36,  9, 0x0B, (zztBoardGetDarkness(myworld)  ? "Yes" : "No"));
-	d->print(36, 10, 0x0B, (zztBoardGetReenter(myworld)   ? "Yes" : "No"));
+	/* Handy macros for using template label & option */
+#define _addlabel(TEXT)      { label.text  = (TEXT); dialogAddComponent(&dia, label); label.y++; }
+#define _addoption(TEXT, ID) { option.text = (TEXT); option.id = (ID); dialogAddComponent(&dia, option); option.y++; }
+
+	/* Initialize */
+	dialogInit(&dia);
+
+	/* Dialog title */
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_TITLE, 0, 0, 0x0F, "Board Info", ID_NONE));
+
+	/* Board title */
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, 0, 0x0F, "Title", ID_NONE));
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_OPTION, 21 - (strlen(zztBoardGetTitle(myworld)) / 2), 1, OPTION_COLOR, zztBoardGetTitle(myworld), BRDINFO_TITLE));
+
+	/* Basic board info */
+	_addlabel("       Board is dark:");
+	_addlabel("Re-Enter When Zapped:");
+	_addlabel("          Time Limit:");
+	_addlabel("       Maximum Shots:");
+
+	_addoption(zztBoardGetDarkness(myworld) ? "Yes" : "No", BRDINFO_DARKNESS);
+	_addoption(zztBoardGetReenter(myworld)  ? "Yes" : "No", BRDINFO_REENTER);
 
 	/* Numerical */
 	/* Time Limit */
@@ -199,77 +175,89 @@ void drawboardinfo(ZZTworld* myworld, displaymethod* d)
 		sprintf(buffer, "%d", zztBoardGetTimelimit(myworld));
 	else
 		strcpy(buffer, "Infinite");
-	d->print(36, 11, 0x0B, buffer);
+	_addoption(buffer, BRDINFO_TIMELIM);
 
 	/* Maximum shots */
 	sprintf(buffer, "%d", zztBoardGetMaxshots(myworld));
-	d->print(36, 12, 0x0B, buffer);
+	_addoption(buffer, BRDINFO_MAXSHOTS);
+
+	/* Advance template cursors */
+	label.y += 2; option.y += 2;
+	label.x = 2; option.x = 5;
 
 	/* Board links */
+
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, label.y - 1, 0x0F, "Adjacent Boards", ID_NONE));
+
+	_addlabel("\x18:");
+	_addlabel("\x19:");
+	_addlabel("\x1A:");
+	_addlabel("\x1B:");
+
+#define _addstar() dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_LABEL, 0, option.y - 1, OPTION_COLOR, "*", ID_NONE))
+
 	/* North */
-	if (zztBoardGetBoard_n (myworld)> 0) {
-		d->print(14, 15, 0x0B, myworld->boards[zztBoardGetBoard_n(myworld)].title);
-		if (curboard > 0 &&
-				myworld->boards[zztBoardGetBoard_n(myworld)].info.board_s == curboard)
-			d->putch(9, 15, '*', 0x0B);
+	if (zztBoardGetBoard_n(myworld) > 0) {
+		_addoption(myworld->boards[zztBoardGetBoard_n(myworld)].title, BRDINFO_BRDNORTH);
+		if (curboard > 0 && myworld->boards[zztBoardGetBoard_n(myworld)].info.board_s == curboard)
+			_addstar();
 	} else {
-		d->print(14, 15, 0x03, "(None)");
+		_addoption("(None)", BRDINFO_BRDNORTH);
 	}
 
 	/* South */
-	if (zztBoardGetBoard_s (myworld)> 0) {
-		d->print(14, 16, 0x0B, myworld->boards[zztBoardGetBoard_s(myworld)].title);
-		if (curboard > 0 &&
-				myworld->boards[zztBoardGetBoard_s(myworld)].info.board_n == curboard)
-			d->putch(9, 16, '*', 0x0B);
+	if (zztBoardGetBoard_s(myworld) > 0) {
+		_addoption(myworld->boards[zztBoardGetBoard_s(myworld)].title, BRDINFO_BRDSOUTH);
+		if (curboard > 0 && myworld->boards[zztBoardGetBoard_s(myworld)].info.board_n == curboard)
+			_addstar();
 	} else {
-		d->print(14, 16, 0x03, "(None)");
+		_addoption("(None)", BRDINFO_BRDSOUTH);
 	}
 
 	/* East */
-	if (zztBoardGetBoard_e (myworld)> 0) {
-		d->print(14, 17, 0x0B, myworld->boards[zztBoardGetBoard_e(myworld)].title);
-		if (curboard > 0 &&
-				myworld->boards[zztBoardGetBoard_e(myworld)].info.board_w == curboard)
-			d->putch(9, 17, '*', 0x0B);
+	if (zztBoardGetBoard_e(myworld) > 0) {
+		_addoption(myworld->boards[zztBoardGetBoard_e(myworld)].title, BRDINFO_BRDEAST);
+		if (curboard > 0 && myworld->boards[zztBoardGetBoard_e(myworld)].info.board_w == curboard)
+			_addstar();
 	} else {
-		d->print(14, 17, 0x03, "(None)");
+		_addoption("(None)", BRDINFO_BRDEAST);
 	}
 
 	/* West */
-	if (zztBoardGetBoard_w (myworld)> 0) {
-		d->print(14, 18, 0x0B, myworld->boards[zztBoardGetBoard_w(myworld)].title);
-		if (curboard > 0 &&
-				myworld->boards[zztBoardGetBoard_w(myworld)].info.board_e == curboard)
-			d->putch(9, 18, '*', 0x0B);
+	if (zztBoardGetBoard_w(myworld) > 0) {
+		_addoption(myworld->boards[zztBoardGetBoard_w(myworld)].title, BRDINFO_BRDWEST);
+		if (curboard > 0 && myworld->boards[zztBoardGetBoard_w(myworld)].info.board_e == curboard)
+			_addstar();
 	} else {
-		d->print(14, 18, 0x03, "(None)");
+		_addoption("(None)", BRDINFO_BRDWEST);
 	}
+	
+	/* Board size statistics */
 
-	sprintf(buffer, "%d", boardsize);
-	d->print(30, 19, (boardsize < 20000 ? 0x0B : 0x0C), buffer);
-	d->print(31 + strlen(buffer), 19, 0x03, "bytes");
+	label.x = 9; _addlabel("Board Size:");
+	/* Red color for dangerously large board size */
+	label.color = (boardsize < 20000 ? 0x0B : 0x0C);
+	label.y--; label.x = 21;
 
+	sprintf(buffer, "%d bytes", boardsize);
+	_addlabel(buffer);
 	sprintf(buffer, "%.3f", (float)boardsize / 1024);
-	d->print(30, 20, (boardsize < 20000 ? 0x0B : 0x0C), buffer);
-	d->print(31 + strlen(buffer), 20, 0x03, "KB");
+	_addlabel(buffer);
+
+	return dia;
 }
 
-
-int boardinfoeditoption(int curoption, ZZTworld* myworld,
-												int cursorx, int cursory, displaymethod* d)
+int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt)
 {
-	int i;
-	char buffer[35];
-
-	switch (curoption) {
+	switch (opt->id) {
 		case BRDINFO_TITLE:
 			/* Change the title of the board */
-			strcpy(buffer, zztBoardGetTitle(myworld));
-			if (line_editor(13, cursory, 0x0f, buffer, 34, LINED_NORMAL, d)
-					== LINED_OK) {
-				zztBoardSetTitle(myworld, buffer);
-			}
+			/* Board titles can actually be up to 50 chars long,
+			 * but this would display poorly in any editor, so we'll
+			 * use the width of a text-box (42) as the maximum. */
+			opt->x = 0; opt->color = 0x0F;
+			if (dialogComponentEdit(d, opt, 42, LINED_NORMAL) == LINED_OK)
+				zztBoardSetTitle(myworld, opt->text);
 			/* Update */
 			return 1;
 
@@ -298,13 +286,14 @@ int boardinfoeditoption(int curoption, ZZTworld* myworld,
 			return 1;
 
 		case BRDINFO_MAXSHOTS:
-			sprintf(buffer, "%d", zztBoardGetMaxshots(myworld));
-			if (line_editor(cursorx, cursory, 0x0f, buffer, 3,
-											LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)
-					== LINED_OK) {
+			if (zztBoardGetMaxshots(myworld) == 0)
+				opt->text[0] = '\x0';
+			if (dialogComponentEdit(d, opt, 3, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES) == LINED_OK) {
 				int maxshots;
-				sscanf(buffer, "%d", &maxshots);
-				if (maxshots > 255)
+				sscanf(opt->text, "%d", &maxshots);
+				if (strlen(opt->text) == 0)
+					zztBoardSetMaxshots(myworld, 0);
+				else if (maxshots > 255)
 					zztBoardSetMaxshots(myworld, 255);
 				else
 					zztBoardSetMaxshots(myworld, (u_int8_t) maxshots);
@@ -312,22 +301,16 @@ int boardinfoeditoption(int curoption, ZZTworld* myworld,
 			return 1;
 
 		case BRDINFO_TIMELIM:
-			/* Clear the word "Infinite" if it's there */
-			for (i = 0; i < 10; i++)
-				d->putch(cursorx + i, cursory, ' ', 0x00);
+			if (zztBoardGetTimelimit(myworld) == 0) {
+				opt->text[0] = '\x0';
+				/* Clear the word "Infinite" */
+				d->print(opt->x + 9, opt->y + 6, 0x00, "          ");
+			}
 
-			/* Load the timelimit into the buffer */
-			if (zztBoardGetTimelimit(myworld) != 0)
-				sprintf(buffer, "%d", zztBoardGetTimelimit(myworld));
-			else
-				strcpy(buffer, "");
-
-			if (line_editor(cursorx, cursory, 0x0f, buffer, 5,
-											LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)
-					== LINED_OK) {
+			if (dialogComponentEdit(d, opt, 5, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES) == LINED_OK) {
 				long int timelimit;
-				sscanf(buffer, "%ld", &timelimit);
-				if (strlen(buffer) == 0)
+				sscanf(opt->text, "%ld", &timelimit);
+				if (strlen(opt->text) == 0)
 					zztBoardSetTimelimit(myworld, 0);
 				else if (timelimit > 32767)
 					zztBoardSetTimelimit(myworld, 32767);
@@ -339,85 +322,81 @@ int boardinfoeditoption(int curoption, ZZTworld* myworld,
 	return 0;
 }
 
-int boardinfodirectionoption(int curoption, ZZTworld* myworld,
-												int cursorx, int cursory, int dir, displaymethod* d)
+int boardinfodeltaoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt, int delta)
 {
 	/* It's easier this way */
 	ZZTboardinfo* info = &(myworld->boards[zztBoardGetCurrent(myworld)].info);
 
-	switch (curoption) {
+	switch (opt->id) {
 		case BRDINFO_TIMELIM:
-			if (info->timelimit + dir <= 32767 &&
-					info->timelimit + dir >= 0)
-				info->timelimit += dir;
+			addBoundedDelta(info->timelimit, delta, 32767);
 			return 1;
 
 		case BRDINFO_MAXSHOTS:
-			if ((int)info->maxshots + dir <= 255 && (int)info->maxshots + dir >= 0)
-				info->maxshots += dir;
+			addBoundedDelta(info->maxshots, delta, 255);
 			return 1;
 
 		case BRDINFO_BRDNORTH:
-			if (info->board_n + dir <= zztWorldGetBoardcount(myworld) &&
-					info->board_n + dir >= 0)
-				info->board_n += dir;
+			if (info->board_n + delta <= zztWorldGetBoardcount(myworld) &&
+					info->board_n + delta >= 0)
+				info->board_n += delta;
 			return 1;
 
 		case BRDINFO_BRDSOUTH:
-			if (info->board_s + dir <= zztWorldGetBoardcount(myworld) &&
-					info->board_s + dir >= 0)
-				info->board_s += dir;
+			if (info->board_s + delta <= zztWorldGetBoardcount(myworld) &&
+					info->board_s + delta >= 0)
+				info->board_s += delta;
 			return 1;
 
 		case BRDINFO_BRDEAST:
-			if (info->board_e + dir <= zztWorldGetBoardcount(myworld) &&
-					info->board_e + dir >= 0)
-				info->board_e += dir;
+			if (info->board_e + delta <= zztWorldGetBoardcount(myworld) &&
+					info->board_e + delta >= 0)
+				info->board_e += delta;
 			return 1;
 
 		case BRDINFO_BRDWEST:
-			if (info->board_w + dir <= zztWorldGetBoardcount(myworld) &&
-					info->board_w + dir >= 0)
-				info->board_w += dir;
+			if (info->board_w + delta <= zztWorldGetBoardcount(myworld) &&
+					info->board_w + delta >= 0)
+				info->board_w += delta;
 			return 1;
 
 		default:
-			return boardinfoeditoption(curoption, myworld,
-																 cursorx, cursory, d);
+			return boardinfoeditoption(d, myworld, opt);
 	}
 }
 
-void boardinfostaroption(int curoption, ZZTworld* myworld)
+int boardinfostaroption(ZZTworld* myworld, dialogComponent* opt)
 {
 	int curboard = zztBoardGetCurrent(myworld);
 	ZZTboardinfo* info = &(myworld->boards[zztBoardGetCurrent(myworld)].info);
 
 	if (curboard == 0)
-		return;
+		return 0;
 
-	switch (curoption) {
+	switch (opt->id) {
 		case BRDINFO_BRDNORTH:
 			if (info->board_n > 0)
 				myworld->boards[info->board_n].info.board_s = curboard;
-			break;
+			return 1;
 
 		case BRDINFO_BRDSOUTH:
 			if (info->board_s > 0)
 				myworld->boards[info->board_s].info.board_n = curboard;
-			break;
+			return 1;
 
 		case BRDINFO_BRDEAST:
 			if (info->board_e > 0)
 				myworld->boards[info->board_e].info.board_w = curboard;
-			break;
+			return 1;
 
 		case BRDINFO_BRDWEST:
 			if (info->board_w > 0)
 				myworld->boards[info->board_w].info.board_e = curboard;
-			break;
+			return 1;
 	}
-}
 
+	return 0;
+}
 
 /************* World Info ******************/
 
@@ -575,32 +554,31 @@ void drawstaticworldinfo(displaymethod* d)
 	drawsidepanel(d, PANEL_WORLDINFO);
 
 	/* Draw the scroll box */
-	drawscrollbox(0, 0, d);
-	d->putch( 7, 13, ' ', 0x00);
-	d->putch(51, 13, ' ', 0x00);
+	drawscrollbox(d, 0, 0, 0);
+	d->putch_discrete( 7, 13, ' ', 0x00);
+	d->putch_discrete(51, 13, ' ', 0x00);
 
 	/* Draw the static contents */
-	d->print(25, 4, 0x0A, "World Info");
+	d->print_discrete(25, 4, 0x0A, "World Info");
 
-	d->print(13,  6, 0x0F, "      World Name:");
+	d->print_discrete(13,  6, 0x0F, "      World Name:");
 
-	d->print(13,  8, 0x0A, "            Keys:");
-	d->print(13,  9, 0x0A, "            Ammo:");
-	d->print(13, 10, 0x0A, "            Gems:");
-	d->print(13, 11, 0x0A, "          Health:");
-	d->print(13, 12, 0x0A, "         Torches:");
-	d->print(13, 13, 0x0A, "           Score:");
+	d->print_discrete(13,  8, 0x0A, "            Keys:");
+	d->print_discrete(13,  9, 0x0A, "            Ammo:");
+	d->print_discrete(13, 10, 0x0A, "            Gems:");
+	d->print_discrete(13, 11, 0x0A, "          Health:");
+	d->print_discrete(13, 12, 0x0A, "         Torches:");
+	d->print_discrete(13, 13, 0x0A, "           Score:");
 
-	d->print(13, 15, 0x0A, "    Torch Cycles:");
-	d->print(13, 16, 0x0A, "Energizer Cycles:");
-	d->print(13, 17, 0x0A, "    Time Elapsed:");
-	d->print(13, 18, 0x0A, "   Is Saved Game:");
-	d->print(23, 20, 0x0F, "Set/Clear Flags");
+	d->print_discrete(13, 15, 0x0A, "    Torch Cycles:");
+	d->print_discrete(13, 16, 0x0A, "Energizer Cycles:");
+	d->print_discrete(13, 17, 0x0A, "    Time Elapsed:");
+	d->print_discrete(13, 18, 0x0A, "   Is Saved Game:");
+	d->print_discrete(23, 20, 0x0F, "Set/Clear Flags");
+
+	/* Update the display */
+	d->update(3, 4, 51, 19);
 }
-
-/* TODO: These can probably be unmacro'ed now */
-#define drawkey(which)  d->putch(31 + (which), 8, '\x0C', 0x08 +  (which) + 1)
-#define drawdoor(which) d->putch(31 + (which), 8, '\x0A', 0x0F + (((which) + 1) << 4))
 
 void drawworldinfo(ZZTworld* myworld, displaymethod* d)
 {
@@ -608,27 +586,34 @@ void drawworldinfo(ZZTworld* myworld, displaymethod* d)
 	int i;
 
 	/* Start at the top */
-	d->print(31,  6, 0x0B, zztWorldGetTitle(myworld));
+	d->print_discrete(31,  6, 0x0B, zztWorldGetTitle(myworld));
 
 	/* List the keys */
 	for (i = ZZT_KEY_BLUE; i <= ZZT_KEY_WHITE; i++) {
-		if (zztWorldGetKey(myworld, i) != 0) drawkey(i); else drawdoor(i);
+		if (zztWorldGetKey(myworld, i) != 0) {
+			d->putch_discrete(31 + i, 8, '\x0C', 0x08 +  i + 1);
+		} else {
+			d->putch_discrete(31 + i, 8, '\x0A', 0x0F + ((i + 1) << 4));
+		}
 	}
 
 	/* Inventory */
-	sprintf(buffer, "%d", zztWorldGetAmmo(myworld));     d->print(31,  9, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetGems(myworld));     d->print(31, 10, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetHealth(myworld));   d->print(31, 11, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetTorches(myworld));  d->print(31, 12, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetScore(myworld));    d->print(31, 13, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetAmmo(myworld));     d->print_discrete(31,  9, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetGems(myworld));     d->print_discrete(31, 10, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetHealth(myworld));   d->print_discrete(31, 11, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTorches(myworld));  d->print_discrete(31, 12, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetScore(myworld));    d->print_discrete(31, 13, 0x0B, buffer);
 
 	/* Misc */
-	sprintf(buffer, "%d", zztWorldGetTorchcycles(myworld));    d->print(31, 15, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetEnergizercycles(myworld));d->print(31, 16, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetTimepassed(myworld));     d->print(31, 17, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTorchcycles(myworld));    d->print_discrete(31, 15, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetEnergizercycles(myworld));d->print_discrete(31, 16, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTimepassed(myworld));     d->print_discrete(31, 17, 0x0B, buffer);
 
 	/* Saved Game boolean */
-	d->print(31, 18, 0x0B, zztWorldGetSavegame(myworld) ? "Yes" : "No");
+	d->print_discrete(31, 18, 0x0B, zztWorldGetSavegame(myworld) ? "Yes" : "No");
+
+	/* Update the display */
+	d->update(3, 4, 51, 19);
 }
 
 int worldinfoeditoption(int curoption, ZZTworld* myworld,
@@ -716,51 +701,35 @@ int worldinfodirectionoption(int curoption, ZZTworld* myworld, int cursorx,
 
 	switch (curoption) {
 		case WLDINFO_AMMO:
-			if (header->ammo + dir <= 32767 &&
-					header->ammo + dir >= 0)
-				header->ammo += dir;
+			addBoundedDelta(header->ammo, dir, 32767);
 			return 1;
 
 		case WLDINFO_GEMS:
-			if (header->gems + dir <= 32767 &&
-					header->gems + dir >= 0)
-				header->gems += dir;
+			addBoundedDelta(header->gems, dir, 32767);
 			return 1;
 
 		case WLDINFO_HEALTH:
-			if (header->health + dir <= 32767 &&
-					header->health + dir >= 0)
-				header->health += dir;
+			addBoundedDelta(header->health, dir, 32767);
 			return 1;
 
 		case WLDINFO_TORCHES:
-			if (header->torches + dir <= 32767 &&
-					header->torches + dir >= 0)
-				header->torches += dir;
+			addBoundedDelta(header->torches, dir, 32767);
 			return 1;
 
 		case WLDINFO_SCORE:
-			if (header->score + dir <= 32767 &&
-					header->score + dir >= 0)
-				header->score += dir;
+			addBoundedDelta(header->score, dir, 32767);
 			return 1;
 
 		case WLDINFO_TCYCLES:
-			if (header->torchcycles + dir <= 32767 &&
-					header->torchcycles + dir >= 0)
-				header->torchcycles += dir;
+			addBoundedDelta(header->torchcycles, dir, 32767);
 			return 1;
 
 		case WLDINFO_ECYCLES:
-			if (header->energizercycles + dir <= 32767 &&
-					header->energizercycles + dir >= 0)
-				header->energizercycles += dir;
+			addBoundedDelta(header->energizercycles, dir, 32767);
 			return 1;
 
 		case WLDINFO_TIMEPASSED:
-			if (header->timepassed + dir <= 32767 &&
-					header->timepassed + dir >= 0)
-				header->timepassed += dir;
+			addBoundedDelta(header->timepassed, dir, 32767);
 			return 1;
 
 		default:
@@ -842,24 +811,27 @@ void editworldflags(ZZTworld* myworld, displaymethod* d)
 void drawstaticflags(displaymethod * d)
 {
 	/* Draw the scroll box */
-	drawscrollbox(0, 0, d);
-	d->putch( 7, 13, ' ', 0x00);
-	d->putch(51, 13, ' ', 0x00);
+	drawscrollbox(d, 0, 0, 0);
+	d->putch_discrete( 7, 13, ' ', 0x00);
+	d->putch_discrete(51, 13, ' ', 0x00);
 
 	/* Draw the static contents */
-	d->print(25, 4, 0x0A, "World Info");
+	d->print_discrete(25, 4, 0x0A, "World Info");
 
-	d->print(23,  7, 0x0F, "Set/Clear Flags");
-	d->print(22, 9+0, 0x0A, "Flag  1:");
-	d->print(22, 9+1, 0x0A, "Flag  2:");
-	d->print(22, 9+2, 0x0A, "Flag  3:");
-	d->print(22, 9+3, 0x0A, "Flag  4:");
-	d->print(22, 9+4, 0x0A, "Flag  5:");
-	d->print(22, 9+5, 0x0A, "Flag  6:");
-	d->print(22, 9+6, 0x0A, "Flag  7:");
-	d->print(22, 9+7, 0x0A, "Flag  8:");
-	d->print(22, 9+8, 0x0A, "Flag  9:");
-	d->print(22, 9+9, 0x0A, "Flag 10:");
+	d->print_discrete(23,  7, 0x0F, "Set/Clear Flags");
+	d->print_discrete(22, 9+0, 0x0A, "Flag  1:");
+	d->print_discrete(22, 9+1, 0x0A, "Flag  2:");
+	d->print_discrete(22, 9+2, 0x0A, "Flag  3:");
+	d->print_discrete(22, 9+3, 0x0A, "Flag  4:");
+	d->print_discrete(22, 9+4, 0x0A, "Flag  5:");
+	d->print_discrete(22, 9+5, 0x0A, "Flag  6:");
+	d->print_discrete(22, 9+6, 0x0A, "Flag  7:");
+	d->print_discrete(22, 9+7, 0x0A, "Flag  8:");
+	d->print_discrete(22, 9+8, 0x0A, "Flag  9:");
+	d->print_discrete(22, 9+9, 0x0A, "Flag 10:");
+
+	/* Update the display */
+	d->update(3, 4, 51, 19);
 }
 
 void drawflags(ZZTworld * myworld, displaymethod * d)
@@ -867,8 +839,11 @@ void drawflags(ZZTworld * myworld, displaymethod * d)
 	int i;
 
 	for (i = 0; i < ZZT_MAX_FLAGS; i++) {
-		d->print(31, 9 + i, 0x0B, zztWorldGetFlag(myworld, i));
+		d->print_discrete(31, 9 + i, 0x0B, zztWorldGetFlag(myworld, i));
 	}
+
+	/* Update the display */
+	d->update(3, 4, 51, 19);
 }
 
 void worldflagedit(int curoption, ZZTworld* myworld,

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.37 2002/03/18 03:12:41 bitman Exp $
+ * $Id: editbox.c,v 1.38 2002/03/20 04:52:24 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -196,7 +196,7 @@ int iszztcolour(char *token);
 void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymethod* d);
 
 /* how to display a line of text in updateditbox() */
-#define displayline(x, y, s, edit, flags, firstline, d) ((flags & EDITBOX_ZOCMODE) ? displayzoc((x), (y), (s), !(edit), (firstline), (d)) : d->print((x), (y), ZOC_TEXT_COLOUR, (s)))
+#define displayline(x, y, s, edit, flags, firstline, d) ((flags & EDITBOX_ZOCMODE) ? displayzoc((x), (y), (s), !(edit), (firstline), (d)) : d->print_discrete((x), (y), ZOC_TEXT_COLOUR, (s)))
 
 
 /***** draweditpanel() ***********/
@@ -220,17 +220,17 @@ void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,
 {
 	/* update title if needed */
 	if (updateflags & U_TITLE) {
-		drawscrollbox(1, 17, d);
-		d->print(30 - (strlen(title) / 2), 4, 0x0a, title);
+		drawscrollbox(d, 1, 17, 0);
+		d->print_discrete(30 - (strlen(title) / 2), 4, 0x0a, title);
 	}
 
 	/* clear the scrollbox */
 	if (updateflags & U_TOP)
-		drawscrollbox(3, 9, d);
+		drawscrollbox(d, 3, 9, 0);
 	if (updateflags & U_CENTER)
-		drawscrollbox(10, 8, d);
+		drawscrollbox(d, 10, 8, 0);
 	if (updateflags & U_BOTTOM)
-		drawscrollbox(11, 1, d);
+		drawscrollbox(d, 11, 1, 0);
 
 	if (updateflags & (U_CENTER)) {
 		/* Draw the center */
@@ -245,7 +245,7 @@ void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,
 			displayline(9, i + 13, loopstr->s, editwidth, flags, 0, d);
 
 		if (i < 8)
-			d->print(9, i + 13, 0x07, SLEADER);
+			d->print_discrete(9, i + 13, 0x07, SLEADER);
 	}
 	if (updateflags & U_TOP) {
 		/* Draw top half */
@@ -258,8 +258,11 @@ void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,
 			i++;
 
 		if (i > -8)
-			d->print(9, i + 13, 0x07, SLEADER);
+			d->print_discrete(9, i + 13, 0x07, SLEADER);
 	}
+
+	/* Update the display */
+	d->update(3, 4, 51, 19);
 }
 
 
@@ -317,7 +320,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 	if (centerstr == NULL)
 		return 0;
 
-	drawscrollbox(0, 0, d);
+	drawscrollbox(d, 0, 0, 1);
 	updateflags = U_ALL;
 
 	while (!done) {
@@ -360,10 +363,10 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 				/* Draw meat lines */
 				if (selLineOffset > 0) {
 					for (i = 1, loopstr = centerstr->next; i < selLineOffset && i < 8 && loopstr != NULL; i++, loopstr = loopstr->next)
-						d->print(9, 13 + i, ZOC_HIGHLIGHT_COLOUR, loopstr->s);
+						d->print_discrete(9, 13 + i, ZOC_HIGHLIGHT_COLOUR, loopstr->s);
 				} else {
 					for (i = -1, loopstr = centerstr->prev; i > selLineOffset && i > -8 && loopstr != NULL; i--, loopstr = loopstr->prev)
-						d->print(9, 13 + i, ZOC_HIGHLIGHT_COLOUR, loopstr->s);
+						d->print_discrete(9, 13 + i, ZOC_HIGHLIGHT_COLOUR, loopstr->s);
 				}
 
 				/* Draw farthest line from centerstr */
@@ -376,9 +379,12 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						endPos = selPos;
 					}
 					for (j = startPos; j < endPos; j++)
-						d->putch(9 + j, 13 + i, loopstr->s[j], ZOC_HIGHLIGHT_COLOUR);
+						d->putch_discrete(9 + j, 13 + i, loopstr->s[j], ZOC_HIGHLIGHT_COLOUR);
 				}
 			}
+
+			/* Update the display */
+			d->update(3, 4, 51, 19);
 		}
 
 		/* Get the key */
@@ -1139,26 +1145,26 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 	switch (s[0]) {
 		case '#':
 			/* command */
-			d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
+			d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
 			for (i = 1; s[i] != ' ' && s[i] != 0; i++)
 				token[i - 1] = s[i];
 			token[i - 1] = 0;
 
 			if (iszztcommand(token)) {
-				d->print(x + 1, y, ZOC_STDCOMMAND_COLOUR, token);
+				d->print_discrete(x + 1, y, ZOC_STDCOMMAND_COLOUR, token);
 
 				displaycommand(x + i, y, token, s + i, d);
 			} else {
 				/* Display as #send call */
 				if (strchr(token, ':') != NULL) {
 					for (j = 1; s[j] != ':' && s[j] != 0; j++)
-						d->putch(x + j, y, s[j], ZOC_OBJNAME_COLOUR);
-					d->putch(x + j, y, ':', ZOC_OPERATOR_COLOUR);
+						d->putch_discrete(x + j, y, s[j], ZOC_OBJNAME_COLOUR);
+					d->putch_discrete(x + j, y, ':', ZOC_OPERATOR_COLOUR);
 					if (j < strlen(s)) j++;
-					d->print(x + j, y, (iszztmessage(s + j) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), s + j);
+					d->print_discrete(x + j, y, (iszztmessage(s + j) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), s + j);
 				} else
-					d->print(x + 1, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token);
-				d->print(x + i, y, ZOC_DEFAULT_COLOUR, s + i);
+					d->print_discrete(x + 1, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token);
+				d->print_discrete(x + i, y, ZOC_DEFAULT_COLOUR, s + i);
 			}
 
 			break;
@@ -1169,30 +1175,30 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 				/* This requires some explaination: When a message label occurs at the
 				 * beginning of an object's code, it cannot be sent to. So, we shall
 				 * display it in the default colour to make this apparent. */
-				d->print(x, y, ZOC_DEFAULT_COLOUR, s);
+				d->print_discrete(x, y, ZOC_DEFAULT_COLOUR, s);
 				break;
 			}
 			if (format) {
 				s = strstr(s, ";");
 				if (s != NULL)
-					d->print(x, y, ZOC_HEADING_COLOUR, s + 1);
+					d->print_discrete(x, y, ZOC_HEADING_COLOUR, s + 1);
 			} else {
-				d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
+				d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
 				for (i = 1; s[i] != '\'' && s[i] != 0; i++)
 					token[i - 1] = s[i];
 				token[i - 1] = 0;
 				
-				d->print(x + 1, y, (iszztmessage(token) ? ZOC_STDLABEL_COLOUR : ZOC_LABEL_COLOUR), token);
+				d->print_discrete(x + 1, y, (iszztmessage(token) ? ZOC_STDLABEL_COLOUR : ZOC_LABEL_COLOUR), token);
 				
 				if (s[i] == '\'')
-					d->print(x + i, y, ZOC_COMMENT_COLOUR, s + i);
+					d->print_discrete(x + i, y, ZOC_COMMENT_COLOUR, s + i);
 			}
 			break;
 
 		case '?':
 		case '/':
 			/* movement */
-			d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
+			d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
 
 			for (i = 1; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' ' && s[i] != '#'; i++)
 				token[i-1] = s[i];
@@ -1207,9 +1213,9 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 
 			if (iszztdir(token)) {
 				/* token is a proper direction */
-				d->print(x + 1, y, ZOC_STDDIR_COLOUR, token);
+				d->print_discrete(x + 1, y, ZOC_STDDIR_COLOUR, token);
 			} else
-				d->print(x + 1, y, ZOC_DEFAULT_COLOUR, token);
+				d->print_discrete(x + 1, y, ZOC_DEFAULT_COLOUR, token);
 
 			if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ' || s[i] == '#')
 				displayzoc(x + i, y, s + i, format, 0, d);
@@ -1220,27 +1226,27 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 			/* hypermessage */
 			if (format) {
 				/* white and -> indented */
-				d->putch(x + 2, y, 0x10, ZOC_HYPARROW_COLOUR);
+				d->putch_discrete(x + 2, y, 0x10, ZOC_HYPARROW_COLOUR);
 				s = strstr(s, ";");
 				if (s != NULL)
-					d->print(x + 5, y, ZOC_HYPER_COLOUR, s + 1);
+					d->print_discrete(x + 5, y, ZOC_HYPER_COLOUR, s + 1);
 			} else {
-				d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
+				d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
 				for (i = 1; s[i] != ';' && s[i] != 0; i++)
-					d->putch(x + i, y, s[i], ZOC_MESSAGE_COLOUR);
+					d->putch_discrete(x + i, y, s[i], ZOC_MESSAGE_COLOUR);
 
 				if (s[i] == 0) break;
 
-				d->putch(x + i, y, s[i], ZOC_OPERATOR_COLOUR);
+				d->putch_discrete(x + i, y, s[i], ZOC_OPERATOR_COLOUR);
 				for (i++; s[i] != 0; i++)
-					d->putch(x + i, y, s[i], ZOC_HYPER_COLOUR);
+					d->putch_discrete(x + i, y, s[i], ZOC_HYPER_COLOUR);
 			}
 
 			break;
 
 		case '\'':
 			/* comment */
-			d->print(x, y, ZOC_COMMENT_COLOUR, s);
+			d->print_discrete(x, y, ZOC_COMMENT_COLOUR, s);
 			break;
 
 		case '$':
@@ -1248,10 +1254,10 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 			if (format) {
 				/* white and centered */
 				s++;
-				d->print(x + 20 - (strlen(s)/2), y, ZOC_HEADING_COLOUR, s);
+				d->print_discrete(x + 20 - (strlen(s)/2), y, ZOC_HEADING_COLOUR, s);
 			} else {
-				d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
-				d->print(x + 1, y, ZOC_HEADING_COLOUR, s + 1);
+				d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
+				d->print_discrete(x + 1, y, ZOC_HEADING_COLOUR, s + 1);
 			}
 			break;
 
@@ -1259,21 +1265,21 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 			/* objectname */
 			if (firstline) {
 				/* it's only an objectname on the first line */
-				d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
-				d->print(x + 1, y, ZOC_OBJNAME_COLOUR, s + 1);
+				d->putch_discrete(x, y, s[0], ZOC_OPERATOR_COLOUR);
+				d->print_discrete(x + 1, y, ZOC_OBJNAME_COLOUR, s + 1);
 			}
 			else
-				d->print(x, y, ZOC_TEXT_COLOUR, s);
+				d->print_discrete(x, y, ZOC_TEXT_COLOUR, s);
 			break;
 		
 		case ' ':
 			/* indented comment? */
 			for (i = 1; s[i] == ' '; i++)
 				;
-			d->print(x, y, (s[i]=='\'' ? ZOC_COMMENT_COLOUR : ZOC_TEXT_COLOUR), s);
+			d->print_discrete(x, y, (s[i]=='\'' ? ZOC_COMMENT_COLOUR : ZOC_TEXT_COLOUR), s);
 		default:
 			/* normal text */
-			d->print(x, y, ZOC_TEXT_COLOUR, s);
+			d->print_discrete(x, y, ZOC_TEXT_COLOUR, s);
 			break;
 	}
 }
@@ -1296,7 +1302,7 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 			break;
 
 	if (t == ZZTCOMMANDCOUNT) {
-		d->print(x, y, ZOC_DEFAULT_COLOUR, args);
+		d->print_discrete(x, y, ZOC_DEFAULT_COLOUR, args);
 		return;
 	}
 
@@ -1310,24 +1316,24 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 		/* Determine current token type (stage 1) */
 		switch (ctax) {
 			case CTAX_OBJECTNAME:
-				d->print(x + j - k, y, ZOC_OBJNAME_COLOUR, token);
+				d->print_discrete(x + j - k, y, ZOC_OBJNAME_COLOUR, token);
 				break;
 
 			case CTAX_NUMBER:
-				d->print(x + j - k, y, ZOC_TEXT_COLOUR, token);
+				d->print_discrete(x + j - k, y, ZOC_TEXT_COLOUR, token);
 				break;
 
 			case CTAX_FLAG:
 				if (str_equ(token, "not", STREQU_UNCASE)) {
-					d->print(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
 					/* Advance to next token */
 					k = tokenadvance(token, args, &j);
 				}
 				/* If it's a built-in, display it as such */
 				if (iszztflag(token))
-					d->print(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_STDFLAG_COLOUR, token);
 				else
-					d->print(x + j - k, y, ZOC_FLAG_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_FLAG_COLOUR, token);
 				/* Check the blocked flag for directions */
 				if (str_equ(token, "blocked", STREQU_UNCASE)) {
 					k = tokenadvance(token, args, &j);
@@ -1341,14 +1347,14 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 
 			case CTAX_ITEM:
 				if (iszztitem(token)) {
-					d->print(x + j - k, y, ZOC_STDITEM_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_STDITEM_COLOUR, token);
 				} else
-					d->print(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
 				break;
 
 			case CTAX_THENMESSAGE:
 				if (str_equ(token, "then", STREQU_UNCASE)) {
-					d->print(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
 					k = tokenadvance(token, args, &j);
 				}
 				if (token[0] == '#' || token[0] == '/' || token[0] == '?') {
@@ -1357,7 +1363,7 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 					j = strlen(args);  /* Avoid overwriting */
 				} else {
 					if (iszztcommand(token)) {
-						d->print(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
+						d->print_discrete(x + j - k, y, ZOC_STDCOMMAND_COLOUR, token);
 						displaycommand(x + j, y, token, args + j, d);
 						j = strlen(args);  /* Avoid overwriting */
 					} else {
@@ -1377,13 +1383,13 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 		switch (ctax) {
 			case CTAX_KIND:
 				if (iszztkind(token)) {
-					d->print(x + j - k, y, ZOC_STDKIND_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_STDKIND_COLOUR, token);
 				} else {
 					k = tokengrow(token, args, &j);
 					if (iszztkind(token)) {
-						d->print(x + j - k, y, ZOC_STDKIND_COLOUR, token);
+						d->print_discrete(x + j - k, y, ZOC_STDKIND_COLOUR, token);
 					} else
-						d->print(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
+						d->print_discrete(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
 				}
 				break;
 
@@ -1391,28 +1397,28 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 				while (!iszztdir(token) && j < strlen(args))
 					k = tokengrow(token, args, &j);
 				if (iszztdir(token))
-					d->print(x + j - k, y, ZOC_STDDIR_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_STDDIR_COLOUR, token);
 				else
-					d->print(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
+					d->print_discrete(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
 				break;
 
 			case CTAX_MESSAGE:
 				if (strchr(token, ':') != NULL) {
 					/* We have an objectname included */
 					for (l = 0; token[l] != ':'; l++)
-						d->putch(x + j - k + l, y, token[l], ZOC_OBJNAME_COLOUR);
-					d->putch(x + j - k + l, y, ':', ZOC_OPERATOR_COLOUR);
+						d->putch_discrete(x + j - k + l, y, token[l], ZOC_OBJNAME_COLOUR);
+					d->putch_discrete(x + j - k + l, y, ':', ZOC_OPERATOR_COLOUR);
 					l++;
-					d->print(x + j - k + l, y, (iszztmessage(token + l) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token + l);
+					d->print_discrete(x + j - k + l, y, (iszztmessage(token + l) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token + l);
 				} else
-					d->print(x + j - k, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token);
+					d->print_discrete(x + j - k, y, (iszztmessage(token) ? ZOC_STDMESSAGE_COLOUR : ZOC_MESSAGE_COLOUR), token);
 				break;
 		}
 	}
 
 	/* Finish anything we haven't dealt with */
 	for (; j < strlen(args); j++)
-		d->putch(x + j, y, args[j], ZOC_DEFAULT_COLOUR);
+		d->putch_discrete(x + j, y, args[j], ZOC_DEFAULT_COLOUR);
 }
 
 /* displayzzm() - displays zzm music highlighted */
@@ -1448,7 +1454,7 @@ void displayzzm(int x, int y, char *music, displaymethod * d)
 				if (toupper(music[i]) >= '0' && toupper(music[i]) <= '9')
 					colour = ZOC_MDRUM_COLOUR;
 		}
-		d->putch(x + i, y, music[i], colour);
+		d->putch_discrete(x + i, y, music[i], colour);
 	}
 }
 

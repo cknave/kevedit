@@ -1,5 +1,5 @@
 /* help.h  -- hypertext help system
- * $Id: help.h,v 1.1 2001/10/22 02:48:22 bitman Exp $
+ * $Id: help.h,v 1.2 2002/03/20 04:52:25 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -43,8 +43,5 @@ int helptopic(stringvector section, char* topic, displaymethod* d);
 /* helptopic() - Displags help for given section title and topic. For NULL or
  *               "" topic, browsing begins at the top of the section */
 int helpsectiontopic(char* sectiontitle, char* topic, displaymethod* d);
-
-/* drawpanelhelp() - draws the help panel */
-void drawpanelhelp(displaymethod* d);
 
 #endif

@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.9 2002/03/18 03:12:41 bitman Exp $
+ * $Id: paramed.c,v 1.10 2002/03/20 04:52:25 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -48,9 +48,9 @@
 #define ID_DATA1        0x0A00
 #define ID_DATA2        0x0B00
 #define ID_INSTRUCTION  0x0C00
-/* The other ID's come from the ZZT_DATAUSE_* set */
+/* The other IDs come from the ZZT_DATAUSE_* set */
 
-/* Option ID's used in tile info */
+/* Option IDs used in tile info */
 #define ID_ADDPARAM     1
 #define ID_RMPARAM      2
 #define ID_EDITPARAM    3
@@ -364,14 +364,16 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 	dialogComponent label  = dialogComponentMake(DIALOG_COMP_LABEL,   0, 1, LABEL_COLOR,  NULL, ID_NONE);
 	dialogComponent option = dialogComponentMake(DIALOG_COMP_OPTION, 20, 1, OPTION_COLOR, NULL, ID_NONE);
 
+	/* Handy macros for using template label & option */
+#define _addlabel(TEXT)      { label.text  = (TEXT); dialogAddComponent(&dia, label); label.y++; }
+#define _addoption(TEXT, ID) { option.text = (TEXT); option.id = (ID); dialogAddComponent(&dia, option); option.y++; }
+
 	/* Initialize the dialog */
 	dialogInit(&dia);
 
 	/* Generate the title */
 	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_TITLE, 0, 0, 0x0F, (char *) zztTileGetName(tile), ID_NONE));
 
-#define _addlabel(TEXT)      { label.text  = (TEXT); dialogAddComponent(&dia, label); label.y++; }
-#define _addoption(TEXT, ID) { option.text = (TEXT); option.id = (ID); dialogAddComponent(&dia, option); option.y++; }
 
 	/* Add "edit program" option */
 	if (properties & ZZT_PROPERTY_PROGRAM) {
@@ -667,7 +669,7 @@ void tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 		}
 
 		if (rebuild) {
-			/* Rebuild param dialog */
+			/* Rebuild dialog */
 			rebuild = 0;
 
 			dialogFree(&dia);

@@ -1,5 +1,5 @@
 /* dialog.h - general dialog tools
- * $Id: dialog.h,v 1.2 2002/02/19 09:41:36 bitman Exp $
+ * $Id: dialog.h,v 1.3 2002/03/20 04:52:24 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@
 
 typedef struct dialogComponent {
 	int type;
-	int x, y;  /* Position on screen or in dialog? */
+	int x, y;  /* Position in dialog */
 	unsigned char color;
 
 	char * text;

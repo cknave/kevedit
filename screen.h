@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.24 2002/02/19 09:41:36 bitman Exp $
+ * $Id: screen.h,v 1.25 2002/03/20 04:52:25 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 
 /* Drawing functions */
 void drawsidepanel(displaymethod * d, unsigned char panel[]);
-void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay);
+void drawscrollbox(displaymethod * mydisplay, int yoffset, int yendoffset, int updateflag);
 void drawscrolltitle(displaymethod * d, char * title);
 void drawpanel(displaymethod * d);
 void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w);

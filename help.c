@@ -1,5 +1,5 @@
 /* help.c  -- hypertext help system
- * $Id: help.c,v 1.4 2002/01/08 23:39:42 bitman Exp $
+ * $Id: help.c,v 1.5 2002/03/20 04:52:25 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
 #include "panel_hl.h"
 #include "helplist.h"
 #include "files.h"
+#include "screen.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -153,7 +154,7 @@ helptopic(stringvector section, char* topic, displaymethod* d)
 		findhypermessage("top", &section);
 
 	/* draw the help panel for all the world to see */
-	drawpanelhelp(d);
+	drawsidepanel(d, PANEL_HELP);
 	
 	while (1) {
 		retcode = editbox("Help", &section, 0, EDITBOX_ZOCMODE | EDITBOX_MOVEMENT, d);
@@ -213,20 +214,5 @@ helpsectiontopic(char* sectiontitle, char* topic, displaymethod* d)
 	}
 
 	return 1;
-}
-
-
-/* Help panel */
-
-void drawpanelhelp(displaymethod* d)
-{
-	int x, y, i = 0;
-
-	for (y = 0; y < PANEL_HELP_DEPTH + 0; y++) {
-		for (x = 0; x < PANEL_HELP_WIDTH; x++) {
-			d->putch(x + 60, y + 3, PANEL_HELP[i], PANEL_HELP[i + 1]);
-			i += 2;
-		}
-	}
 }
 

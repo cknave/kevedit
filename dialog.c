@@ -1,5 +1,5 @@
 /* dialog.c - general dialog tools
- * $Id: dialog.c,v 1.2 2002/02/19 09:41:36 bitman Exp $
+ * $Id: dialog.c,v 1.3 2002/03/20 04:52:24 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,6 @@
 #define TITLE_Y 4
 #define START_X 9
 #define START_Y 6
-/* TODO: what are these, really? */
 #define END_X 49
 #define END_Y 20
 
@@ -89,13 +88,13 @@ void dialogComponentDraw(displaymethod * mydisplay, dialogComponent component)
 	switch (component.type) {
 		case DIALOG_COMP_TITLE:
 			/* Display title in title-bar */
-			mydisplay->print(30 - (strlen(buffer) / 2), TITLE_Y, component.color, buffer);
+			mydisplay->print_discrete(30 - (strlen(buffer) / 2), TITLE_Y, component.color, buffer);
 			break;
 		case DIALOG_COMP_HEADING:
-			mydisplay->print(30 - (strlen(buffer) / 2), START_Y + component.y, component.color, buffer);
+			mydisplay->print_discrete(30 - (strlen(buffer) / 2), START_Y + component.y, component.color, buffer);
 			break;
 		default:
-			mydisplay->print(START_X + component.x, START_Y + component.y,
+			mydisplay->print_discrete(START_X + component.x, START_Y + component.y,
 											 component.color, buffer);
 	}
 
@@ -165,9 +164,9 @@ void dialogDraw(displaymethod * mydisplay, dialog dia)
 	int i;
 
 	/* Draw the scrollbox without pointers */
-	drawscrollbox(0, 0, mydisplay);
-	mydisplay->putch( 7, 13, ' ', 0x00);
-	mydisplay->putch(51, 13, ' ', 0x00);
+	drawscrollbox(mydisplay, 0, 0, 0);
+	mydisplay->putch_discrete( 7, 13, ' ', 0x00);
+	mydisplay->putch_discrete(51, 13, ' ', 0x00);
 
 	/* Draw the components */
 	if (dia.components != NULL)
@@ -182,10 +181,13 @@ void dialogDraw(displaymethod * mydisplay, dialog dia)
 	/* TODO: draw pointer to current option */
 	if (dia.options != NULL) {
 		dialogComponent curopt = dia.options[dia.curoption];
-		mydisplay->putch(START_X - 2, START_Y + curopt.y, '\xAF', 0x02);
-		mydisplay->putch(END_X + 2,   START_Y + curopt.y, '\xAE', 0x02);
+		mydisplay->putch_discrete(START_X - 2, START_Y + curopt.y, '\xAF', 0x02);
+		mydisplay->putch_discrete(END_X + 2,   START_Y + curopt.y, '\xAE', 0x02);
 		mydisplay->cursorgo(START_X + curopt.x, START_Y + curopt.y);
 	}
+
+	/* Update the display */
+	mydisplay->update(3, 4, 51, 19);
 }
 
 int dialogComponentEdit(displaymethod * mydisplay, dialogComponent * comp, int editwidth, int linedflags)
