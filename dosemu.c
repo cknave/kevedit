@@ -1,5 +1,5 @@
 /* dosemu.c		-- Routines for calling dosemu to run ZZT
- * $Id: dosemu.c,v 1.2 2002/09/24 01:05:37 kvance Exp $
+ * $Id: dosemu.c,v 1.3 2002/09/29 18:45:19 bitman Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,16 +17,16 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <sys/types.h>
+#include "dosemu.h"
+
+#ifdef DOSEMU
+
 #include <sys/param.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-
-#include "dosemu.h"
-
-#ifdef DOSEMU
 
 int dosemu_launch(char *datapath, char *worldpath, char *world)
 {
