@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.13 2002/09/18 03:14:59 bitman Exp $
+ * $Id: display_sdl.c,v 1.14 2002/09/22 00:10:14 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -775,8 +775,6 @@ static int shift;	/* Shift state */
 static int timer, csoc;	/* Timer for cursor, current state of cursor */
 static SDL_TimerID timerId;	/* Timer ID */
 
-static int fullscreen = 0; /* Fullscreen flag: off by default */
-
 #define CURSOR_RATE 400
 
 /* Nice timer update callback thing */
@@ -881,7 +879,7 @@ int display_sdl_init()
 			SDL_DEFAULT_REPEAT_INTERVAL);
 
 	/* Fire up the textmode emulator */
-	display_init(&info, 640, 350, 32, fullscreen, 1);
+	display_init(&info, 640, 350, 32, 0, 1);
 	display_load_default_charset(info.char_set);
 	display_load_default_palette(info.palette);
 
@@ -913,11 +911,10 @@ void display_sdl_putch(int x, int y, int ch, int co)
 void display_fullscreen()
 {
 	/* Toggle fullscreen */
+	info.vflags ^= SDL_FULLSCREEN;
 
 #ifdef WIN32
 	/* Toggle fullscreen flag and restart the display */
-	fullscreen ^= 1;
-	info.vflags ^= SDL_FULLSCREEN;
 	display_restart(&info);
 #else
 	/* This doesn't work in Windows */
