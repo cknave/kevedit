@@ -10,6 +10,9 @@ SDL = ON
 VCSA =
 # Set DOS to ON to enable DOS display
 DOS =
+# Set DOSEMU to ON to enable DOSEMU ZZT running
+DOSEMU = ON
+
 
 # Installation directories
 root =

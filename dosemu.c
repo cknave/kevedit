@@ -1,5 +1,5 @@
 /* dosemu.c		-- Routines for calling dosemu to run ZZT
- * $Id: dosemu.c,v 1.3 2002/09/29 18:45:19 bitman Exp $
+ * $Id: dosemu.c,v 1.4 2002/12/04 21:13:45 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,15 +41,20 @@ int dosemu_launch(char *datapath, char *worldpath, char *world)
 
 	struct stat statbuf;
 
-	/* Make path padded with spaces */
+	/* Make path padded with newlines */
 	if(strlen(worldpath) > DEXE_PATH_LENGTH) {
 		fprintf(stderr, "ERROR: Path is too long!\n");
 		return 0;
 	}
-	for(i = 0, j = strlen(worldpath); j < DEXE_PATH_LENGTH; i++, j++)
-		zztpath[i] = ' ';
-	for(j = 0; i < DEXE_PATH_LENGTH+1; i++, j++)
-		zztpath[i] = worldpath[j];
+	strcpy(zztpath, worldpath);
+	for(i = strlen(worldpath); i < DEXE_PATH_LENGTH+1; i++) {
+		zztpath[i] = '\r';
+		i++;
+		if(i >= DEXE_PATH_LENGTH+1)
+			break;
+		zztpath[i] = '\n';
+	}
+
 	zztpath[i] = '\0';
 
 	/* Strip ZZT from world name */
@@ -59,15 +64,19 @@ int dosemu_launch(char *datapath, char *worldpath, char *world)
 		chopworld[i] = world[i];
 	}
 	chopworld[i] = '\0';
-	/* Insert whitespace before world name */
-	for(i = 0, j = strlen(chopworld); j < DEXE_WORLD_LENGTH; i++, j++)
-		zztworld[i] = ' ';
-	for(j = 0; i < DEXE_WORLD_LENGTH+1; i++, j++)
-		zztworld[i] = chopworld[j];
+	/* Insert newlines after world name */
+	strcpy(zztworld, chopworld);
+	for(i = strlen(chopworld); i < DEXE_WORLD_LENGTH+1; i++) {
+		zztworld[i] = '\r';
+		i++;
+		if(i >= DEXE_WORLD_LENGTH+1)
+			break;
+		zztworld[i] = '\n';
+	}
 	zztworld[i] = '\0';
 	
 	/* Make a temporary DEXE */
-	sprintf(olddexe, "%s/dexe/zzt.dexe", datapath);
+	sprintf(olddexe, "%s/zzt.dexe", datapath);
 	sprintf(newdexe, "/tmp/zzt%i.dexe", getpid());
 	if(stat(olddexe, &statbuf) != 0) {
 		fprintf(stderr, "ERROR: %s not found!\n", olddexe);

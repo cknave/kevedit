@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.42 2002/11/11 13:18:02 bitman Exp $
+ * $Id: misc.c,v 1.43 2002/12/04 21:13:46 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -256,10 +256,10 @@ void runzzt(char* path, char* world)
 
 	/* And run dosemu on something */
 	if(no_extension != NULL) {
-		dosemu_launch(path, cwd, no_extension);
+		dosemu_launch(DATAPATH, cwd, no_extension);
 		free(no_extension);
 	} else {
-		dosemu_launch(path, cwd, world);
+		dosemu_launch(DATAPATH, cwd, world);
 	}
 #endif /* DOSEMU */
 }
