@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.40 2002/02/20 05:10:18 kvance Exp $
+ * $Id: screen.c,v 1.41 2002/02/21 22:31:47 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -400,7 +400,7 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 	d->putch(63, 0, ' ', 0x1f);
 	d->putch(76, 0, ' ', 0x1f);
 	d->putch(77, 0, ' ', 0x1f);
-	sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w)-1);
+	sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w));
 	i = 70 - strlen(s) / 2;
 	for (x = 0; x < strlen(s); x++) {
 		d->putch(i + x, 0, s[x], 0x1c);
