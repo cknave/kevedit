@@ -1,5 +1,5 @@
 /* zzl.c  -- ZZT Object Library file routines
- * $Id: zzl.c,v 1.4 2002/02/20 00:38:00 bitman Exp $
+ * $Id: zzl.c,v 1.5 2002/02/21 00:25:42 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -129,6 +129,7 @@ ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 	result.param->length  = objcodeparam.length;
 	result.param->program = objcodeparam.program;
 
+	result.param->data[0] = ch;
 	result.param->xstep = xstep;
 	result.param->ystep = ystep;
 	result.param->cycle = cycle;

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.59 2002/02/19 23:44:57 bitman Exp $
+ * $Id: main.c,v 1.60 2002/02/21 00:25:42 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 
 				/* Determine the text code based on the FG colour */
 				if (myinfo->forec == 0 || myinfo->forec == 8 || myinfo->forec == 15)
-					textTile.color += 6;
+					textTile.type += 6;
 				else if (myinfo->forec > 8)
 					textTile.type += myinfo->forec - 9;
 				else

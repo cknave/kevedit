@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.27 2002/02/19 03:32:28 bitman Exp $
+ * $Id: misc.c,v 1.28 2002/02/21 00:25:42 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -158,7 +158,7 @@ void texteditor(displaymethod * mydisplay)
 	regput('!', &editvector, 0, EDITBOX_ZZTWIDTH, EDITBOX_ZZTWIDTH);
 
 	/* Edit */
-	editbox("Text Editor", &editvector, 42, 0, mydisplay);
+	editbox("Text Editor", &editvector, 42, EDITBOX_ZOCMODE, mydisplay);
 
 	/* Store result to the ! register */
 	regstore('!', editvector);

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.35 2002/02/17 22:41:51 bitman Exp $
+ * $Id: editbox.c,v 1.36 2002/02/21 00:25:42 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -262,32 +262,6 @@ void updateditbox(stringvector* sv, int updateflags, int editwidth, int flags,
 			d->print(9, i + 13, 0x07, SLEADER);
 	}
 }
-
-#if 0
-/***** editmoredata() *********/
-
-void editmoredata(param * p, displaymethod * d)
-{
-	stringvector sv;
-	param newparam;
-
-	sv = moredatatosvector(p, EDITBOX_ZZTWIDTH);
-
-	/* Now that the node is full, we can edit it. */
-	sv.cur = sv.first;	/* This is redundant, but hey. */
-	editbox("Object Editor", &sv, EDITBOX_ZZTWIDTH, 1, d);
-
-	/* Okay, let's put the vector back in moredata */
-	newparam = svectortomoredata(sv);
-
-	deletestringvector(&sv);
-	if (p->moredata != NULL)
-		free(p->moredata);
-
-	p->length = newparam.length;
-	p->moredata = newparam.moredata;
-}
-#endif
 
 
 /* Space to reserve for the saved file name */
@@ -737,10 +711,6 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 							if (newsvector.first != NULL) {
 								if (key == DKEY_ALT_O) {
 									strcpy(savefilename, filename);
-									if (str_equ(filetypelist.cur->s, "*.zoc", 0))
-										flags &= EDITBOX_ZOCMODE;  /* Set ZOCMODE */
-									else
-										flags |= ~EDITBOX_ZOCMODE; /* Clear ZOCMODE */
 									/* erase & replace sv */
 									deletestringvector(sv);
 									*sv = newsvector;
@@ -771,7 +741,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						free(filename);
 						removestringvector(&filetypelist);
 					}			/* block */
-					updateflags = U_EDITAREA | U_TITLE;
+					updateflags = U_EDITAREA | U_TITLE | U_PANEL;
 					break;
 
 				case DKEY_ALT_S: /* alt-s: save to file */
@@ -789,7 +759,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 							free(filename);
 						}
 					}
-					updateflags = U_EDITAREA | U_PANEL;
+					updateflags = U_EDITAREA | U_PANEL | U_PANEL;
 					break;
 
 				case DKEY_ALT_M: /* alt-m: load .zzm music */
@@ -825,7 +795,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						}
 						free(filename);
 					}
-					updateflags = U_EDITAREA | U_TITLE;
+					updateflags = U_EDITAREA | U_TITLE | U_PANEL;
 					break;
 
 				/******** Cut operation *********/
