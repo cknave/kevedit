@@ -132,9 +132,11 @@ these types, you will be presented with the object editor.  This is a simple
 text editor with features specific to ZZT programming.  ARROW KEYS move the
 cursor, ESCAPE quits, ctrl+'y' deletes a line.
 
-Text may be highlighted by holding down ALT and using the arrow keys. Use
-alt+'c' to copy the selected text and alt+'v' to paste. Cut can also be used
-via alt+'x', though it does not yet work fully.
+The ZZT-OOP editor even features copy and paste! Text may be highlighted by
+holding down ALT and using the arrow keys to navigate. Eventually, the editor
+will allow use of SHIFT instead of ALT for selection, so be patient. Use
+alt+'c' to copy the selected text, alt+'x to cut, and alt+'v' to paste.
+CTRL-DELETE will clear a selected area without copying.
 
 The ZZT-OOP editor has a configurable word wrap.  alt+'+' and alt+'-' will
 increase or decrease the maximum length of a line of text.  You can also
