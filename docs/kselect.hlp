@@ -52,7 +52,7 @@ pressing lowercase 'f'.
 
 If an area is not selected, pressing 'f'
 will floodfill around the cursor. This is
-equivilant to pressing 'x' then 'f'.
+equivalent to pressing 'x' then 'f'.
 
 :randfill;Random Filling
 
@@ -75,7 +75,7 @@ your hopes up too high.
 
 In a random flood fill, all tiles used are
 given equal probability. To increase the
-occurance of a certain kind of tile, put
+occurrence of a certain kind of tile, put
 more than one copy in the backbuffer.
 
 !-kbackbuf;See Backbuffer Documentation

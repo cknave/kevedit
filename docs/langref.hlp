@@ -86,7 +86,7 @@ using Alt-P.
 
 :;     $text
      This makes text white and centers it.
-It can be used for titles, dialogue, or
+It can be used for titles, dialog, or
 just about anything!  Note: this command
 does not work in a one-line message.  It
 simply shows the $.
@@ -253,7 +253,7 @@ of the given type on the screen.
 
 :cmds;Programming commands:
 
-     All ZZT-OOP commands are preceeded by
+     All ZZT-OOP commands are preceded by
 the pound sign (#). The following com-
 mands are supported:
 
@@ -447,7 +447,7 @@ any fakes or water in its way.
 
 :zap;#ZAP <message>
 
-     Disables the first occurance of a
+     Disables the first occurrence of a
 label by turning it into a comment.  For
 example, #ZAP TOUCH would turn the label
  :TOUCH into the comment 'TOUCH.  Allows a
@@ -455,7 +455,7 @@ program to have several routines with the
 same labels, so that the desired label
 is called at the appropriate time.
 Remember that the #SEND command always
-calls the first occurence of a label.  For
+calls the first occurrence of a label.  For
 example:
 
  :TOUCH 'will be called first
@@ -498,7 +498,7 @@ objects, respectively.
 
      Puts a program into the "locked"
 state, so it will not be affected by any
-incomming messages.  Often, conflicts
+incoming messages.  Often, conflicts
 occur when two messages are sent to a
 program in a short amount of time.  The
 second message interrupts the program
@@ -510,7 +510,7 @@ disturbed.
 :unlock;#UNLOCK
 
      Removes a program from the "locked"
-state, so it is free to receive incomming
+state, so it is free to receive incoming
 messages.  Any messages that happened to
 arrive while it was LOCKed are lost.
 

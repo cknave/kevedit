@@ -10,7 +10,7 @@ $New in Version 0.5.0
 !-item;Items documentation
 !-creature;Creatures documentation
 !-terrain;Terrain documentation
-!-kbackbuf:aquire;Aquire Mode grows backbuffer
+!-kbackbuf:acquire;Acquire Mode grows backbuffer
 !-kstats:bind;Bind Index in Stats Editor
 !-kbasics:zzt;ALT-T runs zzt for testing
 :;  *  CTRL-K selects color (for F4 mode)
@@ -66,7 +66,7 @@ $Bugs fixed in 0.3.3
      line in text editor
 
 $New in Version 0.3.2
-!-kadvance:backbuffer;Resizable backbuffer
+!-kadvance:backbuffer;Re-sizable backbuffer
 !-kadvance;Advanced Editing Tools
 !-kbasics:creatures;More creatures
 !-kobjedit:copy;Copy and paste

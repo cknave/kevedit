@@ -43,7 +43,7 @@ exchange for gems.
      Keys are used to unlock doors.  They
 are color-coded, so there are seven colors
 of keys.  To unlock a door, the player
-must posess a key of the same color.
+must posses a key of the same color.
 
      The player can not hold two keys of
 the same color, though he can hold all
@@ -59,7 +59,7 @@ instead of a key.
 entering a region.  To get through a door,
 the player must be holding a matching key.
 If this is the case, then the door will
-open and the player will lose posession of
+open and the player will lose possession of
 the key.  The color of a door is
 determined by its background color. Doors
 with a black background need 255 gems to

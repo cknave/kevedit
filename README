@@ -29,7 +29,7 @@ Tile Info
 Items documentation
 Creatures documentation
 Terrain documentation
-Aquire Mode grows backbuffer
+Acquire Mode grows backbuffer
 Bind Index in Stats Editor
 ALT-T runs zzt for testing
 CTRL-K selects color (for F4 mode)
@@ -54,7 +54,7 @@ discussion of KevEdit, join the kevedit-talk mailing list by visiting:
 https://lists.sourceforge.net/lists/listinfo/kevedit-talk
 
 If you find bugs, try to fix it and send in a patch :)  If you can't fix it,
-report it. For the overzelous, you can do what bitman did join in on the
+report it. For the overzealous, you can do what bitman did join in on the
 development if you find sending in patches too tedious. CVS is great for that
 sort of thing.
 

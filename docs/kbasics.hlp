@@ -218,7 +218,7 @@ name.
 :transfer;Board Transfer
 
 KevEdit has several options for
-transfering a board from one world to
+transferring a board from one world to
 another. Pressing 't' will bring up the
 Board Transfer menu:
 
@@ -252,7 +252,7 @@ For this to work, zzt.exe must be in the
 same directory as kevedit.exe. zzt.dat and
 any other .hlp files should be kept in
 either the same folder as kevedit.exe
-or in the docs subfolder.
+or in the docs sub-folder.
 
 KevEdit now supports extended help
 systems when running ZZT. Simply extract

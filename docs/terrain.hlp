@@ -85,7 +85,7 @@ through invisible walls either.
 $Blinking walls
 
      A blinking wall placed on the board
-emitts a ray pointing in a specified
+emits a ray pointing in a specified
 direction.  This ray blinks on and off at
 a constant rate, and forms a barrier that
 is difficult for the player to cross.

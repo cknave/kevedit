@@ -46,7 +46,7 @@ removed before using the code.
  :touch      ' Do the following when we
              ' receive a "TOUCH" message
  Ouch! Stop touching me.
-             ' Put the preceeding text on
+             ' Put the preceding text on
              ' the screen.
  #send shot  ' Next, send ourselves the
              ' message "SHOT".
@@ -69,7 +69,7 @@ until another message is sent.
 
      Likewise, when the player (and only
 the player) touches BadGuy, the object
-will recieve the "TOUCH" message. This
+will receive the "TOUCH" message. This
 causes BadGuy to display the text "Ouch!
 Stop touching me." at the bottom of the
 screen.  This time, however, instead of
@@ -161,10 +161,10 @@ $Here is the first object:
  @Flask      ' Flask object.
  #end        ' Wait for message.
  :touch      ' Player touches the flask.
- You recieve the magical elixer.
+ You receive the magical elixir.
              ' Inform the player that they
-             ' have recieved an elixer.
- #set elixer ' Set the flag "elixer"
+             ' have received an elixir.
+ #set elixir ' Set the flag "elixir"
  #die        ' Cease to exist
 
 $Here is the second object:
@@ -173,35 +173,35 @@ $Here is the second object:
  #end        ' Do nothing yet...
  :touch      ' The player wants to talk to
              ' the wizard.
- #if elixer thank
-             ' If elixer has been set,
+ #if elixir thank
+             ' If elixir has been set,
              ' send the message "THANK".
              ' Otherwise, continue.
  I only talk to people with magical
- elixers. Go away.
+ elixirs. Go away.
  #end        ' Halt.
  :thank      ' Thank the player for the
-             ' elixer.
+             ' elixir.
  Thank you! I have been looking everywhere
- for my magical elixer. I'll take that
+ for my magical elixir. I'll take that
  from you now.
- #clear elixer
-             ' Clear the flag "elixer".
+ #clear elixir
+             ' Clear the flag "elixir".
  #end        ' Done.
 
      When the player touches the flask
 object, it informs the player that he or
-she has recieved a magical elixer and then
+she has received a magical elixir and then
 disappears (dies), which of course stops
-program execution perminantly.
+program execution permanently.
 
      The wizard, when touched, will check
-to see whether or not the elixer flag is
+to see whether or not the elixir flag is
 set.  If the flag is not set, the wizard
 tells the player to find it for him. If it
 is set, the message "THANK" is sent,
 whereby the player is thanked and the
-elixer is taken away.
+elixir is taken away.
 
      Up to ten flags may be set at one
 time in a ZZT world.
@@ -209,7 +209,7 @@ time in a ZZT world.
 :hyper;Hypertext Messages
 
 In the above example, the Wizard rudely
-takes the elixer from the player without
+takes the elixir from the player without
 even asking whether or not the player
 wishes to give it to him. This can,
 fortunately, be remedied.
@@ -219,16 +219,16 @@ $A more polite Wizard
  @PoliteWizard
  #end
  :touch
- #if elixer thank
+ #if elixir thank
  If only you had a magical elixer...
  #end
              ' NEW code to follow:
  :thank      ' Thank the player for the
-             ' elixer.
+             ' elixir.
  Thank you! I have been looking everywhere
- for my magical elixer. May I please have
+ for my magical elixir. May I please have
  it?
-             ' Politely ask for the elixer
+             ' Politely ask for the elixir
  
  !yes;Of course you can.
  !no;No! It is mine!
@@ -239,19 +239,19 @@ $A more polite Wizard
              ' thank the player and ask
              ' again.
  :yes        ' The player decided to give
-             ' up the elixer.
+             ' up the elixir.
  Thank you very much. I am forever in your
  debt.
              ' Suck up to the player. :-)
- #clear elixer
+ #clear elixir
  #end
  :no         ' The player decided to not
-             ' give away the elixer.
+             ' give away the elixir.
  Very well then. See if I ever do anything
  nice for you.
  #end
 
-Instead of simply taking the elixer away,
+Instead of simply taking the elixir away,
 the PoliteWizard offers the player two
 options, which will appear to the player
 as such:

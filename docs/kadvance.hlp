@@ -1,9 +1,9 @@
 @Advanced Editing Tools
 $Advanced Editing Tools
 
-:backbuffer;Resizable Backbuffer
+:backbuffer;Re-sizable Backbuffer
 :buflock;Backbuffer Locking
-:aquire;Aquire Mode
+:acquire;Acquire Mode
 :gradient;Gradient Draw Mode
 
 Information on backbuffer functions can

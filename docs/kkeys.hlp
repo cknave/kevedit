@@ -83,7 +83,7 @@ DELETE
 
  p - Cycles through backbuffer
  P - Cycles backward through backbuffer
- a - Aquires tiles to the backbuffer
+ a - Acquires tiles to the backbuffer
  < - Reduces size of backbuffer
  > - Increases size of backbuffer
  / - Locks backbuffer

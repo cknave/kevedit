@@ -9,6 +9,7 @@ $Tile Info
 !coord;Coordinate
 
 !stats;Stats
+!sindex;Stat Index
 !under;Tile Underneath
 !len;Code Length
 !inst;Current Code
@@ -63,7 +64,7 @@ types.
 :color;Color
 
 The color of the tile is given in
-hexadecimal with a texual description.
+hexadecimal with a textual description.
 Note that ZZT-OOP uses only light colors
 and cannot change a tile's background
 color.
@@ -88,6 +89,13 @@ to other tiles that usually do not have
 them does not generally affect their
 behavior. Remember that each board can
 only have 150 tiles with stats.
+
+:sindex;Stat Index
+
+The stats for each board are stored in a
+specific order. This index tells where an
+item's stats are in the list of stats.
+This value cannot currently be edited.
 
 :under;Tile Underneath
 
