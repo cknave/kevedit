@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.34 2002/09/12 22:05:49 bitman Exp $
+ * $Id: misc.c,v 1.35 2002/09/13 17:51:21 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -288,8 +288,9 @@ void saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 	if (dotptr != NULL)
 		*dotptr = '\0';
 
-	if (!str_equ(zztWorldGetFilename(myworld), file, STREQU_UNCASE) &&
-			str_equ(oldfilenamebase, zztWorldGetTitle(myworld), STREQU_UNCASE)) {
+	if ((!str_equ(zztWorldGetFilename(myworld), file, STREQU_UNCASE) &&
+	     str_equ(oldfilenamebase, zztWorldGetTitle(myworld), STREQU_UNCASE)) ||
+	    str_equ("UNTITLED", zztWorldGetTitle(myworld), 0)) {
 		char* newtitle = str_dup(file);
 		dotptr = strrchr(newtitle, '.');
 		if (dotptr != NULL)

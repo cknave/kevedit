@@ -1,5 +1,5 @@
 /* selection.h  -- selected area
- * $Id: selection.h,v 1.1 2001/10/22 02:48:23 bitman Exp $
+ * $Id: selection.h,v 1.2 2002/09/13 17:51:21 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -54,5 +54,9 @@ int  isselected  (selection sel, int x, int y);
 /* nextselected() - advances x and y to the next set position, returning false
  *                  on success and true on failure (end of bitfield) */
 int nextselected(selection sel, int * x, int * y);
+
+/* firstselected() - advances x and y to the first set position, returning
+ *                   false on success and true on failure */
+int firstselected(selection sel, int * x, int * y);
 
 #endif

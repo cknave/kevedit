@@ -101,9 +101,10 @@ endif
 
 # Dependancies
 
+main.o: main.c kevedit.h libzzt2/zzt.h help.h register.h files.h display.h colours.h patbuffer.h
+
 # Central KevEditing routines
 kevedit.o: kevedit.c kevedit.h misc.h menu.h editbox.h screen.h libzzt2/zzt.h patbuffer.h help.h register.h infobox.h display.h
-main.o: main.c kevedit.h misc.h menu.h editbox.h screen.h libzzt2/zzt.h patbuffer.h help.h register.h infobox.h display.h
 misc.o: misc.c misc.h kevedit.h editbox.h screen.h svector.h hypertxt.h selection.h gradient.h patbuffer.h display.h
 menu.o: menu.c menu.h kevedit.h screen.h editbox.h libzzt2/zzt.h svector.h files.h zzl.h hypertxt.h patbuffer.h display.h
 editbox.o: editbox.c editbox.h screen.h svector.h zzm.h colours.h register.h help.h scroll.h panel_ed.h display.h

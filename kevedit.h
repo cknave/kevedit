@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.16 2002/09/12 22:05:48 bitman Exp $
+ * $Id: kevedit.h,v 1.17 2002/09/13 17:51:20 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include "display.h"
 #include "patbuffer.h"
 #include "colours.h"
+#include "selection.h"
 
 /* Update Flags */
 #define UD_NONE         0x00  /* Nothing at all */
@@ -47,10 +48,15 @@
 #define UD_ALL          (UD_BOARD | UD_PANEL)  /* Everything */
 
 /* Aquire modes */
-
 #define AQUMODE_OFF       0
 #define AQUMODE_NORESIZE  1  /* Don't resize the backbuffer */
 #define AQUMODE_RESIZE    2  /* Grow backbuffer to hold new tiles */
+
+/* Selection mode */
+#define SELECT_OFF     0  /* Select mode is off */
+#define SELECT_ON      1  /* An area is selected */
+#define SELECT_BLOCK   2  /* Select by block */
+#define SELECT_CLEAR  -1  /* Selection must be cleared */
 
 
 typedef struct kevoptions {
@@ -90,6 +96,11 @@ typedef struct keveditor {
 
 	/* Backbuffers */
 	backbuffers buffers;
+
+	/* Selection mode */
+	int selectmode;
+	int selx, sely;
+	selection sel;
 
 	/* Options */
 	kevoptions options;

@@ -1,5 +1,5 @@
 /* selection.h  -- selected area
- * $Id: selection.c,v 1.2 2001/11/11 01:17:23 bitman Exp $
+ * $Id: selection.c,v 1.3 2002/09/13 17:51:21 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -113,6 +113,16 @@ int nextselected(selection sel, int * x, int * y)
 	/* Reached the end of the field */
 	return 1;
 }
+
+int firstselected(selection sel, int * x, int * y)
+{
+	/* nextselected will advance from (-1, 0) to (0, 0) before it starts
+	 * checking values, so this is a very easy trick to find the first
+	 * selected value. */
+	*x = -1; *y = 0;
+	return nextselected(sel, x, y);
+}
+
 
 #if 0
 /* temporary */

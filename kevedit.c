@@ -1,5 +1,5 @@
 /* kevedit.c       -- main kevedit environment
- * $Id: kevedit.c,v 1.2 2002/09/12 22:05:48 bitman Exp $
+ * $Id: kevedit.c,v 1.3 2002/09/13 17:51:20 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 	myeditor->cursorx = 0;
 	myeditor->cursory = 0;
 
-	myeditor->updateflags = UD_NONE;
+	myeditor->updateflags = UD_ALL | UD_BOARDTITLE | UD_WORLDTITLE;
 	myeditor->quitflag = 0;
 
 	myeditor->key = 0;
@@ -95,6 +95,10 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 
 	/* Don't color standard patterns by default */
 	myeditor->options.colorStandardPatterns = 0;
+
+	myeditor->selectmode = SELECT_OFF;
+	myeditor->selx = -1; myeditor->sely = -1;
+	initselection(&myeditor->sel, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
 
 	/* Use KVI environment variable to decide if vi keys should be used */
 	if (getenv("KVI") == NULL) {
@@ -123,6 +127,9 @@ void deletekeveditor(keveditor * myeditor)
 	deletepatternbuffer(myeditor->buffers.backbuffer);
 	free(myeditor->buffers.standard_patterns);
 	free(myeditor->buffers.backbuffer);
+
+	/* Free the selection */
+	deleteselection(&myeditor->sel);
 
 	/* Free everything! Free! Free! Free! Let freedom ring! */
 	free(myeditor);

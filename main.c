@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.73 2002/09/12 21:21:16 bitman Exp $
+ * $Id: main.c,v 1.74 2002/09/13 17:51:20 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,6 +63,8 @@ int main(int argc, char **argv)
 	datapath = locateself(argv[0]);  
 	inithelpsystem(datapath);
 
+	myworld = NULL;
+
 	/* Did we get a world on the command line? */
 	if (argc > 1)
 		myworld = getWorldFromArg(argv[1], datapath);
@@ -71,14 +73,16 @@ int main(int argc, char **argv)
 	if (myworld == NULL)
 		myworld = zztWorldCreate(NULL, NULL);
 
-	/* Create the editor */
-	editor = createkeveditor(myworld, mydisplay, datapath);
+	if (myworld == NULL) {
+		fprintf(stderr, "Error: could not create blank world, exiting.\n");
+		return 1;
+	}
 
 	/* Switch to the start board */
 	zztBoardSelect(myworld, zztWorldGetStartboard(myworld));
 
-	/* Update everything initially */
-	editor->updateflags = UD_ALL | UD_BOARDTITLE;
+	/* Create the editor */
+	editor = createkeveditor(myworld, mydisplay, datapath);
 
 	kevedit(editor);
 
