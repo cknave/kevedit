@@ -4,6 +4,9 @@
 
 #include "zzt.h"
 
+
+/**** libzzt2 block printing */
+
 void printblock(ZZTblock * b) {
 	int x, y;
 	for (y = 0; y < b->height; y++) {
@@ -39,6 +42,8 @@ void shuffle(ZZTworld * w) {
 	}
 }
 
+/****** General libzzt2 tests */
+
 void testblockcopy(ZZTworld * w) {
 	ZZTblock *area;
 
@@ -56,16 +61,15 @@ void testparams(ZZTworld * w) {
 	zztPlotPlayer(w, 1, 0);
 }
 
-int main(int argc, char * argv[])
+void testworld(char * filename)
 {
 	ZZTworld *w;
-	char loadname[1000] = "test.zzt";
+	char loadname[1000] = "town.zzt";
 
-	if (argc > 1) {
-		strcpy(loadname, argv[1]);
-	}
+	if (filename != NULL)
+		strcpy(loadname, filename);
 
-	/* Load TOWN */
+	/* Load world */
 	w = zztWorldLoad(loadname);
 	if(w == NULL) {
 		printf("Error loading world!\n");
@@ -94,6 +98,68 @@ int main(int argc, char * argv[])
 
 	/* Clean up */
 	zztWorldFree(w);
+}
+
+/***** zztoop parser tests */
+#include "zztoop.h"
+
+void testTokenizer(char * line)
+{
+	ZZTOOPparser * parser = zztoopCreateParser(line);
+
+	printf("Tokenizing \"%s\":\n", parser->line);
+	while (zztoopNextToken(parser)) {
+		printf("\"%s\"\n", parser->token);
+	}
+
+	zztoopDeleteParser(parser);
+}
+
+void printComponents(ZZTOOPcomponent* comp)
+{
+	char * text = "NULL";
+
+	if (comp == NULL)
+		return;
+
+	if (comp->text != NULL)
+		text = comp->text;
+
+	printf("Pos: %d, Type: %s, value: %d, text: \"%s\"\n", comp->pos, zztoopTypeDescription(comp->type), comp->value, text);
+
+	printComponents(comp->next);
+}
+
+void testParser(char * line)
+{
+	ZZTOOPparser * parser = zztoopCreateParser(line);
+
+	parser->flags = ZOOPFLAG_HELP;
+
+	printf("Parsing (help) \"%s\":\n", line);
+	printComponents(zztoopParseLine(parser));
+
+	zztoopDeleteParser(parser);
+}
+
+void testParserMany(void)
+{
+	testParser("#go north");
+	testParser("/i/i#change key door");
+	testParser("!message;text 'yeah");
+	testParser(":label;text");
+	testParser("!object:message;text");
+	testParser("!-file:message;text");
+	testParser(":label   'Comment");
+	testParser(":label #go north");
+}
+
+int main(int argc, char * argv[])
+{
+	if (argc > 1)
+		testParser(argv[1]);
+	else
+		testParserMany();
 
 	return 0;
 }

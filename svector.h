@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.17 2002/12/04 23:53:06 kvance Exp $
+ * $Id: svector.h,v 1.18 2003/02/17 15:19:50 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@
 #ifndef __SVECTOR_H
 #define __SVECTOR_H 1
 
+#include "libzzt2/strtools.h"
 
 /* basic structures for a string vector */
 
@@ -91,38 +92,8 @@ void inssortstringvector(stringvector* v, int (*compare)(const char* s1, const c
 /* wordwrap() - wrap text in sv */
 int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth);
 
-/* General string operations which become useful when paired with svectors */
+/* Token manipulation (TODO: may be obsolete) */
 
-
-#define STREQU_UNCASE  0x01     /* Capitalization is ignored */
-#define STREQU_FRONT   0x02     /* Equal if the fronts of the strings
-																	 are the same */
-#define STREQU_RFRONT  (0x04 | STREQU_FRONT)
-                                /* Equal if the right string is the front
-																 * of the left string */
-
-/* String duplication using malloc
- * str_dup()    - reserves just enough space for the string
- * str_dupmax() - reserves at  most max+1 space
- * str_dupmin() - reserves at least min+1 space
- * str_dupat()  - reserves  exactly len+1 space
- */
-char * str_dup   (char * s);
-char * str_dupmin(char * s, unsigned int min);
-char * str_dupmax(char * s, unsigned int max);
-char * str_duplen(char * s, unsigned int len);
-char * str_dupadd(char * s, unsigned int add);
-
-/* Create an empty string of given length using malloc */
-char * str_create(unsigned int len);
-
-/* str_lowercase - changes string to lowercase and returns it */
-char* str_lowercase(char* string);
-
-/* str_equ - compares two strings, ignoring case & length based on flags */
-int str_equ(const char *str1, const char *str2, int flags);
-
-/* tokens */
 /* advance token in source from pos, returning token length */
 int tokenadvance(char *token, char *source, int *pos);
 

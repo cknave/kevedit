@@ -6,7 +6,7 @@ CFLAGS = $(OPTIMIZE) $(DOS)
 
 # Objects
 
-OBJS = board.o file.o tiles.o params.o world.o
+OBJS = board.o file.o tiles.o params.o world.o strtools.o zztoop.o
 
 .c.o:
 	$(CC) -o $@ $< $(CFLAGS) -c
@@ -31,3 +31,6 @@ file.o: file.c zzt.h
 tiles.o: tiles.c zzt.h
 world.o: world.c zzt.h
 params.o: params.c zzt.h
+
+strtools.o: strtools.c strtools.h
+zztoop.o: zztoop.c zztoop.h strtools.h
