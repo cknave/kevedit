@@ -16,7 +16,9 @@ DOS =
 DOS = -DDOS
 DOSOBJ = display_dos.o
 
-CFLAGS = -s -O6 $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.1\"
+OPTIMIZE = -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+
+CFLAGS = -s $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.1\"
 
 # No more modifications below this line
 # -------------------------------------
