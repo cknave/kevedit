@@ -1,5 +1,5 @@
 /* zlaunch - zzt launching library (everything necessary to run zzt smoothly) */
-/* $Id: zlaunch.c,v 1.1 2003/11/01 23:45:57 bitman Exp $ */
+/* $Id: zlaunch.c,v 1.2 2004/02/01 06:31:41 bitman Exp $ */
 /* Copyright (c) 2001 Ryan Phillips <bitman@users.sf.net> */
 
 #include "zlaunch.h"
@@ -9,9 +9,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include <string.h>
 
 /* Keyboard buffer stuffing */
