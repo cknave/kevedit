@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.17 2001/11/11 09:30:01 bitman Exp $
+ * $Id: misc.c,v 1.18 2001/11/13 07:21:43 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -572,12 +572,13 @@ int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, char*
 										0, 0, 59, 24, mydisplay);
 		if (key == DKEY_ESC) return 1;
 		/* Check for flood selection */
-		if (key == 'f' || key == 'F') {
+		if (key == 'f' || key == 'F' || key == 'm') {
 			floodselect(sel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
 			/* Set the gradient endpoints to the current position */
 			grad->x1 = grad->x2 = myinfo->cursorx;
 			grad->y1 = grad->y2 = myinfo->cursory;
-			return 0;
+			if (key != 'm')
+				return 0;
 		}
 	} while (key != DKEY_ENTER && key != ' ');
 	grad->x1 = myinfo->cursorx; grad->y1 = myinfo->cursory;
@@ -591,12 +592,13 @@ int promptforselection(selection sel, gradline * grad, editorinfo* myinfo, char*
 										0, 0, 59, 24, mydisplay);
 		if (key == DKEY_ESC) return 1;
 		/* Check for flood selection */
-		if (key == 'f' || key == 'F') {
+		if (key == 'f' || key == 'F' || key == 'm') {
 			floodselect(sel, myinfo->cursorx, myinfo->cursory, bigboard, 60, 25);
 			/* Set the gradient endpoints to the current position */
 			grad->x2 = myinfo->cursorx;
 			grad->y2 = myinfo->cursory;
-			return 0;
+			if (key != 'm')
+				return 0;
 		}
 	} while (key != DKEY_ENTER && key != ' ');
 	grad->x2 = myinfo->cursorx; grad->y2 = myinfo->cursory;
