@@ -15,7 +15,6 @@ All other unimplemented F-key tiles:
 	* Head
 	* Segment
 	* Transporter
-The shift state indicator is broken.  Rewrite the bloody interrupt handler.
 
 For the 0.5 release:
 --------------------
