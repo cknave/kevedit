@@ -1,11 +1,16 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_REVISION([$Id: configure.in,v 1.2 2003/09/26 03:29:47 bitman Exp $])
 AC_INIT(kevedit, 0.5.1, kev@kvance.com)
 AC_CONFIG_SRCDIR(kevedit.c)
-AM_INIT_AUTOMAKE(kevedit.c, 0.5)
 
-AC_REVISION([[$Id: configure.in,v 1.1 2003/02/18 08:16:32 bitman Exp $]])
+dnl Detect host and target build environment
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
 
-# This doesn't seem to work at all
-#AC_CONFIG_AUX_DIR(config)
+AM_INIT_AUTOMAKE(kevedit.c, $PACKAGE_VERSION)
+#AM_CONFIG_HEADER(config.h)
+
+AC_REVISION([[$Id: configure.in,v 1.2 2003/09/26 03:29:47 bitman Exp $]])
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -14,8 +19,8 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 dnl Checks for header files.
-AC_HEADER_DIRENT
 AC_HEADER_STDC
+AC_HEADER_DIRENT
 AC_CHECK_HEADERS(malloc.h strings.h unistd.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -30,29 +35,80 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRCOLL
 AC_CHECK_FUNCS(getcwd strdup strstr)
 
+dnl Check for windows (for glob's sake)
+AC_MSG_CHECKING(for Windows)
+case "$host" in
+	*-*-*win*)
+		AC_DEFINE(WINDOWS32)
+		AC_MSG_RESULT(yes)
+		;;
+	*)
+		AC_MSG_RESULT(no)
+		;;
+esac
+
+dnl Define some random things
+AC_DEFINE(CANGLOB)
+AC_DEFINE(keveditVERSION, "autotest")
+AC_DEFINE(DATAPATH, ".")
+
+dnl Determine available displays
+AC_MSG_NOTICE(Searching for available displays)
+
+dnl Check for SDL
+AM_PATH_SDL(1.2.0,
+	AC_MSG_NOTICE(Using SDL display and sound)
+	AC_SUBST(DISPLAY_SDL, display_sdl.o)
+	AC_SUBST(SYNTH_SDL, sdl_synth.o)
+	AC_DEFINE(SDL),
+
+	AC_MSG_NOTICE(SDL not available for display))
+
+CFLAGS="$CFLAGS $SDL_CFLAGS"
+LIBS="$LIBS $SDL_LIBS"
+
+dnl Link in SDL_LIBS using x_LDADD in Makefile.am
+
+dnl Check for DOS display
+case "$host" in
+	*-*-msdos*)
+		AC_MSG_NOTICE(Using DOS display and pcspeaker sound)
+		AC_SUBST(DISPLAY_DOS, display_dos.o)
+		AC_SUBST(SYNTH_PCSPEAKER, pcspeaker.o)
+		AC_DEFINE(DOS)
+		;;
+	*)
+		AC_MSG_NOTICE(DOS display not available)
+		;;
+esac
+
 dnl Check the system to see if it provides GNU glob.  If not, use
 dnl the implementation we stole from GNU make. :-)
 AC_MSG_CHECKING(if system libc has GNU glob)
 AC_CACHE_VAL(make_cv_sys_gnu_glob, [
- AC_EGREP_CPP(gnu glob,[
+ AC_TRY_CPP([
 #include <features.h>
 #include <glob.h>
 #include <fnmatch.h>
 
 #define GLOB_INTERFACE_VERSION 1
-#if !defined _LIBC && defined __GNU_LIBRARY__ && __GNU_LIBRARY__ > 1
+#if defined _LIBC || !defined __GNU_LIBRARY__ || __GNU_LIBRARY__ <= 1
+# error no gnu glob
+#else
 # include <gnu-versions.h>
-# if _GNU_GLOB_INTERFACE_VERSION == GLOB_INTERFACE_VERSION
-   gnu glob
+# if _GNU_GLOB_INTERFACE_VERSION != GLOB_INTERFACE_VERSION
+#  error no gnu glob
 # endif
 #endif
- ], [AC_MSG_RESULT(yes)
-make_cv_sys_gnu_glob=yes], [AC_MSG_RESULT([no; using local copy])
-AC_SUBST(GLOBINC) GLOBINC='-I$(srcdir)/glob'
-AC_SUBST(GLOBLIB) GLOBLIB=glob/libglob.a
-make_cv_sys_gnu_glob=no])])
-# Tell automake about this, so it can build the right .c files.
-AM_CONDITIONAL(USE_LOCAL_GLOB, test "$make_cv_sys_gnu_glob" = no)
+ ], make_cv_sys_gnu_glob=yes, make_cv_sys_gnu_glob=no)])
+case "$make_cv_sys_gnu_glob" in
+  yes) AC_MSG_RESULT(yes) ;;
+  no)  AC_MSG_RESULT([no; using local copy])
+       AC_SUBST(GLOBDIR) GLOBDIR=glob
+       AC_SUBST(GLOBINC) GLOBINC='-I$(srcdir)/glob'
+       AC_SUBST(GLOBLIB) GLOBLIB=glob/libglob.a
+       ;;
+esac
 
 
 AC_OUTPUT(glob/Makefile libzzt2/Makefile synth/Makefile Makefile)
