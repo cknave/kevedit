@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.6 2002/02/20 07:13:41 bitman Exp $
+ * $Id: paramed.c,v 1.7 2002/03/16 22:41:07 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -79,6 +79,7 @@ void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 	dia = buildparamdialog(w, x, y);
 
 	do {
+		int rebuild = 0;
 		/* Draw the dialog each time around */
 		dialogDraw(d, dia);
 
@@ -88,13 +89,24 @@ void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 			case DKEY_DOWN: dialogNextOption(&dia); break;
 			case DKEY_UP:   dialogPrevOption(&dia); break;
 			case DKEY_ENTER:
-				parameditoption(d, w, x, y, dialogGetCurOption(dia));
-				/* Rebuild param dialog */
-				curoption = dia.curoption;
-				dialogFree(&dia);
-				dia = buildparamdialog(w, x, y);
-				dia.curoption = curoption;
+				rebuild = parameditoption(d, w, x, y, dialogGetCurOption(dia));
 				break;
+			case DKEY_LEFT:
+				rebuild = paramdeltaoption(d, w, x, y, dialogGetCurOption(dia), -1);
+				break;
+			case DKEY_RIGHT:
+				rebuild = paramdeltaoption(d, w, x, y, dialogGetCurOption(dia), 1);
+				break;
+		}
+
+		if (rebuild) {
+			/* Rebuild param dialog */
+			rebuild = 0;
+
+			curoption = dia.curoption;
+			dialogFree(&dia);
+			dia = buildparamdialog(w, x, y);
+			dia.curoption = curoption;
 		}
 	} while (key != DKEY_ESC);
 
@@ -247,6 +259,37 @@ int nextdirection(int dir)
 	return dir << 1;
 }
 
+char * scalestring(char * buffer, int data)
+{
+	/* Turn data into a scale string in the form: ..*.|.... */
+	int i;
+	const char DOTCH = 0xFA, STARCH = '*', CLINE = '|', CSTAR = '+';
+
+	/* Create first four dots */
+	for (i = 0; i < 4; i++)
+		if (i == data)
+			buffer[i] = STARCH;
+		else
+			buffer[i] = DOTCH;
+
+	/* Create center line */
+	if (i == data)
+		buffer[i] = CSTAR;
+	else
+		buffer[i] = CLINE;
+
+	/* Create last four dots */
+	for (i++; i < 9; i++)
+		if (i == data)
+			buffer[i] = STARCH;
+		else
+			buffer[i] = DOTCH;
+
+	buffer[i] = '\x0';
+
+	return buffer;
+}
+
 char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w)
 {
 	u_int8_t data = tile.param->data[which];
@@ -256,14 +299,36 @@ char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w
 			if (data > 128) data -= 128;
 			/* Continue through... */
 		case ZZT_DATAUSE_DUPRATE:
+			if (data > 8)
+				sprintf(buffer, "%d", data);
+			else {
+				strcpy(buffer, "Slow ");
+				scalestring(buffer + strlen(buffer), data);
+				strcat(buffer, " Fast");
+			}
+			break;
 		case ZZT_DATAUSE_SENSITIVITY:
 		case ZZT_DATAUSE_INTELLIGENCE:
 		case ZZT_DATAUSE_RESTTIME:
-		case ZZT_DATAUSE_SPEED:
 		case ZZT_DATAUSE_DEVIANCE:
 		case ZZT_DATAUSE_STARTTIME:
 		case ZZT_DATAUSE_PERIOD:
-			sprintf(buffer, "%d", data);
+			if (data > 8)
+				sprintf(buffer, "%d", data);
+			else {
+				strcpy(buffer, "1 ");
+				scalestring(buffer + strlen(buffer), data);
+				strcat(buffer, " 9");
+			}
+			break;
+		case ZZT_DATAUSE_SPEED:
+			if (data > 8)
+				sprintf(buffer, "%d", data);
+			else {
+				strcpy(buffer, "Fast ");
+				scalestring(buffer + strlen(buffer), data);
+				strcat(buffer, " Slow");
+			}
 			break;
 		case ZZT_DATAUSE_PASSAGEDEST:
 			if (data < zztWorldGetBoardcount(w))
@@ -371,7 +436,7 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 	return dia;
 }
 
-void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComponent * opt)
+int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComponent * opt)
 {
 	ZZTtile tile = zztTileGet(w, x, y);
 	int num;   /* General use number */
@@ -379,15 +444,15 @@ void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 	switch (opt->id) {
 		case ID_PROGRAM:
 			editprogram(d, tile.param);
-			break;
+			return 1;
 		case ZZT_DATAUSE_PASSAGEDEST:
 			tile.param->data[2] = boarddialog(w, tile.param->data[2], "Passage Destination", 0, d);
-			break;
+			return 1;
 		case ZZT_DATAUSE_CHAR:
 			num = charselect(d, tile.param->data[0]);
 			if (num != -1)
 				tile.param->data[0] = num;
-			break;
+			return 1;
 		/* 8-bit numbers */
 		case ZZT_DATAUSE_DUPRATE:
 		case ZZT_DATAUSE_SENSITIVITY:
@@ -397,6 +462,9 @@ void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 		case ZZT_DATAUSE_DEVIANCE:
 		case ZZT_DATAUSE_STARTTIME:
 		case ZZT_DATAUSE_PERIOD:
+			/* Don't edit these for numbers under 9 */
+			if (tile.param->data[zztParamDatauseLocate(opt->id)] < 9)
+				return 0;
 		case ID_CYCLE:
 		case ID_DATA0:
 		case ID_DATA1:
@@ -427,7 +495,7 @@ void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 						break;
 				}
 			}
-			break;
+			return 1;
 		/* signed 8-bit values -- ack! */
 		case ID_XSTEP:
 		case ID_YSTEP:
@@ -444,7 +512,7 @@ void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 				if (opt->id == ID_XSTEP) tile.param->xstep = num;
 				else tile.param->ystep = num;
 			}
-			break;
+			return 1;
 		case ID_FIRERATE:
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
 			if (dialogComponentEdit(d, opt, 3, LINED_NUMBER) == LINED_OK) {
@@ -458,7 +526,7 @@ void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 				tile.param->data[firerateindex] &= 0x80;
 				tile.param->data[firerateindex] |= num;
 			}
-			break;
+			return 1;
 		case ID_INSTRUCTION:
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
@@ -470,15 +538,13 @@ void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 
 				tile.param->instruction = num;
 			}
-			break;
+			return 1;
 		case ID_PROJECTILE:
-			{
-				tile.param->data[zztParamDatauseLocate(ZZT_DATAUSE_FIRERATEMODE)] ^= 0x80;
-			}
-			break;
+			tile.param->data[zztParamDatauseLocate(ZZT_DATAUSE_FIRERATEMODE)] ^= 0x80;
+			return 1;
 		case ZZT_DATAUSE_OWNER:
 			tile.param->data[zztParamDatauseLocate(opt->id)] = !tile.param->data[zztParamDatauseLocate(opt->id)];
-			break;
+			return 1;
 		case ID_DIRECTION:
 			{
 				char xstep, ystep;
@@ -488,7 +554,59 @@ void parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 				tile.param->xstep = xstep;
 				tile.param->ystep = ystep;
 			}
-			break;
+			return 1;
 	}
+
+	/* No change occured if we reach this point */
+	return 0;
 }
 
+int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComponent * opt, int delta)
+{
+	ZZTtile tile = zztTileGet(w, x, y);
+	int dul = zztParamDatauseLocate(opt->id);
+
+	switch (opt->id) {
+		case ZZT_DATAUSE_DUPRATE:
+		case ZZT_DATAUSE_SENSITIVITY:
+		case ZZT_DATAUSE_INTELLIGENCE:
+		case ZZT_DATAUSE_RESTTIME:
+		case ZZT_DATAUSE_SPEED:
+		case ZZT_DATAUSE_DEVIANCE:
+		case ZZT_DATAUSE_STARTTIME:
+		case ZZT_DATAUSE_PERIOD:
+			if (tile.param->data[dul] < -delta)
+				tile.param->data[dul] = 0;
+			else if (tile.param->data[dul] < 9 && tile.param->data[dul] > 8 - delta)
+				tile.param->data[dul] = 8;
+			else
+				tile.param->data[dul] += delta;
+			return 1;
+		case ZZT_DATAUSE_CHAR:
+			tile.param->data[dul] += delta;
+			return 1;
+
+		case ID_CYCLE:
+			/* Cycle stays within [0, 255] */
+			if (tile.param->cycle < -delta)
+				tile.param->cycle = 0;
+			else if (tile.param->cycle > 255 - delta)
+				tile.param->cycle = 255;
+			else
+				tile.param->cycle += delta;
+			return 1;
+		case ID_XSTEP: tile.param->xstep += delta; return 1;
+		case ID_YSTEP: tile.param->ystep += delta; return 1;
+
+		case ID_DATA0: tile.param->data[0] += delta; return 1;
+		case ID_DATA1: tile.param->data[1] += delta; return 1;
+		case ID_DATA2: tile.param->data[2] += delta; return 1;
+
+		case ID_FIRERATE:
+		case ID_INSTRUCTION:
+			/* TODO: implement */
+			return 0;
+	}
+
+	return 0;
+}
