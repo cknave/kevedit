@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.6 2002/03/29 23:16:43 bitman Exp $
+ * $Id: display_sdl.c,v 1.7 2002/06/06 01:46:13 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -674,48 +674,42 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
 	/* Updates a block */
 
 	SDL_Rect src_rect, dest_rect;
+	Uint32 rowsleft, colsleft;
 
-	Uint32 *root = vdest->buffer_surface->pixels;
+	Uint8 *char_pointer  = vdest->buffer + ((y*80+x)<<1);
+	Uint8 *color_pointer = vdest->buffer + ((y*80+x)<<1) + 1;
 
-	Uint32 *video_pointer = vdest->buffer_surface->pixels;
-	Uint32 *last_pointer, *end_pointer;
-	Uint8 *char_pointer;
-	Uint8 *color_pointer;
-	Uint8 *charset_pointer = vdest->char_set;
-	Uint32 *palette_pointer = vdest->palette;
-	Uint8 *current_char_pointer;
-	Uint8 char_row;
-	Uint8 char_mask;
-	Uint32 fg, bg;
-	Uint32 i, i2, i3, i4;
+	/* Draw each row onto video memory */
+	for (rowsleft = height; rowsleft; rowsleft--) {
 
-	char_pointer = vdest->buffer + ((y*80+x)<<1);
-	color_pointer = vdest->buffer + ((y*80+x)<<1) + 1;
-	current_char_pointer = charset_pointer + (*(char_pointer) * 14);
+		/* Determine the video pointer for this row */
+		Uint32 *root = vdest->buffer_surface->pixels;
+		Uint32 *video_pointer = root + ((height-rowsleft+y)*14)*(640)+(x<<3);
 
-	video_pointer += 640*(y*14);
-	video_pointer += (x<<3);
+		/* Draw each column in row onto video memory */
+		for (colsleft = width; colsleft; colsleft--) {
+			/* Find the current character in the charset */
+			Uint8* current_char_pointer = vdest->char_set + (*(char_pointer) * 14);
 
-	i = height;
-	while(i) {
-		i2 = width;
-		if(height != 1)
-			video_pointer = root + ((height-i+y)*14)*(640)+(x<<3);
-		while(i2) {
-			last_pointer = video_pointer;
-			bg = *(palette_pointer + (*(color_pointer) >> 4));
-			fg = *(palette_pointer + (*(color_pointer) & 15));
+			/* Find the fg and bg colors using the palette */
+			Uint32 bg = *(vdest->palette + (*(color_pointer) >> 4));
+			Uint32 fg = *(vdest->palette + (*(color_pointer) & 15));
 
-			i3 = 14;
-			while(i3)
-			{
+			/* Remember the video pointer for the first line of this character */
+			Uint32 *last_pointer = video_pointer;
+
+			/* Consider making this portion a seperate function */
+
+			int linesleft, pixelsleft;
+
+			/* Draw the current character to video memory */
+			for (linesleft = 14; linesleft; linesleft--) {
 				/* Draw an entire char row at a time.. */
-				char_mask = 0x7f;
-				char_row = *(current_char_pointer);
-				i4 = 8;
-				while(i4)
-				{
-					char_mask = (1 << (i4 - 1));
+				Uint8 char_mask = 0x7f;
+				Uint8 char_row = *(current_char_pointer);
+
+				for (pixelsleft = 8; pixelsleft; pixelsleft--) {
+					char_mask = (1 << (pixelsleft - 1));
 					if((char_mask & char_row))
 					{
 						 /* Draw fg color */
@@ -726,29 +720,27 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
 						/* Draw bg color */
 						*(video_pointer) = bg;
 					}
-					i4--;
 					video_pointer++;
 				}
-				end_pointer = video_pointer;
 				video_pointer += 632;
 				current_char_pointer++;
-				i3--;
 			}
 
-			i3 = 14;
+			/* Advance to next char/color pair */
 			char_pointer += 2;
 			color_pointer += 2;
-			current_char_pointer = charset_pointer + (*(char_pointer) * 14);
-			/* Jump to the next char */
-			i2--;
+
+			/* Jump to the location of next char in video memory */
 			video_pointer = last_pointer + 8;
+
+			/* Do not dereference video_pointer, char_pointer, or color_pointer here! */
 		}
+
 		/* Move char/color pointers to the next line of the block */
-		video_pointer = end_pointer;
 		char_pointer += (80-width)<<1;
 		color_pointer += (80-width)<<1;
-		current_char_pointer = charset_pointer + (*(char_pointer) * 14);
-		i--;
+
+		/* Do not dereference video_pointer, char_pointer, or color_pointer here! */
 	}
 
 	/* Update the buffer surface to the real thing.. */
