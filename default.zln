@@ -12,3 +12,4 @@ optional screenthief run st/st.exe
 optional zzfont run zzfont.com i
 optional zztkeys keystrokes kc<ENTER>
 optional play keystrokes p
+action zzt run zzt %1

@@ -1,5 +1,5 @@
 /* zlaunch - zzt launching library (everything necessary to run zzt smoothly) */
-/* $Id: zlaunch.c,v 1.8 2002/06/07 23:37:49 bitman Exp $ */
+/* $Id: zlaunch.c,v 1.9 2002/06/08 00:37:38 bitman Exp $ */
 /* Copyright (c) 2001 Ryan Phillips <bitman@users.sf.net> */
 
 #include "zlaunch.h"
@@ -18,7 +18,7 @@
 #endif
 
 /* Default configuration info */
-#define DEFAULTZLINFOLEN 14
+#define DEFAULTZLINFOLEN 15
 const char* defaultzlinfodata[] = {
 	"\' zlaunch configuration file",
 	"",
