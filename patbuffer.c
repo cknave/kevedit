@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.5 2001/11/11 06:38:07 bitman Exp $
+ * $Id: patbuffer.c,v 1.6 2001/11/11 06:42:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -49,7 +49,7 @@ patbuffer* patbuffer_create(int size)
 	return pbuf;
 }
 
-int deletepatternbuffer(patbuffer* pbuf)
+void deletepatternbuffer(patbuffer* pbuf)
 {
 	int i;
 
