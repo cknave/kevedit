@@ -4,6 +4,7 @@ Blinkwall lines now drawn properly
 DPMI time slices are given up for more multitasking friendliness
 Text entry implemented
 ZZT-OOP editor import/export
+ZZT-OOP syntax highlighting improved to add #command argument highlighting
 
 0.3: August 22, 2000
 --------------------
