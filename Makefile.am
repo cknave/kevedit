@@ -19,7 +19,7 @@ kevedit_SOURCES += display_dos.c display_dos.h
 endif
 
 if HAVE_WINDRES
-kevedit_SOURCES += icon.rc
+noinst_kevedit_SOURCES = icon.rc
 endif
 
 kevedit_LDADD = $(GLOBLIB) libzzt2/libzzt2.a synth/libsynth.a
@@ -28,9 +28,9 @@ kevedit_DEPENDENCIES = $(GLOBLIB) libzzt2/libzzt2.a synth/libsynth.a
 
 INCLUDES = $(GLOBINC)
 
-EXTRA_DIST = docs
+EXTRA_DIST = docs copying.txt
 
-pkgdata_DATA = kevedit.zml
+pkgdata_DATA = kevedit.zml soundfx.zzm
 
 .rc.o:
 	$(WINDRES) -o $@ $<

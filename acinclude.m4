@@ -1,5 +1,36 @@
 # Autoconf macros for KevEdit
 
+AC_DEFUN(AC_PROG_GNU_GLOB,
+[dnl
+dnl Check the system to see if it provides GNU glob.  If not, use
+dnl the implementation we stole from GNU make. :-)
+AC_MSG_CHECKING(if system libc has GNU glob)
+AC_CACHE_VAL(make_cv_sys_gnu_glob, [
+ AC_TRY_CPP([
+#include <features.h>
+#include <glob.h>
+#include <fnmatch.h>
+
+#define GLOB_INTERFACE_VERSION 1
+#if defined _LIBC || !defined __GNU_LIBRARY__ || __GNU_LIBRARY__ <= 1
+# error no gnu glob
+#else
+# include <gnu-versions.h>
+# if _GNU_GLOB_INTERFACE_VERSION != GLOB_INTERFACE_VERSION
+#  error no gnu glob
+# endif
+#endif
+ ], make_cv_sys_gnu_glob=yes, make_cv_sys_gnu_glob=no)])
+case "$make_cv_sys_gnu_glob" in
+  yes) AC_MSG_RESULT(yes) ;;
+  no)  AC_MSG_RESULT([no; using local copy])
+       AC_SUBST(GLOBDIR) GLOBDIR=glob
+       AC_SUBST(GLOBINC) GLOBINC='-I$(srcdir)/glob'
+       AC_SUBST(GLOBLIB) GLOBLIB=glob/libglob.a
+       ;;
+esac
+])
+
 # The following was snipped from test/acinclude.m4 in SDL 1.2.6 by bitman:
 
 # Configure paths for SDL
