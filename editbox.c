@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.11 2000/10/20 02:17:18 bitman Exp $
+ * $Id: editbox.c,v 1.12 2000/10/21 06:23:46 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -858,21 +858,42 @@ void displayzoc(int x, int y, char *s, int format, int firstline, displaymethod 
 		case '/':
 			/* movement */
 			d->putch(x, y, s[0], ZOC_OPERATOR_COLOUR);
+
+			for (i = 1; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' '; i++)
+				token[i-1] = s[i];
+			token[i-1] = 0;
+
+			while (!iszztdir(token) && s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'') {
+				while (s[i] == ' ') { token[i - 1] = ' '; i++; }
+				for (; s[i] != 0 && s[i] != '/' && s[i] != '?' && s[i] != '\'' && s[i] != ' '; i++)
+					token[i-1] = s[i];
+				token[i-1] = 0;
+			}
+
+			if (iszztdir(token)) {
+				/* token is a proper direction */
+				d->print(x + 1, y, ZOC_STDDIR_COLOUR, token);
+			} else
+				d->print(x + 1, y, ZOC_DEFAULT_COLOUR, token);
+
+			if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ')
+				displayzoc(x + i, y, s + i, format, 0, d);
+/*
 			k = iszztdir(s+1);
 
 			if (k) {
 				for (i = 1; i <= k; i++)
 					d->putch(x + i, y, s[i], ZOC_STDDIR_COLOUR);
-
+*/
 				/* Recursiveness is an art. */
-				if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ')
+/*				if (s[i] == '/' || s[i] == '?' || s[i] == '\'' || s[i] == ' ')
 					displayzoc(x + i, y, s + i, format, 0, d);
 				else
-					d->print(x + i, y, ZOC_DEFAULT_COLOUR, s + i);
+					d->print(x + i, y, BLACK_F | RED_B, s + i);
 			} else {
 				d->print(x + 1, y, ZOC_DEFAULT_COLOUR, s + 1);
 			}
-
+*/
 			break;
 
 		case '!':
@@ -1170,9 +1191,9 @@ void displaycommand(int x, int y, char *command, char *args, displaymethod * d)
 				break;
 
 			case CTAX_DIRECTION:
-				while (!(iszztdir(token) == strlen(token)) && j < strlen(args))
+				while (!iszztdir(token) && j < strlen(args))
 					k = tokengrow(token, args, &j);
-				if (iszztdir(token) == strlen(token))
+				if (iszztdir(token))
 					d->print(x + j - k, y, ZOC_STDDIR_COLOUR, token);
 				else
 					d->print(x + j - k, y, ZOC_DEFAULT_COLOUR, token);
@@ -1301,20 +1322,18 @@ int iszztdir(char *token)
 
 	for (i = 0; i < ZZTDIRMODCOUNT; i++)
 		if (strequ(buffer, zztdirmods[i], STREQU_UNCASE | STREQU_FRONT)) {
-			int modlen = 0;
 			/* Advance token to nearest space */
-			while (token[0] != ' ' && token[0] != 0) { token++; modlen++; } 
+			while (token[0] != ' ' && token[0] != 0) token++; 
 			/* Advance token to nearest nonspace */
-			while (token[0] == ' ') { token++; modlen++; } 
+			while (token[0] == ' ') token++; 
 
 			/* now see if next word is a valid token */
-			i = iszztdir(token);
-			return (i ? modlen + i : 0);
+			return iszztdir(token);
 		}
 
 	for (i = 0; i < ZZTDIRCOUNT; i++)
-		if (strequ(buffer, zztdirs[i], STREQU_UNCASE | STREQU_FRONT))
-			return strlen(zztdirs[i]);
+		if (strequ(buffer, zztdirs[i], STREQU_UNCASE))
+			return 1;
 
 	return 0;
 }
