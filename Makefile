@@ -21,7 +21,7 @@ CFLAGS = -g -O6 $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.2\"
 # No more modifications below this line
 # -------------------------------------
 
-all: kevedit test.exe
+all: kevedit
 
 clean:
 	rm -f *.o kevedit
@@ -59,6 +59,3 @@ display_vcsa.o: display_vcsa.c display.h display_vcsa.h
 	$(CC) -o $@ display_vcsa.c $(CFLAGS) -c
 display_dos.o: display_dos.c display.h display_dos.h
 	$(CC) -o $@ display_dos.c $(CFLAGS) -c
-
-test.exe: test.c
-	$(CC) -o test.exe test.c

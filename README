@@ -82,7 +82,7 @@ anything else in the pattern selector.
 The horizontal bar below the pattern selector is the COLOR SELECTOR.  Every
 tile you plot has a foreground and background color.  The colors on the top
 are for the foreground, which you can switch between by pressing 'c'.  There
-are fewer colors available for the background, which you can seelct by
+are fewer colors available for the background, which you can select by
 pressing shift+'c'.
 
 To make the foreground color blink on and off, press 'v' before you plot.
@@ -105,7 +105,7 @@ Uncommon tiles
 Well, it's not that they're uncommon, just not used as much as the nice
 gradient on the pattern selector.  To choose among items, creatures, and
 terrains, press F1, F2, or F3.  If you want to plot any of these, press its
-coresponding letter (it will be displayed on the sidebar).  Most of these
+corresponding letter (it will be displayed on the sidebar).  Most of these
 are not implemented yet.  Sorry :(
 
 Objects are a special type of tile in the Creature menu.  Right now, you can
