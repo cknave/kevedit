@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.14 2002/05/04 04:17:43 bitman Exp $
+ * $Id: zzt.h,v 1.15 2002/05/09 00:52:11 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -132,13 +132,16 @@ typedef struct ZZTparam {
 	u_int16_t ystep;	/* Y step */
 	u_int16_t cycle;	/* Cycle (speed) */
 	u_int8_t data[3];	/* Generic data */
-	u_int8_t magic1[4];	/* UNKNOWN */
+	u_int16_t leaderindex;	/* Index of leader (usually for centipedes) */
+	u_int16_t followerindex;	/* Index of follower (centipedes) */
 	u_int8_t utype;		/* Type of tile underneath */
 	u_int8_t ucolor;	/* Color of tile underneath */
-	u_int8_t magic2[4];	/* ALSO UNKNOWN */
+	u_int8_t magic[4];	/* UNKNOWN */
 	u_int16_t instruction;	/* Index to current instruction */
 	u_int16_t length;	/* Length of program */
 	u_int8_t *program;	/* Program (if any) */
+
+	u_int16_t bindindex;	/* Index of object bound to */
 } ZZTparam;
 
 /* ZZT tile info -- the basic building-block of a decompressed board */

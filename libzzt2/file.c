@@ -1,5 +1,5 @@
 /* file.c	-- File routines
- * $Id: file.c,v 1.3 2002/02/15 07:13:12 bitman Exp $
+ * $Id: file.c,v 1.4 2002/05/09 00:52:11 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -319,19 +319,27 @@ ZZTboard *zztBoardRead(FILE *fp)
 		_zzt_inb_or(&board->params[i].data[0], fp) freeboard;
 		_zzt_inb_or(&board->params[i].data[1], fp) freeboard;
 		_zzt_inb_or(&board->params[i].data[2], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic1[0], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic1[1], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic1[2], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic1[3], fp) freeboard;
+		_zzt_inw_or(&board->params[i].leaderindex, fp) freeboard;
+		_zzt_inw_or(&board->params[i].followerindex, fp) freeboard;
 		_zzt_inb_or(&board->params[i].utype, fp) freeboard;
 		_zzt_inb_or(&board->params[i].ucolor, fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic2[0], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic2[1], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic2[2], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic2[3], fp) freeboard;
+		_zzt_inb_or(&board->params[i].magic[0], fp) freeboard;
+		_zzt_inb_or(&board->params[i].magic[1], fp) freeboard;
+		_zzt_inb_or(&board->params[i].magic[2], fp) freeboard;
+		_zzt_inb_or(&board->params[i].magic[3], fp) freeboard;
 		_zzt_inw_or(&board->params[i].instruction, fp) freeboard;
 		_zzt_inw_or(&w, fp) freeboard;
-		board->params[i].length = w;
+		/* An object bound to another with param index i
+		 * will have a program length of -i, or 65536 - i.
+		 * An object will never be bound to the player (where i == 0) */
+		if(w < (65535 - ZZT_BOARD_MAX_PARAMS + 1)) {
+			board->params[i].length = w;
+			board->params[i].bindindex = 0;
+		} else {
+			board->params[i].bindindex = -w;
+			board->params[i].length = 0;
+			w = 0;  /* Important: don't look for a program */
+		}
 		_zzt_inspad_or(NULL, 0, 8, fp) freeboard;
 		if(w != 0) {
 			board->params[i].program = malloc(w+1);
@@ -408,18 +416,19 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 		_zzt_outb_ordie(&p->data[0], fp);
 		_zzt_outb_ordie(&p->data[1], fp);
 		_zzt_outb_ordie(&p->data[2], fp);
-		_zzt_outb_ordie(&p->magic1[0], fp);
-		_zzt_outb_ordie(&p->magic1[1], fp);
-		_zzt_outb_ordie(&p->magic1[2], fp);
-		_zzt_outb_ordie(&p->magic1[3], fp);
+		_zzt_outw_ordie(&p->leaderindex, fp);
+		_zzt_outw_ordie(&p->followerindex, fp);
 		_zzt_outb_ordie(&p->utype, fp);
 		_zzt_outb_ordie(&p->ucolor, fp);
-		_zzt_outb_ordie(&p->magic2[0], fp);
-		_zzt_outb_ordie(&p->magic2[1], fp);
-		_zzt_outb_ordie(&p->magic2[2], fp);
-		_zzt_outb_ordie(&p->magic2[3], fp);
+		_zzt_outb_ordie(&p->magic[0], fp);
+		_zzt_outb_ordie(&p->magic[1], fp);
+		_zzt_outb_ordie(&p->magic[2], fp);
+		_zzt_outb_ordie(&p->magic[3], fp);
 		_zzt_outw_ordie(&p->instruction, fp);
-		_zzt_outw_ordie(&p->length, fp);
+
+		/* Ignore binding for anything with code */
+		w = (p->length != 0 ? p->length : -p->bindindex);
+		_zzt_outw_ordie(&w, fp);
 		_zzt_outspad_ordie(NULL, 0, 8, fp);
 		_zzt_outs_ordie(p->program, p->length, fp);
 	}
