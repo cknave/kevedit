@@ -1,5 +1,5 @@
 /* zlaunch - zzt launching library (everything necessary to run zzt smoothly) */
-/* $Id: zlaunch.c,v 1.7 2002/06/07 06:40:32 bitman Exp $ */
+/* $Id: zlaunch.c,v 1.8 2002/06/07 23:37:49 bitman Exp $ */
 /* Copyright (c) 2001 Ryan Phillips <bitman@users.sf.net> */
 
 #include "zlaunch.h"
@@ -29,6 +29,7 @@ const char* defaultzlinfodata[] = {
 	"\' List of actions and optional actions:",
 	"action copydat displace docs/zzt.dat",
 	"action copyhlp copy docs/*.hlp",
+	"action copyhlp copy docs/*.HLP",
 	"optional screenthief run st/st.exe",
 	"optional zzfont run zzfont.com i",
 	"optional zztkeys keystrokes kc<ENTER>",

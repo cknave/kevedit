@@ -7,7 +7,7 @@ AR = ar cqs
 RM = rm -f
 
 # Uncomment when compiling from DOS
-DOS = -DDOS
+#DOS = -DDOS
 
 # Compile and link flags
 CFLAGS =

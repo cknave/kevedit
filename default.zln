@@ -1,0 +1,14 @@
+' zlaunch configuration file
+
+' List of optional actions to perform:
+' (remove "zztkeys" to disable virtual keystrokes)
+perform zztkeys
+
+' List of actions and optional actions:
+action copydat displace docs/zzt.dat
+action copyhlp copy docs/*.hlp
+action copyhlp copy docs/*.HLP
+optional screenthief run st/st.exe
+optional zzfont run zzfont.com i
+optional zztkeys keystrokes kc<ENTER>
+optional play keystrokes p

@@ -16,7 +16,6 @@ InfoBeforeFile=..\windows.txt
 OutputDir=..
 ; Cosmetics
 WindowVisible=no
-; TODO: make some artwork!
 WizardImageFile=install-big.bmp
 WizardSmallImageFile=install-small.bmp
 
@@ -28,8 +27,9 @@ Source: "..\copying.txt";  DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\README";       Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\TODO";         Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\AUTHORS";      Destdir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\ChangeLog";      Destdir: "{app}"; CopyMode: alwaysoverwrite
-; TODO: more? SDL.dll? Cygwin runtime?
+Source: "..\ChangeLog";    Destdir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\SDL.dll";      Destdir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\default.zml";  Destdir: "{app}"; CopyMode: alwaysoverwrite
 
 [Icons]
 Name: "{group}\KevEdit"; Filename: "{app}\kevedit.exe"
