@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.5 2000/08/21 20:06:22 bitman Exp $
+ * $Id: editbox.c,v 1.6 2000/08/22 00:44:48 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 
 #include "scroll.h"
 #include "colours.h"
+#include "panel_ed.h"
 
 
 /* What portion of display box needs update? */
@@ -62,6 +63,26 @@ int iszztitem(unsigned char *token);
 int iszztkind(unsigned char *token);
 int iszztdir(unsigned char *token);
 
+
+void draweditpanel(displaymethod * d, int insertflag, int wrapwidth)
+{
+	int x, y, i = 0;
+	char buf[10] = "";
+
+	for (y = 3; y < PANEL_EDIT_DEPTH + 3; y++) {
+		for (x = 0; x < PANEL_EDIT_WIDTH; x++) {
+			d->putch(x + 60, y, PANEL_EDIT[i], PANEL_EDIT[i + 1]);
+			i += 2;
+		}
+	}
+	
+	d->print(76, 8, YELLOW_F | BRIGHT_F | BLUE_B, (insertflag ? "on" : "off"));
+
+	if (wrapwidth)
+		d->print(76, 11, YELLOW_F | BRIGHT_F | BLUE_B, itoa(wrapwidth, buf, 10));
+	else
+		d->print(72, 11, YELLOW_F | BRIGHT_F | BLUE_B, "off");
+}
 
 
 
@@ -185,6 +206,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 
 	drawscrollbox(0, 0, d);
 	d->print(23, 4, 0x0a, title);
+	draweditpanel(d, insertflag, wrapwidth);
 
 	updateflags = U_ALL;
 
@@ -312,6 +334,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 					case 0x52:
 						/* Insert */
 						insertflag = !insertflag;
+						draweditpanel(d, insertflag, wrapwidth);
 						break;
 
 					case 0x53:
@@ -336,6 +359,24 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 						pos = strlen(centerstr->s);
 						break;
 
+					case 130:
+						/* alt - */
+						if (wrapwidth > 0)
+							wrapwidth--;
+						else
+							wrapwidth = editwidth;
+						draweditpanel(d, insertflag, wrapwidth);
+						break;
+
+					case 131:
+						/* alt + */
+						if (wrapwidth < editwidth)
+							wrapwidth++;
+						else
+							wrapwidth = 0;
+						draweditpanel(d, insertflag, wrapwidth);
+						break;
+
 					default:
 						/* act as if ext key is really not. This way, those used to
 						 * using alt key combos to plot special chars will not be
@@ -347,20 +388,6 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 			if (e == 0) {
 				/* normal key (or unknown ext key impersonating one) */
 				switch (c) {
-					case '-':
-						if (wrapwidth > 0)
-							wrapwidth--;
-						else
-							wrapwidth = editwidth;
-						break;
-
-					case '+':
-						if (wrapwidth < editwidth)
-							wrapwidth++;
-						else
-							wrapwidth = 0;
-						break;
-
 					case 9:
 						/* Tab */
 						if (strlen(centerstr->s) + 3 < (wrapwidth?wrapwidth:editwidth)) {

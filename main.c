@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.12 2000/08/19 22:35:21 kvance Exp $
+ * $Id: main.c,v 1.13 2000/08/22 00:44:48 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -359,7 +359,7 @@ int main(int argc, char **argv)
 	patdefs[14].type = Z_EMPTY;
 	patdefs[15].type = Z_EMPTY;
 
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < 10; i++)
 		patparams[i] = NULL;
 
 	/* Draw */
@@ -1046,6 +1046,9 @@ int main(int argc, char **argv)
 						if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_SCROLL || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_OBJECT) {
 							/* Load editor on current moredata */
 							editmoredata(mydisplay, myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+							/* redraw everything */
+							drawpanel(mydisplay);
+							updatepanel(mydisplay, myinfo, myworld);
 							mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 							drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 						}
