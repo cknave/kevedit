@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.13 2002/02/16 21:12:12 bitman Exp $
+ * $Id: misc.h,v 1.14 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,13 @@ void exitgradientmode(editorinfo * myinfo);
 int toggledrawmode(editorinfo * myinfo);
 int togglegradientmode(editorinfo * myinfo);
 
-void saveworldprompt(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo);
+void saveworld(displaymethod * mydisplay, ZZTworld * myworld);
+ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld);
+
+void boardtransfer(displaymethod * mydisplay, ZZTworld * myworld);
+void importfromworld(displaymethod * mydisplay, ZZTworld * myworld);
+void importfromboard(displaymethod * mydisplay, ZZTworld * myworld);
+void exporttoboard(displaymethod * mydisplay, ZZTworld * myworld);
 
 void previouspattern(editorinfo * myinfo);
 void nextpattern(editorinfo * myinfo);

@@ -56,6 +56,8 @@ int main(int argc, char * argv[])
 	/* Unlock */
 	zztWorldSetFlag(w, 0, "");
 
+	zztBoardSelect(w, 1);
+
 	/* Copy something */
 	foo = zztTileGet(w, 32, 21);
 	zztPlot(w, 4, 11, foo);
@@ -67,7 +69,7 @@ int main(int argc, char * argv[])
 	printboard(w);
 
 	/* Shuffle things up a bit */
-//	shuffle(w);
+	shuffle(w);
 
 	/* Save */
 	if(!zztWorldSave(w))

@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.4 2002/02/16 19:44:31 bitman Exp $
+ * $Id: board.c,v 1.5 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -233,7 +233,7 @@ void zztBoardCopyPtr(ZZTboard *dest, ZZTboard *src)
  * Add offset to all links in a board between start and end, except
  * links to "movefrom" which become "moveto" instead
  */
-void _zzt_board_relink(ZZTboard *brd, int offset, int start, int end, int movefrom, int moveto)
+int _zzt_board_relink(ZZTboard *brd, int offset, int start, int end, int movefrom, int moveto)
 {
 	int j, board_length;
 
@@ -249,7 +249,7 @@ void _zzt_board_relink(ZZTboard *brd, int offset, int start, int end, int movefr
 	/* Do the same for passages */
 	if (!zztBoardDecompress(brd)) {
 		fprintf(stderr, "Error decompressing board\n");
-		return;
+		return 0;
 	}
 	board_length = brd->bigboard->width * brd->bigboard->height;
 	for (j = 0; j < board_length; j++) {
@@ -257,6 +257,37 @@ void _zzt_board_relink(ZZTboard *brd, int offset, int start, int end, int movefr
 			relink(brd->bigboard->tiles[j].param->data[2]);
 		}
 	}
+
+	return 1;
+}
+
+int _zzt_board_limit_links(ZZTboard *brd, int max)
+{
+	int j, board_length;
+
+	/* Fix link macro */
+#define fixlink(link) if ((link) > max) (link) = 0;
+
+	/* Fix board connections */
+	fixlink(brd->info.board_n);
+	fixlink(brd->info.board_s);
+	fixlink(brd->info.board_e);
+	fixlink(brd->info.board_w);
+
+	/* Do the same for passages */
+	if (!zztBoardDecompress(brd)) {
+		fprintf(stderr, "Error decompressing board\n");
+		return 0;
+	}
+
+	board_length = brd->bigboard->width * brd->bigboard->height;
+	for (j = 0; j < board_length; j++) {
+		if (brd->bigboard->tiles[j].type == ZZT_PASSAGE) {
+			fixlink(brd->bigboard->tiles[j].param->data[2]);
+		}
+	}
+
+	return 1;
 }
 
 /* Functions present in zzt.h */
@@ -303,6 +334,45 @@ void zztBoardFree(ZZTboard *board)
 	_zztBoardFree(*board);
 	/* Delete the board pointer */
 	free(board);
+}
+
+ZZTboard *zztBoardLoad(char *filename)
+{
+	ZZTboard *board;
+	FILE *fp;
+       
+	/* Open file */
+	fp = fopen(filename, "rb");
+	if(fp == NULL)
+		return NULL;
+
+	/* Read from file */
+	board = zztBoardRead(fp);
+	fclose(fp);
+
+	/* Done */
+	return board;
+}
+
+int zztBoardSave(ZZTboard *board, char *filename)
+{
+	int result;
+	FILE *fp;
+	
+	/* Open file */
+	fp = fopen(filename, "wb");
+	if(fp == NULL)
+		return 0;
+	
+	/* Compress the board before writing */
+	zztBoardCompress(board);
+
+	/* Write to file */
+	result = zztBoardWrite(board, fp);
+	fclose(fp);
+
+	/* Done */
+	return result;
 }
 
 ZZTboard *zztBoardCopy(ZZTboard *board)
@@ -366,6 +436,30 @@ int zztBoardCompress(ZZTboard *board)
 	board->bigboard = NULL;
 
 	return 1;
+}
+
+u_int16_t zztBoardGetSize(ZZTboard *board)
+{
+	u_int16_t size = 0;
+	int i;
+
+	size += 0x34; /* Header */
+	size += 0x58; /* Info */
+	size += 1;    /* ? */
+
+	/* Size the bigboard */
+	if (board->bigboard != NULL) {
+		size += _zzt_rle_encoded_size(board->bigboard) * 3;
+		size += _zzt_param_encoded_size(board->bigboard) * 0x21;
+		/* Find size of program data */
+		for (i = 0; i < board->bigboard->width * board->bigboard->height; i++)
+			if (board->bigboard->tiles[i].param != NULL)
+				size += board->bigboard->tiles[i].param->length;
+	} else if (board->packed != NULL) {
+		/* TODO: find size of packed & params */
+	}
+
+	return size;
 }
 
 void zztWorldAddBoard(ZZTworld *world, char *title)
@@ -608,6 +702,14 @@ int zztBoardSelect(ZZTworld *world, int number)
 	return 1;
 }
 
+void zztBoardCommit(ZZTworld *world)
+{
+	int curboard = zztBoardGetCurrent(world);
+
+	/* Compress the current board */
+	zztBoardCompress(&(world->boards[curboard]));
+}
+
 int zztBoardClear(ZZTworld *world)
 {
 	ZZTboard * brd = zztBoardGetCurPtr(world);
@@ -635,12 +737,9 @@ int zztBoardClear(ZZTworld *world)
 	return 1;
 }
 
-void zztBoardCommit(ZZTworld *world)
+int zztBoardValidateLinks(ZZTworld *world)
 {
-	int curboard = zztBoardGetCurrent(world);
-
-	/* Compress the current board */
-	zztBoardCompress(&(world->boards[curboard]));
+	return _zzt_board_limit_links(zztBoardGetCurPtr(world), zztWorldGetBoardcount(world) - 1);
 }
 
 int zztBoardGetCurrent(ZZTworld *world)

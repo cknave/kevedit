@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.35 2002/02/16 23:42:28 bitman Exp $
+ * $Id: screen.c,v 1.36 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -202,10 +202,9 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 	return LINED_CANCEL;
 }
 
-/* filedialog() - Prompts user to enter a file name, returns a malloc()ed
- *                      value representing entered value, NULL on cancel. */
-char* filenamedialog(char* initname, char* extension, char* prompt,
-													 int askoverwrite, displaymethod * mydisplay)
+/* filenamedialog() - Prompts user to enter a file name, returns a malloc()ed
+ *                    value representing entered value, NULL on cancel. */
+char* filenamedialog(char* initname, char* extension, char* prompt, int askoverwrite, displaymethod * mydisplay)
 {
 	const int maxlen = 15;   /* 15 chars should be enough for a zzt filename */
 	int extlen = strlen(extension);   /* length of given extension */
@@ -317,6 +316,11 @@ char* filenamedialog(char* initname, char* extension, char* prompt,
 					drawscrollbox(0, 0, mydisplay);
 					/* Display the panel */
 					drawsidepanel(mydisplay, PANEL_FILENAME);
+					/* Display the extension if static */
+					if (extlen > 0) {
+						mydisplay->putch(70, 4, '.', 0x1f);
+						mydisplay->print(71, 4, 0x1f, extension);
+					}
 
 					if (newpath != NULL) {
 						/* Change the path if the user chose a directory */
@@ -496,8 +500,7 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 	}
 }
 
-/* TODO: remove e from params */
-void drawscreen(displaymethod * d, ZZTworld * w, editorinfo * e)
+void drawscreen(displaymethod * d, ZZTworld * w)
 {
 	int x, y;
 
@@ -777,14 +780,17 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 			/* Reorganize the boards!!!! */
 			int src = svgetposition(&boardlist);
 
-			if (src != 0 && src != boardcount &&
+			if (src != boardcount &&
+					(src != 0 || response == EDITBOX_BACK) &&
 					!(src == 1 && response == EDITBOX_BACKWARD) &&
 					!(src == boardcount - 1 && response == EDITBOX_FORWARD)) {
 				if (response == EDITBOX_BACK) {
 					/* Delete selected board */
-					if (zztWorldDeleteBoard(w, src, 1)) {
-						boardcount = zztWorldGetBoardcount(w);
-						curboard = (boardcount == src ? src - 1 : src);
+					if (zztWorldGetBoardcount(w) > 1) {
+						if (zztWorldDeleteBoard(w, src, 1)) {
+							boardcount = zztWorldGetBoardcount(w);
+							curboard = (boardcount == src ? src - 1 : src);
+						}
 					}
 				} else {
 					/* Move selected board */
@@ -814,7 +820,7 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 	return curboard;
 }
 
-int switchboard(ZZTworld * w, editorinfo * e, displaymethod * mydisplay)
+int switchboard(ZZTworld * w, displaymethod * mydisplay)
 {
 	int newboard = boarddialog(w, zztBoardGetCurrent(w), "Switch Boards", 0, mydisplay);
 

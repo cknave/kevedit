@@ -10,6 +10,7 @@ $The Basics of Using KevEdit
 !zzl;  * Object Libraries
 !text;Placing Text on the Board
 !file;File Operations
+!transfer;Board Transfer
 !zzt;Working with ZZT
 
 :movement;Movement and Plotting
@@ -48,12 +49,15 @@ or create a new one.
 
 In the board selection dialog, boards may
 be moved using LEFT and RIGHT and deleted
-with BACKSPACE.
+with BACKSPACE. All boards will be
+"re-linked" to reflect this change. To
+prevent linkage problems, the first board,
+the Title Screen, may not be moved, though
+it can be deleted.
 
 Alternately, pressing PAGEUP or PAGEDOWN
 on the main KevEdit screen will move
-forwards and backwards through the board
-list.
+cycle through the board list.
 
 :sidebar;Getting to Know the Sidebar
 
@@ -213,9 +217,34 @@ abnormal) ZZT worlds.  To load a world,
 press 'l' and you will be presented with a
 list of all world files in the current
 directory.  To save your world, press 's'.
-You will be prompted for an 8 letter name.
-This will be the title and filename of
-your world.
+You will be prompted for an 8 letter file
+name.
+
+:transfer;Board Transfer
+
+KevEdit has several options for
+transfering a board from one world to
+another. Pressing 't' will bring up the
+Board Transfer menu:
+
+  *  Import From ZZT World
+  *  Import From Board File
+  *  Export To Board File
+
+Import From ZZT World will prompt you to
+select a world and then a board within
+that world. Import From Board File will
+prompt you to select a .brd file.
+
+The chosen board will be inserted after
+the current board, without overwriting
+anything. To import a title screen, make
+the first board the current board, import,
+then use the board select dialog to delete
+the first board.
+
+Export To Board File will prompt for a
+filename to save the current board to.
 
 :zzt;Working with ZZT
 

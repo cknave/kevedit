@@ -1,5 +1,5 @@
 /* infobox.c  -- 
- * $Id: infobox.c,v 1.9 2002/02/16 10:25:22 bitman Exp $
+ * $Id: infobox.c,v 1.10 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -176,12 +176,15 @@ void drawstaticboardinfo(displaymethod* d)
 	d->print(11, 16, 0x0a, "\x19:");
 	d->print(11, 17, 0x0a, "\x1A:");
 	d->print(11, 18, 0x0a, "\x1B:");
+
+	d->print(18, 19, 0x0a, "Board Size:");
 }
 
 void drawboardinfo(ZZTworld* myworld, displaymethod* d)
 {
 	char buffer[10];    /* Buffer for translating numbers to strings */
 	int curboard = zztBoardGetCurrent(myworld);
+	int boardsize = zztBoardGetSize(zztBoardGetCurPtr(myworld));
 
 	/* Title */
 	d->print(30 - (strlen(zztBoardGetTitle(myworld)) / 2), 7, 0x0B, zztBoardGetTitle(myworld));
@@ -242,6 +245,14 @@ void drawboardinfo(ZZTworld* myworld, displaymethod* d)
 	} else {
 		d->print(14, 18, 0x03, "(None)");
 	}
+
+	sprintf(buffer, "%d", boardsize);
+	d->print(30, 19, (boardsize < 20000 ? 0x0B : 0x0C), buffer);
+	d->print(31 + strlen(buffer), 19, 0x03, "bytes");
+
+	sprintf(buffer, "%.3f", (float)boardsize / 1024);
+	d->print(30, 20, (boardsize < 20000 ? 0x0B : 0x0C), buffer);
+	d->print(31 + strlen(buffer), 20, 0x03, "KB");
 }
 
 

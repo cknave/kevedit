@@ -1,5 +1,5 @@
 /* world.c	-- World functions
- * $Id: world.c,v 1.3 2002/02/16 19:44:31 bitman Exp $
+ * $Id: world.c,v 1.4 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -66,8 +66,17 @@ ZZTworld *zztWorldCreate(char *filename, char *title)
 	return world;
 }
 
-/* Internal :P */
-int _zzt_rle_decode(u_int8_t *, u_int8_t *);
+void zztWorldFree(ZZTworld *world)
+{
+	/* Free all boards */
+	while(zztWorldGetBoardcount(world) != 0)
+		zztWorldDeleteBoard(world, 0, 0);
+
+	/* Free everything else */
+	free(world->header);
+	free(world->filename);
+	free(world);
+}
 
 ZZTworld *zztWorldLoad(char *filename)
 {
@@ -87,25 +96,14 @@ ZZTworld *zztWorldLoad(char *filename)
 		free(world->filename);
 		world->filename = malloc(strlen(filename)+1);
 		strcpy(world->filename, filename);
+
+		/* Decompress the current/first board */
+		world->cur_board = 0;
+		zztBoardDecompress(&(world->boards[0]));
 	}
-	/* Decompress the current/first board */
-	world->cur_board = 0;
-	zztBoardDecompress(&(world->boards[0]));
 
 	/* Done */
 	return world;
-}
-
-void zztWorldFree(ZZTworld *world)
-{
-	/* Free all boards */
-	while(zztWorldGetBoardcount(world) != 0)
-		zztWorldDeleteBoard(world, 0, 0);
-
-	/* Free everything else */
-	free(world->header);
-	free(world->filename);
-	free(world);
 }
 
 int zztWorldSave(ZZTworld *world)

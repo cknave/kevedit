@@ -8,6 +8,7 @@ $Board Info Dialog
 !maxshots;Maximum Shots
 !boards;Adjacent Boards
 !boardlink;* Link feature *
+!size;Board Size
 
 Use ENTER to toggle or edit each of these
 properties. The LEFT and RIGHT arrows, as
@@ -71,3 +72,20 @@ board to link backward, simply press '*'
 when that board is selected.
 
 Take that ZZT Editor.
+
+:size;Board Size
+
+The size of the current board is displayed
+at the bottom of the Board Info Dialog in
+units of both bytes and kilobytes, with
+1024 bytes to a kilobyte (not 1000!). If
+this value exceeds 20,000 bytes then the
+number will show red.
+
+There is much debate over exactly what the
+board size limit is for ZZT. By consensus,
+boards become unstable somewhere near
+20KB, but no one has yet proven any
+specific value. 20,000 bytes, which is
+just 469 bytes short of 20KB, seems as
+likely a candidate as any number.

@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.21 2002/02/16 10:25:22 bitman Exp $
+ * $Id: screen.h,v 1.22 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -73,7 +73,7 @@ void drawsidepanel(displaymethod * d, unsigned char panel[]);
 void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay);
 void drawpanel(displaymethod * d);
 void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w);
-void drawscreen(displaymethod * d, ZZTworld * w, editorinfo * e);
+void drawscreen(displaymethod * d, ZZTworld * w);
 void cursorspace(displaymethod * d, ZZTworld * w, editorinfo * e);
 void drawspot(displaymethod * d, ZZTworld * w, editorinfo * e);
 
@@ -92,7 +92,7 @@ char* filenamedialog(char* initname, char* extension, char* prompt,
 
 /* board dialogs */
 int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, displaymethod * mydisplay);
-int switchboard(ZZTworld * w, editorinfo * e, displaymethod * mydisplay);
+int switchboard(ZZTworld * w, displaymethod * mydisplay);
 char *titledialog(char* prompt, displaymethod * d);
 
 /* panels */

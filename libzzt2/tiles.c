@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.4 2002/02/16 10:25:22 bitman Exp $
+ * $Id: tiles.c,v 1.5 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -300,7 +300,7 @@ int zztTileErase(ZZTblock * block, int x, int y)
 {
 	/* Erase a tile, bringing whatever is underneath to the top */
 	ZZTtile over = zztTileAt(block, x, y);
-	ZZTtile under = { ZZT_EMPTY, 0x07, NULL };
+	ZZTtile under = { ZZT_EMPTY, 0x0F, NULL };
 
 	if (over.param != NULL) {
 		under.type = over.param->utype;
@@ -330,7 +330,7 @@ int zztErase(ZZTworld * world, int x, int y)
 ZZTtile zztTileGet(ZZTworld * world, int x, int y)
 {
 	ZZTboard* brd = zztBoardGetCurPtr(world);
-	ZZTtile empty = { ZZT_EMPTY, 0x07, NULL };
+	ZZTtile empty = { ZZT_EMPTY, 0x0F, NULL };
 
 	/* Error if board cannot be decompressed */
 	if (!zztBoardDecompress(brd))
@@ -393,7 +393,7 @@ u_int8_t zztLoneTileGetDisplayChar(ZZTtile tile)
 u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile)
 {
 	switch (tile.type) {
-		case ZZT_EMPTY:  return 0x07;
+		case ZZT_EMPTY:  return 0x0F;
 		case ZZT_EDGE:   return 0x4C;
 		case ZZT_PLAYER: return 0x1F;
 		case ZZT_SCROLL:

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.54 2002/02/16 23:42:28 bitman Exp $
+ * $Id: main.c,v 1.55 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 	/* Draw */
 	drawpanel(mydisplay);
 	updatepanel(mydisplay, myinfo, myworld);
-	drawscreen(mydisplay, myworld, myinfo);
+	drawscreen(mydisplay, myworld);
 	mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 	mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
 
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 				if (key == DKEY_CTRL_A) { /* ASCII selection */
 					key = charselect(mydisplay, -1);
 					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-					drawscreen(mydisplay, myworld, myinfo);
+					drawscreen(mydisplay, myworld);
 				}
 
 				/* Determine the text code based on the FG colour */
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 			if (confirmprompt(mydisplay, "Make new world?") == CONFIRM_YES) {
 				myworld = clearworld(myworld);
 
-				drawscreen(mydisplay, myworld, myinfo);
+				drawscreen(mydisplay, myworld);
 			}
 
 			drawpanel(mydisplay);
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
 				clearboard(myworld);
 				/* TODO: clear board */
 
-				drawscreen(mydisplay, myworld, myinfo);
+				drawscreen(mydisplay, myworld);
 			}
 
 			drawpanel(mydisplay);
@@ -260,11 +260,11 @@ int main(int argc, char **argv)
 
 		case 'b':
 		case 'B':
-			switchboard(myworld, myinfo, mydisplay);
+			switchboard(myworld, mydisplay);
 
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
 			break;
 		case DKEY_PAGEDOWN:
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
 			zztBoardSelect(myworld, zztBoardGetCurrent(myworld) + 1);
 
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
 			break;
 		case DKEY_PAGEUP:
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
 			zztBoardSelect(myworld, zztBoardGetCurrent(myworld) - 1);
 
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
 			break;
 
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case 'w':
@@ -301,7 +301,7 @@ int main(int argc, char **argv)
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 
@@ -309,47 +309,31 @@ int main(int argc, char **argv)
 
 		case 's':
 		case 'S':
-				saveworldprompt(mydisplay, myworld, myinfo);
+			/* Save world */
+			saveworld(mydisplay, myworld);
 
-				drawpanel(mydisplay);
-				updatepanel(mydisplay, myinfo, myworld);
-				drawscreen(mydisplay, myworld, myinfo);
-				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				break;
-		case 'L':
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
 		case 'l':
+		case 'L':
 			/* Load world */
-			{
-				char* filename =
-					filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
-				if (filename) {
-					ZZTworld* newworld = zztWorldLoad(filename);
-					if (newworld != NULL) {
-						char* newpath = (char*) malloc(sizeof(char)*(strlen(filename)+1));
-						char* newfile = (char*) malloc(sizeof(char)*(strlen(filename)+1));
+			myworld = loadworld(mydisplay, myworld);
 
-						/* Out with the old and in with the new */
-						zztWorldFree(myworld);
-						myworld = newworld;
+			drawscreen(mydisplay, myworld);
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			mydisplay->print(30 - strlen(zztBoardGetTitle(myworld)) / 2, 0, 0x70, zztBoardGetTitle(myworld));
+			break;
+		case 't':
+		case 'T':
+			/* Transfer board */
+			boardtransfer(mydisplay, myworld);
 
-						/* Change directory */
-						pathof(newpath, filename, strlen(filename) + 1);
-						chdir(newpath);
-
-						/* Change filename */
-						fileof(newfile, filename, strlen(filename) + 1);
-						zztWorldSetFilename(myworld, newfile);
-
-						/* Select the starting board */
-						zztBoardSelect(myworld, zztWorldGetStartboard(myworld));
-
-						free(newpath);
-						free(newfile);
-					}
-					free(filename);
-				}
-			}
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
@@ -362,7 +346,7 @@ int main(int argc, char **argv)
 			
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 
@@ -392,7 +376,7 @@ int main(int argc, char **argv)
 
 			pat_applycolordata(myinfo->standard_patterns, myinfo);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
 		case 'v':
@@ -419,7 +403,7 @@ int main(int argc, char **argv)
 			/* Update everything */
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case 'r':
@@ -432,7 +416,7 @@ int main(int argc, char **argv)
 			/* restart display from scratch */
 			mydisplay->init();
 			drawpanel(mydisplay);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 
 			/* Redraw */
 			drawpanel(mydisplay);
@@ -444,7 +428,7 @@ int main(int argc, char **argv)
 			texteditor(mydisplay);
 
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
@@ -483,12 +467,12 @@ int main(int argc, char **argv)
 		case 'F':
 			dofloodfill(mydisplay, myworld, myinfo, key == 'F');
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			break;
 		case 'g':
 		case 'G':
 			dogradient(mydisplay, myworld, myinfo);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
 			break;
@@ -549,7 +533,7 @@ int main(int argc, char **argv)
 			itemmenu(mydisplay, myworld, myinfo);
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case DKEY_F2:
@@ -558,7 +542,7 @@ int main(int argc, char **argv)
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case DKEY_F3:
@@ -567,7 +551,7 @@ int main(int argc, char **argv)
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
-			drawscreen(mydisplay, myworld, myinfo);
+			drawscreen(mydisplay, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case DKEY_F4:
@@ -609,7 +593,7 @@ int main(int argc, char **argv)
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-				drawscreen(mydisplay, myworld, myinfo);
+				drawscreen(mydisplay, myworld);
 			}
 			break;
 

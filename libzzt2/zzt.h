@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.5 2002/02/16 19:44:31 bitman Exp $
+ * $Id: zzt.h,v 1.6 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -170,18 +170,22 @@ typedef struct ZZTworld {
  * This does NOT create or load any files
  */
 ZZTworld *zztWorldCreate(char *filename, char *title);
-/* zztWorldLoad(filename)
- * Load a ZZT game from the given filename
- */
-ZZTworld *zztWorldLoad(char *filename);
 /* zztWorldFree(world)
  * Free all memory this world is using
  */
 void zztWorldFree(ZZTworld *world);
+/* zztWorldLoad(filename)
+ * Load a ZZT game from the given filename
+ */
+ZZTworld *zztWorldLoad(char *filename);
 /* zztWorldSave(world)
  * Save the ZZT world to disk
  */
 int zztWorldSave(ZZTworld *world);
+/* zztWorldGetSize(world)
+ * Determine the total size of the world in bytes
+ */
+u_int32_t zztWorldGetSize(ZZTworld *world);
 /* zztWorldSetXXXXX()
  * Set a world info variable
  */
@@ -237,6 +241,10 @@ void zztBoardCommit(ZZTworld *world);
  * Clear the current board
  */
 int zztBoardClear(ZZTworld *world);
+/* zztBoardValidateLinks(world)
+ * Remove links to boards beyond the maximum for the current board
+ */
+int zztBoardValidateLinks(ZZTworld *world);
 /* zztBoardGetCurrent(world)
  * Return the number of the currently selected board
  */
@@ -255,6 +263,14 @@ ZZTboard *zztBoardCreate(char *title);
  * Delete a stand-alone board (NOT IN A WORLD!!)
  */
 void zztBoardFree(ZZTboard *board);
+/* zztBoardLoad(filename)
+ * Load a ZZT board from given filename
+ */
+ZZTboard *zztBoardLoad(char *filename);
+/* zztBoardSave(board)
+ * Save the ZZT board to given filename
+ */
+int zztBoardSave(ZZTboard *board, char *filename);
 /* zztBoardCopy(board)
  * Return a copy of an existing board
  */
@@ -267,6 +283,10 @@ int zztBoardDecompress(ZZTboard *board);
  * Switch board to compressed (rle) form (do not call manually)
  */
 int zztBoardCompress(ZZTboard *board);
+/* zztBoardGetSize(board)
+ * Determine the size of a board in bytes
+ */
+u_int16_t zztBoardGetSize(ZZTboard *board);
 /* zztWorldAddBoard(world, title)
  * Create a blank board at the end of the world with the given title
  */

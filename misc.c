@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.24 2002/02/16 21:12:12 bitman Exp $
+ * $Id: misc.c,v 1.25 2002/02/17 07:26:03 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@
 
 #include "panel_g1.h"
 #include "panel_g2.h"
+#include "tdialog.h"
 
 #include "display.h"
 
@@ -380,7 +381,7 @@ int togglegradientmode(editorinfo * myinfo)
 	}
 }
 
-void saveworldprompt(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myinfo)
+void saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 {
 	/* Save World after prompting user for filename */
 	char* filename;
@@ -441,6 +442,165 @@ void saveworldprompt(displaymethod * mydisplay, ZZTworld * myworld, editorinfo *
 	mydisplay->print(61, 5, 0x1f, "Written.");
 	mydisplay->cursorgo(69, 5);
 	mydisplay->getch();
+}
+
+ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld)
+{
+	char* filename = filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
+	ZZTworld* newworld;
+	
+	if (filename == NULL)
+		return myworld;
+
+	newworld = zztWorldLoad(filename);
+
+	if (newworld != NULL) {
+		char* newpath = (char*) malloc(sizeof(char)*(strlen(filename)+1));
+		char* newfile = (char*) malloc(sizeof(char)*(strlen(filename)+1));
+
+		/* Out with the old and in with the new */
+		zztWorldFree(myworld);
+		myworld = newworld;
+
+		/* Change directory */
+		pathof(newpath, filename, strlen(filename) + 1);
+		chdir(newpath);
+
+		/* Change filename */
+		fileof(newfile, filename, strlen(filename) + 1);
+		zztWorldSetFilename(myworld, newfile);
+
+		/* Select the starting board */
+		zztBoardSelect(myworld, zztWorldGetStartboard(myworld));
+
+		free(newpath);
+		free(newfile);
+	}
+
+	free(filename);
+	return myworld;
+}
+
+void boardtransfer(displaymethod * mydisplay, ZZTworld * myworld)
+{
+	int x, y, i = 0;
+	int choice = 0;
+	int key;
+
+	/* Display the transfer dialog */
+	for (y = 9; y < 9 + TRANSFER_DIALOG_DEPTH; y++) {
+		for (x = 14; x < 14 + TRANSFER_DIALOG_WIDTH; x++) {
+			mydisplay->putch(x, y, TRANSFER_DIALOG[i], TRANSFER_DIALOG[i + 1]);
+			i += 2;
+		}
+	}
+
+	/* Make a choice */
+	do {
+		mydisplay->putch(17, 11 + choice, 0xAF, 0x02);
+		mydisplay->putch(43, 11 + choice, 0xAE, 0x02);
+
+		key = mydisplay->getch();
+
+		mydisplay->putch(17, 11 + choice, ' ', 0x07);
+		mydisplay->putch(43, 11 + choice, ' ', 0x07);
+
+		switch (key) {
+			case DKEY_UP:   choice--; if (choice < 0) choice = 2; break;
+			case DKEY_DOWN: choice++; if (choice > 2) choice = 0; break;
+		}
+	} while (key != DKEY_ENTER && key != DKEY_ESC);
+
+	if (key == DKEY_ESC)
+		return;
+
+	/* Act on choice */
+	switch (choice) {
+		case 0: /* Import from ZZT world */
+			importfromworld(mydisplay, myworld);
+			break;
+		case 1: /* Import from Board */
+			importfromboard(mydisplay, myworld);
+			break;
+		case 2: /* Export to Board */
+			exporttoboard(mydisplay, myworld);
+			break;
+	}
+}
+
+void importfromworld(displaymethod * mydisplay, ZZTworld * myworld)
+{
+	char* filename = filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
+	ZZTworld* inworld;
+	
+	if (filename == NULL)
+		return;
+
+	inworld = zztWorldLoad(filename);
+
+	if (inworld != NULL) {
+		ZZTboard* brd;
+
+		/* Select a board from the new world */
+		switchboard(inworld, mydisplay);
+
+		brd = zztBoardGetCurPtr(inworld);
+
+		/* Insert after current board and advance */
+		if (zztWorldInsertBoard(myworld, brd, zztBoardGetCurrent(myworld) + 1, 1))
+			zztBoardSelect(myworld, zztBoardGetCurrent(myworld) + 1);
+
+		/* Fix links over the top */
+		zztBoardValidateLinks(myworld);
+
+		zztWorldFree(inworld);
+	}
+
+	free(filename);
+}
+
+void importfromboard(displaymethod * mydisplay, ZZTworld * myworld)
+{
+	char* filename = filedialog(".", "brd", "Import ZZT Board", FTYPE_ALL, mydisplay);
+	ZZTboard* brd;
+
+	if (filename == NULL)
+		return;
+
+	brd = zztBoardLoad(filename);
+
+	/* Insert after current board and advance */
+	if (zztWorldInsertBoard(myworld, brd, zztBoardGetCurrent(myworld) + 1, 1))
+		zztBoardSelect(myworld, zztBoardGetCurrent(myworld) + 1);
+
+	/* Fix links over the top */
+	zztBoardValidateLinks(myworld);
+
+	/* Free the free board and filename */
+	zztBoardFree(brd);
+	free(filename);
+}
+
+void exporttoboard(displaymethod * mydisplay, ZZTworld * myworld)
+{
+	char* filename;
+	ZZTboard* brd;
+
+	/* Prompt for a filename */
+	filename = filenamedialog("", "brd", "Export to Board", 1, mydisplay);
+
+	if (filename == NULL)
+		return;
+
+	/* Grab the current board by the horns */
+	brd = zztBoardGetCurPtr(myworld);
+
+	/* Export */
+	zztBoardSave(brd, filename);
+
+	/* Decompress; it is the current board, after all */
+	zztBoardDecompress(brd);
+	free(filename);
 }
 
 void previouspattern(editorinfo * myinfo)
