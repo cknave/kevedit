@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.76 2002/12/04 23:53:06 kvance Exp $
+ * $Id: main.c,v 1.77 2002/12/19 03:41:48 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -120,6 +120,10 @@ ZZTworld * getWorldFromArg(char * arg, char * datapath)
 		/* Maybe they left off the .zzt extension? */
 		strcat(buffer, ".zzt");
 		myworld = zztWorldLoad(buffer);
+	}
+
+	if (myworld == NULL) {
+		myworld = zztWorldCreate(arg, NULL);
 	}
 
 	free(buffer);
