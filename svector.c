@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.1 2000/08/18 04:36:26 bitman Exp $
+ * $Id: svector.c,v 1.2 2000/08/18 17:08:10 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "textedit.h"
+#include "editbox.h"
 
 #include <stdlib.h>
 
