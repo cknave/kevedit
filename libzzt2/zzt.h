@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.27 2003/02/17 15:19:23 bitman Exp $
+ * $Id: zzt.h,v 1.28 2003/02/17 22:31:54 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#ifndef LIBZZT_ZZT_H
-#define LIBZZT_ZZT_H
+#ifndef LIBZZT2_ZZT_H
+#define LIBZZT2_ZZT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -633,4 +633,4 @@ extern const char * _zzt_type_kind_table[];
 }
 #endif
 
-#endif /* __ZZT_H */
+#endif /* LIBZZT2_ZZT_H */

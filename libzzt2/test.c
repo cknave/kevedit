@@ -35,8 +35,8 @@ void shuffle(ZZTworld * w) {
 	/* Swap random boards for a while */
 	bcount = zztWorldGetBoardcount(w) - 1.0;
 	for(i = 0; i < 100; i++) {
-		src = (int) 1 + (bcount*rand()/(RAND_MAX+1.0));
-		dest = (int) 1 + (bcount*rand()/(RAND_MAX+1.0));
+		src = (int) (1 + (bcount*rand()/(RAND_MAX+1.0)));
+		dest = (int) (1 + (bcount*rand()/(RAND_MAX+1.0)));
 		printf("%i -> %i\n", src, dest);
 		zztWorldMoveBoard(w, src, dest);
 	}
@@ -134,9 +134,13 @@ void testParser(char * line)
 {
 	ZZTOOPparser * parser = zztoopCreateParser(line);
 
-	parser->flags = ZOOPFLAG_HELP;
+	parser->flags = ZOOPFLAG_STRICTZZT;
+	/* Also | in ZOOPFLAG_FIRSTLINE for the first line of an object
+	 * to allow @objectname and disallow :labels (under strict parsing) */
+	/* Set ZOOPFLAG_HELP instead of (or in addition to) ZOOPFLAG_STRICTZZT when
+	 * parsing as ZZT HLP for formatted display. */
 
-	printf("Parsing (help) \"%s\":\n", line);
+	printf("Parsing \"%s\":\n", line);
 	printComponents(zztoopParseLine(parser));
 
 	zztoopDeleteParser(parser);

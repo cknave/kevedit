@@ -1,5 +1,5 @@
 /* strtools  -- portable string-handling functions */
-/* $Id: strtools.h,v 1.1 2003/02/17 15:19:23 bitman Exp $ */
+/* $Id: strtools.h,v 1.2 2003/02/17 22:31:51 bitman Exp $ */
 /* Copyright (C) 2002 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,9 +17,12 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef STRTOOLS_H
-#define STRTOOLS_H "$Id: strtools.h,v 1.1 2003/02/17 15:19:23 bitman Exp $"
+#ifndef LIBZZT2_STRTOOLS_H
+#define LIBZZT2_STRTOOLS_H 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define STREQU_UNCASE  0x01     /* Capitalization is ignored */
 #define STREQU_FRONT   0x02     /* Equal if the fronts of the strings
@@ -53,4 +56,8 @@ int str_equ(const char *str1, const char *str2, int flags);
  * Returns index of string if found, otherwise -1 */
 int lookupString(const char * table[], int size, char * value, int equflags);
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* LIBZZT2_STRTOOLS_H */

@@ -1,5 +1,5 @@
 /* zztoop - zzt oop parser */
-/* $Id: zztoop.h,v 1.1 2003/02/17 15:19:25 bitman Exp $ */
+/* $Id: zztoop.h,v 1.2 2003/02/17 22:31:55 bitman Exp $ */
 /* Copyright (C) 2002 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,10 +17,14 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef ZZTOOP_H
-#define ZZTOOP_H 1
+#ifndef LIBZZT2_ZZTOOP_H
+#define LIBZZT2_ZZTOOP_H 1
 
 #include "zzt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* A single component of an OOP string */
 typedef struct ZZTOOPcomponent {
@@ -234,4 +238,8 @@ extern const char * zztoopdirs[ZOOPDIRCOUNT];
 extern const char * zztoopdirmods[ZOOPDIRMODCOUNT];
 extern const char * zztoopcolours[ZOOPCOLOURCOUNT];
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* LIBZZT2_ZZTOOP_H */
