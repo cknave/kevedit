@@ -96,7 +96,8 @@ Code. All it does is turn of syntax
 highlighting and prevent #play statements
 from being inserted with ZZM music. If you
 use the editor to copy music from one ZZM
-file to another.
+file to another. Use ALT-Z to toggle ZOC
+mode.
 
 :help;Context Sensitive Help
 

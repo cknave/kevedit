@@ -52,6 +52,8 @@ b - Switch/edit boards
  k - Kolor dialog
  v - Toggles blinking colors
  d - Toggles default color mode
+CTRL-K
+  Kolor dialog (use with F4)
 
 :draw;Drawing
 

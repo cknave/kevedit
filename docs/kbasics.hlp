@@ -170,26 +170,22 @@ F2, or F3.  If you want to plot any of
 these, press its corresponding letter
 (which will be displayed on the sidebar).
 
+!-item.hlp;Items
+!-creature.hlp;Creatures
+!-terrain.hlp;Terrain
+
 :creatures;Editing Creatures & Objects
 !zzl;Object Libraries
 
-If a tile has editable parameters, such as
+If a tile has editable stats, such as
 a built-in enemy, object, or scroll,
 pressing ENTER will allow you to modify
-them.  After you have done this, a copy
+them. After you have done this, a copy
 will be placed in the backbufffer.
+!-kstats.hlp;Stats Editor
 
 To copy a tile to the backbuffer without
 editing it, press INSERT.
-
-Objects and scrolls are programmed in the
-ZZT-OOP language.  When you edit these
-types, you will be presented with the
-object editor.  This is a powerful editor
-tailored specifically for ZZT-OOP
-programming.
-!-langref;The ZZT-OOP Programming Language
-!-kobjedit;The KevEdit Object Editor
 
 :zzl;Object Libraries
 Pressing 'o' will bring up the ZZT Object

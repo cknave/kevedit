@@ -11,8 +11,16 @@ With many contributions by
 !-knew;* New features *
 !-kbasics;Basics of Using KevEdit
 !-kkeys;Keystroke Quick Reference
+
 !-kbrdinfo;Board Information
 !-kwldinfo;World Information
+!-ktileinf;Tile Information
+
+!-item;Items
+!-creature;Creatures
+!-terrain;Terrain
+
+!-kstats;Stats Editor
 !-kobjedit;The Object Code Editor
 !-kadvance;Advanced Editing Tools
 
@@ -22,9 +30,9 @@ With many contributions by
 
 :help;Help!
 
-KevEdit now includes a fully functional
-help system, as you are very much aware
-since you are reading this.
+KevEdit includes a fully functional help
+system, as you are very much aware since
+you are reading this.
 !-kobjedit:help;Object Editor Help
 
 :quit;Quitting

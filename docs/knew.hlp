@@ -1,6 +1,18 @@
 @New Features
 $New Features
 
+$New in Version 0.4.1
+!-kstats;Stats Editor documentation
+!-ktileinf;Tile Info
+!-item;Items documentation
+!-creature;Creature documentation
+!-terrain;Terrain documentation
+:;  *  CTRL-K selects color (for F4 mode)
+
+$Bugs fixed in 0.4.1
+:;  *  Monitor recognized as valid type
+:;  *  Object Editor panel updated
+
 $New in Version 0.4.0
 :;  *  Libzzt2 - greater stability
 !-kbasics:brdselect;Board Movement and Deletion
