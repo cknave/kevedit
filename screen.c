@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.25 2001/10/22 02:48:23 bitman Exp $
+ * $Id: screen.c,v 1.26 2001/10/26 23:36:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -45,9 +45,6 @@
  * when bb is larger than visible width */
 #define BBSCROLLSTART 7
 #define BBVWIDTH      10
-
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#define max(a, b) ((a) > (b) ? (a) : (b))
 
 /* Eventually these should go in DISPLAY_DOS */
 #define DDOSKEY_EXT      0x100
@@ -165,6 +162,35 @@ int line_editor(int x, int y, int color,
 				break;
 		}
 	}
+}
+
+int line_editnumber(int x, int y, int color, int * number, int maxval,
+                    displaymethod* d)
+{
+	char* buffer;
+	int editwidth = 0;
+	int factor;
+
+	for (factor = 1; factor < maxval; factor *= 10)
+		editwidth++;
+
+	if (editwidth == 0)
+		editwidth = 1;
+
+	buffer = (char *) malloc(sizeof(char) * (editwidth + 1));
+
+	sprintf(buffer, "%d", *number);
+	if (line_editor(x, y, color, buffer, editwidth,
+									LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)) {
+		sscanf(buffer, "%d", number);
+		if (*number > maxval)
+			*number = maxval;
+		free(buffer);
+		return LINED_OK;
+	}
+
+	free(buffer);
+	return LINED_CANCEL;
 }
 
 char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, displaymethod * mydisplay)

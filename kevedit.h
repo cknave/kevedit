@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.7 2001/10/22 02:48:22 bitman Exp $
+ * $Id: kevedit.h,v 1.8 2001/10/26 23:36:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -58,6 +58,10 @@ typedef struct editorinfo {
 
 	int curboard;
 } editorinfo;
+
+/* The all-powerful min/max macros */
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
 
 /* Very useful macros for looking at bigboards */
 #define tiletype(bigboard, x, y)  ((bigboard)[((x) + (y) * 60) * 2])

@@ -1,0 +1,91 @@
+$World Info
+
+!name;World Name
+!keys;Keys
+!inv;Inventory
+!misc;Miscellaneous
+!flags;Set/Clear Flags
+
+:name;World Name
+
+The name of the world need not necessarily
+match the filename of the world, although
+it usually should (minus the .zzt
+extension).
+
+If a different name is used, that name
+will appear under the word "World" on the
+title screen menu in ZZT.  When a user
+quits from the world, then presses 'p' to
+play again, a different world will be
+loaded! Simply use a filename for the
+second world based on the name of the
+first world.
+
+Example:
+
+The player loads "test.zzt" which has the
+name "newworld". After the player dies in
+"test.zzt", they press 'p' to play again,
+but instead of starting in "test.zzt", zzt
+loads them into "newworld.zzt". Consult
+the ZZT Encyclopedia Online for an
+example.
+
+:keys;Keys
+
+Keys which the player possesses are
+displayed as keys. Doors represent keys
+which the player could obtain. Place the
+cursor over a key or door and press ENTER
+or SPACEBAR to give or take that key from
+the player.
+
+:inv;Inventory
+
+The initial inventory of the player may be
+modified easily. Pressing ENTER edits the
+value of the item. Left and right change
+the value by ten units at a time. To
+change the value by one unit at a time,
+use '+' and '-'.
+
+:misc;Miscellaneous
+
+Torch Cycles
+ * Usually used exclusively in saved
+   games, the number of torch cycles
+   remaining indicates how long the player
+   has before a torch burns out.
+Energizer Cycles
+ * Energizer cycles, by a similar measure,
+   indicate how much longer an energizer
+   will last.
+Time Elapsed
+ * How much time within the current
+   board's timelimit countdown has been
+   used up
+Is Saved Game
+ * For saved games, this is set to true,
+   and is false for normal worlds. ZZT
+   uses the same file format for both
+   worlds and saved games, using this flag
+   to ensure that one does not impersonate
+   the other. ZZT will not play or edit
+   saved games and will not restore
+   worlds, regardless of extension.
+
+:flags;Set/Clear Flags
+
+Pressing enter on the Set/Clear Flags
+option will present a list of the
+currently set flags. DELETE or BACKSPACE
+will clear a flag.
+
+ZZT supports up to ten flags. The order of
+the flags is determined by zzt. When a
+flag is set, it is placed in the first
+available slot and removed from that slot
+when cleared. Thus the order of the flags
+is completely arbitrary, but may be useful
+in debugging saved games.

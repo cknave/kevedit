@@ -3,7 +3,8 @@ $New Features
 
 $New in Version 0.3.3
 !-kevedit:help;Hypertext help system!!!
-!-kbrdinfo;Board Info dialog
+!-kbrdinfo;Board Info Dialog
+!-kwldinfo;World Info Dialog
 !-kbasics:color;Kolor Dialog
 !-kbasics:zzl;ZZT Object Library Support
 !-kobjedit:copy;Copy & paste uses CTRL

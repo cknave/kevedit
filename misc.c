@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.9 2001/10/22 02:48:23 bitman Exp $
+ * $Id: misc.c,v 1.10 2001/10/26 23:36:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -560,6 +560,7 @@ void updateparamlist(world * myworld, editorinfo * myinfo, unsigned char paramli
 
 void updateinfo(world * myworld, editorinfo * myinfo, char * bigboard)
 {
+	/* TODO: Should the current title be filename based or "title" based */
 	strncpy(myinfo->currenttitle, myworld->zhead->title, 20);
 	myinfo->currenttitle[myworld->zhead->titlelength] = '\0';
 	myinfo->curboard = myworld->zhead->startboard;

@@ -22,6 +22,7 @@
 
 #include "zzt.h"
 #include "display.h"
+#include "kevedit.h"
 
 /* editboardinfo() - brings up dialog box for editing board info */
 void editboardinfo(world* myworld, int curboard, displaymethod* d);

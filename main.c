@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.38 2001/10/22 02:48:22 bitman Exp $
+ * $Id: main.c,v 1.39 2001/10/26 23:36:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -589,7 +589,7 @@ int main(int argc, char **argv)
 							param* p = myworld->board[myinfo->curboard]->
 								params[paramlist[myinfo->cursorx][myinfo->cursory]];
 							/* Choose passage destination */
-							p->data3 = boarddialog(myworld, p->data3, 1, "Passage Destination", mydisplay);
+							p->data3 = boarddialog(myworld, p->data3, 0, "Passage Destination", mydisplay);
 						}
 						/* TODO: modify other params */
 						/* redraw everything */

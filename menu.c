@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.3 2001/10/22 02:48:23 bitman Exp $
+ * $Id: menu.c,v 1.4 2001/10/26 23:36:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -119,7 +119,7 @@ void itemmenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, c
 			break;
 			}
 		case Z_PASSAGE:
-			pm = z_newparam_passage(myinfo->cursorx + 1, myinfo->cursory + 1, boarddialog(myworld, myinfo->curboard, 1, "Passage Destination", mydisplay));
+			pm = z_newparam_passage(myinfo->cursorx + 1, myinfo->cursory + 1, boarddialog(myworld, myinfo->curboard, 0, "Passage Destination", mydisplay));
 			if (myinfo->defc == 1)
 				x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
 			else
