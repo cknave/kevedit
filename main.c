@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.57 2002/02/18 08:04:40 bitman Exp $
+ * $Id: main.c,v 1.58 2002/02/19 03:32:28 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -197,7 +197,7 @@ int main(int argc, char **argv)
 		case DKEY_NONE:
 			break;
 
-			/**************** Movement Keys *****************/
+		/**************** Movement Keys *****************/
 
 		case DKEY_LEFT:
 			/* Left arrow */
@@ -224,7 +224,8 @@ int main(int argc, char **argv)
 			}
 			break;
 
-			/****************** Major actions ****************/
+		/****************** Major actions ****************/
+
 		case 'q':
 		case 'Q':
 			/* Quit */

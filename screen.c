@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.38 2002/02/18 02:06:25 bitman Exp $
+ * $Id: screen.c,v 1.39 2002/02/19 03:32:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -358,6 +358,11 @@ void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
 			i += 2;
 		}
 	}
+}
+
+void drawscrolltitle(displaymethod * d, char * title)
+{
+	d->print(30 - (strlen(title) / 2), 4, 0x0a, title);
 }
 
 void drawpanel(displaymethod * d)

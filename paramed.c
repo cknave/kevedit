@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.1 2002/02/18 08:04:40 bitman Exp $
+ * $Id: paramed.c,v 1.2 2002/02/19 03:32:28 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,36 +24,248 @@
 
 #include "libzzt2/zzt.h"
 #include "help.h"
+#include "dialog.h"
 
 #include "display.h"
 
 #include <stdlib.h>
 #include <string.h>
 
+
+/* Direction flags */
+#define DIR_NORTH 0x01
+#define DIR_SOUTH 0x02
+#define DIR_EAST  0x04
+#define DIR_WEST  0x08
+
+/* Label colorings */
+#define LABEL_COLOR  0x0A
+#define OPTION_COLOR 0x03
+
+/* Option ID's used in the dialog */
+#define ID_NONE         0x0100
+#define ID_PROGRAM      0x0200
+#define ID_DIRECTION    0x0300
+#define ID_FIRERATE     0x0400
+#define ID_PROJECTILE   0x0500
+#define ID_CYCLE        0x0600
+#define ID_XSTEP        0x0700
+#define ID_YSTEP        0x0800
+#define ID_DATA0        0x0900
+#define ID_DATA1        0x0A00
+#define ID_DATA2        0x0B00
+#define ID_INSTRUCTION  0x0C00
+/* The remaining ID's come from the ZZT_DATAUSE_* set */
+
+/* Table of direction names based on direction flags */
+const char * direction_table[] = {
+	"Idle",
+	"North",
+	"South",
+	"", /* North-South */
+	"East",
+	"North-East",
+	"South-East",
+	"", /* North-South-East */
+	"West",
+	"North-West",
+	"South-West",
+};
+
+/* getdirection(xstep, ystep)
+ * Get a direction based on x and y step values
+ */
+int getdirection(char xstep, char ystep)
+{
+	int dir = 0;
+
+	if (xstep > 0)
+		dir |= DIR_EAST;
+	else if (xstep < 0)
+		dir |= DIR_WEST;
+	if (ystep > 0)
+		dir |= DIR_SOUTH;
+	else if (ystep < 0)
+		dir |= DIR_NORTH;
+
+	return dir;
+}
+
+char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w)
+{
+	u_int8_t data = tile.param->data[which];
+
+	switch (zztParamDatauseGet(tile, which)) {
+		case ZZT_DATAUSE_FIRERATEMODE:
+			if (data > 128) data -= 128;
+			/* Continue through... */
+		case ZZT_DATAUSE_DUPRATE:
+		case ZZT_DATAUSE_SENSITIVITY:
+		case ZZT_DATAUSE_INTELLIGENCE:
+		case ZZT_DATAUSE_RESTTIME:
+		case ZZT_DATAUSE_SPEED:
+		case ZZT_DATAUSE_DEVIANCE:
+		case ZZT_DATAUSE_STARTTIME:
+		case ZZT_DATAUSE_PERIOD:
+			sprintf(buffer, "%d", data);
+			break;
+		case ZZT_DATAUSE_PASSAGEDEST:
+			if (data < zztWorldGetBoardcount(w))
+				strcpy(buffer, w->boards[data].title);
+			break;
+		case ZZT_DATAUSE_CHAR:
+			sprintf(buffer, "%c  -  #char %d", data, data);
+			break;
+		case ZZT_DATAUSE_OWNER:
+			strcpy(buffer, data == 0 ? "Player" : "Creature");
+			break;
+	}
+
+	return buffer;
+}
+
+dialog buildparamdialog(ZZTworld * w, int x, int y)
+{
+	ZZTtile tile = zztTileGet(w, x, y);
+	u_int8_t properties = zztParamGetProperties(tile);
+	dialog dia;
+
+	int i;
+	char buffer[100];
+
+	dialogComponent label  = dialogComponentMake(DIALOG_COMP_LABEL,   0, 1, LABEL_COLOR,  NULL, ID_NONE);
+	dialogComponent option = dialogComponentMake(DIALOG_COMP_OPTION, 20, 1, OPTION_COLOR, NULL, ID_NONE);
+
+	/* Initialize the dialog */
+	dialogInit(&dia);
+
+	/* Generate the title */
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_TITLE, 0, 0, 0x0F, (char *) zztTileGetName(tile), ID_NONE));
+
+#define _addlabel(TEXT)      { label.text  = (TEXT); dialogAddComponent(&dia, label); label.y++; }
+#define _addoption(TEXT, ID) { option.text = (TEXT); option.id = (ID); dialogAddComponent(&dia, option); option.y++; }
+
+	/* Add "edit program" option */
+	if (properties & ZZT_PROPERTY_PROGRAM) {
+		_addlabel(tile.type == ZZT_OBJECT ? "Program" : "Text");
+		_addoption("Edit", ID_PROGRAM);
+	}
+
+	/* Direction option */
+	if (properties & ZZT_PROPERTY_STEP) {
+		_addlabel("Direction");
+		_addoption((char *) direction_table[getdirection(tile.param->xstep, tile.param->ystep)], ID_DIRECTION);
+	}
+
+	for (i = 0; i < 3; i++) {
+		int datause = zztParamDatauseGet(tile, i);
+		if (datause == ZZT_DATAUSE_FIRERATEMODE) {
+			/* Confounded special case */
+
+			int rate = tile.param->data[i];
+			/* Remove the projectile-type component for printing */
+			if (rate > 128) rate -= 128;
+			_addlabel("Firing Rate");
+			sprintf(buffer, "%d", rate);
+			_addoption(buffer, ID_FIRERATE);
+
+			_addlabel("Projectile");
+			_addoption(tile.param->data[i] < 128 ? "Bullets" : "Throwstars", ID_PROJECTILE);
+		} else if (datause != ZZT_DATAUSE_NONE) {
+			char * usename = (char *) zztParamDatauseGetName(tile, i);
+			_addlabel(usename);
+			paramdatavaluestring(buffer, tile, i, w);
+			_addoption(buffer, zztParamDatauseGet(tile, i));
+		}
+	}
+
+	if (properties & ZZT_PROPERTY_CYCLE) {
+		/* Add a blank line before cycle if not the first item */
+		if (label.y > 1) { label.y++; option.y++; }
+
+		_addlabel("Cycle");
+		sprintf(buffer, "%d", tile.param->cycle);
+		_addoption(buffer, ID_CYCLE);
+	}
+
+	/* Advanced configuration */
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, 7, 0x0F, "Advanced Tweaking", ID_NONE));
+
+	label.y = option.y = 8;
+	label.x = 0; option.x = 8;
+
+	_addlabel("X Step");
+	_addlabel("Y Step");
+	_addlabel("Data 1");
+	_addlabel("Data 2");
+	_addlabel("Data 3");
+
+	sprintf(buffer, "%d", (char) tile.param->xstep); _addoption(buffer, ID_XSTEP);
+	sprintf(buffer, "%d", (char) tile.param->ystep); _addoption(buffer, ID_YSTEP);
+	sprintf(buffer, "%d", tile.param->data[0]); _addoption(buffer, ID_DATA0);
+	sprintf(buffer, "%d", tile.param->data[1]); _addoption(buffer, ID_DATA1);
+	sprintf(buffer, "%d", tile.param->data[2]); _addoption(buffer, ID_DATA2);
+
+	if (properties & ZZT_PROPERTY_PROGRAM) {
+		option.x = 20;
+		_addlabel("Program Instruction");
+		sprintf(buffer, "%d", (int) tile.param->instruction); _addoption(buffer, ID_INSTRUCTION);
+	}
+
+	return dia;
+}
+
 void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 {
 	ZZTtile tile = zztTileGet(w, x, y);
-	if (tile.param == NULL)
-		return;
+	dialog dia;
+	int key;
+	int choice;
 
-	/* We have params; have at 'em! */
-	if (tile.type == ZZT_OBJECT) {
-		/* Modify object char */
-		int csel = charselect(d, tile.param->data[0]);
-		if (csel != -1)
-			tile.param->data[0] = csel;
-	}
+	/* Build the dialog */
+	dia = buildparamdialog(w, x, y);
 
-	if (tile.type == ZZT_OBJECT || tile.type == ZZT_SCROLL) {
-		/* Edit the program/text */
-		editprogram(d, tile.param);
-	}
+	do {
 
-	if (tile.type == ZZT_PASSAGE) {
-		/* Change the passage's destination */
-		tile.param->data[2] = boarddialog(w, tile.param->data[2], "Passage Destination", 0, d);
-	}
-	/* TODO: modify other params */
+		/* Draw the dialog each time around */
+		dialogDraw(d, dia);
+
+		key = d->getch();
+
+		switch (key) {
+			case DKEY_DOWN: dialogNextOption(&dia); break;
+			case DKEY_UP:   dialogPrevOption(&dia); break;
+			case DKEY_ENTER:
+				/* This all deserves its own function, I would say */
+				{
+					char buffer[100];
+					dialogComponent * opt = dialogGetCurOption(dia);
+					switch (opt->id) {
+						case ID_PROGRAM:
+							editprogram(d, tile.param);
+							break;
+						case ZZT_DATAUSE_PASSAGEDEST:
+							free(opt->text);
+							tile.param->data[2] = boarddialog(w, tile.param->data[2], "Passage Destination", 0, d);
+							opt->text = str_dup(paramdatavaluestring(buffer, tile, 2, w));
+							break;
+						case ZZT_DATAUSE_CHAR:
+							free(opt->text);
+							{
+								int csel = charselect(d, tile.param->data[0]);
+								if (csel != -1)
+									tile.param->data[0] = csel;
+							}
+							opt->text = str_dup(paramdatavaluestring(buffer, tile, 0, w));
+					}
+				}
+				/* NOTE: we will have to re-build the dialog each time a change occurs
+				 * because data is shared between components */
+				break;
+		}
+	} while (key != DKEY_ESC);
+
+	dialogFree(&dia);
 }
 
 stringvector programtosvector(ZZTparam * p, int editwidth)

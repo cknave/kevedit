@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.7 2002/02/18 02:06:25 bitman Exp $
+ * $Id: zzt.h,v 1.8 2002/02/19 03:32:28 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -411,6 +411,10 @@ int zztParamFree(ZZTparam *param);
  * Create a duplicate of a param w/o any shared memory
  */
 ZZTparam *zztParamDuplicate(ZZTparam *param);
+/* zztParamGetProperties(tile)
+ * Get the parameter properties for the given tile
+ */
+u_int8_t zztParamGetProperties(ZZTtile tile);
 /* zztParamDatauseGet(tile, which)
  * Determine the use for data[which] in tile's param
  */

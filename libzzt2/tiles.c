@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.6 2002/02/18 02:06:25 bitman Exp $
+ * $Id: tiles.c,v 1.7 2002/02/19 03:32:28 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -51,9 +51,9 @@ const char * _zzt_type_name_table[] = {
 	/* ZZT_BOULDER        */ "Boulder",
 	/* ZZT_NSSLIDER       */ "North-South Slider",
 	/* ZZT_EWSLIDER       */ "East-West Slider",
-	/* ZZT_FAKE           */ "Fake",
-	/* ZZT_INVISIBLE      */ "Invisible",
-	/* ZZT_BLINK          */ "Blink",
+	/* ZZT_FAKE           */ "Fake Wall / Floor",
+	/* ZZT_INVISIBLE      */ "Invisible Wall",
+	/* ZZT_BLINK          */ "Blink Wall",
 	/* ZZT_TRANSPORTER    */ "Transporter",
 	/* ZZT_LINE           */ "Line",
 	/* ZZT_RICOCHET       */ "Richochet",

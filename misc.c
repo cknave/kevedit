@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.26 2002/02/18 08:04:40 bitman Exp $
+ * $Id: misc.c,v 1.27 2002/02/19 03:32:28 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -384,6 +384,9 @@ void boardtransfer(displaymethod * mydisplay, ZZTworld * myworld)
 			i += 2;
 		}
 	}
+
+	/* Get the cursor out of the way */
+	mydisplay->cursorgo(0, 0);
 
 	/* Make a choice */
 	do {
