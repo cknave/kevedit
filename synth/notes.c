@@ -1,5 +1,5 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.4 2002/04/05 04:44:38 kvance Exp $
+ * $Id: notes.c,v 1.5 2002/06/04 18:51:13 kvance Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,13 +23,13 @@
 
 #include "notes.h"
 
-static Uint8 *masterplaybuffer = NULL;
+Uint8 *masterplaybuffer = NULL;
 static size_t playbuffersize = 0, playbufferloc = 0, playbuffermax = 0;
 
 /* Return the frequency of the given note, "octave" octaves from middle */
 float NoteFreq(int note, int octave)
 {
-	float retval;
+	double retval;
 	float fraction;
 
 	/* Multiply or divide the base frequency to get to the correct octave
@@ -65,9 +65,9 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 {
 	size_t notesize = seconds * spec.freq; /* Bytes of sound */
 	size_t wordsize;
-	size_t i;
+	size_t i, j;
 
-	int hfreq = (spec.freq/freq)/2;
+	float hfreq = (spec.freq/freq/2.0);
 	int osc = 1;
 
 	Uint16 uon = U16_1, uoff = U16_0;
@@ -86,10 +86,15 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 		playbuffermax -= playbufferloc;
 		playbufferloc = 0;
 	}
+	if(playbuffersize == 0) {
+		/* Create buffer */
+		masterplaybuffer = malloc(notesize*wordsize);
+		playbuffersize   = notesize*wordsize;
+	}
 	if((notesize*wordsize) > (playbuffersize-playbuffermax)) {
 		/* Make bigger buffer */
 		masterplaybuffer = realloc(masterplaybuffer,
-				(playbuffersize+notesize)*wordsize);
+				(playbuffermax+notesize)*wordsize);
 		playbuffersize += notesize*wordsize;
 	}
 
@@ -101,9 +106,11 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 		playbuffermax += notesize*wordsize;
 	} else {
 		/* Tone */
-		for(i = 0; i < notesize*wordsize; i += wordsize) {
-			if( (i/wordsize) % hfreq == 0)
+		for(i = 0, j = 0; i < notesize; i++, j++) {
+			if(j >= hfreq) {
 				osc ^= 1;
+				j = 0;
+			}
 			if(spec.format == AUDIO_U8) {
 				if(osc)
 					masterplaybuffer[playbuffermax] = U8_1;
@@ -136,9 +143,17 @@ void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len)
 	for(i = 0; i < len && playbufferloc < playbuffermax; i++) {
 		stream[i] = masterplaybuffer[playbufferloc];
 		playbufferloc++;
-//		if(playbufferloc % 2 == 1)
-//			printf("%i", (Sint16)masterplaybuffer[playbufferloc]);
 	}
 	for(; i < len; i++)
 		stream[i] = spec->silence;
+}
+
+void AudioCleanUp()
+{
+	if(playbuffersize != 0) {
+		free(masterplaybuffer);
+		playbuffersize = 0;
+		playbufferloc = 0;
+		playbuffermax = 0;
+	}
 }

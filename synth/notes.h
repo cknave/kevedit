@@ -1,5 +1,5 @@
 /* notes.h	-- Generate musical notes in chromatic scale
- * $Id: notes.h,v 1.3 2002/04/05 04:44:38 kvance Exp $
+ * $Id: notes.h,v 1.4 2002/06/04 18:51:13 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,6 +19,8 @@
 
 #ifndef _NOTES_H
 #define _NOTES_H 1
+
+#include "SDL.h"
 
 /* Notes in relation to A */
 #define NOTE_C	-3
@@ -62,5 +64,6 @@ float NoteFreq(int note, int octave);	/* Return the frequency of a given note
 					   the given octaves away from middle */
 void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds);
 void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len);
+void AudioCleanUp();
 
 #endif	/* _NOTES_H */

@@ -1,5 +1,5 @@
 /* play.c	-- Play ZZT music from the commandline
- * $Id: play.c,v 1.5 2002/04/05 04:47:38 kvance Exp $
+ * $Id: play.c,v 1.6 2002/06/04 18:51:13 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -49,7 +49,7 @@ int PlayZZTMusic(char *string)
 	atexit(SDL_Quit);
 
 	/* Set desired sound opts */
-	desired.freq = 44100;
+	desired.freq = 48000;
 	desired.format = AUDIO_U16SYS;
 	desired.channels = 1;
 	desired.samples = 4096;
@@ -196,7 +196,8 @@ int PlayZZTMusic(char *string)
 		pos++;
 	}
 
-	SDL_Delay(delaytime);
+	SDL_Delay(delaytime + 500);
 
+	AudioCleanUp();
 	SDL_Quit();
 }
