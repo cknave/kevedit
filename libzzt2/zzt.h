@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.9 2002/02/19 09:41:36 bitman Exp $
+ * $Id: zzt.h,v 1.10 2002/02/20 15:33:09 kvance Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@
  * makefile. Should we do the same thing here, or find another way
  * of determining the necessity of these typdefs? */
 
+#ifdef DOS
 /* If you're running DOS, you'll need these defined */
 typedef char int8_t;
 typedef short int int16_t;
@@ -38,6 +39,7 @@ typedef int int32_t;
 typedef unsigned char u_int8_t;
 typedef unsigned short int u_int16_t;
 typedef unsigned int u_int32_t;
+#endif
 
 /***** CONSTANTS *****/
 /* Board size constants */
