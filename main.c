@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.1 2000/06/15 03:58:05 kvance Exp $
+ * $Id: main.c,v 1.2 2000/08/01 21:46:55 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@
 
 patdef patdefs[16];
 param *patparams[10];
+unsigned char paramlist[60][25];
 
 void push(int type, int color, param * p)
 {
@@ -54,29 +55,45 @@ void push(int type, int color, param * p)
 	if (p != NULL) {
 		patparams[0] = malloc(sizeof(param));
 		memcpy(patparams[0], p, sizeof(param));
+		if(patparams[0]->moredata != NULL) {
+			/* dup. the data, too */
+			patparams[0]->moredata = (char *) malloc(sizeof(p->moredata));
+			memcpy(patparams[0]->moredata, p->moredata, sizeof(p->moredata));
+		}
 	} else
 		patparams[0] = NULL;
 }
 
-void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16], unsigned char paramlist[60][25])
+void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16])
 {
-	int i;
+	int i, x, t;
 	int u = 0;
+	#define CURRENTPARAM	myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]
+	#define NEWPARAM	myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount]
 
 	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
 		return;
 	if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 		/* We're overwriting a parameter */
-		if(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]->moredata != NULL)
-			free(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]->moredata);
-		free(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-		for (i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount; i++)
+		if(CURRENTPARAM->moredata != NULL)
+			free(CURRENTPARAM->moredata);
+		free(CURRENTPARAM);
+		for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount+1; i++) {
 			myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
+		}
+		for(x = 0; x < 25; x++) {
+			for(i = 0; i < 60; i++) {
+				if(paramlist[i][x] > t)
+					paramlist[i][x]--;
+			}
+		}
 		myworld->board[myinfo->curboard]->info->objectcount--;
 		paramlist[myinfo->cursorx][myinfo->cursory] = 0;
 		u = 1;
 	}
+	/* Plot the type */
 	bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = patdefs[myinfo->pattern].type;
+	/* Plot the colour */
 	if (patdefs[myinfo->pattern].type == Z_EMPTY)
 		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x07;
 	else if (myinfo->pattern < 6 || myinfo->defc == 0) {
@@ -86,20 +103,22 @@ void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int
 		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = i;
 	} else
 		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = patdefs[myinfo->pattern].color;
+	/* Plot the parameter if applicable */
 	if (myinfo->pattern > 5 && patparams[myinfo->pattern - 6] != NULL && myworld->board[myinfo->curboard]->info->objectcount < 150) {
 		myworld->board[myinfo->curboard]->info->objectcount++;
-		myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount] = malloc(sizeof(param));
-		memcpy(myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount], patparams[myinfo->pattern - 6], sizeof(param));
+		NEWPARAM = malloc(sizeof(param));
+		memcpy(NEWPARAM, patparams[myinfo->pattern - 6], sizeof(param));
 		if(patparams[myinfo->pattern - 6]->moredata != NULL) {
-			myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount]->moredata = (char *) malloc(sizeof(patparams[myinfo->pattern - 6]->moredata));
-			memcpy(myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount]->moredata, patparams[myinfo->pattern - 6]->moredata, sizeof(patparams[myinfo->pattern - 6]->moredata));
+			NEWPARAM->moredata = (char *) malloc(sizeof(patparams[myinfo->pattern - 6]->moredata));
+			memcpy(NEWPARAM->moredata, patparams[myinfo->pattern - 6]->moredata, sizeof(patparams[myinfo->pattern - 6]->moredata));
 		}
 		paramlist[myinfo->cursorx][myinfo->cursory] = myworld->board[myinfo->curboard]->info->objectcount;
-		myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount]->x = myinfo->cursorx + 1;
-		myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount]->y = myinfo->cursory + 1;
+		NEWPARAM->x = myinfo->cursorx + 1;
+		NEWPARAM->y = myinfo->cursory + 1;
 		u = 1;
 	}
-	if(myworld->board[myinfo->curboard]->info->objectcount == 150) {
+	/* Oops, too many */
+	if(myworld->board[myinfo->curboard]->info->objectcount == 151) {
 		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = Z_EMPTY;
 		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x07;
 		u = 1;
@@ -135,7 +154,6 @@ int main(int argc, char **argv)
 	char *string = (char *) malloc(256);
 	char *bigboard = (char *) malloc(BOARD_MAX * 2);
 	char buffer[255];
-	unsigned char paramlist[60][25];
 
 	world *myworld;
 	FILE *fp;
@@ -287,8 +305,30 @@ int main(int argc, char **argv)
 		case 'q':
 		case 'Q':
 			/* Quit */
-			if (e == 0)
-				quit = 1;
+			if (e == 0) {
+				for (i = 3; i < 25; i++) {
+					for (x = 0; x < 20; x++) {
+						mydisplay->putch(x + 60, i, ' ', 0x1f);
+					}
+				}
+				mydisplay->print(61, 3, 0x1f, "Quit?");
+				mydisplay->print(67, 3, 0x1e, "y/n");
+				c = 0;
+				while (c == 0) {
+					c = mydisplay->getch();
+					if (c == 'y' || c == 'Y') {
+						quit = 1;
+					} else if (c == 'n' || c == 'N') {
+						quit = 0;
+
+					} else
+						c = 0;
+				}
+				if(quit == 0) {
+					drawpanel(mydisplay);
+					updatepanel(mydisplay, myinfo, myworld);
+				}
+			}
 			break;
 		case 'd':
 		case 'D':
@@ -301,7 +341,7 @@ int main(int argc, char **argv)
 			myinfo->drawmode ^= 1;
 			updatepanel(mydisplay, myinfo, myworld);
 			if (myinfo->drawmode == 1) {
-				plot(myworld, myinfo, mydisplay, bigboard, patdefs, paramlist);
+				plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
 			break;
@@ -313,7 +353,7 @@ int main(int argc, char **argv)
 			break;
 		case ' ':
 			/* Plot */
-			plot(myworld, myinfo, mydisplay, bigboard, patdefs, paramlist);
+			plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			break;
 		case 'c':
@@ -492,7 +532,7 @@ int main(int argc, char **argv)
 					updatepanel(mydisplay, myinfo, myworld);
 				}
 				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs, paramlist);
+					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 				}
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
@@ -517,7 +557,7 @@ int main(int argc, char **argv)
 					updatepanel(mydisplay, myinfo, myworld);
 				}
 				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs, paramlist);
+					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 				}
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			}
@@ -544,7 +584,7 @@ int main(int argc, char **argv)
 					updatepanel(mydisplay, myinfo, myworld);
 				}
 				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs, paramlist);
+					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 				}
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			} else {
@@ -584,7 +624,7 @@ int main(int argc, char **argv)
 					updatepanel(mydisplay, myinfo, myworld);
 				}
 				if (myinfo->drawmode == 1) {
-					plot(myworld, myinfo, mydisplay, bigboard, patdefs, paramlist);
+					plot(myworld, myinfo, mydisplay, bigboard, patdefs);
 				}
 				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
 			} else {
@@ -684,10 +724,18 @@ int main(int argc, char **argv)
 						break;
 					if(paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 						/* We're overwriting a parameter */
-						free(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-						for (x = paramlist[myinfo->cursorx][myinfo->cursory]; x < myworld->board[myinfo->curboard]->info->objectcount; x++)
+						if(CURRENTPARAM->moredata != NULL)
+							free(CURRENTPARAM->moredata);
+						free(CURRENTPARAM);
+						for (t = x = paramlist[myinfo->cursorx][myinfo->cursory]; x < myworld->board[myinfo->curboard]->info->objectcount; x++)
 							myworld->board[myinfo->curboard]->params[x] = myworld->board[myinfo->curboard]->params[x + 1];
-						paramlist[myinfo->cursorx][myinfo->cursory] = 0;
+						for(x = 0; x < 25; x++) {
+								for(e = 0; e < 60; e++) {
+										if(paramlist[e][x] > t)
+												paramlist[e][x]--;
+								}
+						}
+						e = 1;
 					} else {
 						myworld->board[myinfo->curboard]->info->objectcount++;
 					}

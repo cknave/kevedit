@@ -1,11 +1,10 @@
 --------------------------------------------
-KevEdit 0.1
+KevEdit 0.2
 	A world file editor for the game ZZT
 --------------------------------------------
 Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
 
- * This is nowhere near finished.  The main purpose of 0.1 is to create art
-   for the 24AHoZ compo.
+ * This is nowhere near finished.
 
 Things that are implemented so far:
 
@@ -39,8 +38,8 @@ send me email asking how to use it.
 If you find bugs, try to fix it and send me a patch :)  If you can't fix it,
 report it.
 
-http://www.sourceforge.net/projects/kevedit/ is where you can check for new
-releases, get the CVS code, post bug reports, etc.
+http://kevedit.sourceforge.net/ is where you can check for new releases, get
+the CVS code, post bug reports, etc.
 
     Kev Vance <kvance@tekktonik.net>
     June 14, 2000

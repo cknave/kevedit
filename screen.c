@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.2 2000/06/15 05:07:25 kvance Exp $
+ * $Id: screen.c,v 1.3 2000/08/01 21:46:55 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -581,15 +581,16 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 
 char charselect(displaymethod *d)
 {
-	int x, y, e, i = 0;
+	int z, e, i = 0;
+	static int x, y;
 
-	for(y = 0; y < CHAR_BOX_DEPTH; y++) {
-		for(x = 0; x < CHAR_BOX_WIDTH; x++) {
-			d->putch(x+13, y+8, CHAR_BOX[i], CHAR_BOX[i+1]);
+	for(e = 0; e < CHAR_BOX_DEPTH; e++) {
+		for(z = 0; z < CHAR_BOX_WIDTH; z++) {
+			d->putch(z+13, e+8, CHAR_BOX[i], CHAR_BOX[i+1]);
 			i += 2;
 		}
 	}
-	x = y = i = 0;
+	i = 0;
 	while(1) {
 		d->cursorgo(14+x, 9+y);
 		d->putch(14+x, 9+y, (x+y*32), 0x0f);
