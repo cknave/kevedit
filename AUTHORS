@@ -10,9 +10,12 @@ The first bug was discovered by:
 Another bug was found by:
 	Elchonon Edelson <ene@vasco.com>
 
-Music playback adapted from code by:
+DOS Music playback adapted from code by:
   Jacob Hammond <zig16@hotmail.com>
   WeP <wep@planetzztpp.com>
 
 Some documentation written by:
   Chronos <chronos30@aol.com>
+
+SDL textmode emulation originally written by:
+  Gilead ``Exophase'' Kutnick <exophase@earthlink.net>
