@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.41 2002/02/21 22:31:47 bitman Exp $
+ * $Id: screen.c,v 1.42 2002/03/17 09:35:58 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -948,7 +948,7 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 	/* Tiger   */ d->putch(78, 12, 0xE3, e->defc ? 0x0B : color);
 
 	/* Bullet  */ d->putch(78, 14, 0xF8, e->defc ? 0x0F : color);
-	/* Star    */ d->putch(78, 15, '*',  e->defc ? 0x0F : color);
+	/* Star    */ d->putch(78, 15, '/',  e->defc ? 0x0F : color);
 
 	/* Head    */ d->putch(78, 17, 0xE9, color);
 	/* Segment */ d->putch(78, 18, 'O',  color);
@@ -1026,7 +1026,7 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 	d->putch(78, 14, 0xCE, color);
 	d->putch(78, 15, '<', color);
 	d->putch(78, 16, '*', e->defc ? 0x0a : color);
-	d->putch(78, 18, 'E', 0x4c);
+	d->putch(78, 18, 'E', color);
 	while (1) {
 		i = d->getch();
 		switch (i) {
@@ -1073,6 +1073,15 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 		case 'E':
 		case 'e':
 			return ZZT_EDGE;
+		case 'M':
+		case 'm':
+			return ZZT_MONITOR;
+		case 'V':
+		case 'v':
+			return ZZT_BLINKHORIZ;
+		case 'H':
+		case 'h':
+			return ZZT_BLINKVERT;
 		}
 	}
 }

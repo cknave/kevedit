@@ -1,5 +1,5 @@
 /* paramed.h  -- Parameter editor
- * $Id: paramed.h,v 1.3 2002/03/16 22:41:07 bitman Exp $
+ * $Id: paramed.h,v 1.4 2002/03/17 09:35:58 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -93,5 +93,15 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
  * Returns true if change occured
  */
 int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComponent * opt, int delta);
+
+/* tileinfo(display, world, x, y)
+ * Display/edit info for the current tile
+ */
+void tileinfo(displaymethod * d, ZZTworld * w, int x, int y);
+
+/* buildtileinfodialog(world, x, y)
+ * Builds info for dialog at (x, y)
+ */
+dialog buildtileinfodialog(ZZTworld * w, int x, int y);
 
 #endif

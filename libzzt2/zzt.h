@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.11 2002/03/07 06:06:21 bitman Exp $
+ * $Id: zzt.h,v 1.12 2002/03/17 09:35:58 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -88,8 +88,6 @@ typedef unsigned int u_int32_t;
 #define ZZT_DATAUSE_STARTTIME   10
 #define ZZT_DATAUSE_PERIOD      11
 #define ZZT_DATAUSE_OWNER       12
-
-/* TODO: make table for default datause values */
 
 /* ZZT param profile -- description of tile with param data */
 typedef struct ZZTprofile {
@@ -410,6 +408,10 @@ ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2);
 int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y);
 
 /***** PARAMETER MANIPULATORS *****/
+/* zztParamCreateBlank()
+ * Create a blank, typeless param. Use only in advanced situations!
+ */
+ZZTparam *zztParamCreateBlank(void);
 /* zztParamCreate(tile)
  * Create a param structure for the given tile
  */
@@ -502,6 +504,7 @@ const char * zztTileGetKind(ZZTtile tile);
 /***** TILE TYPES *****/
 #define ZZT_EMPTY         0x00
 #define ZZT_EDGE          0x01
+#define ZZT_MONITOR       0x03
 #define ZZT_PLAYER        0x04
 #define ZZT_AMMO          0x05
 #define ZZT_TORCH         0x06

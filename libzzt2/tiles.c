@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.10 2002/03/07 06:06:21 bitman Exp $
+ * $Id: tiles.c,v 1.11 2002/03/17 09:35:58 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@ const char * _zzt_type_name_table[] = {
 	/* ZZT_EMPTY          */ "Empty",
 	/* ZZT_EDGE           */ "Board Edge",
 	/* Invalid            */ "Unknown",
-	/* Invalid            */ "Unknown",
+	/* ZZT_MONITOR        */ "Monitor",
 	/* ZZT_PLAYER         */ "Player",
 	/* ZZT_AMMO           */ "Ammo",
 	/* ZZT_TORCH          */ "Torch",
@@ -62,7 +62,7 @@ const char * _zzt_type_name_table[] = {
 	/* ZZT_TRANSPORTER    */ "Transporter",
 	/* ZZT_LINE           */ "Line",
 	/* ZZT_RICOCHET       */ "Ricochet",
-	/* ZZT_BLINKHORIZ     */ "Horizontal Blink Wall",
+	/* ZZT_BLINKHORIZ     */ "Horizontal Blink Wall Ray",
 	/* ZZT_BEAR           */ "Bear",
 	/* ZZT_RUFFIAN        */ "Ruffian",
 	/* ZZT_OBJECT         */ "Object",
@@ -72,7 +72,7 @@ const char * _zzt_type_name_table[] = {
 	/* ZZT_PUSHER         */ "Pusher",
 	/* ZZT_LION           */ "Lion",
 	/* ZZT_TIGER          */ "Tiger",
-	/* ZZT_BLINKVERT      */ "Vertical Blink Wall",
+	/* ZZT_BLINKVERT      */ "Vertical Blink Wall Ray",
 	/* ZZT_CENTHEAD       */ "Centipede Head",
 	/* ZZT_CENTBODY       */ "Centipede Body",
 	/* ZZT_BLUETEXT       */ "Blue Text",
@@ -88,8 +88,8 @@ const char * _zzt_type_name_table[] = {
 const char * _zzt_type_kind_table[] = {
 	/* ZZT_EMPTY          */ "empty",
 	/* ZZT_EDGE           */ "",
-	/* Invalid            */ "(none)",
-	/* Invalid            */ "(none)",
+	/* Invalid            */ "(unknown)",
+	/* ZZT_MONITOR        */ "monitor",
 	/* ZZT_PLAYER         */ "player",
 	/* ZZT_AMMO           */ "ammo",
 	/* ZZT_TORCH          */ "torch",
@@ -119,7 +119,7 @@ const char * _zzt_type_kind_table[] = {
 	/* ZZT_TRANSPORTER    */ "transporter",
 	/* ZZT_LINE           */ "line",
 	/* ZZT_RICOCHET       */ "ricochet",
-	/* ZZT_BLINKHORIZ     */ "(none)",
+	/* ZZT_BLINKHORIZ     */ "(horizontal blink wall ray)",
 	/* ZZT_BEAR           */ "bear",
 	/* ZZT_RUFFIAN        */ "ruffian",
 	/* ZZT_OBJECT         */ "object",
@@ -129,17 +129,17 @@ const char * _zzt_type_kind_table[] = {
 	/* ZZT_PUSHER         */ "pusher",
 	/* ZZT_LION           */ "lion",
 	/* ZZT_TIGER          */ "tiger",
-	/* ZZT_BLINKVERT      */ "(none)",
+	/* ZZT_BLINKVERT      */ "(vertical blink wall ray)",
 	/* ZZT_CENTHEAD       */ "head",
 	/* ZZT_CENTBODY       */ "segment",
-	/* ZZT_BLUETEXT       */ "(none)",
-	/* ZZT_GREENTEXT      */ "(none)",
-	/* ZZT_CYANTEXT       */ "(none)",
-	/* ZZT_REDTEXT        */ "(none)",
-	/* ZZT_PURPLETEXT     */ "(none)",
-	/* ZZT_YELLOWTEXT     */ "(none)",
-	/* ZZT_WHITETEXT      */ "(none)",
-	/* Invalid type       */ "(none)"
+	/* ZZT_BLUETEXT       */ "(blue text)",
+	/* ZZT_GREENTEXT      */ "(green text)",
+	/* ZZT_CYANTEXT       */ "(cyan text)",
+	/* ZZT_REDTEXT        */ "(red text)",
+	/* ZZT_PURPLETEXT     */ "(purple text)",
+	/* ZZT_YELLOWTEXT     */ "(yellow text)",
+	/* ZZT_WHITETEXT      */ "(white text)",
+	/* Invalid type       */ "(unknown)"
 };
 
 /* Look-up table for converting zzt types to display chars */
@@ -147,7 +147,7 @@ const u_int8_t _zzt_display_char_table[] = {
 	' ', /* ZZT_EMPTY          */
 	'E', /* ZZT_EDGE           */
 	'?', /* Invalid            */
-	'?', /* Invalid            */
+	'M', /* ZZT_MONITOR        */
 	2,   /* ZZT_PLAYER         */
 	132, /* ZZT_AMMO           */
 	157, /* ZZT_TORCH          */
@@ -159,7 +159,7 @@ const u_int8_t _zzt_display_char_table[] = {
 	250, /* ZZT_DUPLICATOR     */
 	11,  /* ZZT_BOMB           */
 	127, /* ZZT_ENERGIZER      */
-	'*', /* ZZT_STAR           */
+	'/', /* ZZT_STAR           */
 	179, /* ZZT_CWCONV         */
 	'\\', /* ZZT_CCWCONV       */
 	248, /* ZZT_BULLET         */
@@ -184,7 +184,7 @@ const u_int8_t _zzt_display_char_table[] = {
 	'*', /* ZZT_SLIME          */
 	'^', /* ZZT_SHARK          */
 	24,  /* ZZT_SPINNINGGUN    */
-	17,  /* ZZT_PUSHER         */
+	0x1F, /* ZZT_PUSHER         */
 	234, /* ZZT_LION           */
 	227, /* ZZT_TIGER          */
 	186, /* ZZT_BLINKVERT      */
@@ -555,7 +555,6 @@ u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile)
 {
 	switch (tile.type) {
 		case ZZT_EMPTY:  return 0x0F;
-		case ZZT_EDGE:   return 0x4C;
 		case ZZT_PLAYER: return 0x1F;
 		case ZZT_BLUETEXT:    return 0x1f;
 		case ZZT_GREENTEXT:   return 0x2f;

@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.10 2002/02/18 02:06:25 bitman Exp $
+ * $Id: menu.c,v 1.11 2002/03/17 09:35:58 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -151,12 +151,6 @@ void terrainmenu(displaymethod * mydisplay, ZZTworld * myworld, editorinfo * myi
 
 	/* Nothing has params, but why not? */
 	tile.param = zztParamCreate(tile);
-
-	switch (choice) {
-		case ZZT_EDGE:
-			tile.color = 0x0F;
-			break;
-	}
 
 	/* Plot and push the created tile */
 	if (choice != -1) {

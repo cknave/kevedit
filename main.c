@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.63 2002/02/22 00:22:30 bitman Exp $
+ * $Id: main.c,v 1.64 2002/03/17 09:35:58 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -304,6 +304,15 @@ int main(int argc, char **argv)
 		case 'W':
 			/* World Info */
 			editworldinfo(myworld, mydisplay);
+
+			drawpanel(mydisplay);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+			break;
+		case DKEY_CTRL_T:
+			/* Tile Info */
+			tileinfo(mydisplay, myworld, myinfo->cursorx, myinfo->cursory);
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);

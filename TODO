@@ -14,6 +14,9 @@ Re-draw panel after zzm import
 Technical info for everything
   Add/remove stats for every kind of tile
 Exploit ability of board to "link to self" using index FF
+Allow #play-back to piggy-back on other commands. i.e. /i#play
+Add monitor
+Add horiz/vert blink wall rays to menus
 
 For the 0.5 release:
 --------------------

@@ -10,10 +10,13 @@ RM = rm -f
 
 # First line for optimization
 # Second line for debug
-#OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-OPTIMIZE = -g -Wall
+OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+#OPTIMIZE = -g -Wall
 
-CFLAGS = $(OPTIMIZE)
+# Uncomment when compiling from DOS
+#DOS = -DDOS
+
+CFLAGS = $(OPTIMIZE) $(DOS)
 
 # No more modifications below this line
 # -------------------------------------

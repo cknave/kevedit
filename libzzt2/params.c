@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.2 2002/03/16 22:37:05 bitman Exp $
+ * $Id: params.c,v 1.3 2002/03/17 09:35:58 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,7 @@ const ZZTprofile _zzt_param_profile_table[] = {
 	/* ZZT_EMPTY          */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_EDGE           */ { 0, 0, { 0, 0, 0 } },   /* TODO: are edges paramless? */
 	/* Invalid            */ { 0, 0, { 0, 0, 0 } },
-	/* Invalid            */ { 0, 0, { 0, 0, 0 } },
+	/* ZZT_MONITOR        */ { ZZT_PROPERTY_CYCLE, 1, { 0, 0, 0 } },
 	/* ZZT_PLAYER         */ { ZZT_PROPERTY_CYCLE, 1, { 0, 0, 0 } },
 	/* ZZT_AMMO           */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_TORCH          */ { 0, 0, { 0, 0, 0 } },
@@ -124,20 +124,9 @@ u_int16_t _zzt_datause_location_table[] = {
 	/* ZZT_DATAUSE_OWNER        */ 0,
 };
 
-
-ZZTparam *zztParamCreate(ZZTtile tile)
+ZZTparam *zztParamCreateBlank(void)
 {
 	ZZTparam *param;
-	ZZTprofile profile = _zzt_param_profile_table[tile.type];
-	int i;
-
-	/* No params for tiles outside the profile table */
-	if (tile.type > ZZT_CENTBODY)
-		return NULL;
-
-	/* No params for param-less types */
-	if (profile.properties == ZZT_PROPERTY_NOPARAM)
-		return NULL;
 
 	/* Allocate the param structure */
 	param = (ZZTparam *) malloc(sizeof(ZZTparam));
@@ -156,6 +145,25 @@ ZZTparam *zztParamCreate(ZZTtile tile)
 	param->instruction = 0;
 	param->length = 0;
 	param->program = NULL;
+
+	return param;
+}
+
+ZZTparam *zztParamCreate(ZZTtile tile)
+{
+	ZZTparam *param;
+	ZZTprofile profile = _zzt_param_profile_table[tile.type];
+	int i;
+
+	/* No params for tiles outside the profile table */
+	if (tile.type > ZZT_CENTBODY)
+		return NULL;
+
+	/* No params for param-less types */
+	if (profile.properties == ZZT_PROPERTY_NOPARAM)
+		return NULL;
+
+	param = zztParamCreateBlank();
 
 	/* Consider profile for given tile type */
 

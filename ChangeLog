@@ -1,3 +1,10 @@
+0.4.1
+-----
+Param Editor interface improvements
+Tile Info with ability to add/remove stats (params) for any type
+Monitor type recognized
+Monitor and blink wall rays added to Terrain menu (but not the displayed panel!)
+
 0.4.0: February 19, 2002
 ------------------------
 Migration to libzzt2
