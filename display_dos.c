@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.21 2002/12/04 23:53:06 kvance Exp $
+ * $Id: display_dos.c,v 1.22 2002/12/13 00:09:52 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,10 @@ _go32_dpmi_seginfo new_kb_handler;
 short videomem;
 int windows;
 static int lshift, rshift; /* 0 = shift not pressed, 1 = shift pressed */
+static int vshift; /* virtual shift (toggled by DKEY_SHIFT_TOGGLE) */
+
+/* Virtual shift toggle key */
+#define DKEY_SHIFT_TOGGLE DKEY_F12
 
 /* Prototype needed by display_dos_init */
 int display_dos_getch();
@@ -172,9 +176,15 @@ int display_dos_getch()
 
 	key = getch();
 	if (!key)
-		return getch() | DDOSKEY_EXT;
-	else
-		return key;
+		key = getch() | DDOSKEY_EXT;
+
+	/* If the user presses the virtual shift toggle, toggle the virtual shift */
+	if (key == DKEY_SHIFT_TOGGLE) {
+		vshift = !vshift;
+		key = DKEY_NONE;
+	}
+
+	return key;
 }
 
 int display_dos_getkey()
@@ -240,7 +250,7 @@ void display_dos_titlebar(char *title)
 
 int display_dos_shift()
 {
-	return lshift | rshift;
+	return lshift | rshift | vshift;
 }
 
 void display_dos_update(int x, int y, int w, int h)
