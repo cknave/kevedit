@@ -1,5 +1,5 @@
 /* zlaunch - zzt launching library (everything necessary to run zzt smoothly) */
-/* $Id: zlaunch.c,v 1.6 2002/02/16 10:25:22 bitman Exp $ */
+/* $Id: zlaunch.c,v 1.7 2002/06/07 06:40:32 bitman Exp $ */
 /* Copyright (c) 2001 Ryan Phillips <bitman@users.sf.net> */
 
 #include "zlaunch.h"
@@ -312,6 +312,7 @@ void zlaunchact(zlaunchinfo* zli)
 
 		switch (curaction->type) {
 			case ZL_RUN:
+				/* TODO: seperate args from command and pass seperately */
 				run(zli->bindir, command, "");
 				break;
 			case ZL_KEYSTROKES:

@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.h,v 1.4 2002/03/29 23:16:43 bitman Exp $
+ * $Id: files.h,v 1.5 2002/06/07 06:40:32 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -39,9 +39,14 @@
 #define FTYPE_ALL  3
 
 /* Types of slashes */
-#define SLASH_DEFAULT 0
 #define SLASH_FORWARD 0
 #define SLASH_BACK    1
+
+#ifdef WIN32
+#define SLASH_DEFAULT SLASH_BACK
+#else
+#define SLASH_DEFAULT SLASH_FORWARD
+#endif
 
 /* Displacement constants */
 #define DISPLACE_LEADER "~"
@@ -79,6 +84,9 @@ char* locateself(char* argv0);
 char* fileof(char* buffer, char* fullpath, int buflen);
 char* pathof(char* buffer, char* fullpath, int buflen);
 char* fullpath(char* path, char* file, int slashtype);
+
+/* Change all the slashes in a pathname */
+char* reslash(char* pathname, int slashtype);
 
 /* Run a program with given path and arguments in current directory */
 int   run(char* path, char* program, char* args);

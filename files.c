@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.9 2002/03/29 23:16:43 bitman Exp $
+ * $Id: files.c,v 1.10 2002/06/07 06:40:32 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -552,6 +552,29 @@ fullpath(char* path, char* file, int slashtype)
 	return fullpath;
 }
 
+/* Changes all slashes in a pathname to the given slashtype
+ * pathname is modified!
+ * pathname is returned
+ */
+char*
+reslash(char* pathname, int slashtype)
+{
+	int i;
+	if (slashtype == SLASH_FORWARD) {
+		/* Change backslashes to forward slashes */
+		for (i = 0; i < strlen(pathname); i++)
+			if (pathname[i] == '\\')
+				pathname[i] = '/';
+	} else {
+		/* Change forward slashes to backslashes */
+		for (i = 0; i < strlen(pathname); i++)
+			if (pathname[i] == '/')
+				pathname[i] = '\\';
+	}
+
+	return pathname;
+}
+
 int
 run(char* path, char* program, char* args)
 {
@@ -559,8 +582,13 @@ run(char* path, char* program, char* args)
 	char* command = malloc(sizeof(char) *
 												 (strlen(path)+strlen(program)+strlen(args)+3));
 
-	strcpy(command, path);
+	/* Surround the path with quotes in case of spaces */
+	strcpy(command, "\"");
+	strcat(command, path);
 	strcat(command, "/");
+	reslash(command, SLASH_DEFAULT);
+	strcat(command, "\"");
+
 	strcat(command, program);
 	strcat(command, " ");
 	strcat(command, args);

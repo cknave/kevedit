@@ -21,6 +21,12 @@ ifeq ($(DOS),ON)
 	DOSOBJ = display_dos.o
 endif
 
+# Link in libglob
+ifeq ($(BUILDGLOB),ON)
+	CFLAGS += -DCANGLOB -Iglob
+	GLOBLIB = glob/libglob.a
+endif
+
 PATHS = -DDATAPATH=\"$(datadir)\"
 
 CFLAGS += $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(VERSIONFLAG) $(PATHS)
@@ -33,7 +39,7 @@ MISCOBJS    = patbuffer.o help.o dialog.o infobox.o paramed.o register.o
 DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o panel_bd.o panel_sd.o panel_ti.o scroll.o tbox.o cbox.o tdialog.o
 DISPLAYOBJS = display.o $(SDLOBJ) $(VCSAOBJ) $(DOSOBJ)
 
-OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS)
+OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS) $(GLOBLIB)
 
 # Documents
 
@@ -54,6 +60,7 @@ kevedit.zml: docs/*.hlp
 	cd docs; ./makehelp.sh; cd ..
 
 install: all
+#TODO: use $(INSTALL) instead of mkdir
 	mkdir -p $(bindir)
 	mkdir -p $(datadir)
 	mkdir -p $(docdir)
@@ -69,10 +76,17 @@ uninstall:
 clean:
 	rm -f *.o kevedit kevedit.exe kevedit.zln synth/*.o
 	make -C libzzt2 clean
+	make -C glob clean
 
 # Libraries
 libzzt2/libzzt2.a: libzzt2/*.c libzzt2/*.h
 	make -C libzzt2 -f $(MAKEFILE_NAME) DOS=$(DOS)
+
+# Build libglob
+ifeq ($(BUILDGLOB),ON)
+glob/libglob.a: glob/*.c glob/*.h
+	make -C glob
+endif
 
 # Dependancies
 

@@ -27,5 +27,8 @@ INSTALL = /usr/bin/install -c
 CFLAGS =
 LDFLAGS =
 
+# Build glob because it's not available in libc
+BUILDGLOB = ON
+
 # Makefile rules
 include KevEdit.make
