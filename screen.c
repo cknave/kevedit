@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.53 2002/09/16 06:47:24 bitman Exp $
+ * $Id: screen.c,v 1.54 2002/09/17 06:03:47 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -629,39 +629,23 @@ void drawblockcursorspace(displaymethod * d, ZZTblock * b, int x, int y, int off
 	d->putch(x + offx, y + offy, zztTileGetDisplayChar(b, x, y), c);
 }
 
-#define drawat(x, y)  drawblocktile(d, b, (x), (y), offx, offy, isselected(sel, (x), (y)))
-
 void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y, int offx, int offy)
 {
-	drawat(x, y);
+	int x1, y1, x2, y2;
+	int col, row;
 
-	if (y - 1 >= 0) {
-		if (x - 1 >= 0) {
-			drawat(x - 1, y - 1);
-		}
-		drawat(x, y - 1);
-		if (x + 1 < ZZT_BOARD_X_SIZE) {
-			drawat(x + 1, y - 1);
-		}
-	}
-	if (x - 1 >= 0) {
-		drawat(x - 1, y);
-	}
-	if (x + 1 < ZZT_BOARD_X_SIZE) {
-		drawat(x + 1, y);
-	}
-	if (y + 1 < ZZT_BOARD_Y_SIZE) {
-		if (x - 1 >= 0) {
-			drawat(x - 1, y + 1);
-		}
-		drawat(x, y + 1);
-		if (x + 1 < 60) {
-			drawat(x + 1, y + 1);
-		}
-	}
+	/* Use a 3x3 block around (x,y), but chop off edges if it's beyond
+	 * the boundaries of the block */
+	x1 = max(x - 1, 0); x2 = min(x + 1, b->width - 1);
+	y1 = max(y - 1, 0); y2 = min(y + 1, b->height - 1);
+
+	for (col = x1; col <= x2; col++)
+		for (row = y1; row <= y2; row++)
+			drawblocktile(d, b, col, row, offx, offy, isselected(sel, col, row));
+
+	d->update(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
 }
 
-#undef drawat
 
 char * filedialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay)
 {
