@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.10 2002/12/04 23:53:06 kvance Exp $
+ * $Id: params.c,v 1.11 2002/12/08 00:20:43 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
 /* Param profile look-up table */
 /* THIS IS ZZT IN A NUT-SHELL! */
 const ZZTprofile _zzt_param_profile_table[] = {
+	/* Type                  { properties, default cycle, data uses } */
 	/* ZZT_EMPTY          */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_EDGE           */ { 0, 0, { 0, 0, 0 } },   /* TODO: are edges paramless? */
 	/* ZZT_MESSAGETIMER   */ { 0, 0, { 0, 0, 0 } },
@@ -37,7 +38,7 @@ const ZZTprofile _zzt_param_profile_table[] = {
 	/* ZZT_DOOR           */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_SCROLL         */ { ZZT_PROPERTY_CYCLE | ZZT_PROPERTY_PROGRAM, 1, { 0, 0, 0 } },
 	/* ZZT_PASSAGE        */ { ZZT_PROPERTY_NONE, 0, { 0, 0, ZZT_DATAUSE_PASSAGEDEST } },
-	/* ZZT_DUPLICATOR     */ { ZZT_PROPERTY_STEP, 0, { 0, ZZT_DATAUSE_DUPRATE, 0 } },
+	/* ZZT_DUPLICATOR     */ { ZZT_PROPERTY_STEP, 1, { 0, ZZT_DATAUSE_DUPRATE, 0 } },
 	/* ZZT_BOMB           */ { ZZT_PROPERTY_CYCLE, 6, { ZZT_DATAUSE_TIMELEFT, 0, 0 } },   /* TODO: there must be more to it than this */
 	/* ZZT_ENERGIZER      */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_STAR           */ { ZZT_PROPERTY_STEP | ZZT_PROPERTY_CYCLE, 1, { ZZT_DATAUSE_OWNER, 0, 0 } }, /* TODO: does owner matter? */
