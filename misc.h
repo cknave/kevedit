@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.5 2001/09/23 19:57:41 bitman Exp $
+ * $Id: misc.h,v 1.6 2001/10/20 03:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,10 @@
 // Filename parsing from full path
 char * getfilename(char* buffer, char* fullpath, int buflen);
 
-// Kevedit initialization routines
+/* Confirms that a file exists */
+int fileexists(char* filename);
+
+/* Kevedit initialization routines */
 displaymethod * pickdisplay(displaymethod * rootdisplay);
 void initeditorinfo(editorinfo * myinfo);
 

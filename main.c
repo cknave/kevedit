@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.36 2001/09/23 19:57:41 bitman Exp $
+ * $Id: main.c,v 1.37 2001/10/20 03:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@
 #include "patbuffer.h"
 #include "misc.h"
 #include "menu.h"
+#include "infobox.h"
 
 #define MAIN_BUFLEN 255
 
@@ -205,7 +206,7 @@ int main(int argc, char **argv)
 		case 'z':
 		case 'Z':
 			if (e == 0) {
-				if (confirmprompt(mydisplay, "Clear board?") != 0) {
+				if (confirmprompt(mydisplay, "Clear board?") == CONFIRM_YES) {
 					clearboard(myworld, myinfo, bigboard, paramlist);
 
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -218,7 +219,7 @@ int main(int argc, char **argv)
 		case 'n':
 		case 'N':
 			if (e == 0) {
-				if (confirmprompt(mydisplay, "Make new world?") != 0) {
+				if (confirmprompt(mydisplay, "Make new world?") == CONFIRM_YES) {
 					myworld = clearworld(myworld, myinfo, bigboard, paramlist);
 
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -231,7 +232,7 @@ int main(int argc, char **argv)
 		case 'q':
 		case 'Q':
 			/* Quit */
-			if (confirmprompt(mydisplay, "Quit?") != 0) {
+			if (confirmprompt(mydisplay, "Quit?") == CONFIRM_YES) {
 				quit = 1;
 			} else {
 				drawpanel(mydisplay);
@@ -535,6 +536,10 @@ int main(int argc, char **argv)
 		case 'i':
 		case 'I':
 			/* Board Info */
+			editboardinfo(myworld, myinfo->curboard, mydisplay);
+
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
 		case 13:
 			/* Modify / Grab */
@@ -550,8 +555,9 @@ int main(int argc, char **argv)
 							editmoredata(myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], mydisplay);
 						}
 						if(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_PASSAGE) {
+							param* p = myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]];
 							/* Choose passage destination */
-							myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]->data3 = boarddialog(myworld, myinfo, mydisplay);
+							p->data3 = boarddialog(myworld, p->data3, 1, "Passage Destination", mydisplay);
 						}
 						/* TODO: modify other params */
 						/* redraw everything */
@@ -581,12 +587,28 @@ int main(int argc, char **argv)
 				if (e == 0) {
 					mydisplay->end();
 					runzzt(myinfo->currentfile);
-
+					
 					/* restart display from scratch */
 					mydisplay->init();
 					drawpanel(mydisplay);
-					updatepanel(mydisplay, myinfo, myworld);
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+
+					if (confirmprompt(mydisplay, "Reload World?") == CONFIRM_YES) {
+						/* Load the world from file, in case ZZT modified it */
+						if (fileexists(myinfo->currentfile)) {
+							z_delete(myworld);
+							myworld = loadworld(myinfo->currentfile);
+
+							updateinfo(myworld, myinfo, bigboard);
+							updateparamlist(myworld, myinfo, paramlist);
+
+							drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+						}
+					}
+
+					/* Redraw */
+					drawpanel(mydisplay);
+					updatepanel(mydisplay, myinfo, myworld);
 					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 				}
 			}

@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.10 2001/10/09 01:14:36 bitman Exp $
+ * $Id: svector.h,v 1.11 2001/10/20 03:05:49 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -71,9 +71,14 @@ void removestringvector(stringvector * v);
  * thereafter share the same memory, only cur differs! */
 stringvector * stringvectorcat(stringvector * v1, stringvector * v2);
 
-/* pushstringcopy - malloc()s a copy of s and pushes it into v, size equal
- *                  to (length of s) + 1 */
-void pushstringcopy(stringvector * v, char * s);
+/* svmovetofirst() - move to first element */
+void svmovetofirst(stringvector* v);
+
+/* svmoveby() - move by a number of steps, negative for backward */
+void svmoveby(stringvector* v, int delta);
+
+/* svgetposoiton() - count how far cur is from first */
+int svgetposition(stringvector* v);
 
 /* General string operations which become useful when paired with svectors */
 

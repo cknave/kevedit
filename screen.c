@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.23 2001/10/14 05:46:57 bitman Exp $
+ * $Id: screen.c,v 1.24 2001/10/20 03:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -48,6 +48,7 @@
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+/* Eventually these should go in DISPLAY_DOS */
 #define DDOSKEY_EXT      0x100
 
 #define DKEY_ENTER      13
@@ -56,6 +57,8 @@
 #define DKEY_TAB        '\t'
 #define DKEY_CTRL_A     0x01
 #define DKEY_CTRL_Y     25
+#define DKEY_UP         0x48 | DDOSKEY_EXT
+#define DKEY_DOWN       0x50 | DDOSKEY_EXT
 #define DKEY_LEFT       0x4B | DDOSKEY_EXT
 #define DKEY_RIGHT      0x4D | DDOSKEY_EXT
 #define DKEY_HOME       0x47 | DDOSKEY_EXT
@@ -209,70 +212,70 @@ char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, 
 		if (x == 0 && mydisplay->getch() == 0x4B)
 			x = 8;
 		switch (x) {
-		case 8:
-			if (t > 0) {
-				t--;
+			case 8:
+				if (t > 0) {
+					t--;
+					buffer[t] = '\0';
+					mydisplay->putch(61 + t, 4, ' ', 0x0f);
+				}
+				break;
+			case 27:
+				return NULL;
+				break;
+			case 13:
+				if (t > 0) {
+					FILE *fp = NULL;
+
+					if (extlen) {
+						strcat(buffer, ".");
+						strcat(buffer, ext);
+					}
+
+					fp = fopen(buffer, "rb");
+					if (fp != NULL && askoverwrite) {
+						fclose(fp);
+						mydisplay->print(61, 5, 0x1f, "Overwrite?");
+						mydisplay->print(72, 5, 0x1e, "y/n");
+						do {
+							c = mydisplay->getch();
+						} while (!(c == 'y' || c == 'Y' || c == 'n' || c == 'N'));
+						mydisplay->print(61, 5, 0x1f, "          ");
+						mydisplay->print(72, 5, 0x1f, "   ");
+					} else {
+						c = 'y';
+					}
+
+					if (c == 'y') {
+						strcpy(filename, buffer);
+						x = 27;
+					} else {
+						buffer[t] = 0;
+					}
+				}
+				break;
+			default:
+				if (extlen ? t >= 8 : t >= 12)
+					break;
+				if (x < 45)
+					break;
+				if (x == 46 && extlen)
+					break;
+				if (x > 46 && x < 48)
+					break;
+				if (x > 57 && x < 65)
+					break;
+				if (x > 90 && x < 95)
+					break;
+				if (x == 96)
+					break;
+				if (x > 122)
+					break;
+				buffer[t] = x;
+				mydisplay->putch(61 + t, 4, x, 0x0f);
+				t++;
 				buffer[t] = '\0';
-				mydisplay->putch(61 + t, 4, ' ', 0x0f);
-			}
-			break;
-		case 27:
-			return NULL;
-			break;
-		case 13:
-			if (t > 0) {
-				FILE *fp = NULL;
-
-				if (extlen) {
-					strcat(buffer, ".");
-					strcat(buffer, ext);
-				}
-
-				fp = fopen(buffer, "rb");
-				if (fp != NULL && askoverwrite) {
-					fclose(fp);
-					mydisplay->print(61, 5, 0x1f, "Overwrite?");
-					mydisplay->print(72, 5, 0x1e, "y/n");
-					do {
-						c = mydisplay->getch();
-					} while (!(c == 'y' || c == 'Y' || c == 'n' || c == 'N'));
-					mydisplay->print(61, 5, 0x1f, "          ");
-					mydisplay->print(72, 5, 0x1f, "   ");
-				} else {
-					c = 'y';
-				}
-
-				if (c == 'y') {
-					strcpy(filename, buffer);
-					x = 27;
-				} else {
-					buffer[t] = 0;
-				}
-			}
-			break;
-		default:
-			if (extlen ? t >= 8 : t >= 12)
+				mydisplay->cursorgo(61 + t, 4);
 				break;
-			if (x < 45)
-				break;
-			if (x == 46 && extlen)
-				break;
-			if (x > 46 && x < 48)
-				break;
-			if (x > 57 && x < 65)
-				break;
-			if (x > 90 && x < 95)
-				break;
-			if (x == 96)
-				break;
-			if (x > 122)
-				break;
-			buffer[t] = x;
-			mydisplay->putch(61 + t, 4, x, 0x0f);
-			t++;
-			buffer[t] = '\0';
-			mydisplay->cursorgo(61 + t, 4);
-			break;
 		}
 	}
 	return filename;
@@ -390,9 +393,9 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 	for (i = 0; i < e->standard_patterns->size; i++) {
 		patdef pattern = e->standard_patterns->patterns[i];
 		d->putch(61 + i, 21,
-		   z_getchar(pattern.type, pattern.color, pattern.patparam,
-				         NULL, 0, 0),
-		   z_getcolour(pattern.type, pattern.color, pattern.patparam));
+						 z_getchar(pattern.type, pattern.color, pattern.patparam,
+											 NULL, 0, 0),
+						 z_getcolour(pattern.type, pattern.color, pattern.patparam));
 	}
 #endif
 
@@ -411,9 +414,9 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 	for (i = 0; i < BBVWIDTH && i + x < e->backbuffer->size; i++) {
 		patdef pattern = e->backbuffer->patterns[i + x];
 		d->putch(68 + i, 21,
-		   z_getchar(pattern.type, pattern.color, pattern.patparam,
-				         NULL, 0, 0),
-		   z_getcolour(pattern.type, pattern.color, pattern.patparam));
+						 z_getchar(pattern.type, pattern.color, pattern.patparam,
+											 NULL, 0, 0),
+						 z_getcolour(pattern.type, pattern.color, pattern.patparam));
 	}
 	/* Start where we left off and fill the rest w/ blue solids */
 	for (; i < BBVWIDTH; i++) {
@@ -428,9 +431,9 @@ void drawscreen(displaymethod * d, world * w, editorinfo * e, char *bigboard, un
 	for (y = 0; y < 25; y++) {
 		for (x = 0; x < 60; x++) {
 			d->putch(x, y,
-				 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]], bigboard, x, y),
-				 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]])
-			    );
+							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]], bigboard, x, y),
+							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]])
+							);
 			i += 2;
 		}
 	}
@@ -466,61 +469,61 @@ void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsi
 		if (x - 1 >= 0) {
 			i = ((x - 1) + (y - 1) * 60) * 2;
 			d->putch(x - 1, y - 1,
-				 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y - 1]], bigboard, x - 1, y - 1),
-				 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y - 1]])
-			    );
+							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y - 1]], bigboard, x - 1, y - 1),
+							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y - 1]])
+							);
 		}
 		i = (x + (y - 1) * 60) * 2;
 		d->putch(x, y - 1,
-			 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y - 1]], bigboard, x, y - 1),
-			 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y - 1]])
-		    );
+						 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y - 1]], bigboard, x, y - 1),
+						 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y - 1]])
+						);
 		if (x + 1 < 60) {
 			i = ((x + 1) + (y - 1) * 60) * 2;
 			d->putch(x + 1, y - 1,
-				 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y - 1]], bigboard, x + 1, y - 1),
-				 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y - 1]])
-			    );
+							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y - 1]], bigboard, x + 1, y - 1),
+							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y - 1]])
+							);
 		}
 	}
 	if (x - 1 >= 0) {
 		i = ((x - 1) + y * 60) * 2;
 		d->putch(x - 1, y,
-			 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y]], bigboard, x - 1, y),
-			 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y]])
-		    );
+						 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y]], bigboard, x - 1, y),
+						 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y]])
+						);
 	}
 	i = (x + y * 60) * 2;
 	d->putch(x, y,
-		 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]], bigboard, x, y),
-		 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]])
-	    );
+					 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]], bigboard, x, y),
+					 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y]])
+					);
 	if (x + 1 < 60) {
 		i = ((x + 1) + y * 60) * 2;
 		d->putch(x + 1, y,
-			 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y]], bigboard, x + 1, y),
-			 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y]])
-		    );
+						 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y]], bigboard, x + 1, y),
+						 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y]])
+						);
 	}
 	if (y + 1 < 25) {
 		if (x - 1 >= 0) {
 			i = ((x - 1) + (y + 1) * 60) * 2;
 			d->putch(x - 1, y + 1,
-				 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y + 1]], bigboard, x - 1, y + 1),
-				 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y + 1]])
-			    );
+							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y + 1]], bigboard, x - 1, y + 1),
+							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x - 1][y + 1]])
+							);
 		}
 		i = (x + (y + 1) * 60) * 2;
 		d->putch(x, y + 1,
-			 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y + 1]], bigboard, x, y + 1),
-			 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y + 1]])
-		    );
+						 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y + 1]], bigboard, x, y + 1),
+						 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x][y + 1]])
+						);
 		if (x + 1 < 60) {
 			i = ((x + 1) + (y + 1) * 60) * 2;
 			d->putch(x + 1, y + 1,
-				 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y + 1]], bigboard, x + 1, y + 1),
-				 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y + 1]])
-			    );
+							 z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y + 1]], bigboard, x + 1, y + 1),
+							 z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[x + 1][y + 1]])
+							);
 		}
 	}
 }
@@ -571,7 +574,7 @@ char * filedialog(char * buffer, char * extention, char * title, displaymethod *
 	}
 
 	for (i = 0; i < x; i++)
-		pushstringcopy(&files, filelist[i]);
+		pushstring(&files, str_dup(filelist[i]));
 
 	if (editbox(title, &files, 0, 1, mydisplay) == EDITBOX_OK)
 		strcpy(buffer, files.cur->s);
@@ -599,7 +602,52 @@ char *titledialog(displaymethod * d)
 	return t;
 }
 
-int boarddialog(world * w, editorinfo * e, displaymethod * mydisplay)
+int boarddialog(world * w, int curboard, int firstnone, char * title,
+										 displaymethod * mydisplay)
+{
+	stringvector boardlist;
+	int response;
+	int i = 0;
+
+	initstringvector(&boardlist);
+
+	if (firstnone) {
+		pushstring(&boardlist, "(none)");
+		i = 1;
+	} else {
+		i = 0;
+	}
+
+	for (; i <= w->zhead->boardcount; i++)
+		pushstring(&boardlist, w->board[i]->title);
+
+	if (w->zhead->boardcount < 255)
+		pushstring(&boardlist, "!;Add New Board");
+
+	svmovetofirst(&boardlist);
+	svmoveby(&boardlist, curboard);
+
+	response = scrolldialog(title, &boardlist, mydisplay);
+	if (response == EDITBOX_OK) {
+		if (boardlist.cur == boardlist.last && w->zhead->boardcount < 255) {
+			w->zhead->boardcount++;
+			w->board[w->zhead->boardcount] = z_newboard(titledialog(mydisplay));
+		}
+
+		curboard = svgetposition(&boardlist);
+	}
+
+	/* No dynamic data in this list */
+	removestringvector(&boardlist);
+
+	return curboard;
+}
+
+int switchboard(world * w, editorinfo * e, displaymethod * mydisplay)
+{
+	return boarddialog(w, e->curboard, 0, "Switch Boards", mydisplay);
+}
+#if 0
 {
 	int t, listpos, offset;
 	int subc, sube;
@@ -676,6 +724,7 @@ int boarddialog(world * w, editorinfo * e, displaymethod * mydisplay)
 	}
 	return -1;
 }
+#endif
 
 
 int dothepanel_f1(displaymethod * d, editorinfo * e)
@@ -951,9 +1000,11 @@ int confirmprompt(displaymethod * mydisplay, char * prompt)
 	while (1) {
 		i = mydisplay->getch();
 		if (i == 'y' || i == 'Y')
-			return 1;
+			return CONFIRM_YES;
 		else if (i == 'n' || i == 'N')
-			return 0;
+			return CONFIRM_NO;
+		else if (i == 27)
+			return CONFIRM_CANCEL;
 	}
 }
 

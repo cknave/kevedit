@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.7 2001/10/09 01:14:36 bitman Exp $
+ * $Id: misc.c,v 1.8 2001/10/20 03:05:49 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,20 @@ char * getfilename(char* buffer, char* fullpath, int buflen)
 
 	return buffer;
 }
+
+
+int fileexists(char* filename)
+{
+	FILE* testfile;
+
+	testfile = fopen(filename, "rb");
+	if (testfile == NULL) 
+		return 0;
+
+	fclose(testfile);
+	return 1;
+}
+
 
 displaymethod * pickdisplay(displaymethod * rootdisplay)
 {
@@ -195,37 +209,37 @@ void showParamData(param * p, int paramNumber, displaymethod * d)
 	stringvector data;
 	initstringvector(&data);
 
-	pushstringcopy(&data, "$Param Data");
-	pushstringcopy(&data, "");
+	pushstring(&data, str_dup("$Param Data"));
+	pushstring(&data, str_dup(""));
 
 	sprintf(buffer, "param#:      %d / 150", paramNumber);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "x:           %d", p->x);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "y:           %d", p->y);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "xstep:       %d", p->xstep);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "ystep:       %d", p->ystep);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "cycle:       %d", p->cycle);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "data1:       %d", p->data1);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "data2:       %d", p->data2);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "data3:       %d", p->data3);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "magic:       %d", p->magic);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "undert:      0x%X", p->undert);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "underc:      0x%X", p->underc);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "instruction: %d", p->instruction);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 	sprintf(buffer, "length:      %d", p->length);
-	pushstringcopy(&data, buffer);
+	pushstring(&data, str_dup(buffer));
 
 	editbox("Param Data", &data, 0, 1, d);
 
@@ -354,7 +368,7 @@ void changeboard(displaymethod * mydisplay, world * myworld, editorinfo * myinfo
 	int i, x;
 
 	/* Switch boards */
-	i = boarddialog(myworld, myinfo, mydisplay);
+	i = switchboard(myworld, myinfo, mydisplay);
 	if (i == -1 || i == myinfo->curboard)
 		return;
 

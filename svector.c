@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.13 2001/10/09 01:14:36 bitman Exp $
+ * $Id: svector.c,v 1.14 2001/10/20 03:05:49 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -212,15 +212,40 @@ stringvector * stringvectorcat(stringvector * v1, stringvector * v2)
 	return v1;
 }
 
-void pushstringcopy(stringvector * v, char * s)
+/* svmovetofirst() - move to first element */
+void svmovetofirst(stringvector* v)
 {
-	char* copy = (char *) malloc(sizeof(char) * (strlen(s) + 1));
-	if (copy == NULL)
-		return;
-
-	strcpy(copy, s);
-	pushstring(v, copy);
+	v->cur = v->first;
 }
+
+/* svmoveby() - move by a number of steps, negative for backward */
+void svmoveby(stringvector* v, int delta)
+{
+	int i;
+	
+	if (delta > 0) {
+		for (i = 0; i < delta && v->cur->next != NULL; i++)
+			v->cur = v->cur->next;
+	} else {
+		for (i = 0; i > delta && v->cur->prev != NULL; i--)
+			v->cur = v->cur->prev;
+	}
+}
+
+/* svgetposoiton() - count how far cur is from first */
+int svgetposition(stringvector* v)
+{
+	int pos = 0;
+	stringnode *finder = v->first;
+
+	while (finder != v->cur && finder != NULL) {
+		finder = finder->next;
+		pos++;
+	}
+
+	return pos;
+}
+
 
 /******* String utility functions ******/
 

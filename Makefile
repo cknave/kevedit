@@ -37,7 +37,7 @@ CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.2\"
 # No more modifications below this line
 # -------------------------------------
 
-OBJECTS = display.o main.o menu.o misc.o register.o patbuffer.o hypertxt.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
+OBJECTS = display.o main.o menu.o misc.o register.o patbuffer.o hypertxt.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o infobox.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
 
 all: kevedit
 
@@ -73,6 +73,8 @@ patbuffer.o: patbuffer.c kevedit.h zzt.h display.h
 	$(CC) -o $@ patbuffer.c $(CFLAGS) -c
 hypertxt.o: hypertxt.c hypertxt.h svector.h
 	$(CC) -o $@ hypertxt.c $(CFLAGS) -c
+infobox.o: infobox.c infobox.h zzt.h display.h
+	$(CC) -o $@ infobox.c $(CFLAGS) -c
 
 panel.o: panel.c panel.h
 	$(CC) -o $@ panel.c $(CFLAGS) -c
