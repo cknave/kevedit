@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.5 2001/06/13 02:04:55 bitman Exp $
+ * $Id: misc.c,v 1.6 2001/09/23 19:57:41 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,25 @@
 #include <string.h>
 #include <stdio.h>
 
+char * getfilename(char* buffer, char* fullpath, int buflen)
+{
+	char *lastslash, *lastbackslash, *start;
+
+	lastslash     = strrchr(fullpath, '/');
+	lastbackslash = strrchr(fullpath, '\\');
+
+	if (lastslash == NULL && lastbackslash == NULL)
+		start = fullpath;
+	else if (lastslash > lastbackslash)
+		start = lastslash + 1;
+	else
+		start = lastbackslash + 1;
+
+	strncpy(buffer, start, buflen);
+	buffer[buflen] = 0;
+
+	return buffer;
+}
 
 displaymethod * pickdisplay(displaymethod * rootdisplay)
 {

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.35 2001/06/03 17:45:19 bitman Exp $
+ * $Id: main.c,v 1.36 2001/09/23 19:57:41 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,7 @@
 #include "misc.h"
 #include "menu.h"
 
+#define MAIN_BUFLEN 255
 
 int main(int argc, char **argv)
 {
@@ -42,7 +43,7 @@ int main(int argc, char **argv)
 	displaymethod *mydisplay;
 	editorinfo *myinfo;
 	char *bigboard;
-	char buffer[255];
+	char buffer[MAIN_BUFLEN];
 	unsigned char paramlist[60][25];
 
 	world *myworld;
@@ -65,15 +66,14 @@ int main(int argc, char **argv)
 	initeditorinfo(myinfo);
 
 	/* Did we get a world on the command line? */
-	/* TODO: strip full path if given (as Windows would give it to us)
-	 * and change to that directory, putting only the name of the file itself
-	 * in myinfo->currentfile. */
 	myworld = NULL;
 	if (argc > 1) {
-		strcpy(buffer, argv[1]);
+		/* Ignore anything but the actual file name */
+		/* TODO: Check for a given path and chdir there if we can */
+		getfilename(buffer, argv[1], MAIN_BUFLEN - 5);
 		myworld = loadworld(buffer);
 		if (myworld == NULL) {
-			/* Maybe it's a .zzt */
+			/* Maybe they left off the .zzt extension? */
 			strcat(buffer, ".zzt");
 			myworld = loadworld(buffer);
 		}
@@ -526,7 +526,7 @@ int main(int argc, char **argv)
 				updatepanel(mydisplay, myinfo, myworld);
 			} else {
 				/* Increase size of backbuffer */
-				if (myinfo->backbuffer->size < 128) {
+				if (myinfo->backbuffer->size < MAX_BACKBUF) {
 					patbuffer_resize(myinfo->backbuffer, 1);
 					updatepanel(mydisplay, myinfo, myworld);
 				}
