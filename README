@@ -25,6 +25,7 @@ will be created.
 $---------------------
 $New in Version 0.3.2!
 $---------------------
+$*** Look for these new features ***
 
  * Resizable backbuffers
  * Advanced tile editing
@@ -142,6 +143,7 @@ these types, you will be presented with the object editor.  This is a simple
 text editor with features specific to ZZT programming.  ARROW KEYS move the
 cursor, ESCAPE quits, ctrl+'y' deletes a line.
 
+$******* NEW in 0.3.2 *******
 The ZZT-OOP editor even features copy and paste! Text may be highlighted by
 holding down ALT and using the arrow keys to navigate. Eventually, the editor
 will allow use of SHIFT instead of ALT for selection, so be patient. Use
@@ -162,6 +164,7 @@ cursor is.  alt+'m' will load a ZZM format music file.
 $-------------------------
 $Placing Text on the Board
 $-------------------------
+$******* NEW in 0.3.2 *******
 To add readable text tiles to the board, press F4 to activate text entry mode.
 Every character you type will be written on the board.  To add a non-typable
 character, press ctrl+'a' for the ASCII selection dialog box.  To leave text
@@ -187,6 +190,7 @@ For this to work, zzt.exe and zzt.dat must be in the current directory.
 $---------------------
 $Resizable Backbuffers
 $---------------------
+$******* NEW in 0.3.2 *******
 The backbuffer may  be  resized  using  the '<' and '>' keys. Some gradients
 may not fit in the default ten-tile backbuffer, so this may prove useful. Only
 ten tiles will be visible at once, but the backbuffer will scroll
@@ -195,6 +199,7 @@ automatically.
 $---------------------
 $Advanced Tile Editing
 $---------------------
+$******* NEW in 0.3.2 *******
 KevEdit includes several advanced tile editting features, including gradient
 draw mode, get mode, and random flood fill.
 
@@ -230,6 +235,7 @@ free to resize the backbuffer as necessary using '<' and '>'.
 $-----
 $Help!
 $-----
+$******* NEW in 0.3.2 *******
 Someday, KevEdit will have an online help system.  For now, pressing 'h' will
 present you with a dialog box with copyright and version information, as well
 as this readme file if it is in the current directory.
