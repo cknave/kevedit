@@ -1,6 +1,7 @@
 0.3.4:
 ------
 Bug fixed in help system
+Bug fixed: backbuffers now deallocated
 General code cleanup and organization
 Display library keyboard handling improved
 File dialogs support multiple directories

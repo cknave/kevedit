@@ -1,5 +1,5 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.4 2001/10/27 19:30:42 kvance Exp $
+ * $Id: patbuffer.c,v 1.5 2001/11/11 06:38:07 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -49,6 +49,23 @@ patbuffer* patbuffer_create(int size)
 	return pbuf;
 }
 
+int deletepatternbuffer(patbuffer* pbuf)
+{
+	int i;
+
+	/* Free all the patterns with patparam data */
+	for (i = 0; i < pbuf->size; i++) {
+		if (pbuf->patterns[i].patparam != NULL) {
+			if (pbuf->patterns[i].patparam->moredata != NULL)
+				free(pbuf->patterns[i].patparam->moredata);
+			free(pbuf->patterns[i].patparam);
+		}
+	}
+
+	/* Free the patterns themselves */
+	free(pbuf->patterns);
+	pbuf->patterns = NULL;
+}
 
 void patbuffer_resize(patbuffer * pbuf, int delta)
 {

@@ -42,7 +42,7 @@ endif
 CENTRALOBJS = main.o misc.o menu.o editbox.o screen.o
 LIBRARYOBJS = libzzt.o svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
 MISCOBJS    = patbuffer.o help.o infobox.o register.o
-DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o scroll.o tbox.o cbox.o
+DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o scroll.o tbox.o cbox.o
 DISPLAYOBJS = display.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
 
 OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS)
@@ -97,6 +97,10 @@ panel_f2.o: panel_f2.c panel_f2.h
 panel_f3.o: panel_f3.c panel_f3.h
 panel_ed.o: panel_ed.c panel_ed.h
 panel_hl.o: panel_hl.c panel_hl.h
+panel_bi.o: panel_bi.c panel_bi.h
+panel_wi.o: panel_wi.c panel_wi.h
+panel_g1.o: panel_g1.c panel_g1.h
+panel_g2.o: panel_g2.c panel_g2.h
 scroll.o: scroll.c scroll.h
 tbox.o: tbox.c tbox.h
 cbox.o: cbox.c cbox.h

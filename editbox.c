@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.28 2001/11/10 07:42:39 bitman Exp $
+ * $Id: editbox.c,v 1.29 2001/11/11 06:38:07 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -188,15 +188,8 @@ int iszztcolour(char *token);
 /***** draweditpanel() ***********/
 void draweditpanel(int insertflag, int wrapwidth, int zocmode, displaymethod * d)
 {
-	int x, y, i = 0;
 	char buf[10] = "";
-
-	for (y = 0; y < PANEL_EDIT_DEPTH; y++) {
-		for (x = 0; x < PANEL_EDIT_WIDTH; x++) {
-			d->putch(x + 60, y + 3, PANEL_EDIT[i], PANEL_EDIT[i + 1]);
-			i += 2;
-		}
-	}
+	drawsidepanel(d, PANEL_EDIT);
 	
 	d->print(76, 4,  YELLOW_F | BRIGHT_F | BLUE_B, (insertflag ? "on" : "off"));
 	d->print(76, 8, YELLOW_F | BRIGHT_F | BLUE_B, (zocmode ? "on" : "off"));
@@ -221,11 +214,6 @@ stringvector moredatatosvector(param * p, int editwidth)
 	/* load the vector */
 	if ((p->moredata == NULL) | (p->length <= 0)) {
 		/* No data! We need to create an empty node */
-#if 0
-		str = (char *) malloc(editwidth + 1);
-		strcpy(str, "");
-		pushstring(&sv, str);
-#endif
 		pushstring(&sv, str_dupmin("", editwidth + 1));
 		return sv;
 	}

@@ -1,5 +1,5 @@
 /* patbuffer.h    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.h,v 1.2 2001/10/27 19:30:42 kvance Exp $
+ * $Id: patbuffer.h,v 1.3 2001/11/11 06:38:07 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 
 
 patbuffer* patbuffer_create(int size);
+void deletepatternbuffer(patbuffer* pbuf);
 void patbuffer_resize(patbuffer * pbuf, int delta);
 
 param* param_duplicate(param* p);

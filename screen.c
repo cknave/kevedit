@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.31 2001/11/10 07:42:39 bitman Exp $
+ * $Id: screen.c,v 1.32 2001/11/11 06:38:07 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -352,6 +352,18 @@ void drawpanel(displaymethod * d)
 	for (y = 0; y < 25; y++) {
 		for (x = 0; x < 20; x++) {
 			d->putch(x + 60, y, PANEL_MAIN[i], PANEL_MAIN[i + 1]);
+			i += 2;
+		}
+	}
+}
+
+void drawsidepanel(displaymethod * d, unsigned char panel[])
+{
+	int x, y, i = 0;
+
+	for (y = 0; y < 22; y++) {
+		for (x = 0; x < 20; x++) {
+			d->putch(x + 60, y + 3, panel[i], panel[i + 1]);
 			i += 2;
 		}
 	}

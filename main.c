@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.47 2001/11/11 01:17:23 bitman Exp $
+ * $Id: main.c,v 1.48 2001/11/11 06:38:07 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -718,6 +718,8 @@ int main(int argc, char **argv)
 		free(datapath);
 
 	/* Free pattern buffers */
+	deletepatternbuffer(myinfo->standard_patterns);
+	deletepatternbuffer(myinfo->backbuffer);
 	free(myinfo->standard_patterns);
 	free(myinfo->backbuffer);
 

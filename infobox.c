@@ -1,5 +1,5 @@
 /* infobox.c  -- 
- * $Id: infobox.c,v 1.7 2001/11/10 07:42:39 bitman Exp $
+ * $Id: infobox.c,v 1.8 2001/11/11 06:38:07 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,10 +18,16 @@
  */
 
 #include "infobox.h"
-#include "zzt.h"
-#include "display.h"
+
 #include "screen.h"
+
+#include "zzt.h"
 #include "help.h"
+
+#include "panel_bi.h"
+#include "panel_wi.h"
+
+#include "display.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -147,6 +153,9 @@ void editboardinfo(world* myworld, int curboard, displaymethod* d)
 
 void drawstaticboardinfo(displaymethod* d)
 {
+	/* Draw the side panel */
+	drawsidepanel(d, PANEL_BOARDINFO);
+
 	/* Draw the scroll box */
 	drawscrollbox(0, 0, d);
 	d->putch( 7, 13, ' ', 0x00);
@@ -167,7 +176,6 @@ void drawstaticboardinfo(displaymethod* d)
 	d->print(11, 16, 0x0a, "\x19:");
 	d->print(11, 17, 0x0a, "\x1A:");
 	d->print(11, 18, 0x0a, "\x1B:");
-	d->print(9,  19, 0x0f, "* = Links back to this board");
 }
 
 void drawboardinfo(world* myworld, int curboard, displaymethod* d)
@@ -566,6 +574,9 @@ void editworldinfo(world* myworld, displaymethod* d)
 
 void drawstaticworldinfo(displaymethod* d)
 {
+	/* Draw the side panel */
+	drawsidepanel(d, PANEL_WORLDINFO);
+
 	/* Draw the scroll box */
 	drawscrollbox(0, 0, d);
 	d->putch( 7, 13, ' ', 0x00);
