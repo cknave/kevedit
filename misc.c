@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.46 2003/02/07 10:01:04 bitman Exp $
+ * $Id: misc.c,v 1.47 2003/10/02 01:16:55 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -43,7 +43,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #include <unistd.h>
 #include <time.h>
 

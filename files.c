@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.11 2002/12/04 23:53:06 kvance Exp $
+ * $Id: files.c,v 1.12 2003/10/02 01:16:55 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,10 +18,9 @@
  */
 
 
-#include "files.h"
-
-#include "zlaunch.h"
-
+#if HAVE_SYS_TYPES_H
+#	include <sys/types.h>
+#endif
 #include <dirent.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -33,6 +32,11 @@
 #ifdef CANGLOB
 #include <glob.h>
 #endif
+
+#include "files.h"
+
+#include "zlaunch.h"
+
 
 #define BUFFERSIZE 42     /* Expanding buffer for text files */
 #define CWDMAXLEN 4096    /* Max to allow getcwd() to reserve */
@@ -599,4 +603,5 @@ run(char* path, char* program, char* args)
 
 	return result;
 }
+
 

@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.17 2002/12/13 00:08:45 bitman Exp $
+ * $Id: display.h,v 1.18 2003/10/02 01:16:55 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,6 +19,11 @@
 
 #ifndef _DISPLAY_H
 #define _DISPLAY_H 1
+
+#ifdef SDL
+/* OS X port requires this in the file containing main() */
+#include "SDL.h"
+#endif
 
 typedef struct displaymethod {
 	struct displaymethod *next;
