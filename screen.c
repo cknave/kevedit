@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.43 2002/03/19 03:09:35 kvance Exp $
+ * $Id: screen.c,v 1.44 2002/03/19 19:12:50 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -472,7 +472,10 @@ void updatepanel(displaymethod * d, editorinfo * e, ZZTworld * w)
 
 	strcpy(s, "KevEdit - ");
 	strncpy(&s[10], title, 244);
-	d->titlebar(s);
+	if(e->changed_title == 1) {
+		e->changed_title = 0;
+		d->titlebar(s);
+	}
 
 #ifdef STDPATFOLLOWCOLOR
 	/* Draw standard patterns in all their colourful grandure */

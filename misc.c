@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.28 2002/02/21 00:25:42 bitman Exp $
+ * $Id: misc.c,v 1.29 2002/03/19 19:12:50 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -140,6 +140,7 @@ void initeditorinfo(editorinfo * myinfo)
 	myinfo->standard_patterns = createstandardpatterns();
 	myinfo->backbuffer = patbuffer_create(10);
 	myinfo->pbuf = myinfo->standard_patterns;
+	myinfo->changed_title = 1;
 
 	pat_applycolordata(myinfo->standard_patterns, myinfo);
 }

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.65 2002/03/18 03:12:41 bitman Exp $
+ * $Id: main.c,v 1.66 2002/03/19 19:12:50 kvance Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -304,6 +304,7 @@ int main(int argc, char **argv)
 		case 'W':
 			/* World Info */
 			editworldinfo(myworld, mydisplay);
+			myinfo->changed_title = 1;
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
@@ -326,6 +327,7 @@ int main(int argc, char **argv)
 		case 'S':
 			/* Save world */
 			saveworld(mydisplay, myworld);
+			myinfo->changed_title = 1;
 
 			drawpanel(mydisplay);
 			updatepanel(mydisplay, myinfo, myworld);
@@ -336,6 +338,7 @@ int main(int argc, char **argv)
 		case 'L':
 			/* Load world */
 			myworld = loadworld(mydisplay, myworld);
+			myinfo->changed_title = 1;
 
 			drawscreen(mydisplay, myworld);
 			drawpanel(mydisplay);

@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.12 2002/02/16 23:42:28 bitman Exp $
+ * $Id: kevedit.h,v 1.13 2002/03/19 19:12:50 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,7 @@ typedef struct editorinfo {
 	patbuffer* pbuf;
 	patbuffer* standard_patterns;
 	patbuffer* backbuffer;
+	int changed_title;
 
 } editorinfo;
 
