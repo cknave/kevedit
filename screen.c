@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.9 2000/08/20 02:08:34 bitman Exp $
+ * $Id: screen.c,v 1.10 2000/08/21 20:06:22 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.4 2000/08/20 02:08:34 bitman Exp $
+ * $Id: editbox.c,v 1.5 2000/08/21 20:06:22 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,17 +63,19 @@ int iszztkind(unsigned char *token);
 int iszztdir(unsigned char *token);
 
 
+
+
 /* FIXME: any data on a line longer than editwidth will be cut. Should we do
  * something else? Perhaps wordwrap, or long line editing? Currently, it
  * doesn't crash KevEdit in this special case, but may mess up someone's
  * moredata (very theoretically). */
 void editmoredata(displaymethod * d, param * p)
 {
-	stringvector sv;	/* list of strings */
+	stringvector sv;		/* list of strings */
 	unsigned char *str = NULL;	/* temporary string */
-	int strpos = 0;		/* position in str */
-	int newdatalength = 0;	/* when writing, how big will moredata be? */
-	int i = 0, j = 0;	/* general counters */
+	int strpos = 0;			/* position in str */
+	int newdatalength = 0;		/* when writing, size of moredata */
+	int i = 0, j = 0;		/* general counters */
 	const int editwidth = 42;	/* allowable width for editing */
 
 	initstringvector(&sv);
@@ -165,6 +167,7 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 {
 	int c = 0, e = 0;	/* Char & ext flag */
 	int i, j;		/* general counters */
+	int done = 0;		/* true when editing/viewing is done */
 	int updateflags;	/* flags to determine what needs update */
 	stringnode *centerstr;	/* str in center of dialog */
 
@@ -174,6 +177,8 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 	unsigned char *tmpstr;	/* temporary string for pushing */
 	unsigned char strbuf[80] = "";  /* general buffer */
 
+	int wrapwidth = editwidth;
+
 	if (sv->cur == NULL)
 		return;
 	centerstr = sv->cur;
@@ -181,10 +186,9 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 	drawscrollbox(0, 0, d);
 	d->print(23, 4, 0x0a, title);
 
-//      d->cursorgo(9,13);
 	updateflags = U_ALL;
 
-	while (!(c == 27 && e == 0) && !(c == 13 && e == 0 && editwidth == 0)) {
+	while (!done && !(c == 13 && e == 0 && editwidth == 0)) {
 
 		d->cursorgo(9 + pos, 13);
 
@@ -343,9 +347,23 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 			if (e == 0) {
 				/* normal key (or unknown ext key impersonating one) */
 				switch (c) {
+					case '-':
+						if (wrapwidth > 0)
+							wrapwidth--;
+						else
+							wrapwidth = editwidth;
+						break;
+
+					case '+':
+						if (wrapwidth < editwidth)
+							wrapwidth++;
+						else
+							wrapwidth = 0;
+						break;
+
 					case 9:
 						/* Tab */
-						if (strlen(centerstr->s) + 3 < editwidth) {
+						if (strlen(centerstr->s) + 3 < (wrapwidth?wrapwidth:editwidth)) {
 							/* insert if there is room */
 							for (i = strlen(centerstr->s) + 4; i > pos; i--)
 								centerstr->s[i] = centerstr->s[i-4];
@@ -354,7 +372,12 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 							updateflags = U_CENTER;
 						}
 						else {
-							/* FIXME: wordwrap */
+							/* no room; wordwrap */
+							strcpy(strbuf, "    ");
+							sv->cur = centerstr;
+							pos = wordwrap(sv, strbuf, pos, pos, wrapwidth, editwidth);
+							centerstr = sv->cur;
+							updateflags = U_ALL;
 						}
 						break;
 
@@ -396,16 +419,21 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 								deletestring(sv);
 								updateflags = U_TOP;
 							}
-							else if (strlen(centerstr->s) + strlen(centerstr->prev->s) <= editwidth) {
-								pos = strlen(centerstr->prev->s);
-								strcpy(centerstr->prev->s+pos, centerstr->s);
+							else if (strlen(centerstr->prev->s) + 1 < wrapwidth) {
+								/* merge lines; wordwrap */
+								i = strlen(centerstr->prev->s);
+								if (centerstr->prev->s[i-1] != ' ') {
+									/* add a space at the end */
+									centerstr->prev->s[i]     = ' ';
+									centerstr->prev->s[i + 1] = 0;
+								}
+								sv->cur = centerstr->prev;
+								tmpstr = removestring(sv);
 								sv->cur = centerstr;
-								centerstr = centerstr->prev;
-								deletestring(sv);
-								updateflags = U_TOP | U_CENTER;
-							}
-							else {
-								/* FIXME: wordwrap */
+								pos = wordwrap(sv, tmpstr, pos, pos, wrapwidth, editwidth);
+								centerstr = sv->cur;
+								free(tmpstr);
+								updateflags = U_ALL;
 							}
 						}
 						break;
@@ -430,7 +458,8 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 						}
 						break;
 
-					case 27: /* esc should not be inserted */
+					case 27: /* escape when done */
+						done = 1;
 						break;
 
 					case 1: 
@@ -462,27 +491,39 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 						/* Normal/weird char for insert/replace */
 						if (insertflag) {
 							/* insert */
-							if (strlen(centerstr->s) < editwidth) {
+							if (strlen(centerstr->s) < (wrapwidth?wrapwidth:editwidth)) {
 								/* insert if there is room */
 								for (i = strlen(centerstr->s) + 1; i > pos; i--)
 									centerstr->s[i] = centerstr->s[i-1];
 								centerstr->s[pos++] = c;
 								updateflags |= U_CENTER;
 							}
-							else {
-								/* FIXME: wordwrap would be great here! */
+							else if (wrapwidth) {
+								/* no room; wordwrap */
+								strbuf[0] = c;
+								strbuf[1] = 0;
+								sv->cur = centerstr;
+								pos = wordwrap(sv, strbuf, pos, pos, wrapwidth, editwidth);
+								centerstr = sv->cur;
+								updateflags = U_ALL;
 							}
 						}
 						else {
 							/* easy replace */
 							if (centerstr->s[pos] == 0) {
-								if (strlen(centerstr->s) < editwidth) {
+								if (strlen(centerstr->s) < (wrapwidth?wrapwidth:editwidth)) {
 									centerstr->s[pos+1] = 0;
 									centerstr->s[pos++] = c;
 									updateflags |= U_CENTER;
 								}
-								else {
-									/* FIXME: wordwrap */
+								else if (wrapwidth) {
+									/* no room; wordwrap */
+									strbuf[0] = c;
+									strbuf[1] = 0;
+									sv->cur = centerstr;
+									pos = wordwrap(sv, strbuf, pos, pos, wrapwidth, editwidth);
+									centerstr = sv->cur;
+									updateflags = U_ALL;
 								}
 							}
 							else {
@@ -502,10 +543,11 @@ void editbox(displaymethod * d, char *title, stringvector * sv, int editwidth, i
 
 void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int firstline)
 {
-	int i = 0;		/* position in s */
-	int j = 0;		/* position in token */
+	int i = 0;			/* position in s */
+	int j = 0;			/* position in token */
 	unsigned char token[80] = "";	/* token buffer */
-/* find out what we're dealing with based on the first char */
+
+	/* find out what we're dealing with based on the first char */
 	switch (s[0]) {
 		case '#':
 			/* command */
@@ -784,3 +826,144 @@ int iszztdir(unsigned char *token)
 
 	return 0;
 }
+
+
+/* wordwrap
+ * purpose: Inserts string into current string of svector, wordwrapping if
+ *          necessary.
+ * args:    sv:        stringvector to manipulate
+ *          str:       string to insert in sv->cur->s
+ *          inspos:    where in sv to insert str
+ *          pos:       cursor position in sv->cur->s to track; a negative value
+ *                     indicates that -pos - 1 is position in str
+ *          wrapwidth: at what cursor position to wrap to next line
+ *          editwidth: maximum width of a line in sv
+ * return:  new location of pos. sv->cur is changed to reflect line on which
+ *          pos now resides.
+ *
+ * NOTE: str will not be modified nor free()d in any way.
+ */
+int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wrapwidth, int editwidth)
+{
+	int i, j, k;		/* general counters */
+	unsigned char *longstr;	/* Combination of sv->cur->s & str */
+	int longlen;		/* Length of longstr */
+	int newpos;		/* new position after insert */
+
+	unsigned char *newstr;     /* new string for next line */
+
+	/* check for bad data */
+	if (sv->cur == NULL || sv->cur->s == NULL || wrapwidth > editwidth || editwidth < 2 || inspos > strlen(sv->cur->s))
+		return -1;
+
+	/* first determine longlen and allocate longstr */
+	longlen = strlen(sv->cur->s) + strlen(str);
+	longstr = (unsigned char *) malloc(longlen + 2);
+	memset(longstr, 0, longlen + 2);
+	
+	/* fill longstr
+	 * 
+	 * i: position in longstr
+	 * j: position in sv->cur->s
+	 * k: position in str 
+	 */
+
+	/* fill from sv until inspos */
+	for (i = 0; i < inspos; i++)
+		longstr[i] = sv->cur->s[i];
+	j = i;
+
+	/* fill from str until end of str */
+	for (k = 0; str[k] != 0; k++, i++)
+		longstr[i] = str[k];
+
+	/* fill from sv until end */
+	for (; i < longlen; i++, j++)
+		longstr[i] = sv->cur->s[j];
+	
+	/* cap longstr */
+	longstr[i]   = 0;
+
+	/* determine location of newpos */
+	if (pos >= inspos)
+		newpos = pos + strlen(str);
+	else if (pos < 0)
+		newpos = inspos - pos - 1;
+
+	if (longlen <= wrapwidth) {
+		/* no need to wordwrap; we can just copy longstr over sv->cur->s */
+		strcpy(sv->cur->s, longstr);
+		return newpos;
+	}
+
+	/* we need to find the first space before wrapwidth 
+	 *
+	 * i: position in longstr
+	 * j: position of last identified space
+	 */
+
+	j = -1;
+	for (i = 0; i < wrapwidth; i++)
+		if (longstr[i] == ' ')
+			j = i;
+
+	if (j == -1) {
+		/* no space was found before wrap; reject insert */
+		return pos;
+	}
+
+	/* make newpos the negative differance of location of space and newpos,
+	 * if it belongs on next line */
+	if (newpos > j)
+		newpos = j - newpos;
+
+	/* set newstr to location of string after the space & cap longstr at space */
+	newstr = longstr + j + 1;
+	longstr[j] = 0;
+
+	/* replace sv->cur->s with shortened longstr */
+	strcpy(sv->cur->s, longstr);
+
+	/* finally: wrap onto next line or new line */
+	if (sv->cur->next != NULL    && strlen(sv->cur->next->s) != 0 &&
+			sv->cur->next->s[0] != '#'  && sv->cur->next->s[0] != '/' &&
+			sv->cur->next->s[0] != '?'  && sv->cur->next->s[0] != ':' &&
+			sv->cur->next->s[0] != '!'  && sv->cur->next->s[0] != '$' &&
+			sv->cur->next->s[0] != '\'' && sv->cur->next->s[0] != '@') {
+		/* next line exists, is not blank, and isn't a zoc command */
+
+		/* append a space to end of newstr */
+		i = strlen(newstr);
+		newstr[i++] = ' ';
+		newstr[i] = 0;
+
+		/* recursively insert newstr at beginning of next line */
+		if (newpos < 0) {
+			/* cursor should be tracked on next line */
+			sv->cur = sv->cur->next;
+			newpos = wordwrap(sv, newstr, 0, newpos, wrapwidth, editwidth);
+		} else {
+			sv->cur = sv->cur->next;
+			wordwrap(sv, newstr, 0, 0, wrapwidth, editwidth);
+			sv->cur = sv->cur->prev;
+		}
+	} else {
+		/* cannot wrapped to next line; create a new line and copy newstr into it */
+		/* FIXME: what if strlen(newstr) > wrapwidth? */
+		unsigned char *newnode;
+		newnode = (unsigned char *) malloc(editwidth + 2);
+
+		strcpy(newnode, newstr);
+		insertstring(sv, newnode);
+		
+		if (newpos < 0) {
+			/* cursor should be on next line */
+			sv->cur = sv->cur->next;
+			newpos = -newpos - 1;
+		}
+	}
+	free(longstr);
+
+	return newpos;
+}
+

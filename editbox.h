@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.3 2000/08/20 02:08:34 bitman Exp $
+ * $Id: editbox.h,v 1.4 2000/08/21 20:06:22 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,9 @@ void editbox(displaymethod * d, char* title, stringvector * sv, int editwidth, i
  * "@" will be allowed to denote object name. */
 void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int firstline);
 
+/* wordwrap - wrap text in sv */
+int wordwrap(stringvector * sv, unsigned char *str, int inspos, int pos, int wrapwidth, int editwidth);
+
 
 /* REFERENCE -- editbox key actions
  * - standard keys -
@@ -60,6 +63,8 @@ void displayzoc(displaymethod * d, int x, int y, unsigned char *s, int firstline
  * tab      : inserts 4 spaces
  * enter    : inserts newline
  * backspace: deletes space before cursor, or blank lines
+ * -        : decrease wordwrap width
+ * +        : increase wordwrap width
  * ctrl-y   : deletes the current line
  * ctrl-a   : inserts an ascii character (or a number on #char statements)
  * 
