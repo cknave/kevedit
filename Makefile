@@ -39,7 +39,7 @@ CFLAGS = $(OPTIMIZE) $(GGI) $(VCSA) $(DOS) -DVERSION=\"0.3.3\"
 
 DRAWOBJS = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o tbox.o cbox.o
 
-OBJECTS = display.o main.o menu.o misc.o register.o patbuffer.o selection.o help.o helplist.o hypertxt.o zzm.o zzl.o svector.o editbox.o infobox.o screen.o scroll.o libzzt.o $(DRAWOBJS) $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
+OBJECTS = display.o main.o menu.o misc.o register.o patbuffer.o selection.o help.o helplist.o hypertxt.o zzm.o zzl.o svector.o editbox.o infobox.o zlaunch.o screen.o scroll.o libzzt.o $(DRAWOBJS) $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
 
 all: kevedit
 
@@ -85,6 +85,8 @@ hypertxt.o: hypertxt.c hypertxt.h svector.h
 	$(CC) -o $@ hypertxt.c $(CFLAGS) -c
 infobox.o: infobox.c infobox.h zzt.h display.h
 	$(CC) -o $@ infobox.c $(CFLAGS) -c
+zlaunch.o: zlaunch.c zlaunch.h svector.h
+	$(CC) -o $@ zlaunch.c $(CFLAGS) -c
 
 panel.o: panel.c panel.h
 	$(CC) -o $@ panel.c $(CFLAGS) -c

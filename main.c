@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.40 2001/10/27 19:30:42 kvance Exp $
+ * $Id: main.c,v 1.41 2001/11/04 06:37:02 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -640,6 +640,8 @@ int main(int argc, char **argv)
 					drawpanel(mydisplay);
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 
+					/* Ask to reload world (I don't like it any more) */
+#if 0
 					if (confirmprompt(mydisplay, "Reload World?") == CONFIRM_YES) {
 						/* Load the world from file, in case ZZT modified it */
 						if (fileexists(myinfo->currentfile)) {
@@ -652,6 +654,7 @@ int main(int argc, char **argv)
 							drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 						}
 					}
+#endif
 
 					/* Redraw */
 					drawpanel(mydisplay);
