@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.7 2002/06/06 01:46:13 bitman Exp $
+ * $Id: display_sdl.c,v 1.8 2002/08/23 23:28:24 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -897,7 +897,7 @@ void display_sdl_putch(int x, int y, int ch, int co)
 
 void display_fullscreen()
 {
-	static int mouse = 1;
+	static int mouse = 0;
 	/* Toggle fullscreen */
 	SDL_WM_ToggleFullScreen(info.video);
 
@@ -930,8 +930,10 @@ int display_sdl_getch()
 					break;
 				case SDLK_RETURN:
 					/* Fullscreen toggle */
-					if(event.key.keysym.mod & KMOD_ALT)
+					if(event.key.keysym.mod & KMOD_ALT) {
+						event.type = SDL_KEYUP;
 						display_fullscreen();
+					}
 					break;
 				default:
 					break;
