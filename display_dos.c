@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.18 2002/03/20 00:55:21 bitman Exp $
+ * $Id: display_dos.c,v 1.19 2002/09/17 20:01:23 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -132,6 +132,9 @@ int display_dos_init()
 	new_kb_handler.pm_offset = (int) kb_isr;
 	new_kb_handler.pm_selector = _go32_my_cs();
 	_go32_dpmi_chain_protected_mode_interrupt_vector(KBD_INT, &new_kb_handler);
+
+	/* flush the keystroke buffer just in case */
+	while (display_dos_kbhit()) display_dos_getch();
 	
 	return -1;
 }

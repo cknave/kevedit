@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.14 2002/09/16 20:46:48 bitman Exp $
+ * $Id: menu.c,v 1.15 2002/09/17 20:01:24 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -153,8 +153,8 @@ void terrainmenu(keveditor * myeditor)
 	choice = dothepanel_f3(myeditor);
 	tile.type = choice;
 
-	/* Nothing has params, but why not? */
-	tile.param = zztParamCreate(tile);
+	/* Nothing has params, especially the dead player */
+	tile.param = NULL;
 
 	/* Use default color if in default color mode */
 	if (myeditor->defcmode != 0) {

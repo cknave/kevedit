@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.36 2002/09/16 06:47:24 bitman Exp $
+ * $Id: misc.c,v 1.37 2002/09/17 20:01:24 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -119,7 +119,7 @@ void paste(keveditor * myeditor)
 
 	deleteselection(&pasteselection);
 	myeditor->clearselectflag = 1;
-	myeditor->updateflags = UD_BOARD;
+	myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT;
 }
 
 /* TODO: should this go in libzzt2? selection.c/h has to go with it... */

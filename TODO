@@ -1,5 +1,6 @@
 For the 0.5.x release:
 ----------------------
+Fix: paste may exceed object limit
 Change pattern of current tile
   ENTER changes char of TEXT under cursor
 Retain color mode added to defc toggle
@@ -8,6 +9,11 @@ Quick key for quick key reference (and mention on panel)
 Tile under cursor displays w/ different for/back-color always
 Exploit ability of board to "link to self" using index FF
 Add monitor & blink rays to terrain documentation
+Respond to exit event from SDL
+
+Number boards in the board selector
+Char dialog: Alpha keys select characters 
+File dialog: Alpha keys move the cursor
 
 For the 0.6 release:
 --------------------

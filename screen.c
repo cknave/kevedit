@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.54 2002/09/17 06:03:47 bitman Exp $
+ * $Id: screen.c,v 1.55 2002/09/17 20:01:25 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1038,6 +1038,7 @@ int dothepanel_f3(keveditor * e)
 	d->putch_discrete(78, 19, 'M', color);
 	d->putch_discrete(78, 20, 205, color);
 	d->putch_discrete(78, 21, 186, color);
+	d->putch_discrete(78, 23, 2, color);
 	d->update(60, 3, 20, 22);
 	while (1) {
 		i = d->getch();
@@ -1094,6 +1095,9 @@ int dothepanel_f3(keveditor * e)
 		case 'H':
 		case 'h':
 			return ZZT_BLINKVERT;
+		case 'D':
+		case 'd':
+			return ZZT_PLAYER;
 		}
 	}
 }
