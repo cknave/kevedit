@@ -1,5 +1,5 @@
 /* register.c  -- text editor memory registers
- * $Id: register.c,v 1.7 2002/02/18 08:03:58 bitman Exp $
+ * $Id: register.c,v 1.8 2002/12/04 23:53:06 kvance Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
 

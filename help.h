@@ -1,5 +1,5 @@
 /* help.h  -- hypertext help system
- * $Id: help.h,v 1.2 2002/03/20 04:52:25 bitman Exp $
+ * $Id: help.h,v 1.3 2002/12/04 23:53:06 kvance Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
 #ifndef __HELP_H

@@ -1,5 +1,5 @@
 /* dosemu.h		-- Routines for calling dosemu to run ZZT
- * $Id: dosemu.h,v 1.2 2002/09/24 01:05:37 kvance Exp $
+ * $Id: dosemu.h,v 1.3 2002/12/04 23:53:06 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
 /* Only need this if DOSEMU support is to be included */

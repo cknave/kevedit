@@ -1,5 +1,5 @@
 /* display.c    -- Functions for the modular display
- * $Id: display.c,v 1.5 2002/03/19 03:09:35 kvance Exp $
+ * $Id: display.c,v 1.6 2002/12/04 23:53:06 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
 #include "display.h"
