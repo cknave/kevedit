@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.49 2001/11/11 23:59:25 bitman Exp $
+ * $Id: main.c,v 1.50 2001/11/13 01:38:36 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -215,23 +215,11 @@ int main(int argc, char **argv)
 				myinfo->cursorx--;
 			}
 			break;
-		case DKEY_ALT_LEFT:
-			/* Alt+Left */
-			myinfo->cursorx -= 10;
-			if (myinfo->cursorx < 0)
-				myinfo->cursorx = 0;
-			break;
 		case DKEY_RIGHT:
 			/* Right arrow */
 			if (myinfo->cursorx < 59) {
 				myinfo->cursorx++;
 			}
-			break;
-		case DKEY_ALT_RIGHT:
-			/* Alt+Right */
-			myinfo->cursorx += 10;
-			if (myinfo->cursorx > 59)
-				myinfo->cursorx = 59;
 			break;
 		case DKEY_UP:
 			/* Up arrow */
@@ -239,23 +227,11 @@ int main(int argc, char **argv)
 				myinfo->cursory--;
 			}
 			break;
-		case DKEY_ALT_UP:
-			/* Alt+Up */
-			myinfo->cursory -= 5;
-			if (myinfo->cursory < 0)
-				myinfo->cursory = 0;
-			break;
 		case DKEY_DOWN:
 			/* Down arrow or P */
 			if (myinfo->cursory < 24) {
 				myinfo->cursory++;
 			}
-			break;
-		case DKEY_ALT_DOWN:
-			/* Alt+Down */
-			myinfo->cursory += 5;
-			if (myinfo->cursory > 24)
-				myinfo->cursory = 24;
 			break;
 
 			/****************** Major actions ****************/
@@ -674,37 +650,68 @@ int main(int argc, char **argv)
 		    key == DKEY_UP       || key == DKEY_DOWN      ||
 		    key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT ||
 		    key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN) {
-			/* TODO: consider ALT-movents seperately */
-			if (myinfo->aqumode != 0) {
-				/* Get if aquire mode is on */
-				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-					push(myinfo->backbuffer,
-							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-							 myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-				else
-					push(myinfo->backbuffer,
-							 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
-							 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
-							 NULL);
+			int repeat = 0;
+			if (key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT ||
+					key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN)
+				repeat = 10;
+
+			do {
+				/* Consider alt-direction actions */
+				switch (key) {
+					case DKEY_ALT_LEFT:
+						/* Alt+Left */
+						myinfo->cursorx--; repeat--;
+						if (myinfo->cursorx < 0) { myinfo->cursorx = 0; repeat = 0; }
+						break;
+					case DKEY_ALT_RIGHT:
+						/* Alt+Right */
+						myinfo->cursorx++; repeat--;
+						if (myinfo->cursorx > 59) { myinfo->cursorx = 59; repeat = 0; }
+						break;
+					case DKEY_ALT_UP:
+						/* Alt+Up */
+						myinfo->cursory--; repeat--;
+						if (myinfo->cursory < 0) { myinfo->cursory = 0; repeat = 0; }
+						break;
+					case DKEY_ALT_DOWN:
+						/* Alt+Down */
+						myinfo->cursory++; repeat--;
+						if (myinfo->cursory > 24) { myinfo->cursory = 24; repeat = 0; }
+						break;
+				}
+
+				/* Act on keystrokes */
+				if (myinfo->aqumode != 0) {
+					/* Get if aquire mode is on */
+					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
+						push(myinfo->backbuffer,
+								 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+								 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+								 myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					else
+						push(myinfo->backbuffer,
+								 tiletype (bigboard, myinfo->cursorx, myinfo->cursory),
+								 tilecolor(bigboard, myinfo->cursorx, myinfo->cursory),
+								 NULL);
+					updatepanel(mydisplay, myinfo, myworld);
+				}
+				/* If gradmode is on, cycle through the pattern buffer.
+				 * Negative values move backward, positive values forward. */
+				if (myinfo->gradmode < 0) {
+					if (--myinfo->pbuf->pos < 0)
+						myinfo->pbuf->pos = myinfo->pbuf->size - 1;
+				} else if (myinfo->gradmode > 0) {
+					if (++myinfo->pbuf->pos >= myinfo->pbuf->size)
+						myinfo->pbuf->pos = 0;
+				}
+				/* If drawmode is on, plot */
+				if (myinfo->drawmode == 1) {
+					plot(myworld, myinfo, mydisplay, bigboard, paramlist);
+				}
+				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 				updatepanel(mydisplay, myinfo, myworld);
-			}
-			/* If gradmode is on, cycle through the pattern buffer.
-			 * Negative values move backward, positive values forward. */
-			if (myinfo->gradmode < 0) {
-				if (--myinfo->pbuf->pos < 0)
-					myinfo->pbuf->pos = myinfo->pbuf->size - 1;
-			} else if (myinfo->gradmode > 0) {
-				if (++myinfo->pbuf->pos >= myinfo->pbuf->size)
-					myinfo->pbuf->pos = 0;
-			}
-			/* If drawmode is on, plot */
-			if (myinfo->drawmode == 1) {
-				plot(myworld, myinfo, mydisplay, bigboard, paramlist);
-			}
-			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
-			updatepanel(mydisplay, myinfo, myworld);
-			drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+				drawspot(mydisplay, myworld, myinfo, bigboard, paramlist);
+			} while (repeat);
 		}
 	}
 
