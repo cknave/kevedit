@@ -1,13 +1,8 @@
-# Makefile for KevEdit
+# Makefile for KevEdit in Windows
 MAKEFILE_NAME = Makefile.win
 
 # Choose your compiler
 CC = i686-pc-cygwin-gcc -mno-cygwin
-
-# Uncomment next line to optimize kevedit
-# Uncomment second line to not optimize and include debugging information
-OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-#OPTIMIZE = -g -Wall
 
 # Set SDL to ON to enable SDL display
 SDL = ON
@@ -16,11 +11,21 @@ VCSA =
 # Set DOS to ON to enable DOS display
 DOS =
 
-include KevEdit.version
-CFLAGS = $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(KEVEDIT_VERSION)
+# Installation directories
+prefix = release-win
+bindir = $(prefix)
+datadir = $(prefix)
+docdir = $(prefix)
+
+# Target binary
+BINARY = kevedit.exe
+
+# Install program
+INSTALL = /usr/bin/install -c
+
+# Compile and link flags
+CFLAGS =
 LDFLAGS =
 
-# No more modifications below this line
-# -------------------------------------
-
+# Makefile rules
 include KevEdit.make

@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.h,v 1.3 2002/01/05 22:00:59 bitman Exp $
+ * $Id: files.h,v 1.4 2002/03/29 23:16:43 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,11 +63,14 @@ stringvector globtosvector(char * pattern, int filetypes);
 /* globdirectorytosvector() - globs a directory listing into an svector */
 stringvector globdirectorytosvector(char * dir, char * pattern, int filetypes);
 
+/* File access */
+int fileexists(char* filename);
+int fileisdir(char* filename);
+
 /* File copying */
-int   copyfile(char* srcname, char* destname, int flags);
-int   copyfilebydir(char* srcdir, char* destdir, char* filename, int flags);
-int   copyfilepatternbydir(char* srcdir, char* destdir, char* pattern,
-													 int flags, stringvector* successlist);
+int copyfile(char* srcname, char* destname, int flags);
+int copyfilebydir(char* srcdir, char* destdir, char* filename, int flags);
+int copyfilepatternbydir(char* srcdir, char* destdir, char* pattern, int flags, stringvector* successlist);
 
 /* Determine path of self from main's argv[0] */
 char* locateself(char* argv0);

@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.10 2002/03/20 04:52:25 bitman Exp $
+ * $Id: paramed.c,v 1.11 2002/03/29 23:16:43 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -342,7 +342,7 @@ char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w
 				strcpy(buffer, w->boards[data].title);
 			break;
 		case ZZT_DATAUSE_CHAR:
-			sprintf(buffer, "%c - #char %d - %Xh", (data != 0 ? data : ' '), data, data);
+			sprintf(buffer, "%c - #char %d - %02Xh", (data != 0 ? data : ' '), data, data);
 			break;
 		case ZZT_DATAUSE_OWNER:
 			strcpy(buffer, data == 0 ? "Player" : "Creature");
@@ -705,7 +705,7 @@ char * colorname(char * buf, int color)
 	buf[0] = '\x0';
 
 	/* Number form */
-	sprintf(buf, "%X: ", color);
+	sprintf(buf, "%02X: ", color);
 
 	/* Text form */
 	if (color & 0x80) strcat(buf, "Blinking ");
@@ -742,7 +742,7 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 
 	_addvalue((char *) zztTileGetKind(tile));
 
-	sprintf(buf, "%d, %Xh", tile.type, tile.type);
+	sprintf(buf, "%d, %02Xh", tile.type, tile.type);
 	_addvalue(buf);
 
 	_addvalue(colorname(buf, tile.color));
@@ -773,7 +773,7 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 		_addlabel("Under Type");
 		_addlabel("Under Color");
 
-		sprintf(buf, "%d, %X: %s", under.type, under.type, zztTileGetName(under));
+		sprintf(buf, "%d, %02X: %s", under.type, under.type, zztTileGetName(under));
 		_addvalue(buf);
 		_addvalue(colorname(buf, under.color));
 

@@ -1,4 +1,4 @@
-# Makefile for libzzt2
+# Makefile for libzzt2 in Linux
 
 # Choose your compiler & archiver
 CC = gcc
@@ -6,17 +6,12 @@ AR = ar cqs
 
 RM = rm -f
 
-# First line for optimization
-# Second line for debug
-OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-#OPTIMIZE = -g -Wall
-
 # Uncomment when compiling from DOS
 #DOS = -DDOS
 
-CFLAGS = $(OPTIMIZE) $(DOS)
+# Compile and link flags
+CFLAGS =
+LDFLAGS =
 
-# No more modifications below this line
-# -------------------------------------
-
-include KevEdit.make
+# Makefile rules
+include libzzt2.make

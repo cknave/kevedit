@@ -1,0 +1,5 @@
+# Full optimization
+OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
+
+# No optimization and debug info
+OPTIMIZE = -g -Wall

@@ -1,4 +1,8 @@
-# Actual Makefile rules
+# Makefile rules for building KevEdit in any environment
+
+# Version & optimization information
+include kevedit.version
+include kevedit.optimize
 
 # Set up display settings
 ifeq ($(SDL),ON)
@@ -17,6 +21,10 @@ ifeq ($(DOS),ON)
 	DOSOBJ = display_dos.o
 endif
 
+PATHS = -DDATAPATH=\"$(datadir)\"
+
+CFLAGS += $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(VERSIONFLAG) $(PATHS)
+
 # Objects
 
 CENTRALOBJS = misc.o menu.o editbox.o screen.o
@@ -27,24 +35,44 @@ DISPLAYOBJS = display.o $(SDLOBJ) $(VCSAOBJ) $(DOSOBJ)
 
 OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS)
 
+# Documents
+
+DOCS = README AUTHORS TODO COPYING ChangeLog
+
 .SUFFIXES: .o .c .h
-
-# Targets
-all: kevedit
-
-kevedit: $(OBJECTS) main.o
-	make -C libzzt2 -f $(MAKEFILE_NAME)
-	$(CC) -o $@ $(OBJECTS) main.o $(CFLAGS) $(LDFLAGS)
 
 .cpp.o:
 	$(CC) -o $@ $< $(CFLAGS) -c
 
+# Targets
+all: kevedit kevedit.zml
+
+kevedit: $(OBJECTS) main.o
+	$(CC) -o $@ $(OBJECTS) main.o $(CFLAGS) $(LDFLAGS)
+
+kevedit.zml: docs/*.hlp
+	cd docs; ./makehelp.sh; cd ..
+
+install: all
+	mkdir -p $(bindir)
+	mkdir -p $(datadir)
+	mkdir -p $(docdir)
+	$(INSTALL) $(BINARY) $(bindir)
+	$(INSTALL) kevedit.zml $(datadir)
+	$(INSTALL) $(DOCS) $(docdir)
+
+uninstall:
+	rm -f $(bindir)/$(BINARY)
+	rm -f -R $(datadir)
+	rm -f -R $(docdir)
+
 clean:
-	rm -f *.o kevedit libzzt2/*.o libzzt2/libzzt2.a
+	rm -f *.o kevedit kevedit.exe kevedit.zln
+	make -C libzzt2 clean
 
 # Libraries
-libzzt2/libzzt2.a: 
-	make -C libzzt2 -f $(MAKEFILE_NAME)
+libzzt2/libzzt2.a: libzzt2/*.c libzzt2/*.h
+	make -C libzzt2 -f $(MAKEFILE_NAME) DOS=$(DOS)
 
 # Dependancies
 

@@ -7,17 +7,9 @@ With many contributions by bitman  <bitman@users.sf.net>
 
 Getting Started With KevEdit
 ----------------------------
-Copy the binary KEVEDIT.EXE and the help file KEVEDIT.ZML to your ZZT
-directory.  You can run it with no arguments to get a blank new world, or give
-it a world on the command line to load it.
+Follow the instructions in the Windows installer to install KevEdit.
 
-Example:
-C> kevedit town.zzt
-
-This will load town.zzt into the editor if it exists.  Otherwise, a new world
-will be created.
-
-To learn more about using KevEdit, activate its on-line help by pressing 'H'.
+To learn more about using KevEdit, activate its on-line help by pressing 'H' in the editor.
 
 New Features / Bug Fixes
 ------------------------

@@ -1,8 +1,12 @@
 #!/bin/sh
 
-rm -f ../kevedit.zml
+HELPFILE=../kevedit.zml
+
+rm -f $HELPFILE
 
 for i in *.hlp; do
-	echo @@$i >> ../kevedit.zml
-	cat $i >> ../kevedit.zml
+	echo @@$i >> $HELPFILE
+	cat $i >> $HELPFILE
 done
+
+echo "Help metafile generated"

@@ -1,0 +1,38 @@
+Name: kevedit
+Summary: Powerful ZZT Editing
+URL: http://kevedit.sourceforge.net/
+License: GPL
+Packager: Ryan Phillips <bitman@users.sourceforge.net>
+# TODO: Is there a better group?
+Group: Games
+
+Buildroot: /tmp/%{name}-%{version}
+Source: %{name}-%{version}.src.tgz
+# TODO: Anything else?
+Requires: SDL
+BuildRequires: SDL-devel
+
+%Description
+KevEdit is a powerful editor for the ZZT game creation system.
+
+%Prep
+%setup -q -n %{name}-%{version}
+
+%Build
+make keveditVERSION=%{version}
+
+%Install
+mkdir -p $RPM_BUILD_ROOT
+make prefix=$RPM_BUILD_ROOT/usr install
+
+%Files
+%doc README AUTHORS TODO COPYING ChangeLog
+/usr/bin/kevedit
+/usr/share/kevedit/*
+
+%Clean
+rm -rf $RPM_BUILD_ROOT
+
+%ChangeLog
+* Wed Mar 27 2002 bitman <bitman@users.sourceforge.net>
+- version 0.5.0: Created RPM spec file

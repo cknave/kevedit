@@ -1,6 +1,7 @@
 0.5.0
 -----
 Native Linux and Windows via SDL display
+Linux and Windows automatic installer generation
 Param Editor interface improvements
 Tile Info with ability to add/remove stats (params) for any type
 Monitor type recognized

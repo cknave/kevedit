@@ -1,5 +1,5 @@
 /* help.c  -- hypertext help system
- * $Id: help.c,v 1.5 2002/03/20 04:52:25 bitman Exp $
+ * $Id: help.c,v 1.6 2002/03/29 23:16:43 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,9 +63,17 @@ void helploadmetafile(void)
 {
 	static int loaded = 0;
 	if (!loaded) {
-		char* buffer = str_duplen(helpdatapath, strlen(helpdatapath) + 14);
+		char* buffer = str_dupadd(helpdatapath, 14);
 		strcat(buffer, "/kevedit.zml");
-		loadmetafile(buffer);
+		if (fileexists(buffer))
+			loadmetafile(buffer);
+		else {
+			free(buffer);
+			buffer = str_dupadd(DATAPATH, 14);
+			strcat(buffer, "/kevedit.zml");
+			if (fileexists(buffer))
+				loadmetafile(buffer);
+		}
 		free(buffer);
 		loaded = 1;
 	}
@@ -133,7 +141,7 @@ void help(displaymethod* d)
 		initstringvector(&aboutdialog);
 
 		pushstring(&aboutdialog, str_dup("@About KevEdit"));
-		pushstring(&aboutdialog, str_dup("$KevEdit Version " VERSION));
+		pushstring(&aboutdialog, str_dup("$KevEdit Version " keveditVERSION));
 		pushstring(&aboutdialog, str_dup("Copyright (C) 2000-2001 Kev Vance, et al."));
 		pushstring(&aboutdialog, str_dup("Distribute under the terms of the GNU GPL"));
 		editbox("", &aboutdialog, 0, EDITBOX_ZOCMODE | EDITBOX_MOVEMENT, d);

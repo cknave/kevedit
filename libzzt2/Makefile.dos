@@ -6,17 +6,14 @@ AR = i586-pc-msdosdjgpp-ar cqs
 
 RM = rm -f
 
-# First line for optimization
-# Second line for debug
-OPTIMIZE = -s -O3 -fexpensive-optimizations -fomit-frame-pointer -finline-functions -funroll-loops -march=pentium
-#OPTIMIZE = -g -Wall
-
 # Uncomment when compiling from DOS
-DOS = -DDOS
+#DOS = -DDOS
 
 CFLAGS = $(OPTIMIZE) $(DOS)
 
-# No more modifications below this line
-# -------------------------------------
+# Compile and link flags
+CFLAGS =
+LDFLAGS =
 
-include KevEdit.make
+# Makefile rules
+include libzzt2.make

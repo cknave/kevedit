@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.8 2002/03/24 08:39:54 bitman Exp $
+ * $Id: files.c,v 1.9 2002/03/29 23:16:43 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,9 +27,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <glob.h>
 #include <unistd.h>   /* For getcwd() */
 #include <sys/stat.h>
+
+#ifdef CANGLOB
+#include <glob.h>
+#endif
 
 #define BUFFERSIZE 42     /* Expanding buffer for text files */
 #define CWDMAXLEN 4096    /* Max to allow getcwd() to reserve */
@@ -187,7 +190,6 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 	while (1) {
 		char * fulld_name;
 		struct dirent *dirent;
-		struct stat statent;
 
 		dirent = readdir(dp);
 
@@ -195,9 +197,8 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 			break;
 
 		fulld_name = fullpath(dir, dirent->d_name, SLASH_DEFAULT);
-		stat(fulld_name, &statent);
 
-		if (!S_ISDIR(statent.st_mode)) {
+		if (!fileisdir(fulld_name)) {
 			if (filetypes & FTYPE_FILE) {
 				/* The current file is not a directory, check the extension */
 				if (extension[0] == '*' ||
@@ -215,7 +216,7 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 						pushstring(&files, str_dup(dirent->d_name));
 				}
 			}
-		} else if (!str_equ(dirent->d_name, ".", 0) && S_ISDIR(statent.st_mode)) {
+		} else if (!str_equ(dirent->d_name, ".", 0) && fileisdir(fulld_name)) {
 			if (filetypes & FTYPE_DIR) {
 				/* Current file is a directory */
 				char* dirline = (char*) malloc(sizeof(char) *
@@ -244,10 +245,13 @@ stringvector globtosvector(char * pattern, int filetypes)
 	int i;
 
 	stringvector files;
+#ifdef CANGLOB
 	glob_t listing;
+#endif
 
 	initstringvector(&files);
 
+#ifdef CANGLOB
 	/* Get the listing */
 	glob(pattern, GLOB_MARK, NULL, &listing);
 
@@ -264,6 +268,7 @@ stringvector globtosvector(char * pattern, int filetypes)
 	}
 
 	globfree(&listing);
+#endif
 	return files;
 }
 
@@ -305,6 +310,18 @@ stringvector globdirectorytosvector(char * dir, char * pattern, int filetypes)
 	deletestringvector(&fullfiles);
 
 	return files;
+}
+
+int fileexists(char* filename)
+{
+	return !access(filename, F_OK);
+}
+
+int fileisdir(char* filename)
+{
+	struct stat statent;
+	stat(filename, &statent);
+	return S_ISDIR(statent.st_mode);
 }
 
 int
