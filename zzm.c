@@ -1,5 +1,5 @@
 /* zzm.c  -- zzm file routines
- * $Id: zzm.c,v 1.10 2002/08/23 22:34:49 bitman Exp $
+ * $Id: zzm.c,v 1.11 2002/08/24 23:00:57 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -52,7 +52,6 @@ stringvector zzmpullsong(stringvector * zzmv, int songnum)
 	
 	return songlines;
 }
-
 
 int zzmpicksong(stringvector * zzmv, displaymethod * d)
 {
@@ -158,3 +157,28 @@ int zzmpicksong(stringvector * zzmv, displaymethod * d)
 	return i;
 }
 
+stringvector zzmripsong(stringvector * zoc, int maxseparation)
+{
+	stringvector songlines;
+	stringnode * curline = zoc->cur;
+	int separation = 0;
+
+	initstringvector(&songlines);
+
+	while (curline != NULL && separation <= maxseparation) {
+		char* tune = strstr(curline->s, "#");
+		if (tune != NULL && str_equ(tune, "#play ", STREQU_UNCASE | STREQU_RFRONT)) {
+			separation = 0;  /* Reset separation counter */
+			tune += 6;       /* Advance to notes! */
+
+			/* Push the remainder of the line into songlines */
+			pushstring(&songlines, str_dup(tune));
+		} else {
+			separation++;
+		}
+
+		curline = curline->next;
+	}
+
+	return songlines;
+}

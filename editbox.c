@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.45 2002/08/23 22:41:23 bitman Exp $
+ * $Id: editbox.c,v 1.46 2002/08/24 23:00:55 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -804,6 +804,18 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						free(filename);
 					}
 					updateflags = U_EDITAREA | U_TITLE | U_PANEL;
+					break;
+
+				case DKEY_CTRL_R: /* ctrl-r: rip music */
+					{
+						/* This is mostly worthless just now */
+						stringvector ripped;
+						sv->cur = centerstr;
+						ripped = zzmripsong(sv, 4);
+						scrolldialog("Ripped Music", &ripped, d);
+						deletestringvector(&ripped);
+						updateflags = U_ALL;
+					}
 					break;
 
 				/******** Cut operation *********/
