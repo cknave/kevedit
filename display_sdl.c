@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.2 2002/03/19 19:46:19 kvance Exp $
+ * $Id: display_sdl.c,v 1.3 2002/03/19 21:23:00 kvance Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -22,6 +22,7 @@
 #include "SDL.h"
 
 #include "display.h"
+#include "kevedit.h"
 #include "display_sdl.h"
 
 int xstart, ystart;	/* Where the viewport begins */
