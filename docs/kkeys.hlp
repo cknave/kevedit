@@ -28,6 +28,8 @@ INSERT
  ! - Loads text editor
 CTRL-O
   Reveal hidden objects
+ALT-ENTER
+  Toggle fullscreen
 
 :move;Movement
 

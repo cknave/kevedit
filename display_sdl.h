@@ -15,6 +15,9 @@ typedef struct
   Uint32 *palette;               /* Pointer to palette                  */
   Uint32 write_x;                /* Current x write position in VRAM    */
   Uint32 write_y;                /* Current y write position in VRAM    */
+
+	/* Info for reinitializing the screen  */
+	Uint32 width, height, depth, vflags;
 } video_info;
 
 /* Prototypes */
@@ -22,6 +25,7 @@ void display_load_charset(Uint8 *dest, Uint8 *name);
 void display_load_palette(Uint32 *dest, Uint8 *name);
 void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32
  depth, Uint32 full_screen, Uint32 hw_surface);
+void display_restart(video_info *vdest);
 void display_end(video_info *vdest);
 void display_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co);
 void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y);

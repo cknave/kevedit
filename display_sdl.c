@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.12 2002/09/17 17:42:18 bitman Exp $
+ * $Id: display_sdl.c,v 1.13 2002/09/18 03:14:59 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -564,6 +564,17 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32
 	vdest->palette = (Uint32 *)malloc(4 * 16);
 	vdest->write_x = 0;
 	vdest->write_y = 0;
+
+	vdest->width  = width;
+	vdest->height = height;
+	vdest->depth  = depth;
+	vdest->vflags = vflags;
+}
+
+void display_restart(video_info *vdest)
+{
+	vdest->video = SDL_SetVideoMode(vdest->width, vdest->height, vdest->depth, vdest->vflags);
+	display_redraw(vdest);
 }
 
 void display_end(video_info *vdest)
@@ -764,6 +775,8 @@ static int shift;	/* Shift state */
 static int timer, csoc;	/* Timer for cursor, current state of cursor */
 static SDL_TimerID timerId;	/* Timer ID */
 
+static int fullscreen = 0; /* Fullscreen flag: off by default */
+
 #define CURSOR_RATE 400
 
 /* Nice timer update callback thing */
@@ -868,7 +881,7 @@ int display_sdl_init()
 			SDL_DEFAULT_REPEAT_INTERVAL);
 
 	/* Fire up the textmode emulator */
-	display_init(&info, 640, 350, 32, 0, 1);
+	display_init(&info, 640, 350, 32, fullscreen, 1);
 	display_load_default_charset(info.char_set);
 	display_load_default_palette(info.palette);
 
@@ -899,13 +912,20 @@ void display_sdl_putch(int x, int y, int ch, int co)
 
 void display_fullscreen()
 {
-	static int mouse = 0;
 	/* Toggle fullscreen */
+
+#ifdef WIN32
+	/* Toggle fullscreen flag and restart the display */
+	fullscreen ^= 1;
+	info.vflags ^= SDL_FULLSCREEN;
+	display_restart(&info);
+#else
+	/* This doesn't work in Windows */
 	SDL_WM_ToggleFullScreen(info.video);
+#endif
 
 	/* If in fullscreen mode, don't show the mouse */
-	mouse ^= 1;
-	if(mouse)
+	if(info.vflags & SDL_FULLSCREEN)
 		SDL_ShowCursor(SDL_DISABLE);
 	else
 		SDL_ShowCursor(SDL_ENABLE);
