@@ -1,0 +1,13 @@
+How to make a DEXE
+------------------
+
+1) Make a regular hdimage: mkfatimage16 -k (size in kb) >hdimage
+2) Use DOSEMU and the FreeDOS install disk to format hdimage and make it
+   bootable
+3) Copy the desired files onto the hdimage
+4) MAKE A BACKUP OF HDIMAGE!!!
+5) Turn the hdimage into a dexe by applying the config file:
+   dexeconfig -M -i dconfig hdimage
+6) Rename hdimage to file.dexe
+
+And that's how to make a DEXE.
