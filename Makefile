@@ -62,7 +62,7 @@ clean:
 	rm -f *.o kevedit
 
 # Libraries
-libzzt2/libzzt2.a:
+libzzt2/libzzt2.a: libzzt2/zzt.h
 	cd libzzt2
 	make libzzt2.a
 	cd ..

@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.23 2002/02/16 19:44:31 bitman Exp $
+ * $Id: misc.c,v 1.24 2002/02/16 21:12:12 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -246,17 +246,10 @@ void initeditorinfo(editorinfo * myinfo)
 	myinfo->defc = 1;
 	myinfo->forec = 0x0f;
 	myinfo->backc = 0x00;
-	myinfo->standard_patterns = patbuffer_create(6);
+	myinfo->standard_patterns = createstandardpatterns();
 	myinfo->backbuffer = patbuffer_create(10);
 	myinfo->pbuf = myinfo->standard_patterns;
 
-	/* Initialize pattern definitions */
-	myinfo->standard_patterns->patterns[0].type = ZZT_SOLID;
-	myinfo->standard_patterns->patterns[1].type = ZZT_NORMAL;
-	myinfo->standard_patterns->patterns[2].type = ZZT_BREAKABLE;
-	myinfo->standard_patterns->patterns[3].type = ZZT_WATER;
-	myinfo->standard_patterns->patterns[4].type = ZZT_EMPTY;
-	myinfo->standard_patterns->patterns[5].type = ZZT_LINE;
 	pat_applycolordata(myinfo->standard_patterns, myinfo);
 }
 
@@ -300,11 +293,66 @@ ZZTworld * clearworld(ZZTworld * myworld)
 	return newworld;
 }
 
+void entergradientmode(editorinfo * myinfo)
+{
+	if (myinfo->gradmode != 0)
+		return;  /* Don't enter grad mode if we're already there */
+
+	if (myinfo->pbuf == myinfo->standard_patterns) {
+		int oldpos = myinfo->standard_patterns->pos;
+
+		/* Substitute fill patterns for standard patterns */
+		deletepatternbuffer(myinfo->standard_patterns);
+		free(myinfo->standard_patterns);
+		myinfo->standard_patterns = createfillpatterns(myinfo);
+		myinfo->pbuf = myinfo->standard_patterns; /* Very important */
+
+		/* Use the previous position if not too big */
+		if (oldpos >= myinfo->standard_patterns->size)
+			oldpos = myinfo->standard_patterns->size - 1;
+		myinfo->standard_patterns->pos = oldpos;
+
+		/* Turn gradmode on going forward for standard patterns */
+		myinfo->gradmode = 1;
+	} else {
+		/* Turn gradmode on going backward for backbuffer */
+		myinfo->gradmode = -1;
+	}
+	/* Drawmode goes on no matter what */
+	myinfo->drawmode = 1;
+}
+
+void exitgradientmode(editorinfo * myinfo)
+{
+	if (myinfo->gradmode == 0)
+		return;  /* Can't leave a state we're not in */
+
+	if (myinfo->pbuf == myinfo->standard_patterns) {
+		int oldpos = myinfo->standard_patterns->pos;
+
+		/* Restore the regular standard patterns */
+		deletepatternbuffer(myinfo->standard_patterns);
+		free(myinfo->standard_patterns);
+		myinfo->standard_patterns = createstandardpatterns();
+		myinfo->pbuf = myinfo->standard_patterns; /* Very important */
+
+		/* Apply the current colors */
+		pat_applycolordata(myinfo->standard_patterns, myinfo);
+
+		/* Use the previous position if not too big */
+		if (oldpos >= myinfo->standard_patterns->size)
+			oldpos = myinfo->standard_patterns->size - 1;
+		myinfo->standard_patterns->pos = oldpos;
+	}
+
+	/* Turn gradmode and drawmode off */
+	myinfo->gradmode = myinfo->drawmode = 0;
+}
+
 int toggledrawmode(editorinfo * myinfo)
 {
 	if (myinfo->gradmode != 0) {
-		/* If grad mode is on, turn it and drawmode off */
-		myinfo->gradmode = myinfo->drawmode = 0;
+		exitgradientmode(myinfo);
 	} else {
 		/* Otherwise toggle draw mode */
 		myinfo->drawmode ^= 1;
@@ -319,30 +367,15 @@ int togglegradientmode(editorinfo * myinfo)
 {
 	/* Toggle gradient mode - pattern changes with each cursor
 	 * movement & drawmode is turned on. */
-	if (myinfo->pbuf == myinfo->standard_patterns) {
-		/* TODO: use drawing patterns (later) */
-		myinfo->pbuf = myinfo->backbuffer;
-		myinfo->pbuf->pos = myinfo->pbuf->size - 1;
-	}
 
 	myinfo->aqumode = 0;
 	if (myinfo->gradmode != 0) {
-		/* Gradmode is already on, advance once and reverse it */
-		if (myinfo->gradmode < 0) {
-			if (--myinfo->pbuf->pos < 0)
-				myinfo->pbuf->pos = myinfo->pbuf->size - 1;
-		} else {
-			if (++myinfo->pbuf->pos >= myinfo->pbuf->size)
-				myinfo->pbuf->pos = 0;
-		}
+		/* Gradmode is already on -- reverse direction */
 		myinfo->gradmode = -(myinfo->gradmode);
 
 		return 0;    /* No reason to start plotting yet */
 	} else {
-		/* Turn gradmode & drawmode on */
-		myinfo->drawmode = 1;
-		/* Gradmode cycles backward by default */
-		myinfo->gradmode = -1;
+		entergradientmode(myinfo);
 		return 1;    /* Gradmode went on -- let the plotting begin! */
 	}
 }
@@ -452,6 +485,24 @@ patbuffer* createfillpatterns(editorinfo* myinfo)
 	                                  ((myinfo->forec & 0x07) << 4);
 
 	return fillpatterns;
+}
+
+patbuffer* createstandardpatterns(void)
+{
+	patbuffer* standard_patterns;
+
+	standard_patterns = patbuffer_create(6);
+
+	/* Initialize pattern definitions */
+	standard_patterns = patbuffer_create(6);
+	standard_patterns->patterns[0].type = ZZT_SOLID;
+	standard_patterns->patterns[1].type = ZZT_NORMAL;
+	standard_patterns->patterns[2].type = ZZT_BREAKABLE;
+	standard_patterns->patterns[3].type = ZZT_WATER;
+	standard_patterns->patterns[4].type = ZZT_EMPTY;
+	standard_patterns->patterns[5].type = ZZT_LINE;
+
+	return standard_patterns;
 }
 
 void floodselect(ZZTblock* block, selection fillsel, int x, int y)

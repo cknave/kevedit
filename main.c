@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.52 2002/02/16 10:25:22 bitman Exp $
+ * $Id: main.c,v 1.53 2002/02/16 21:12:12 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -487,8 +487,7 @@ int main(int argc, char **argv)
 			myinfo->aqumode ^= 1;
 
 			/* drawmode & gradmode can't be on while in aqumode */
-			myinfo->drawmode = 0;
-			myinfo->gradmode = 0;
+			exitgradientmode(myinfo);
 
 			if (myinfo->aqumode != 0) {
 				/* Grab if aqumode is on */

@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.10 2002/02/16 10:25:22 bitman Exp $
+ * $Id: kevedit.h,v 1.11 2002/02/16 21:12:12 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,15 +22,7 @@
 
 #include "libzzt2/zzt.h"
 
-#define MAX_BACKBUF 128
-
-#if 0
-typedef struct patdef {
-	int type;
-	int color;
-	ZZTparam* patparam;
-} patdef;
-#endif
+#define MAX_BACKBUF 1024
 
 typedef struct patbuffer {
 	ZZTtile* patterns;
@@ -52,23 +44,10 @@ typedef struct editorinfo {
 	patbuffer* standard_patterns;
 	patbuffer* backbuffer;
 
-	/* Now taken care of by libzzt2 */
-#if 0
-	int playerx, playery;
-
-	char *currentfile;
-	char *currenttitle;
-
-	int curboard;
-#endif
 } editorinfo;
 
 /* The all-powerful min/max macros */
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
-
-/* Very useful macros for looking at bigboards */
-#define tiletype(bigboard, x, y)  ((bigboard)[((x) + (y) * 60) * 2])
-#define tilecolor(bigboard, x, y) ((bigboard)[((x) + (y) * 60) * 2 + 1])
 
 #endif				/* _KEVEDIT_H */

@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.12 2002/02/16 10:25:22 bitman Exp $
+ * $Id: misc.h,v 1.13 2002/02/16 21:12:12 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@ void editprogram(displaymethod * d, ZZTparam * p);
 stringvector programtosvector(ZZTparam * p, int editwidth);
 
 /* svectortoprogram() - copies the contents of the given svector into a new
- *              parameter. Only the moredata and length variables are used! */
+ *              param. Only the program and length variables are used! */
 ZZTparam svectortoprogram(stringvector sv);
 
 /* Running zzt */
@@ -53,6 +53,8 @@ void texteditor(displaymethod * mydisplay);
 void clearboard(ZZTworld * myworld);
 ZZTworld * clearworld(ZZTworld * myworld);
 
+void entergradientmode(editorinfo * myinfo);
+void exitgradientmode(editorinfo * myinfo);
 int toggledrawmode(editorinfo * myinfo);
 int togglegradientmode(editorinfo * myinfo);
 
@@ -60,6 +62,9 @@ void saveworldprompt(displaymethod * mydisplay, ZZTworld * myworld, editorinfo *
 
 void previouspattern(editorinfo * myinfo);
 void nextpattern(editorinfo * myinfo);
+
+patbuffer* createfillpatterns(editorinfo* myinfo);
+patbuffer* createstandardpatterns(void);
 
 void floodselect(ZZTblock* block, selection fillsel, int x, int y);
 void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag);
