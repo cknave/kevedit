@@ -1,5 +1,5 @@
 /* help.c  -- hypertext help system
- * $Id: help.c,v 1.2 2001/11/10 07:42:39 bitman Exp $
+ * $Id: help.c,v 1.3 2001/11/10 22:06:07 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -50,7 +50,7 @@ int loadmetafile(char* metafilename)
 {
 	stringvector meta;
 
-	meta = filetosvector(metafilename, EDITBOX_ZZTWIDTH, EDITBOX_ZZTWIDTH);
+	meta = filetosvector(metafilename, EDITBOX_NOEDIT, EDITBOX_NOEDIT);
 	if (meta.first == NULL)  /* could not load metafile */
 		return 1;
 
@@ -62,8 +62,7 @@ void helploadmetafile(void)
 {
 	static int loaded = 0;
 	if (!loaded) {
-		char* buffer = (char*) malloc(sizeof(char) * (strlen(helpdatapath) + 14));
-		strcpy(buffer, helpdatapath);
+		char* buffer = str_duplen(helpdatapath, strlen(helpdatapath) + 14);
 		strcat(buffer, "/kevedit.zml");
 		loadmetafile(buffer);
 		free(buffer);
@@ -79,14 +78,13 @@ void helploadfile(char* filename)
 	/* Make sure the file isn't already available */
 	if (findsection(&helplist, filename) == NULL) {
 		stringvector
-			file = filetosvector(filename, EDITBOX_ZZTWIDTH, EDITBOX_ZZTWIDTH);
+			file = filetosvector(filename, EDITBOX_NOEDIT, EDITBOX_NOEDIT);
 
 		if (file.first == NULL) {
 			/* Try adding a .hlp extension */
-			char* fullname = (char*) malloc(sizeof(char) * (strlen(filename)) + 5);
-			strcpy(fullname, filename);
+			char* fullname = str_duplen(filename, strlen(filename) + 5);
 			strcat(fullname, ".hlp");
-			file = filetosvector(fullname, EDITBOX_ZZTWIDTH, EDITBOX_ZZTWIDTH);
+			file = filetosvector(fullname, EDITBOX_NOEDIT, EDITBOX_NOEDIT);
 			free(fullname);
 		}
 
@@ -127,11 +125,11 @@ helptopic(stringvector section, char* topic, displaymethod* d)
 {
 	int retcode;
 
+	/* Try searching for the topic if one is provided, otherwise look for "top" */
 	if (topic != NULL && topic[0] != '\0')
-		if (!findhypermessage(topic, &section)) {
-			/* Can't find the message, so go back but keep browsing */
-			return 1;
-		}
+		findhypermessage(topic, &section);
+	else
+		findhypermessage("top", &section);
 
 	/* draw the help panel for all the world to see */
 	drawpanelhelp(d);
