@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.3 2002/02/19 09:41:36 bitman Exp $
+ * $Id: paramed.c,v 1.4 2002/02/19 22:38:02 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -71,6 +71,9 @@ void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 	dialog dia;
 	int key;
 	int curoption;
+
+	if (zztTileGet(w, x, y).param == NULL)
+		return;
 
 	/* Build the dialog */
 	dia = buildparamdialog(w, x, y);
