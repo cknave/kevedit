@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.7 2000/08/14 19:57:07 kvance Exp $
+ * $Id: main.c,v 1.8 2000/08/14 22:00:35 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -794,6 +794,23 @@ int main(int argc, char **argv)
 					/* The player is a special case */
 					bigboard[(myinfo->playerx + myinfo->playery * 60) * 2] = Z_EMPTY;
 					bigboard[(myinfo->playerx + myinfo->playery * 60) * 2 + 1] = 0x07;
+					if(paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
+						/* We're overwriting a parameter */
+						if (CURRENTPARAM->moredata != NULL)
+							free(CURRENTPARAM->moredata);
+						free(CURRENTPARAM);
+						for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
+							myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
+						}
+						for (x = 0; x < 25; x++) {
+							for (i = 0; i < 60; i++) {
+								if (paramlist[i][x] > t)
+									paramlist[i][x]--;
+							}
+						}
+						myworld->board[myinfo->curboard]->info->objectcount--;
+						paramlist[myinfo->cursorx][myinfo->cursory] = 0;
+					}
 					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = Z_PLAYER;
 					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x1f;
 					paramlist[myinfo->cursorx][myinfo->cursory] = 0;
@@ -807,8 +824,6 @@ int main(int argc, char **argv)
 					break;
 				case Z_GEM:
 				case Z_KEY:
-				case Z_CWCONV:
-				case Z_CCWCONV:
 					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
 					break;
 				case Z_AMMO:
@@ -835,7 +850,22 @@ int main(int argc, char **argv)
 						x = (myinfo->backc << 4) + (myinfo->forec) + (myinfo->blinkmode * 0x80);
 					push(i, x, NULL);
 					break;
-				default:
+				case Z_PASSAGE:
+					pm = z_newparam_passage(myinfo->cursorx + 1, myinfo->cursory + 1, boarddialog(myworld, myinfo, mydisplay));
+					if(myinfo->defc == 1)
+						x = myinfo->forec > 7 ? ((myinfo->forec - 8) << 4) + 0x0f : (myinfo->forec << 4) + 0x0f;
+					else
+						x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+					push(i, x, pm);
+					break;
+				case Z_CWCONV:
+				case Z_CCWCONV:
+					pm = z_newparam_conveyer(myinfo->cursorx + 1, myinfo->cursory + 1);
+					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
+					break;
+				case Z_BOMB:
+					pm = z_newparam_bomb(myinfo->cursorx + 1, myinfo->cursory + 1);
+					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), pm);
 					break;
 				}
 				if (i != -1 && i != Z_PLAYER) {
@@ -911,6 +941,24 @@ int main(int argc, char **argv)
 				case Z_EWSLIDER:
 				case Z_INVISIBLE:
 					push(i, (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80), NULL);
+					break;
+				case Z_WATER:
+				case Z_FOREST:
+				case Z_RICOCHET:
+					if(myinfo->defc == 0)
+						x = (myinfo->backc << 4) + myinfo->forec + (myinfo->blinkmode * 0x80);
+					else {
+						if(i == Z_WATER)
+							x = 0x9f;
+						if(i == Z_FOREST)
+							x = 0x20;
+						if(i == Z_RICOCHET)
+							x = 0x0a;
+					}
+					push(i, x, NULL);
+					break;
+				case Z_EDGE:
+					push(i, 0x07, NULL);
 					break;
 				}
 				if(i != -1) {

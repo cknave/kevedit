@@ -1,5 +1,5 @@
 /* zzt.h        -- ZZT library definitions
- * $Id: zzt.h,v 1.3 2000/08/12 18:13:22 kvance Exp $
+ * $Id: zzt.h,v 1.4 2000/08/14 22:00:35 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -191,9 +191,19 @@ extern board *z_newboard(char *);
 /* z_newparam_object(x, y, char, undertype, undercolor)
  * Creates a new object paramater record with the given information and a NULL program */
 extern param *z_newparam_object(int x, int y, int ch, int undert, int underc);
+/* z_newparam_conveyer(x, y)
+ * Creates a new conveyer parameter at cycle 3 */
+extern param *z_newparam_conveyer(int x, int y);
+/* z_newparam_conveyer(x, y)
+ * Creates a new passage to the given board */
+extern param *z_newparam_passage(int x, int y, int b);
+/* z_newparam_bomb(x, y)
+ * Create a new unlit bomb at x, y */
+extern param *z_newparam_bomb(int x, int y);
 
 /* Definitions of codes: */
 #define Z_EMPTY		0x00
+#define Z_EDGE		0x01
 #define Z_PLAYER	0x04
 #define Z_AMMO		0x05
 #define Z_TORCH		0x06

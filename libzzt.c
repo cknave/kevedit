@@ -1,5 +1,5 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.2 2000/08/09 18:21:38 kvance Exp $
+ * $Id: libzzt.c,v 1.3 2000/08/14 22:00:35 kvance Exp $
  * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -104,6 +104,76 @@ board *
 	return b;
 }
 
+param *z_newparam_bomb(int x, int y)
+{
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = 0;
+	p->ystep = 0;
+	p->cycle = 6;
+	p->data1 = 0;
+	p->data2 = 0;
+	p->data3 = 0;
+	p->magic = 0xFFFFFFFF;
+	p->undert = Z_EMPTY;
+	p->underc = 0x07;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
+
+param *z_newparam_passage(int x, int y, int b)
+{
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = 0;
+	p->ystep = 0;
+	p->cycle = 0;
+	p->data1 = 0;
+	p->data2 = 0;
+	p->data3 = b;
+	p->magic = 0xFFFFFFFF;
+	p->undert = Z_EMPTY;
+	p->underc = 0x07;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
+
+param *z_newparam_conveyer(int x, int y)
+{
+	/* All that's important here is cycle 3 */
+	param *p = (param *) malloc(sizeof(param));
+	p->x = x;
+	p->y = y;
+	p->xstep = 0;
+	p->ystep = 0;
+	p->cycle = 3;
+	p->data1 = 0;
+	p->data2 = 0;
+	p->data3 = 0;
+	p->magic = 0xFFFFFFFF;
+	p->undert = Z_EMPTY;
+	p->underc = 0x07;
+	p->unused = 0;
+	p->instruction = 0;
+	p->length = 0;
+	memset(p->pad, 0, sizeof(p->pad));
+	p->moredata = NULL;
+
+	return p;
+}
+
 param *z_newparam_object(int x, int y, int ch, int undert, int underc)
 {
 	param *p = (param *) malloc(sizeof(param));
@@ -206,6 +276,8 @@ z_getchar(u_int8_t type, u_int8_t colour, param * p, u_int8_t * boardata, u_int8
 	switch (type) {
 	case Z_EMPTY:
 		return ' ';
+	case Z_EDGE:
+		return 'E';
 	case Z_PLAYER:
 		return 2;
 	case Z_AMMO:
@@ -399,6 +471,8 @@ z_getcolour(u_int8_t type, u_int8_t colour, param * p)
 	switch (type) {
 	case Z_EMPTY:
 		return 0x07;
+	case Z_EDGE:
+		return 0x4C;
 	case Z_PLAYER:
 		return 0x1f;
 	case Z_AMMO:
