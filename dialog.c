@@ -1,5 +1,5 @@
 /* dialog.c - general dialog tools
- * $Id: dialog.c,v 1.5 2002/05/04 04:17:43 bitman Exp $
+ * $Id: dialog.c,v 1.6 2002/09/23 21:22:43 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -60,6 +60,7 @@ dialogComponent * dialogCompListGrow(dialogComponent * complist, int size)
 	newlist = (dialogComponent *) malloc(sizeof(dialogComponent) * (size + 1));
 	if (complist != NULL && newlist != NULL) {
 		memcpy(newlist, complist, sizeof(dialogComponent) * size);
+		free(complist);
 	}
 
 	return newlist;
