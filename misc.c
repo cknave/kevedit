@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.38 2002/09/22 00:11:47 bitman Exp $
+ * $Id: misc.c,v 1.39 2002/09/22 02:17:38 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -760,7 +760,7 @@ void tileselect(ZZTblock* block, selection fillsel, ZZTtile tile)
 	int x, y;
 
 	for (x = 0; x < block->width; x++)
-		for (y = 0; y < block->width; y++)
+		for (y = 0; y < block->height; y++)
 			if ( zztTileAt(block, x, y).type  == tile.type &&
 			    (zztTileAt(block, x, y).color == tile.color ||
 			     tile.type == ZZT_EMPTY))
