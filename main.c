@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.43 2001/11/06 07:33:05 bitman Exp $
+ * $Id: main.c,v 1.44 2001/11/09 01:15:09 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -359,6 +359,7 @@ int main(int argc, char **argv)
 				saveworldprompt(mydisplay, myworld, myinfo, bigboard);
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
+				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			} else {
 				/* Plot an empty */
@@ -383,7 +384,7 @@ int main(int argc, char **argv)
 			/* Load world */
 			{
 				char* filename =
-					betterfiledialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
+					filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
 				if (filename) {
 					world* newworld = loadworld(filename);
 					if (newworld != NULL) {

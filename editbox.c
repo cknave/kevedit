@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.26 2001/11/06 09:19:18 bitman Exp $
+ * $Id: editbox.c,v 1.27 2001/11/09 01:15:09 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -324,6 +324,8 @@ void editmoredata(param * p, displaymethod * d)
 /* how to display a line of text in editbox */
 #define displayline(x, y, s, edit, flags, firstline, d) ((flags & EDITBOX_ZOCMODE) ? displayzoc((x), (y), (s), !(edit), (firstline), (d)) : d->print((x), (y), ZOC_TEXT_COLOUR, (s)))
 
+/* Space to reserve for the saved file name */
+#define SAVEFILENAME_LEN 1024
 
 int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymethod * d)
 {
@@ -339,7 +341,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 	int pos = 0;            /* position in sv->cur->s */
 	char *tmpstr;           /* temporary string for pushing */
 	char strbuf[80] = "";   /* general buffer */
-	static char savefilename[15] = "temp.zoc";
+	static char savefilename[SAVEFILENAME_LEN] = "temp.zoc";
 
 	/* selection variables */
 	int selectFlag = 0;     /* Status of the shift key */
@@ -655,6 +657,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 				case DKEY_DOWN:
 				case DKEY_PAGEUP:
 				case DKEY_PAGEDOWN:
+				case DKEY_CTRL_C:
 					/* Avoid inserting these keys */
 					break;
 
@@ -768,6 +771,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 					/* alt+i: insert file */
 					{
 						stringvector filetypelist;
+						char* filename = NULL;
 						
 						initstringvector(&filetypelist);
 
@@ -782,18 +786,19 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						}
 
 						if (filetypelist.cur != NULL)
-							filedialog(strbuf, filetypelist.cur->s + 2,
-												 (key == DKEY_ALT_O ?
+							filename =
+								filedialog(".", filetypelist.cur->s + 2,
+													 (key == DKEY_ALT_O ?
 													   "Open ZZT Object Code (ZOC) File" :
 													   "Insert ZZT Object Code (ZOC) File"),
-												 d);
+													 FTYPE_ALL, d);
 
-						if (strlen(strbuf) != 0) {
+						if (filename != NULL && strlen(filename) != 0) {
 							stringvector newsvector;
-							newsvector = filetosvector(strbuf, wrapwidth, editwidth);
+							newsvector = filetosvector(filename, wrapwidth, editwidth);
 							if (newsvector.first != NULL) {
 								if (key == DKEY_ALT_O) {
-									strcpy(savefilename, strbuf);
+									strcpy(savefilename, filename);
 									if (str_equ(filetypelist.cur->s, "*.zoc", 0))
 										flags &= EDITBOX_ZOCMODE;  /* Set ZOCMODE */
 									else
@@ -825,44 +830,62 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 								} /* esle alt-i */
 							}	/* fi file selected */
 						}		/* fi not empty */
+						free(filename);
 						removestringvector(&filetypelist);
 					}			/* block */
 					updateflags = U_EDITAREA | U_TITLE;
 					break;
 
 				case DKEY_ALT_S: /* alt-s: save to file */
-					if (filenamedialog(savefilename, "Save Object Code As", "", 1, d) != NULL)
-						svectortofile(sv, savefilename);
+					{
+						char* filename;
+						filename = filenamedialog(savefilename, "", "Save Object Code As",
+																			1, d);
+						if (filename != NULL) {
+							/* Save to the file */
+							svectortofile(sv, filename);
+							/* Remember the file name */
+							strncpy(savefilename, filename, SAVEFILENAME_LEN - 1);
+							savefilename[SAVEFILENAME_LEN] = '\x0';
+
+							free(filename);
+						}
+					}
 					updateflags = U_EDITAREA | U_PANEL;
 					break;
 
 				case DKEY_ALT_M: /* alt-m: load .zzm music */
-					filedialog(strbuf, "zzm", "Choose ZZT Music (ZZM) File", d);
-					if (strlen(strbuf) != 0) {
-						stringvector zzmv;
-						zzmv = filetosvector(strbuf, 80, 80);
-						if (zzmv.first != NULL) {
-							stringvector song;
-							song = zzmpullsong(&zzmv, zzmpicksong(&zzmv, d));
-							if (song.first != NULL) {
-								/* copy song into sv */
-								sv->cur = centerstr;
-								for (song.cur = song.first; song.cur != NULL; song.cur = song.cur->next) {
-									tmpstr = (char*) malloc(editwidth + 2);
+					{
+						char* filename;
+						filename = filedialog(".", "zzm", "Choose ZZT Music (ZZM) File",
+																	FTYPE_ALL, d);
+						if (filename != NULL) {
+							stringvector zzmv;
+							zzmv = filetosvector(filename, 80, 80);
+							if (zzmv.first != NULL) {
+								stringvector song;
+								song = zzmpullsong(&zzmv, zzmpicksong(&zzmv, d));
+								if (song.first != NULL) {
+									/* copy song into sv */
+									sv->cur = centerstr;
+									for (song.cur = song.first; song.cur != NULL; song.cur = song.cur->next) {
+										tmpstr = (char*) malloc(editwidth + 2);
 
-									if (flags & EDITBOX_ZOCMODE) {
-										strcpy(tmpstr, "#play ");
-										strncat(tmpstr, song.cur->s, editwidth - 6);
-									} else {
-										strncpy(tmpstr, song.cur->s, editwidth);
+										if (flags & EDITBOX_ZOCMODE) {
+											strcpy(tmpstr, "#play ");
+											strncat(tmpstr, song.cur->s, editwidth - 6);
+										} else {
+											strncpy(tmpstr, song.cur->s, editwidth);
+										}
+
+										preinsertstring(sv, tmpstr);
 									}
-
-									preinsertstring(sv, tmpstr);
+									deletestringvector(&song);
 								}
-								deletestringvector(&song);
+								deletestringvector(&zzmv);
 							}
-							deletestringvector(&zzmv);
 						}
+						free(filename);
 					}
 					updateflags = U_EDITAREA | U_TITLE;
 					break;

@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.17 2001/11/06 07:33:05 bitman Exp $
+ * $Id: screen.h,v 1.18 2001/11/09 01:15:09 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,35 +38,69 @@
 #define LINED_NOPATH   0x80
 
 /* line_editor responses */
-#define LINED_CANCEL 0
-#define LINED_OK     1
+#define LINED_CANCEL 1
+#define LINED_OK     0
 
 /* General file types */
 #define FTYPE_FILE 1
 #define FTYPE_DIR  2
 #define FTYPE_ALL  3
 
+/* confirmprompt() return values */
+#define CONFIRM_YES    0
+#define CONFIRM_NO     1
+#define CONFIRM_CANCEL 2
+
+
+/* line_editor() - edit a string of characters on a single line 
+ * 	str:       buffer to be edited
+ * 	editwidth: maximum length string in buffer
+ * 	flags:     select which classes of characters may not be used
+ * 	return:    LINED_OK on enter, LINED_CANCEL on escape */
 int line_editor(int x, int y, int color,
 								char* str, int editwidth, int flags, displaymethod* d);
+
+/* line_editnumber() - uses line_editor to edit the given number */
 int line_editnumber(int x, int y, int color, int * number, int maxval,
                     displaymethod* d);
 
+/* line_editor_raw() - even more powerful line editor, requires careful
+ *                     handling
+ * 	position: position in the string of the cursor
+ * 	return:   whenever a control or non-ascii keypress occurs, it's value is
+ * 	          returned */
+int line_editor_raw(int x, int y, int color, char* str, int editwidth,
+										int* position, int flags, displaymethod* d);
+
+/* Drawing functions */
 extern void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay);
 extern void drawpanel(displaymethod * d);
 extern void updatepanel(displaymethod * d, editorinfo * e, world * w);
-extern void drawscreen(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
-extern void cursorspace(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
+extern void drawscreen(displaymethod * d, world * w, editorinfo * e,
+											 char *bigboard, unsigned char paramlist[60][25]);
+extern void cursorspace(displaymethod * d, world * w, editorinfo * e,
+												char *bigboard, unsigned char paramlist[60][25]);
+extern void drawspot(displaymethod * d, world * w, editorinfo * e,
+										 char *bigboard, unsigned char paramlist[60][25]);
 
-extern void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
+/* file dialogs */
+char * filedialog(char * dir, char * extension, char * title, int filetypes,
+									displaymethod * mydisplay);
+char* filenamedialog(char* initname, char* extension, char* prompt,
+										 int askoverwrite, displaymethod * mydisplay);
 
-extern char * filedialog(char * buffer, char * extension, char * title, displaymethod * mydisplay);
-extern stringvector readdirectorytosvector(char * dir, char * extension, int filetypes);
-char * betterfiledialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay);
-extern int boarddialog(world * w, int curboard, int firstnone, char * title, displaymethod * mydisplay);
+
+/* board dialogs */
+extern int boarddialog(world * w, int curboard, int firstnone, char * title,
+											 displaymethod * mydisplay);
 extern int switchboard(world * w, editorinfo * e, displaymethod * mydisplay);
-extern char * filenamedialog(char * filename, char * prompt, char * ext, int askoverwrite, displaymethod * mydisplay);
-extern char *titledialog(displaymethod * d);
+extern char *titledialog(char* prompt, displaymethod * d);
 
+/* directory reading - doesn't really belong */
+extern stringvector readdirectorytosvector(char * dir, char * extension,
+																					 int filetypes);
+
+/* panels */
 extern int dothepanel_f1(displaymethod * d, editorinfo * e);
 extern int dothepanel_f2(displaymethod * d, editorinfo * e);
 extern int dothepanel_f3(displaymethod * d, editorinfo * e);
@@ -76,11 +110,6 @@ extern unsigned char charselect(displaymethod * d, int c);
 
 /* Prompts the user to select a color */
 int colorselector(displaymethod * d, int * bg, int * fg, int * blink);
-
-/* confirmprompt() return values */
-#define CONFIRM_YES    0
-#define CONFIRM_NO     1
-#define CONFIRM_CANCEL 2
 
 /* confirmprompt() - Asks a yes/no question */
 int confirmprompt(displaymethod * mydisplay, char * prompt);

@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.5 2001/10/27 19:30:42 kvance Exp $
+ * $Id: menu.c,v 1.6 2001/11/09 01:15:09 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -280,7 +280,7 @@ void terrainmenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo
 
 void loadobjectlibrary(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
 {
-	char filename[256];
+	char* filename;
 	stringvector zzlv;
 	patdef pd;
 
@@ -289,10 +289,12 @@ void loadobjectlibrary(displaymethod * mydisplay, world * myworld, editorinfo * 
 		return;
 
 	/* Prompt for a file and load it */
-	if (filedialog(filename, "zzl", "Select an Object Library", mydisplay)
-			== NULL)
+	filename =
+		filedialog(".", "zzl", "Select an Object Library", FTYPE_ALL, mydisplay);
+	if (filename == NULL)
 		return;
 	zzlv = filetosvector(filename, EDITBOX_ZZTWIDTH*2, EDITBOX_ZZTWIDTH*2);
+	free(filename);
 
 	/* Have the user select an object */
 	if (zzlpickobject(&zzlv, mydisplay) != EDITBOX_OK) {
@@ -313,7 +315,7 @@ void loadobjectlibrary(displaymethod * mydisplay, world * myworld, editorinfo * 
 
 void saveobjecttolibrary(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
 {
-	char filename[256];
+	char* filename;
 	char* title;
 	stringvector zzlv;
 	patdef obj;
@@ -323,11 +325,15 @@ void saveobjecttolibrary(displaymethod * mydisplay, world * myworld, editorinfo 
 		return;
 
 	/* Prompt for and load a file */
-	filedialog(filename, "zzl", "Save to Which Object Library?", mydisplay);
+	filename =
+		filedialog(".", "zzl", "Save to Which Object Library?", FTYPE_ALL, mydisplay);
+	if (filename == NULL)
+		return;
+
 	zzlv = filetosvector(filename, EDITBOX_ZZTWIDTH*2, EDITBOX_ZZTWIDTH*2);
 
 	/* Prompt for a title */
-	title = titledialog(mydisplay);
+	title = titledialog("Name Your Object", mydisplay);
 
 	/* Copy the object under the cursor onto obj */
 	obj.type  = Z_OBJECT;
@@ -342,11 +348,12 @@ void saveobjecttolibrary(displaymethod * mydisplay, world * myworld, editorinfo 
 
 	deletestringvector(&zzlv);
 	free(title);
+	free(filename);
 }
 
 void saveobjecttonewlibrary(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])
 {
-	char filename[256];
+	char* filename;
 	char* title;
 	stringvector zzlv;
 	patdef obj;
@@ -358,16 +365,13 @@ void saveobjecttonewlibrary(displaymethod * mydisplay, world * myworld, editorin
 		return;
 
 	/* Prompt for file name */
-	strcpy(filename, "");
-	if (filenamedialog(filename, "New Object Library", "zzl", 1, mydisplay)
-			== NULL)
+	filename =
+		filenamedialog("mylib.zzl", "zzl", "New Object Library", 1, mydisplay);
+	if (filename == NULL)
 		return;
 
-	/* Prompt for a title */
-	title = titledialog(mydisplay);
-
 	/* Generate the zzl header */
-	pushstring(&zzlv, str_dup("KevEdit Generated Library"));
+	pushstring(&zzlv, titledialog("Name Your Library", mydisplay));
 	pushstring(&zzlv, str_dup("*"));
 	pushstring(&zzlv, str_dup("* Format (by CyQ):"));
 	pushstring(&zzlv, str_dup("* "));
@@ -380,6 +384,9 @@ void saveobjecttonewlibrary(displaymethod * mydisplay, world * myworld, editorin
 	pushstring(&zzlv, str_dup("* program"));
 	pushstring(&zzlv, str_dup("* "));
 
+	/* Prompt for an object title */
+	title = titledialog("Name Your Object", mydisplay);
+
 	/* Copy the object under the cursor onto obj */
 	obj.type  = Z_OBJECT;
 	obj.color = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1];
@@ -393,6 +400,7 @@ void saveobjecttonewlibrary(displaymethod * mydisplay, world * myworld, editorin
 
 	deletestringvector(&zzlv);
 	free(title);
+	free(filename);
 }
 
 void objectlibrarymenu(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard, unsigned char paramlist[60][25])

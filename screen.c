@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.29 2001/11/06 07:33:05 bitman Exp $
+ * $Id: screen.c,v 1.30 2001/11/09 01:15:09 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,28 @@ int line_editor(int x, int y, int color,
 {
 	int pos = strlen(str);   /* Position in str */
 	int key;                 /* Key being acted on */
+
+	while (1) {
+		/* Call the raw line editor */
+		key = line_editor_raw(x, y, color, str, editwidth, &pos, flags, d);
+
+		/* Look for return-inducing keys */
+		switch (key) {
+			case DKEY_ENTER:
+				return LINED_OK;
+
+			case DKEY_ESC:
+				return LINED_CANCEL;
+		}
+	}
+}
+
+int line_editor_raw(int x, int y, int color, char* str, int editwidth,
+										int* position, int flags, displaymethod* d)
+{
+	int key;                 /* Key being acted on */
 	int i;                   /* General counter */
+	int pos = *position;     /* Current position */
 
 	while (1) {
 		/* Display the line */
@@ -71,12 +92,6 @@ int line_editor(int x, int y, int color,
 			key = d->getch() | DDOSKEY_EXT;
 
 		switch (key) {
-			case DKEY_ENTER:
-				return LINED_OK;
-
-			case DKEY_ESC:
-				return LINED_CANCEL;
-
 			case DKEY_LEFT:  if (pos > 0)           pos--; break;
 			case DKEY_RIGHT: if (pos < strlen(str)) pos++; break;
 			case DKEY_HOME:  pos = 0;                      break;
@@ -116,8 +131,12 @@ int line_editor(int x, int y, int color,
 				break;
 
 			default:
-				/* Directly from the keyboard, only standard ASCII chars are acceptable */
-				if (key < 0x20 || key > 0x7E) break;
+				/* Keys outside the standard ASCII range are returned for
+				 * consideration by the calling function */
+				if (key < 0x20 || key > 0x7E) {
+					*position = pos;
+					return key;
+				}
 
 				/* Be sure we have room */
 				if (strlen(str) >= editwidth)
@@ -166,7 +185,8 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 
 	sprintf(buffer, "%d", *number);
 	if (line_editor(x, y, color, buffer, editwidth,
-									LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)) {
+									LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)
+			== LINED_OK) {
 		sscanf(buffer, "%d", number);
 		if (*number > maxval)
 			*number = maxval;
@@ -178,120 +198,140 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 	return LINED_CANCEL;
 }
 
-char *filenamedialog(char *filename, char *prompt, char *ext, int askoverwrite, displaymethod * mydisplay)
+/* filedialog() - Prompts user to enter a file name, returns a malloc()ed
+ *                      value representing entered value, NULL on cancel. */
+char* filenamedialog(char* initname, char* extension, char* prompt,
+													 int askoverwrite, displaymethod * mydisplay)
 {
-	int i = 0, x = 0, c = 0;	/* general vars */
-	int t = strlen(filename);	/* current edit position */
-	int extlen = strlen(ext);	/* length of given extension */
-	char buffer[15] = "";
+	const int maxlen = 15;   /* 15 chars should be enough for a zzt filename */
+	int extlen = strlen(extension);   /* length of given extension */
+	int pos;                 /* editing position */
+	char* filenamebuffer;
+	char* path = NULL;
+	char* result = NULL;
+	int done = 0;
+	int i, x;
+	
+	if (extlen > 3)
+		return NULL;
 
-	if (extlen > 3 || t > 12)
-		return filename;
+	/* Reserve some space */
+	filenamebuffer = (char *) malloc(sizeof(char) * (maxlen + 1));
+	path = (char *) malloc(sizeof(char) * (strlen(initname) + 1));
 
+	/* Parse the initial filename */
+	fileof(filenamebuffer, initname, maxlen + 1);
+	pathof(path, initname, strlen(initname) + 1);
+
+	/* if extension is given, remove extension from buffer */
+	if (extlen > 0)
+		for (i = strlen(filenamebuffer) - 1; i >= 0; i--)
+			if (filenamebuffer[i] == '.') {
+				filenamebuffer[i] = '\x0';
+				break;
+			}
+
+	/* Clear the panel area */
 	for (i = 3; i < 25; i++) {
 		for (x = 0; x < 20; x++) {
 			mydisplay->putch(x + 60, i, ' ', 0x1f);
 		}
 	}
 
+	/* Display the prompt */
 	if (strlen(prompt) < 20)
 		mydisplay->print(61, 3, 0x1f, prompt);
 
-	strcpy(buffer, filename);
-
-	/* if extension is given, remove extension from buffer */
-	if (extlen)
-		for (i = 0; i < t; i++)
-			if (buffer[i] == '.')
-				buffer[t = i] = 0;
-
-	/* show filename */
-	for (i = 0; i < (extlen ? 9 : 12); i++) {
-		if (i > t)
-			mydisplay->putch(61 + i, 4, ' ', 0x0f);
-		else
-			mydisplay->putch(61 + i, 4, buffer[i], 0x0f);
-	}
-	if (extlen > 0 && extlen < 4) {
+	/* Display the extension if static */
+	if (extlen > 0) {
 		mydisplay->putch(70, 4, '.', 0x1f);
-		mydisplay->print(70, 4, 0x1f, ext);
+		mydisplay->print(71, 4, 0x1f, extension);
 	}
-	x = 0;
-	while (x != 27) {
-		mydisplay->cursorgo(61 + t, 4);
-		x = mydisplay->getch();
-		/* On left arrow, backspace */
-		if (x == 0 && mydisplay->getch() == 0x4B)
-			x = 8;
-		switch (x) {
-			case 8:
-				if (t > 0) {
-					t--;
-					buffer[t] = '\0';
-					mydisplay->putch(61 + t, 4, ' ', 0x0f);
+
+	/* TODO: allow directory switching */
+
+	pos = strlen(filenamebuffer);
+
+	/* Edit */
+	while (!done) {
+		int key;  /* Key returned from line editor */
+
+		/* Edit the filename and check return value */
+		if (extlen > 0) {
+			key = line_editor_raw(61, 4, 0x0f, filenamebuffer, 8, &pos,
+													 LINED_FILENAME | LINED_NOPERIOD, mydisplay);
+		} else {
+			key = line_editor_raw(61, 4, 0x0f, filenamebuffer, 12, &pos,
+														LINED_FILENAME, mydisplay);
+		}
+		switch (key) {
+			case DKEY_ENTER:   /* enter: prepare file name and finish */
+				/* Don't allow files without names */
+				if (strlen(filenamebuffer) == 0)
+					break;
+
+				if (extlen > 0) {
+					strcat(filenamebuffer, ".");
+					strcat(filenamebuffer, extension);
 				}
-				break;
-			case 27:
-				return NULL;
-				break;
-			case 13:
-				if (t > 0) {
-					FILE *fp = NULL;
 
-					if (extlen) {
-						strcat(buffer, ".");
-						strcat(buffer, ext);
-					}
+				result = fullpath(path, filenamebuffer, SLASH_DEFAULT);
 
-					fp = fopen(buffer, "rb");
-					if (fp != NULL && askoverwrite) {
-						fclose(fp);
-						mydisplay->print(61, 5, 0x1f, "Overwrite?");
-						mydisplay->print(72, 5, 0x1e, "y/n");
-						do {
-							c = mydisplay->getch();
-						} while (!(c == 'y' || c == 'Y' || c == 'n' || c == 'N'));
-						mydisplay->print(61, 5, 0x1f, "          ");
-						mydisplay->print(72, 5, 0x1f, "   ");
-					} else {
-						c = 'y';
-					}
+				if (askoverwrite && !access(result, F_OK)) {
+					/* File already exists, confirm overwrite */
 
-					if (c == 'y') {
-						strcpy(filename, buffer);
-						x = 27;
-					} else {
-						buffer[t] = 0;
+					/* TODO: find a better way to present this */
+					mydisplay->print(61, 5, 0x1f, "Overwrite?");
+					mydisplay->print(72, 5, 0x1e, "y/n");
+					do {
+						key = mydisplay->getch();
+					} while (!(key == 'y' || key == 'Y' || key == 'n' || key == 'N' ||
+										 key == DKEY_ESC));
+					mydisplay->print(61, 5, 0x1f, "          ");
+					mydisplay->print(72, 5, 0x1f, "   ");
+
+					if (key != 'y' && key != 'Y') {
+						/* Unless user chose to overwrite, prompt for a different file */
+						free(result);
+						result = NULL;
+
+						/* Truncate at the period we appended a few moments ago */
+						strrchr(filenamebuffer, '.')[0] = '\x0';
+						break;
 					}
 				}
+				/* No break */
+
+			case DKEY_ESC:     /* esc: cancel filename dialog */
+				done = 1;
 				break;
-			default:
-				if (extlen ? t >= 8 : t >= 12)
-					break;
-				if (x < 45)
-					break;
-				if (x == 46 && extlen)
-					break;
-				if (x > 46 && x < 48)
-					break;
-				if (x > 57 && x < 65)
-					break;
-				if (x > 90 && x < 95)
-					break;
-				if (x == 96)
-					break;
-				if (x > 122)
-					break;
-				buffer[t] = x;
-				mydisplay->putch(61 + t, 4, x, 0x0f);
-				t++;
-				buffer[t] = '\0';
-				mydisplay->cursorgo(61 + t, 4);
+
+			case DKEY_CTRL_D:  /* ctrl-d: change directory */
+			case DKEY_CTRL_F:  /* ctrl-f: change folder */
+				{
+					char* newpath;
+
+					newpath =
+						filedialog(path, "", "Choose a Path (arrows nav, enter selects)",
+											 FTYPE_DIR, mydisplay);
+
+					if (newpath != NULL) {
+						/* Change the path if the user chose a directory */
+						free(path);
+						path = newpath;
+					}
+				}
 				break;
 		}
 	}
-	return filename;
+
+	/* Memory cleanup */
+	free(filenamebuffer);
+	free(path);
+	
+	return result;
 }
+
 
 void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
 {
@@ -540,10 +580,6 @@ void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsi
 	}
 }
 
-#define FTYPE_FILE 1
-#define FTYPE_DIR  2
-#define FTYPE_ALL  3
-
 stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 {
 	stringvector files;
@@ -600,7 +636,7 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 	return files;
 }
 
-char * betterfiledialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay)
+char * filedialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay)
 {
 	int done = 0;
 	char* result = NULL;
@@ -668,30 +704,29 @@ char * betterfiledialog(char * dir, char * extension, char * title, int filetype
 	return result;
 }
 
-char * filedialog(char * buffer, char * extension, char * title, displaymethod * mydisplay)
-{
-	char* filename = betterfiledialog(".", extension, title, FTYPE_FILE | FTYPE_DIR, mydisplay);
-	if (filename != NULL)
-		strcpy(buffer, filename);
-	free(filename);
-	return buffer;
-}
 
-
-char *titledialog(displaymethod * d)
+char *titledialog(char* prompt, displaymethod * d)
 {
 	char *t;
 	int x, y, i = 0;
 
-	t = (char *) malloc(35);
-	memset(t, '\0', 35);
-
+	/* Display the title box */
 	for (y = 12; y < 12 + TITLE_BOX_DEPTH; y++) {
 		for (x = 10; x < 10 + TITLE_BOX_WIDTH; x++) {
 			d->putch(x, y, TITLE_BOX[i], TITLE_BOX[i + 1]);
 			i += 2;
 		}
 	}
+
+	/* Display the prompt */
+	if (strlen(prompt) < 38)
+		d->print(30 - (strlen(prompt) / 2), 12, 0x2f, prompt);
+
+	/* Reserve some memory */
+	t = (char *) malloc(35);
+	memset(t, '\0', 35);
+
+	/* Do the editing */
 	line_editor(12, 13, 0x0f, t, 34, LINED_NORMAL, d);
 	return t;
 }
@@ -725,7 +760,7 @@ int boarddialog(world * w, int curboard, int firstnone, char * title,
 	if (response == EDITBOX_OK) {
 		if (boardlist.cur == boardlist.last && w->zhead->boardcount < 255) {
 			w->zhead->boardcount++;
-			w->board[w->zhead->boardcount] = z_newboard(titledialog(mydisplay));
+			w->board[w->zhead->boardcount] = z_newboard(titledialog("Enter Title", mydisplay));
 		}
 
 		curboard = svgetposition(&boardlist);

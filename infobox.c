@@ -1,5 +1,5 @@
 /* infobox.c  -- 
- * $Id: infobox.c,v 1.5 2001/11/06 07:33:05 bitman Exp $
+ * $Id: infobox.c,v 1.6 2001/11/09 01:15:09 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -251,7 +251,8 @@ int boardinfoeditoption(int curoption, world* myworld, int curboard,
 		case BRDINFO_TITLE:
 			/* Change the title of the board */
 			strcpy(buffer, brd->title);
-			if (line_editor(13, cursory, 0x0f, buffer, 34, LINED_NORMAL, d)) {
+			if (line_editor(13, cursory, 0x0f, buffer, 34, LINED_NORMAL, d)
+					== LINED_OK) {
 				/* Success! Reserve enough space and copy the buffer over */
 				free(brd->title);
 				brd->title = (u_int8_t*) malloc(sizeof(u_int8_t) * (strlen(buffer)+1));
@@ -287,7 +288,8 @@ int boardinfoeditoption(int curoption, world* myworld, int curboard,
 		case BRDINFO_MAXSHOTS:
 			sprintf(buffer, "%d", brd->info->maxshots);
 			if (line_editor(cursorx, cursory, 0x0f, buffer, 3,
-											LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)) {
+											LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)
+					== LINED_OK) {
 				int maxshots;
 				sscanf(buffer, "%d", &maxshots);
 				if (maxshots > 255)
@@ -309,7 +311,8 @@ int boardinfoeditoption(int curoption, world* myworld, int curboard,
 				strcpy(buffer, "");
 
 			if (line_editor(cursorx, cursory, 0x0f, buffer, 5,
-											LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)) {
+											LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)
+					== LINED_OK) {
 				long int timelimit;
 				sscanf(buffer, "%ld", &timelimit);
 				if (strlen(buffer) == 0)
@@ -637,7 +640,8 @@ int worldinfoeditoption(int curoption, world* myworld,
 		case WLDINFO_NAME:
 			/* Change the title of the board */
 			strcpy(buffer, myworld->zhead->title);
-			if (line_editor(cursorx, cursory, 0x0f, buffer, 19, LINED_NORMAL, d)) {
+			if (line_editor(cursorx, cursory, 0x0f, buffer, 19, LINED_NORMAL, d)
+					== LINED_OK) {
 				/* Success! Copy the thing! */
 				strcpy(myworld->zhead->title, buffer);
 				myworld->zhead->titlelength = strlen(myworld->zhead->title);
@@ -918,7 +922,8 @@ void worldflagedit(int curoption, world* myworld,
 	switch (curoption) {
 		case 0:
 			copyflag(buffer, zhead->flag1, zhead->flag1len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag1, buffer, i);
 				zhead->flag1len = strlen(buffer);
 			}
@@ -926,7 +931,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 1:
 			copyflag(buffer, zhead->flag2, zhead->flag2len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag2, buffer, i);
 				zhead->flag2len = strlen(buffer);
 			}
@@ -934,7 +940,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 2:
 			copyflag(buffer, zhead->flag3, zhead->flag3len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag3, buffer, i);
 				zhead->flag3len = strlen(buffer);
 			}
@@ -942,7 +949,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 3:
 			copyflag(buffer, zhead->flag4, zhead->flag4len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag4, buffer, i);
 				zhead->flag4len = strlen(buffer);
 			}
@@ -950,7 +958,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 4:
 			copyflag(buffer, zhead->flag5, zhead->flag5len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag5, buffer, i);
 				zhead->flag5len = strlen(buffer);
 			}
@@ -958,7 +967,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 5:
 			copyflag(buffer, zhead->flag6, zhead->flag6len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag6, buffer, i);
 				zhead->flag6len = strlen(buffer);
 			}
@@ -966,7 +976,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 6:
 			copyflag(buffer, zhead->flag7, zhead->flag7len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag7, buffer, i);
 				zhead->flag7len = strlen(buffer);
 			}
@@ -974,7 +985,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 7:
 			copyflag(buffer, zhead->flag8, zhead->flag8len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag8, buffer, i);
 				zhead->flag8len = strlen(buffer);
 			}
@@ -982,7 +994,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 8:
 			copyflag(buffer, zhead->flag9, zhead->flag9len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag9, buffer, i);
 				zhead->flag9len = strlen(buffer);
 			}
@@ -990,7 +1003,8 @@ void worldflagedit(int curoption, world* myworld,
 
 		case 9:
 			copyflag(buffer, zhead->flag10, zhead->flag10len);
-			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)) {
+			if (line_editor(cursorx, cursory, 0x0B, buffer, 20, LINED_NOLOWER, d)
+					== LINED_OK) {
 				copytoflag(zhead->flag10, buffer, i);
 				zhead->flag10len = strlen(buffer);
 			}

@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.7 2001/11/06 07:33:05 bitman Exp $
+ * $Id: display.h,v 1.8 2001/11/09 01:15:09 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -55,9 +55,10 @@ extern void RegisterDisplays();
 #define DKEY_SHIFT      0x100
 #define DKEY_ALT        0x200
 #define DKEY_CTRL       0x400
+#define DKEY_NUMPAD     0x800
 
 /* DOS extended key */
-#define DDOSKEY_EXT     0x800
+#define DDOSKEY_EXT     0x1000
 
 /* Standard action keys */
 #define DKEY_ENTER      13
@@ -86,6 +87,8 @@ extern void RegisterDisplays();
 /* TODO: replace with 'a' | DKEY_CTRL, etc */
 #define DKEY_CTRL_A     ('a' - 0x60)
 #define DKEY_CTRL_C     ('c' - 0x60)
+#define DKEY_CTRL_D     ('d' - 0x60)
+#define DKEY_CTRL_F     ('f' - 0x60)
 #define DKEY_CTRL_V     ('v' - 0x60)
 #define DKEY_CTRL_X     ('x' - 0x60)
 #define DKEY_CTRL_Y     ('y' - 0x60)

@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.12 2001/11/04 06:37:02 bitman Exp $
+ * $Id: misc.c,v 1.13 2001/11/09 01:15:09 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -170,8 +170,11 @@ void texteditor(displaymethod * mydisplay)
 	strcpy(buffer, "");
 	initstringvector(&editvector);
 	editbox("Text Editor", &editvector, 42, 0, mydisplay);
+#if 0
+	/* this code has fallen out of bitman's favour */
 	if (filenamedialog(buffer, "Save As", "", 1, mydisplay) != NULL)
 		svectortofile(&editvector, buffer);
+#endif
 	deletestringvector(&editvector);
 }
 
@@ -311,20 +314,28 @@ void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * my
 {
 	/* Save World after prompting user for filename */
 	int i;
-	char filename[13];
+	char* filename;
+	char* path, * file;
 
-	/* Prompt the user for a filename */
-	strcpy(filename, myinfo->currentfile);
-	if (filenamedialog(filename, "Save World As", "zzt", 1, mydisplay) == NULL)
+	filename =
+		filenamedialog(myinfo->currentfile, "zzt", "Save World As", 1, mydisplay);
+
+	if (filename == NULL)
 		return;
+
+	path = (char*) malloc(sizeof(char) * (strlen(filename) + 1));
+	file = (char*) malloc(sizeof(char) * (strlen(filename) + 1));
+
+	fileof(file, filename, strlen(filename) + 1);
+	pathof(path, filename, strlen(filename) + 1);
 
 	/* Update board data to reflect bigboard */
 	free(myworld->board[myinfo->curboard]->data);
 	myworld->board[myinfo->curboard]->data = rle_encode(bigboard);
 
 	/* Copy filename w/o ext onto world's title */
-	for (i = 0; i < 9 && filename[i] != '.' && filename[i] != '\0'; i++) {
-		myinfo->currenttitle[i] = filename[i];
+	for (i = 0; i < 9 && file[i] != '.' && file[i] != '\0'; i++) {
+		myinfo->currenttitle[i] = file[i];
 	}
 	myinfo->currenttitle[i] = '\0';
 
@@ -334,10 +345,17 @@ void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * my
 		myworld->zhead->titlelength = strlen(myworld->zhead->title);
 	}
 
-	strcpy(myinfo->currentfile, filename);
+	strcpy(myinfo->currentfile, file);
 
 	myworld->zhead->startboard = myinfo->curboard;
 	saveworld(filename, myworld);
+
+	/* Switch the current directory to the same location as the file */
+	chdir(path);
+
+	free(filename);
+	free(path);
+	free(file);
 
 	mydisplay->print(61, 5, 0x1f, "Written.");
 	mydisplay->cursorgo(69, 5);
