@@ -1,5 +1,5 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.1 2002/04/02 19:43:31 kvance Exp $
+ * $Id: notes.c,v 1.2 2002/04/04 21:13:25 kvance Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 #include "notes.h"
 
 /* Return the frequency of the given note, "octave" octaves from middle */
-float freq(int note, int octave)
+float NoteFreq(int note, int octave)
 {
 	float retval;
 	float fraction;
@@ -55,3 +55,5 @@ float freq(int note, int octave)
 	/* Return the frequency */
 	return retval;
 }
+
+

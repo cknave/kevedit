@@ -1,5 +1,5 @@
 /* play.c	-- Play ZZT music from the commandline
- * $Id: play.c,v 1.1 2002/04/02 19:43:31 kvance Exp $
+ * $Id: play.c,v 1.2 2002/04/04 21:13:25 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,18 @@
 
 int main(int argc, char **argv)
 {
+	if(argc != 2) {
+		printf("USAGE: play <zzt music string>\n");
+		return 1;
+	}
+	PlayZZTMusic(argv[1]);
+	return 0;
+}
+
+int PlayZZTMusic(char *string)
+{
 	SDL_AudioSpec desired, obtained;
+	void *masterbufer;
 
 	if(SDL_Init(SDL_INIT_AUDIO) < 0) {
 		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
@@ -77,5 +88,4 @@ int main(int argc, char **argv)
 	}
 
 	SDL_Quit();
-	return 0;
 }
