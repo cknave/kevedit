@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.25 2000/11/13 19:56:23 kvance Exp $
+ * $Id: main.c,v 1.26 2001/01/05 11:06:03 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -302,7 +302,7 @@ int main(int argc, char **argv)
 	myinfo->currenttitle = (char *) malloc(20);
 	strcpy(myinfo->currenttitle, "UNTITLED");
 	myinfo->currentfile = (char *) malloc(13);
-	myinfo->currentfile = "untitled.zzt";
+	strcpy(myinfo->currentfile, "untitled.zzt");
 
 	myinfo->curboard = 0;
 
