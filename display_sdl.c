@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.8 2002/08/23 23:28:24 bitman Exp $
+ * $Id: display_sdl.c,v 1.9 2002/08/30 02:20:34 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -884,8 +884,8 @@ int display_sdl_init()
 void display_sdl_end()
 {
 	/* Terminate SDL stuff */
+	display_end(&info);
 	SDL_Quit();
-	/* TODO: should we call display_end() here? anywhere? */
 }
 
 void display_sdl_putch(int x, int y, int ch, int co)
