@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.10 2001/10/22 02:48:22 bitman Exp $
+ * $Id: editbox.h,v 1.11 2001/11/06 07:33:05 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@
 #define EDITBOX_CANCEL   2     /* ESC */
 #define EDITBOX_FORWARD  3     /* RIGHT-ARROW */
 #define EDITBOX_BACK     4     /* BACKSPACE */
-#define EDITBOX_BACKWARD 4     /* LEFT-ARROW */
+#define EDITBOX_BACKWARD 5     /* LEFT-ARROW */
 
 /* Flags */
 #define EDITBOX_ZOCMODE  1     /* Use ZZT markup / syntax highlighting */

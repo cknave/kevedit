@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.42 2001/11/06 05:44:58 bitman Exp $
+ * $Id: main.c,v 1.43 2001/11/06 07:33:05 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -381,25 +381,29 @@ int main(int argc, char **argv)
 		case 'L':
 		case 'l':
 			/* Load world */
-			if (filedialog(buffer, "zzt", "Load World", mydisplay)) {
-				if (strlen(buffer) != 0) {
-					world* newworld = loadworld(buffer);
+			{
+				char* filename =
+					betterfiledialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
+				if (filename) {
+					world* newworld = loadworld(filename);
 					if (newworld != NULL) {
-						char newpath[MAIN_BUFLEN];
+						char* newpath = (char*) malloc(sizeof(char)*(strlen(filename)+1));
 
 						/* Out with the old and in with the new */
 						z_delete(myworld);
 						myworld = newworld;
 
 						/* Change directory */
-						pathof(newpath, buffer, MAIN_BUFLEN);
+						pathof(newpath, filename, strlen(filename) + 1);
 						chdir(newpath);
+						free(newpath);
 
 						/* Copy the file portion of the filename */
-						fileof(myinfo->currentfile, buffer, 14);
+						fileof(myinfo->currentfile, filename, 14);
 						updateinfo(myworld, myinfo, bigboard);
 						updateparamlist(myworld, myinfo, paramlist);
 					}
+					free(filename);
 				}
 			}
 			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);

@@ -1,5 +1,5 @@
 /* infobox.c  -- 
- * $Id: infobox.c,v 1.4 2001/10/27 05:29:35 bitman Exp $
+ * $Id: infobox.c,v 1.5 2001/11/06 07:33:05 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,24 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Eventually these should go in DISPLAY_DOS */
-#define DDOSKEY_EXT      0x100
-
-#define DKEY_ENTER      13
-#define DKEY_ESC        27
-#define DKEY_BACKSPACE  '\b'
-#define DKEY_TAB        '\t'
-#define DKEY_CTRL_A     0x01
-#define DKEY_CTRL_Y     25
-#define DKEY_UP         0x48 | DDOSKEY_EXT
-#define DKEY_DOWN       0x50 | DDOSKEY_EXT
-#define DKEY_LEFT       0x4B | DDOSKEY_EXT
-#define DKEY_RIGHT      0x4D | DDOSKEY_EXT
-#define DKEY_HOME       0x47 | DDOSKEY_EXT
-#define DKEY_END        0x4F | DDOSKEY_EXT
-#define DKEY_INSERT     0x52 | DDOSKEY_EXT
-#define DKEY_DELETE     0x53 | DDOSKEY_EXT
-#define DKEY_F1         0x3B | DDOSKEY_EXT
 
 /*************** Board Info *******************/
 

@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.28 2001/11/06 05:44:58 bitman Exp $
+ * $Id: screen.c,v 1.29 2001/11/06 07:33:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -48,24 +48,6 @@
  * when bb is larger than visible width */
 #define BBSCROLLSTART 7
 #define BBVWIDTH      10
-
-/* Eventually these should go in DISPLAY_DOS */
-#define DDOSKEY_EXT      0x100
-
-#define DKEY_ENTER      13
-#define DKEY_ESC        27
-#define DKEY_BACKSPACE  '\b'
-#define DKEY_TAB        '\t'
-#define DKEY_CTRL_A     0x01
-#define DKEY_CTRL_Y     25
-#define DKEY_UP         0x48 | DDOSKEY_EXT
-#define DKEY_DOWN       0x50 | DDOSKEY_EXT
-#define DKEY_LEFT       0x4B | DDOSKEY_EXT
-#define DKEY_RIGHT      0x4D | DDOSKEY_EXT
-#define DKEY_HOME       0x47 | DDOSKEY_EXT
-#define DKEY_END        0x4F | DDOSKEY_EXT
-#define DKEY_INSERT     0x52 | DDOSKEY_EXT
-#define DKEY_DELETE     0x53 | DDOSKEY_EXT
 
 int line_editor(int x, int y, int color,
 								char* str, int editwidth, int flags, displaymethod* d)
@@ -618,7 +600,7 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 	return files;
 }
 
-char * betterfiledialog(char * dir, char * extension, char * title, displaymethod * mydisplay)
+char * betterfiledialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay)
 {
 	int done = 0;
 	char* result = NULL;
@@ -628,12 +610,23 @@ char * betterfiledialog(char * dir, char * extension, char * title, displaymetho
 	while (!done) {
 		int response;
 
-		files = readdirectorytosvector(curdir, extension, FTYPE_DIR | FTYPE_FILE);
+		files = readdirectorytosvector(curdir, extension, filetypes);
 
 		response = browsedialog(title, &files, mydisplay);
 
 		switch (response) {
 			case EDITBOX_OK:
+				if (!(filetypes & FTYPE_FILE) && ishypermessage(files)) {
+					/* If files are not to be listed and a directory is chosen,
+					 * treat it as a final choice. */
+					char* subdir = gethypermessage(files);
+
+					result = fullpath(curdir, subdir, SLASH_DEFAULT);
+					free(subdir);
+
+					done = 1;
+				}
+				/* No break */
 			case EDITBOX_FORWARD:
 				if (ishypermessage(files)) {
 					/* A directory was chosen */
@@ -652,6 +645,17 @@ char * betterfiledialog(char * dir, char * extension, char * title, displaymetho
 				}
 				break;
 
+			case EDITBOX_BACKWARD:
+			case EDITBOX_BACK:
+				{
+					char* nextdirectory;
+
+					nextdirectory = fullpath(curdir, "..", SLASH_DEFAULT);
+					free(curdir);
+					curdir = nextdirectory;
+				}
+				break;
+
 			case EDITBOX_CANCEL:
 				done = 1;
 				break;
@@ -666,7 +670,7 @@ char * betterfiledialog(char * dir, char * extension, char * title, displaymetho
 
 char * filedialog(char * buffer, char * extension, char * title, displaymethod * mydisplay)
 {
-	char* filename = betterfiledialog(".", extension, title, mydisplay);
+	char* filename = betterfiledialog(".", extension, title, FTYPE_FILE | FTYPE_DIR, mydisplay);
 	if (filename != NULL)
 		strcpy(buffer, filename);
 	free(filename);

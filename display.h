@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.6 2001/10/27 19:30:42 kvance Exp $
+ * $Id: display.h,v 1.7 2001/11/06 07:33:05 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,5 +46,63 @@ typedef struct displaymethod {
 extern displaymethod display;
 
 extern void RegisterDisplays();
+
+/* DOS keys */
+/* TODO: move to another file */
+
+/* Flags */
+/* TODO: actually used these */
+#define DKEY_SHIFT      0x100
+#define DKEY_ALT        0x200
+#define DKEY_CTRL       0x400
+
+/* DOS extended key */
+#define DDOSKEY_EXT     0x800
+
+/* Standard action keys */
+#define DKEY_ENTER      13
+#define DKEY_ESC        27
+#define DKEY_BACKSPACE  '\b'
+#define DKEY_TAB        '\t'
+
+/* Arrow keys */
+#define DKEY_UP         (0x48 | DDOSKEY_EXT)
+#define DKEY_DOWN       (0x50 | DDOSKEY_EXT)
+#define DKEY_LEFT       (0x4B | DDOSKEY_EXT)
+#define DKEY_RIGHT      (0x4D | DDOSKEY_EXT)
+
+/* Navigation keys */
+#define DKEY_INSERT     (0x52 | DDOSKEY_EXT)
+#define DKEY_DELETE     (0x53 | DDOSKEY_EXT)
+#define DKEY_HOME       (0x47 | DDOSKEY_EXT)
+#define DKEY_END        (0x4F | DDOSKEY_EXT)
+#define DKEY_PAGEUP     (0x49 | DDOSKEY_EXT)
+#define DKEY_PAGEDOWN   (0x51 | DDOSKEY_EXT)
+
+/* Function keys */
+#define DKEY_F1         (0x3B | DDOSKEY_EXT)
+
+/* Ctrl-letter keys */
+/* TODO: replace with 'a' | DKEY_CTRL, etc */
+#define DKEY_CTRL_A     ('a' - 0x60)
+#define DKEY_CTRL_C     ('c' - 0x60)
+#define DKEY_CTRL_V     ('v' - 0x60)
+#define DKEY_CTRL_X     ('x' - 0x60)
+#define DKEY_CTRL_Y     ('y' - 0x60)
+
+#define DKEY_CTRL_DELETE  (147 | DDOSKEY_EXT)
+
+/* Alt-letter keys */
+/* TODO: replace with 'a' | DKEY_ALT, etc */
+#define DKEY_ALT_I      (23 | DDOSKEY_EXT)
+#define DKEY_ALT_M      (50 | DDOSKEY_EXT)
+#define DKEY_ALT_O      (24 | DDOSKEY_EXT)
+#define DKEY_ALT_S      (31 | DDOSKEY_EXT)
+#define DKEY_ALT_Z      (44 | DDOSKEY_EXT)
+
+#define DKEY_ALT_MINUS  (130 | DDOSKEY_EXT) 
+/* TODO: make alt + different from alt = */
+#define DKEY_ALT_PLUS   (131 | DDOSKEY_EXT)
+
 
 #endif				/* _DISPLAY_H */
