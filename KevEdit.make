@@ -47,7 +47,7 @@ DOCS = README AUTHORS TODO COPYING ChangeLog *.txt
 
 .SUFFIXES: .o .c .h
 
-.cpp.o:
+.c.o:
 	$(CC) -o $@ $< $(CFLAGS) -c
 
 # Targets
