@@ -9,6 +9,7 @@ $The Object Code Editor
 !play;Testing ZZT Music
 !zoc;ZOC Mode
 !help;Context Sensitive Help
+!txted;Text Editor (! editor)
 
 Objects and scrolls are programmed in the
 ZZT-OOP language.  When you edit these
@@ -20,6 +21,7 @@ ESCAPE quits, ctrl+'y' deletes a line, et
 cetera. A text editor may also be accessed
 by pressing '!' on the main screen, a la
 zzt.
+!txted;More information on ! editor
 
 :copy;Copy & Paste
 
@@ -99,3 +101,12 @@ Programming Reference. If the cursor is on
 the same line as a #command, it will look
 that command up in the help.
 
+:txted;Text Editor (! editor)
+Pressing '!' while editing a ZZT World
+will open a general text editor with
+similar functions to the object editor.
+When you exit the text editor by pressing
+ESC, your work will be remembered for the
+next time you open the text editor, until
+you exit KevEdit. If you wish to save your
+work to a file, use ALT-S.

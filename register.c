@@ -1,5 +1,5 @@
 /* register.c  -- text editor memory registers
- * $Id: register.c,v 1.5 2001/05/12 21:15:28 bitman Exp $
+ * $Id: register.c,v 1.6 2002/01/12 06:31:58 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,12 @@ void regyank(char whichreg, stringnode * startn, stringnode * endn, int startpos
 	loadsvector(&reg, startn, endn, startpos, endpos);
 }
 
+void regstore(char whichreg, stringvector src)
+{
+	clearregister(whichreg);
+
+	reg = duplicatestringvector(src, 0);
+}
 
 int regput(char whichreg, stringvector * dest, int inspos, int wrapwidth, int editwidth)
 {
@@ -122,6 +128,10 @@ void loadsvector(stringvector * dest, stringnode * startn, stringnode * endn, in
  */
 int mergesvector(stringvector * dest, stringvector * src, int inspos, int wrapwidth, int editwidth)
 {
+	/* The destination must have at least one line! */
+	if (dest->first == NULL)
+		pushstring(dest, str_dupmin("", editwidth));
+
 	if (src->first == src->last) {
 		/* Insert inside current line of dest */
 		return wordwrap(dest, src->first->s, inspos, inspos, wrapwidth, editwidth);

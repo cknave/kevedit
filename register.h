@@ -1,5 +1,5 @@
 /* register.h  -- text editor memory registers
- * $Id: register.h,v 1.2 2001/04/08 18:45:05 bitman Exp $
+ * $Id: register.h,v 1.3 2002/01/12 06:31:58 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@
  */
 
 void regyank(char whichreg, stringnode * startn, stringnode * endn, int startpos, int endpos);
+void regstore(char whichreg, stringvector src);
 int regput(char whichreg, stringvector * dest, int inspos, int wrapwidth, int editwidth);
 void clearregister(char whichreg);
 void deleteregisters(void);

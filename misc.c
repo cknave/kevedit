@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.20 2001/12/12 22:08:02 bitman Exp $
+ * $Id: misc.c,v 1.21 2002/01/12 06:31:58 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@
 #include "zlaunch.h"
 
 #include "patbuffer.h"
+#include "register.h"
 
 #include "panel_g1.h"
 #include "panel_g2.h"
@@ -209,12 +210,15 @@ void texteditor(displaymethod * mydisplay)
 
 	strcpy(buffer, "");
 	initstringvector(&editvector);
+	
+	/* Load the ! register for editing */
+	regput('!', &editvector, 0, EDITBOX_ZZTWIDTH, EDITBOX_ZZTWIDTH);
+
+	/* Edit */
 	editbox("Text Editor", &editvector, 42, 0, mydisplay);
-#if 0
-	/* this code has fallen out of bitman's favour */
-	if (filenamedialog(buffer, "Save As", "", 1, mydisplay) != NULL)
-		svectortofile(&editvector, buffer);
-#endif
+
+	/* Store result to the ! register */
+	regstore('!', editvector);
 	deletestringvector(&editvector);
 }
 

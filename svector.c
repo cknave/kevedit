@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.17 2001/12/12 22:08:03 bitman Exp $
+ * $Id: svector.c,v 1.18 2002/01/12 06:31:58 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -201,6 +201,19 @@ void removestringvector(stringvector * v)
 	while (removestring(v) != NULL);
 
 	return;
+}
+
+/* duplcatestringvector - allocate a copy of an svector */
+stringvector duplicatestringvector(stringvector v, int minlen)
+{
+	stringvector dup;
+	initstringvector(&dup);
+
+	for (svmovetofirst(&v); v.cur != NULL; v.cur = v.cur->next) {
+		pushstring(&dup, str_dupmin(v.cur->s, minlen));
+	}
+
+	return dup;
 }
 
 stringvector * stringvectorcat(stringvector * v1, stringvector * v2)

@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.14 2001/12/12 22:08:03 bitman Exp $
+ * $Id: svector.h,v 1.15 2002/01/12 06:31:58 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -66,6 +66,9 @@ int deletestringvector(stringvector * v);
 
 /* removestringvector - empties a stringvector without free()ing any s */
 void removestringvector(stringvector * v);
+
+/* duplcatestringvector - allocate a copy of an svector */
+stringvector duplicatestringvector(stringvector v, int minlen);
 
 /* stringvectorcat - concatinates two string vectors. BOTH vectors
  * thereafter share the same memory, only cur differs! */
