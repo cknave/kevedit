@@ -1,5 +1,5 @@
 /* params.c	-- The evil tile params
- * $Id: params.c,v 1.12 2002/12/13 00:46:06 bitman Exp $
+ * $Id: params.c,v 1.13 2003/02/07 09:59:50 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -253,5 +253,10 @@ int zztParamDatauseLocate(int datause)
 {
 	if (datause > ZZT_DATAUSE_MAX) return 0;
 	return _zzt_datause_location_table[datause];
+}
+
+int zztParamGetProperty(ZZTparam * param, int property)
+{
+	return param->data[zztParamDatauseLocate(property)];
 }
 
