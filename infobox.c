@@ -1,5 +1,5 @@
 /* infobox.c  -- 
- * $Id: infobox.c,v 1.6 2001/11/09 01:15:09 bitman Exp $
+ * $Id: infobox.c,v 1.7 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -86,8 +86,6 @@ void editboardinfo(world* myworld, int curboard, displaymethod* d)
 
 		/* Get the key */
 		key = d->getch();
-		if (key == 0)
-			key = d->getch() | DDOSKEY_EXT;
 
 		/* Erase the selector */
 		d->putch( 7, cursory, ' ', 0x00);
@@ -478,8 +476,6 @@ void editworldinfo(world* myworld, displaymethod* d)
 
 		/* Get the key */
 		key = d->getch();
-		if (key == 0)
-			key = d->getch() | DDOSKEY_EXT;
 
 		/* Erase the selector */
 		d->putch( 7, cursory, ' ', 0x00);
@@ -831,8 +827,6 @@ void editworldflags(world* myworld, displaymethod* d)
 
 		/* Get the key */
 		key = d->getch();
-		if (key == 0)
-			key = d->getch() | DDOSKEY_EXT;
 
 		/* Erase the selector */
 		d->putch( 7, cursory, ' ', 0x00);

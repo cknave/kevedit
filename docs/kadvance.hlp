@@ -51,10 +51,7 @@ NOTE: Aquire mode was formerly "get mode"
 but the name didn't have much ring to it
 and I hope to use the 'g' key for
 something else in the future. The 'g' key
-will still work for now, but it may
-provide a different function in future
-versions. Sorry for the inconvenience.
-  --bitman
+may no longer be used.
 
 :randfill;Random Flood Fill
 

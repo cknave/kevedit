@@ -1,6 +1,6 @@
 /* svector.c   -- string vectors
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
- * $Id: svector.c,v 1.15 2001/11/06 05:44:58 bitman Exp $
+ * $Id: svector.c,v 1.16 2001/11/10 07:42:39 bitman Exp $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -272,7 +272,151 @@ void inssortstringvector(stringvector* v, int (*compare)(const char* s1, const c
 }
 
 
-/******* String utility functions ******/
+/***************************************************************************/
+/**** Wordwrap *************************************************************/
+/***************************************************************************/
+
+/* wordwrap
+ * purpose: Inserts string into current string of svector, wordwrapping if
+ *          necessary.
+ * args:    sv:        stringvector to manipulate
+ *          str:       string to insert in sv->cur->s
+ *          inspos:    where in sv to insert str
+ *          pos:       cursor position in sv->cur->s to track; a negative value
+ *                     indicates that -pos - 1 is position in str
+ *          wrapwidth: at what cursor position to wrap to next line
+ *          editwidth: maximum width of a line in sv
+ * return:  new location of pos. sv->cur is changed to reflect line on which
+ *          pos now resides.
+ *
+ * NOTE: str will not be modified nor free()d in any way.
+ */
+int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth)
+{
+	int i, j, k;		/* general counters */
+	char *longstr;	/* Combination of sv->cur->s & str */
+	int longlen;		/* Length of longstr */
+	int newpos;		/* new position after insert */
+
+	char *newstr;     /* new string for next line */
+
+	/* check for bad data */
+	if (sv->cur == NULL || sv->cur->s == NULL || wrapwidth > editwidth || editwidth < 2 || inspos > strlen(sv->cur->s))
+		return -1;
+
+	/* first determine longlen and allocate longstr */
+	longlen = strlen(sv->cur->s) + strlen(str);
+	longstr = (char *) malloc(longlen + 2);
+	memset(longstr, 0, longlen + 2);
+	
+	/* fill longstr
+	 * 
+	 * i: position in longstr
+	 * j: position in sv->cur->s
+	 * k: position in str 
+	 */
+
+	/* fill from sv until inspos */
+	for (i = 0; i < inspos; i++)
+		longstr[i] = sv->cur->s[i];
+	j = i;
+
+	/* fill from str until end of str */
+	for (k = 0; str[k] != 0; k++, i++)
+		longstr[i] = str[k];
+
+	/* fill from sv until end */
+	for (; i < longlen; i++, j++)
+		longstr[i] = sv->cur->s[j];
+	
+	/* cap longstr */
+	longstr[i]   = 0;
+
+	/* determine location of newpos */
+	if (pos >= inspos)
+		newpos = pos + strlen(str);
+	else if (pos < 0)
+		newpos = inspos - pos - 1;
+
+	if (longlen <= wrapwidth) {
+		/* no need to wordwrap; we can just copy longstr over sv->cur->s */
+		strcpy(sv->cur->s, longstr);
+		return newpos;
+	}
+
+	/* we need to find the first space before wrapwidth 
+	 *
+	 * i: position in longstr
+	 * j: position of last identified space
+	 */
+
+	j = -1;
+	for (i = 0; i < wrapwidth; i++)
+		if (longstr[i] == ' ')
+			j = i;
+
+	if (j == -1) {
+		/* no space was found before wrap; reject insert */
+		return pos;
+	}
+
+	/* make newpos the negative differance of location of space and newpos,
+	 * if it belongs on next line */
+	if (newpos > j)
+		newpos = j - newpos;
+
+	/* set newstr to location of string after the space & cap longstr at space */
+	newstr = longstr + j + 1;
+	longstr[j] = 0;
+
+	/* replace sv->cur->s with shortened longstr */
+	strcpy(sv->cur->s, longstr);
+
+	/* finally: wrap onto next line or new line */
+	if (sv->cur->next == NULL       || strlen(sv->cur->next->s) == 0 ||
+			sv->cur->next->s[0] == '#'  || sv->cur->next->s[0] == '/' ||
+			sv->cur->next->s[0] == '?'  || sv->cur->next->s[0] == ':' ||
+			sv->cur->next->s[0] == '!'  || sv->cur->next->s[0] == '$' ||
+			sv->cur->next->s[0] == '\'' || sv->cur->next->s[0] == '@' ||
+			sv->cur->next->s[0] == ' ') {
+		/* next line either does not exist, is blank, is a zoc command,
+		 * or is indented; so, we create a new, blank line to wordwrap onto */
+
+		char *newnode;
+		newnode = (char *) malloc(editwidth + 2);
+		newnode[0] = 0;
+		insertstring(sv, newnode);
+	} else {
+		/* we can put text at the beginning of the next line; append a space
+		 * to end of newstr in preparation. */
+		i = strlen(newstr);
+		newstr[i++] = ' ';
+		newstr[i] = 0;
+	}
+	/* it is now okay to put text at the beginning of the next line */
+
+
+	/* recursively insert newstr at beginning of next line */
+	if (newpos < 0) {
+		/* cursor should be tracked on next line */
+		sv->cur = sv->cur->next;
+		newpos = wordwrap(sv, newstr, 0, newpos, wrapwidth, editwidth);
+	} else {
+		stringnode * nodeptr = sv->cur;
+		sv->cur = sv->cur->next;
+		wordwrap(sv, newstr, 0, 0, wrapwidth, editwidth);
+		sv->cur = nodeptr;
+	}
+
+	free(longstr);
+
+	return newpos;
+}
+
+
+/**********************************************************************/
+/******* String utility functions *************************************/
+/**********************************************************************/
 
 char * str_dup(char * s)
 {
@@ -347,9 +491,9 @@ int str_equ(const char *str1, const char *str2, int flags)
 	int i;
 	int isequ = 1;		/* Strings are equal until proven otherwise */
 
-	if (str1[0] == 0 && str2[0] == 0)
+	if (str1[0] == '\x0' && str2[0] == '\x0')
 		return 1;
-   else if (str1[0] == 0 || str2[0] == 0)
+   else if (str1[0] == '\x0' || str2[0] == '\x0')
    	return 0;
 
 	lwr1 = (char *) malloc(strlen(str1) * sizeof(char) + 1);
@@ -365,15 +509,20 @@ int str_equ(const char *str1, const char *str2, int flags)
 		str_lowercase(lwr2);
 	}
 
-	for (i = 0; lwr1[i] != 0 && lwr2[i] != 0; i++)
+	for (i = 0; lwr1[i] != '\x0' && lwr2[i] != '\x0'; i++)
 		if (lwr1[i] != lwr2[i]) {
 			isequ = 0;
 			break;
 		}
 
-	/* Strings must be equal */
-	if (lwr1[i] != lwr2[i] && !(flags & STREQU_FRONT))
-		isequ = 0;
+	if (lwr1[i] != lwr2[i]) {        /* If the strings do not end together */
+		if (!(flags & STREQU_FRONT))   /* Unless only checking string fronts */
+			isequ = 0;
+		/* If the left string ends first and the right is expected to be the front
+		 * part of the left string, they are not equal */
+		if ((flags & STREQU_RFRONT) && lwr1[i] == '\x0')
+			isequ = 0;
+	}
 
 	free(lwr1);
 	free(lwr2);

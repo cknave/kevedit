@@ -1,5 +1,5 @@
 /* misc.h       -- General routines for everyday KevEditing
- * $Id: misc.h,v 1.8 2001/10/27 19:30:42 kvance Exp $
+ * $Id: misc.h,v 1.9 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,6 +19,8 @@
 
 #ifndef _MISC_H
 #define _MISC_H 1
+
+#include "kevedit.h"
 
 #include "display.h"
 

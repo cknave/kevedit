@@ -1,5 +1,5 @@
 /* menu.c       -- Code for using the F1-3 panels
- * $Id: menu.c,v 1.6 2001/11/09 01:15:09 bitman Exp $
+ * $Id: menu.c,v 1.7 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,15 +17,21 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "menu.h"
+
 #include "kevedit.h"
-#include "zzt.h"
-#include "display.h"
 #include "screen.h"
-#include "patbuffer.h"
-#include "svector.h"
-#include "zzl.h"
 #include "editbox.h"
+
+#include "zzt.h"
+#include "svector.h"
+#include "files.h"
+#include "zzl.h"
 #include "hypertxt.h"
+
+#include "patbuffer.h"
+
+#include "display.h"
 
 #include <stdlib.h>
 

@@ -1,8 +1,10 @@
 0.3.4:
 ------
 Bug fixed in help system
+General code cleanup and organization
+Display library keyboard handling improved
 File dialogs support multiple directories
-Go directly to the title screen when running ZZT worlds
+Goes directly to the title screen when running ZZT worlds
 
 0.3.3: October 27, 2001
 -----------------------

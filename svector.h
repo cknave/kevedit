@@ -1,5 +1,5 @@
 /* svector.h  -- string vectors
- * $Id: svector.h,v 1.12 2001/11/06 05:44:58 bitman Exp $
+ * $Id: svector.h,v 1.13 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -83,10 +83,20 @@ int svgetposition(stringvector* v);
 /* inssortstringvector() - insertion sort vector using strcmp()-like funct */
 void inssortstringvector(stringvector* v, int (*compare)(const char* s1, const char* s2));
 
+/***** Wordwrap **********************************/
+
+/* wordwrap() - wrap text in sv */
+int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth);
+
 /* General string operations which become useful when paired with svectors */
 
-#define STREQU_UNCASE  0x01
-#define STREQU_FRONT   0x02
+
+#define STREQU_UNCASE  0x01     /* Capitalization is ignored */
+#define STREQU_FRONT   0x02     /* Equal if the fronts of the strings
+																	 are the same */
+#define STREQU_RFRONT  (0x04 | STREQU_FRONT)
+                                /* Equal if the right string is the front
+																 * of the left string */
 
 /* String duplication using malloc
  * str_dup()    - reserves just enough space for the string

@@ -1,5 +1,5 @@
 /* help.c  -- hypertext help system
- * $Id: help.c,v 1.1 2001/10/22 02:48:22 bitman Exp $
+ * $Id: help.c,v 1.2 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include "hypertxt.h"
 #include "panel_hl.h"
 #include "helplist.h"
+#include "files.h"
 
 #include <stdlib.h>
 #include <string.h>

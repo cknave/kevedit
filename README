@@ -1,5 +1,5 @@
 -----------------------------------------
-KevEdit 0.3.3
+KevEdit 0.3.4
      A world file editor for the game ZZT
 -----------------------------------------
 Copyright (C) 2000-2001 Kev Vance  <kev@kvance.com>
@@ -7,8 +7,9 @@ With many contributions by bitman  <bitman@users.sf.net>
 
 Getting Started With KevEdit
 ----------------------------
-Copy the binary KEVEDIT.EXE to your ZZT directory.  You can run it with no
-arguments to get a blank new world, or give it a world on the command line to
+Copy the binary KEVEDIT.EXE and the help file KEVEDIT.ZML to your ZZT
+directory.  You can run it with no arguments to get a blank new world, or give
+it a world on the command line to
 load it.
 
 Example:
@@ -17,32 +18,36 @@ C> kevedit town.zzt
 This will load town.zzt into the editor if it exists.  Otherwise, a new world
 will be created.
 
-To learn more about using KevEdit, activate its on-line help by pressing
-'H'.
+To learn more about using KevEdit, activate its on-line help by pressing 'H'.
+
+For even more extended help, download the ZZTWeb from Chronos' website at
+http://members.aol.com/chronos30/ and unzip the .hlp files into the same folder as KEVEDIT.HLP. Do not, at this time, run the installation batch file.
 
 New Features / Bug Fixes
 ------------------------
-New features in 0.3.3
-  * Hypertext help system
-  * Board Info Dialog
-  * World Info Dialog
-  * Kolor Dialog (press K)
-  * ZZT Object Library Support
-  * Cut, copy, and paste use CTRL now
-  * Floodfill advancements
-Bugs fixed in 0.3.3
-  * Escape cancels save operation
-  * Cut doesn't crash on last line
+New features in 0.3.4
+  * Multi-directory file dialogs
+	* Goes directly to the title screen when running ZZT worlds
+Bugs fixed in 0.3.4
+  * Infrequent help system crash repaired
+
+Blatant Plug of ZZT Under Windows
+---------------------------------
+To associate KevEdit with ZZT files anywhere on your hard-drive, install "ZZT
+Under Windows" with KevEdit support and then extract the KevEdit distribution
+into the ZZT Under Windows folder. ZZT Under Windows can be aquired in the
+Utilities section of zzt.org.
 
 Post Script
 -----------
 Though KevEdit is not supported at present, you can send emails to bitman
 <bitman_squared@hotmail.com> if you can't figure something out or just don't
 like it. Also, the kevedit-talk mailing list is a good source of updates on the
-development of KevEdit.
+development of KevEdit. To join the mailing list, visit
+https://lists.sourceforge.net/lists/listinfo/kevedit-talk
 
 If you find bugs, try to fix it and send in a patch :)  If you can't fix it,
-report it. For the overzelous, you can do what I (bitman) did join in on the
+report it. For the overzelous, you can do what bitman did join in on the
 development if you find sending in patches too tedious. CVS is great for that
 sort of thing.
 
@@ -51,4 +56,4 @@ the CVS code, post bug reports, etc.
 
     Kev Vance <kev@kvance.com>
     Ryan Phillips <bitman@users.sf.net>
-    October 27, 2001
+    November 9, 2001

@@ -1,5 +1,5 @@
 /* editbox.h  -- text editor/viewer in kevedit
- * $Id: editbox.h,v 1.11 2001/11/06 07:33:05 bitman Exp $
+ * $Id: editbox.h,v 1.12 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -59,15 +59,6 @@ stringvector moredatatosvector(param * p, int editwidth);
 /* svectortomoredata() - copies the contents of the given svector into a new
  *              parameter. Only the moredata and length variables are used! */
 param svectortomoredata(stringvector sv);
-
-/* filetosvector() - loads a textfile into a new stringvector */
-stringvector filetosvector(char* filename, int wrapwidth, int editwidth);
-
-/* svectortofile() = copies a stringvector into a file. sv is not changed */
-void svectortofile(stringvector * sv, char *filename);
-
-/* wordwrap() - wrap text in sv */
-int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth);
 
 /* displayzoc() - display a string with zoc highlighting. If firstline is true,
  * "@" will be allowed to denote object name. */

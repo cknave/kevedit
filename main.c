@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.45 2001/11/10 04:48:12 bitman Exp $
+ * $Id: main.c,v 1.46 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,18 +24,20 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "display.h"
 #include "kevedit.h"
-#include "screen.h"
-#include "scroll.h"
-#include "zzt.h"
-#include "editbox.h"
-#include "register.h"
-#include "patbuffer.h"
 #include "misc.h"
 #include "menu.h"
+#include "editbox.h"
+#include "screen.h"
+
+#include "zzt.h"
+
+#include "patbuffer.h"
 #include "help.h"
+#include "register.h"
 #include "infobox.h"
+
+#include "display.h"
 
 #define MAIN_BUFLEN 255
 
@@ -132,8 +134,6 @@ int main(int argc, char **argv)
 
 		/* Get the key */
 		key = mydisplay->getch();
-		if (key == 0)
-			key = mydisplay->getch() | DDOSKEY_EXT;
 
 		/* Undo the cursorspace (draw as a normal tile) */
 		i = (myinfo->cursorx + myinfo->cursory * 60) * 2;
@@ -162,11 +162,12 @@ int main(int argc, char **argv)
 
 				if (key == DKEY_CTRL_A) { /* ASCII selection */
 					key = charselect(mydisplay, -1);
+					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
 				}
 
 				/* Plot the text character */
-				if (myinfo->cursorx != myinfo->playerx || myinfo->cursory != myinfo->playery) {
+				if ((myinfo->cursorx != myinfo->playerx || myinfo->cursory != myinfo->playery) && (key != -1)) {
 					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 						/* We're overwriting a parameter */
 						param_remove(myworld->board[myinfo->curboard], paramlist, myinfo->cursorx, myinfo->cursory);
@@ -186,8 +187,8 @@ int main(int argc, char **argv)
 					tilecolor(bigboard, myinfo->cursorx, myinfo->cursory) = key;
 					/* Move right now */
 					key = DKEY_RIGHT;
-				} else
-					continue;
+				} else 
+					key = DKEY_NONE;
 			}
 		}
 
@@ -597,10 +598,13 @@ int main(int argc, char **argv)
 							params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
 					/* we have params; lets edit them! */
 					if(tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {
-						myworld->board[myinfo->curboard]->
-							params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1
+						int csel
 							= charselect(mydisplay, myworld->board[myinfo->curboard]->
 													 params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1);
+						if (csel != -1)
+							myworld->board[myinfo->curboard]->
+								params[paramlist[myinfo->cursorx][myinfo->cursory]]->data1
+									= csel;
 					}
 					if (tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_SCROLL ||
 							tiletype(bigboard, myinfo->cursorx, myinfo->cursory) == Z_OBJECT) {

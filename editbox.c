@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.27 2001/11/09 01:15:09 bitman Exp $
+ * $Id: editbox.c,v 1.28 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,14 +19,20 @@
 
 
 #include "editbox.h"
-#include "scroll.h"
-#include "colours.h"
-#include "svector.h"
-#include "panel_ed.h"
-#include "zzm.h"
-#include "register.h"
+
 #include "screen.h"
+
+#include "svector.h"
+#include "zzm.h"
+#include "colours.h"
+
+#include "register.h"
 #include "help.h"
+
+#include "scroll.h"
+#include "panel_ed.h"
+
+#include "display.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -154,11 +160,11 @@ const char zztcolours[ZZTCOLOURCOUNT][8] =
 	"blue", "green", "red", "cyan", "purple", "yellow", "white"
 };
 
-#define ZZTDIRCOUNT 14
+#define ZZTDIRCOUNT 15
 const char zztdirs[ZZTDIRCOUNT][6] =
 {
 	"north", "south", "east", "west", "idle",
-	"seek", "flow", "rndns", "rndne",
+	"seek", "flow", "rnd", "rndns", "rndne",
 	"n", "s", "e", "w", "i"
 };
 
@@ -482,8 +488,6 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 		/* Get the key */
 		key = d->getch();
-		if (key == 0)
-			key = d->getch() | DDOSKEY_EXT;
 
 		selectFlag = d->shift();
 
@@ -1081,10 +1085,9 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 				case DKEY_CTRL_A: /* ctrl-a: insert ascii char/decimal-value */
 					strcpy(strbuf, centerstr->s);
-					str_lowercase(strbuf);
 					updateflags = U_EDITAREA;
 
-					if (str_equ(strbuf, "#char", STREQU_UNCASE | STREQU_FRONT)) {
+					if (str_equ(strbuf, "#char", STREQU_UNCASE | STREQU_RFRONT)) {
 						/* append dec value for ascii char */
 
 						sscanf(strbuf + 5, "%d", &selChar);
@@ -1099,9 +1102,14 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						updateflags = U_EDITAREA;
 						break;
 					}
-					else
+					else {
 						/* ctrl-a: insert ascii char */
-						key = selChar = charselect(d, selChar);
+						key = charselect(d, selChar);
+						if (key == -1)
+							break;
+						else
+							selChar = key;
+					}
 					/* no break; we just changed the key & want to insert it */
 
 				default:
@@ -1593,7 +1601,7 @@ int iszztdir(char *token)
 	buffer[40] = 0;
 
 	for (i = 0; i < ZZTDIRMODCOUNT; i++)
-		if (str_equ(buffer, zztdirmods[i], STREQU_UNCASE | STREQU_FRONT)) {
+		if (str_equ(buffer, zztdirmods[i], STREQU_UNCASE | STREQU_RFRONT)) {
 			/* Advance token to nearest space */
 			while (token[0] != ' ' && token[0] != 0) token++; 
 			/* Advance token to nearest nonspace */
@@ -1610,240 +1618,4 @@ int iszztdir(char *token)
 	return 0;
 }
 
-
-/***************************************************************************/
-/**** Wordwrap *************************************************************/
-/***************************************************************************/
-
-
-/* wordwrap
- * purpose: Inserts string into current string of svector, wordwrapping if
- *          necessary.
- * args:    sv:        stringvector to manipulate
- *          str:       string to insert in sv->cur->s
- *          inspos:    where in sv to insert str
- *          pos:       cursor position in sv->cur->s to track; a negative value
- *                     indicates that -pos - 1 is position in str
- *          wrapwidth: at what cursor position to wrap to next line
- *          editwidth: maximum width of a line in sv
- * return:  new location of pos. sv->cur is changed to reflect line on which
- *          pos now resides.
- *
- * NOTE: str will not be modified nor free()d in any way.
- */
-int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, int editwidth)
-{
-	int i, j, k;		/* general counters */
-	char *longstr;	/* Combination of sv->cur->s & str */
-	int longlen;		/* Length of longstr */
-	int newpos;		/* new position after insert */
-
-	char *newstr;     /* new string for next line */
-
-	/* check for bad data */
-	if (sv->cur == NULL || sv->cur->s == NULL || wrapwidth > editwidth || editwidth < 2 || inspos > strlen(sv->cur->s))
-		return -1;
-
-	/* first determine longlen and allocate longstr */
-	longlen = strlen(sv->cur->s) + strlen(str);
-	longstr = (char *) malloc(longlen + 2);
-	memset(longstr, 0, longlen + 2);
-	
-	/* fill longstr
-	 * 
-	 * i: position in longstr
-	 * j: position in sv->cur->s
-	 * k: position in str 
-	 */
-
-	/* fill from sv until inspos */
-	for (i = 0; i < inspos; i++)
-		longstr[i] = sv->cur->s[i];
-	j = i;
-
-	/* fill from str until end of str */
-	for (k = 0; str[k] != 0; k++, i++)
-		longstr[i] = str[k];
-
-	/* fill from sv until end */
-	for (; i < longlen; i++, j++)
-		longstr[i] = sv->cur->s[j];
-	
-	/* cap longstr */
-	longstr[i]   = 0;
-
-	/* determine location of newpos */
-	if (pos >= inspos)
-		newpos = pos + strlen(str);
-	else if (pos < 0)
-		newpos = inspos - pos - 1;
-
-	if (longlen <= wrapwidth) {
-		/* no need to wordwrap; we can just copy longstr over sv->cur->s */
-		strcpy(sv->cur->s, longstr);
-		return newpos;
-	}
-
-	/* we need to find the first space before wrapwidth 
-	 *
-	 * i: position in longstr
-	 * j: position of last identified space
-	 */
-
-	j = -1;
-	for (i = 0; i < wrapwidth; i++)
-		if (longstr[i] == ' ')
-			j = i;
-
-	if (j == -1) {
-		/* no space was found before wrap; reject insert */
-		return pos;
-	}
-
-	/* make newpos the negative differance of location of space and newpos,
-	 * if it belongs on next line */
-	if (newpos > j)
-		newpos = j - newpos;
-
-	/* set newstr to location of string after the space & cap longstr at space */
-	newstr = longstr + j + 1;
-	longstr[j] = 0;
-
-	/* replace sv->cur->s with shortened longstr */
-	strcpy(sv->cur->s, longstr);
-
-	/* finally: wrap onto next line or new line */
-	if (sv->cur->next == NULL       || strlen(sv->cur->next->s) == 0 ||
-			sv->cur->next->s[0] == '#'  || sv->cur->next->s[0] == '/' ||
-			sv->cur->next->s[0] == '?'  || sv->cur->next->s[0] == ':' ||
-			sv->cur->next->s[0] == '!'  || sv->cur->next->s[0] == '$' ||
-			sv->cur->next->s[0] == '\'' || sv->cur->next->s[0] == '@' ||
-			sv->cur->next->s[0] == ' ') {
-		/* next line either does not exist, is blank, is a zoc command,
-		 * or is indented; so, we create a new, blank line to wordwrap onto */
-
-		char *newnode;
-		newnode = (char *) malloc(editwidth + 2);
-		newnode[0] = 0;
-		insertstring(sv, newnode);
-	} else {
-		/* we can put text at the beginning of the next line; append a space
-		 * to end of newstr in preparation. */
-		i = strlen(newstr);
-		newstr[i++] = ' ';
-		newstr[i] = 0;
-	}
-	/* it is now okay to put text at the beginning of the next line */
-
-
-	/* recursively insert newstr at beginning of next line */
-	if (newpos < 0) {
-		/* cursor should be tracked on next line */
-		sv->cur = sv->cur->next;
-		newpos = wordwrap(sv, newstr, 0, newpos, wrapwidth, editwidth);
-	} else {
-		stringnode * nodeptr = sv->cur;
-		sv->cur = sv->cur->next;
-		wordwrap(sv, newstr, 0, 0, wrapwidth, editwidth);
-		sv->cur = nodeptr;
-	}
-
-	free(longstr);
-
-	return newpos;
-}
-
-
-/***************************************************************************/
-/**** File I/O for editbox editing *****************************************/
-/***************************************************************************/
-
-
-#define BUFFERSIZE 1000
-/* filetosvector - loads a textfile into a new stringvector */
-stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
-{
-	stringvector v;
-	FILE * fp;
-	char buffer[BUFFERSIZE] = "";      /* Be nice and wordwrap long lines */
-	char * str = NULL;
-	int strpos = 0;
-	int c = 0;
-
-	initstringvector(&v);
-
-	/* return on bad data */
-	if (wrapwidth > editwidth || editwidth < 1)
-		return v;
-
-	fp = fopen(filename, "rb");
-	if (fp == NULL)
-		return v;
-
-	do {
-		strpos = 0;
-
-		while (strpos < BUFFERSIZE && !((c = fgetc(fp)) == EOF || c == 0x0d || c == 0x0a || c == 0)) {
-			buffer[strpos++] = c;
-		}
-		buffer[strpos] = 0;
-
-		/* remove LF after CR (assume not CR format) */
-		if (c == 0x0d)
-			fgetc(fp);
-
-		str = (char *) malloc(sizeof(char) * (editwidth + 1));
-		if (str == NULL) {
-			fclose(fp);
-			return v;
-		}
-
-		if (strpos < wrapwidth) {
-			/* simple copy */
-			strcpy(str, buffer);
-			pushstring(&v, str);
-		} else {
-			/* Push an empty string and wordwrap the buffer onto it */
-			str[0] = 0;
-			pushstring(&v, str);
-			v.cur = v.last;
-			wordwrap(&v, buffer, 0, 0, wrapwidth, editwidth);
-		}
-	} while (c != EOF);
-
-	fclose(fp);
-
-	/* remove trailing blank line */
-	v.cur = v.last;
-	if (strlen(v.cur->s) == 0)
-		removestring(&v);
-
-	return v;
-}
-
-
-/* Copies a stringvector into a file. sv is not changed */
-void svectortofile(stringvector * sv, char *filename)
-{
-	FILE* fp;
-	stringnode * curnode = NULL;
-	int i;
-
-	if (sv->first == NULL)
-		return;
-
-	fp = fopen(filename, "wb");
-	if (fp == NULL)
-		return;
-
-	for (curnode = sv->first; curnode != NULL; curnode = curnode->next) {
-		for (i = 0; curnode->s[i] != 0; i++)
-			fputc(curnode->s[i], fp);
-		fputc(0x0d, fp);
-		fputc(0x0a, fp);
-	}
-
-	/* Done with file; success! */
-	fclose(fp);
-}
 

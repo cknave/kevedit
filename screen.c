@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.30 2001/11/09 01:15:09 bitman Exp $
+ * $Id: screen.c,v 1.31 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,19 +17,12 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <string.h>
-#include <dirent.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <unistd.h>
-
 #include "screen.h"
-#include "display.h"
+
 #include "kevedit.h"
-#include "zzt.h"
-#include "scroll.h"
 #include "editbox.h"
+
+#include "zzt.h"
 #include "hypertxt.h"
 #include "zlaunch.h"
 
@@ -37,8 +30,17 @@
 #include "panel_f1.h"
 #include "panel_f2.h"
 #include "panel_f3.h"
+#include "scroll.h"
 #include "tbox.h"
 #include "cbox.h"
+
+#include "display.h"
+
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /* The following define tells updatepanel to draw the standard patterns
  * in the current colour, rather than plain ol' white */
@@ -88,8 +90,6 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 
 		/* Get the key */
 		key = d->getch();
-		if (key == 0)
-			key = d->getch() | DDOSKEY_EXT;
 
 		switch (key) {
 			case DKEY_LEFT:  if (pos > 0)           pos--; break;
@@ -247,8 +247,6 @@ char* filenamedialog(char* initname, char* extension, char* prompt,
 		mydisplay->putch(70, 4, '.', 0x1f);
 		mydisplay->print(71, 4, 0x1f, extension);
 	}
-
-	/* TODO: allow directory switching */
 
 	pos = strlen(filenamebuffer);
 
@@ -580,62 +578,6 @@ void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsi
 	}
 }
 
-stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
-{
-	stringvector files;
-	DIR *dp;
-
-	initstringvector(&files);
-
-	dp = opendir(dir);
-	if (dp == NULL)
-		return files;
-
-	while (1) {
-		char * fulld_name;
-		struct dirent *dirent;
-
-		dirent = readdir(dp);
-
-		if (dirent == NULL)
-			break;
-
-		fulld_name = fullpath(dir, dirent->d_name, SLASH_DEFAULT);
-
-		if (access(fulld_name, D_OK)) {
-			if (filetypes & FTYPE_FILE) {
-				/* The current file is not a directory, check the extension */
-				if (extension[0] == '*' ||
-						(dirent->d_name[strlen(dirent->d_name) - strlen(extension) - 1]
-							 == '.' &&
-						str_equ(dirent->d_name + strlen(dirent->d_name) - strlen(extension),
-										extension, STREQU_UNCASE))) {
-					pushstring(&files, str_dup(dirent->d_name));
-				}
-			}
-		} else if (!str_equ(dirent->d_name, ".", 0)) {
-			if (filetypes & FTYPE_DIR) {
-				/* Current file is a directory */
-				char* dirline = (char*) malloc(sizeof(char) *
-																			 (strlen(dirent->d_name)*2 + 5));
-				strcpy(dirline, "!");
-				strcat(dirline, dirent->d_name);
-				strcat(dirline, ";[");
-				strcat(dirline, dirent->d_name);
-				strcat(dirline, "]");
-				pushstring(&files, dirline);
-			}
-		}
-
-		free(fulld_name);
-	}
-	closedir(dp);
-
-	inssortstringvector(&files, strcmp);
-
-	return files;
-}
-
 char * filedialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay)
 {
 	int done = 0;
@@ -811,8 +753,8 @@ int dothepanel_f1(displaymethod * d, editorinfo * e)
 	while (1) {
 		i = d->getch();
 		switch (i) {
-		case 27:
-		case 13:
+		case DKEY_ESC:
+		case DKEY_ENTER:
 			return -1;
 		case 'Z':
 		case 'z':
@@ -874,8 +816,8 @@ int dothepanel_f2(displaymethod * d, editorinfo * e)
 	while (1) {
 		i = d->getch();
 		switch (i) {
-		case 27:
-		case 13:
+		case DKEY_ESC:
+		case DKEY_ENTER:
 			return -1;
 		case 'O':
 		case 'o':
@@ -921,8 +863,8 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 	while (1) {
 		i = d->getch();
 		switch (i) {
-		case 27:
-		case 13:
+		case DKEY_ESC:
+		case DKEY_ENTER:
 			return -1;
 		case 'W':
 		case 'w':
@@ -962,8 +904,9 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 	}
 }
 
-unsigned char charselect(displaymethod * d, int c)
+int charselect(displaymethod * d, int c)
 {
+	int key;
 	int z, e, i = 0;
 	static int x, y;
 
@@ -981,58 +924,30 @@ unsigned char charselect(displaymethod * d, int c)
 			i += 2;
 		}
 	}
-	i = 0;
+
 	while (1) {
 		d->cursorgo(14 + x, 9 + y);
+
+		/* Cursor color tile */
 		d->putch(14 + x, 9 + y, (x + y * 32), 0x0f);
-		e = 0;
-		i = d->getch();
+
+		key = d->getch();
+
+		/* Regular-color tile */
 		d->putch(14 + x, 9 + y, (x + y * 32), 0x0a);
-		if (!i) {
-			e = 1;
-			i = d->getch();
-		}
-		if (e == 1 && i == 72) {
-			/* Up Arrow */
-			if (y > 0)
-				y--;
-			else
-				y = 7;
-		}
-		if (e == 1 && i == 80) {
-			/* Down Arrow */
-			if (y < 7)
-				y++;
-			else
-				y = 0;
-		}
-		if (e == 1 && i == 75) {
-			/* Left Arrow */
-			if (x > 0)
-				x--;
-			else
-				x = 31;
-		}
-		if (e == 1 && i == 77) {
-			/* Left Arrow */
-			if (x < 31)
-				x++;
-			else
-				x = 0;
-		}
-		if (e == 0 && i == 13) {
-			/* Enter */
-			i = (x + y * 32);
-			break;
-		}
-		if (e == 0 && i == 27) {
-			/* Escape */
-			/* Return the char we recieved without doing anything, unless it is -1 */
-			return (c != -1)? c : (x + y * 32);
+
+		switch (key) {
+			case DKEY_UP:    if (y > 0) y--;  else y = 7;  break;
+			case DKEY_DOWN:  if (y < 7) y++;  else y = 0;  break;
+			case DKEY_LEFT:  if (x > 0) x--;  else x = 31; break;
+			case DKEY_RIGHT: if (x < 31) x++; else x = 0;  break;
+			case DKEY_ENTER: return x + y * 32;
+			case DKEY_ESC:   return -1;
+				/* Return the char we recieved without doing anything,
+				 * unless it was -1 */
+				return (c != -1)? c : (x + y * 32);
 		}
 	}
-
-	return i;
 }
 
 void colorselectdrawat(displaymethod* d, int x, int y, char ch)
@@ -1044,7 +959,6 @@ void colorselectdraw(displaymethod* d)
 {
 	int x, y;
 
-	/* TODO: find a better place to get the cursor out of the way */
 	d->cursorgo(0, 0);
 
 	/* Draw the colors */
@@ -1184,8 +1098,6 @@ int colorselector(displaymethod * d, int * bg, int * fg, int * blink)
 
 		/* Get the key */
 		key = d->getch();
-		if (key == 0)
-			key = d->getch() | DDOSKEY_EXT;
 
 		/* Hide the damage done by the cursor */
 		colorselectremovecursor(d, curx, cury);
@@ -1231,7 +1143,7 @@ int confirmprompt(displaymethod * mydisplay, char * prompt)
 			return CONFIRM_YES;
 		else if (i == 'n' || i == 'N')
 			return CONFIRM_NO;
-		else if (i == 27)
+		else if (i == DKEY_ESC)
 			return CONFIRM_CANCEL;
 	}
 }

@@ -1,6 +1,6 @@
 !contents;Table of Contents
 $-----------------------------------------
-KevEdit 0.3.3
+KevEdit 0.3.4
      A world file editor for the game ZZT
 $-----------------------------------------
 Copyright (C) 2000-2001
@@ -23,7 +23,6 @@ With many contributions by
 
 :help;Help!
 
-$******* NEW in 0.3.3 *******
 KevEdit now includes a fully functional
 help system, as you are very much aware
 since you are reading this.

@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.13 2001/11/09 01:15:09 bitman Exp $
+ * $Id: misc.c,v 1.14 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,15 +17,19 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "misc.h"
+
 #include "kevedit.h"
-#include "display.h"
-#include "svector.h"
 #include "editbox.h"
 #include "screen.h"
-#include "patbuffer.h"
+
+#include "svector.h"
 #include "hypertxt.h"
-#include "misc.h"
 #include "selection.h"
+
+#include "patbuffer.h"
+
+#include "display.h"
 
 #include <stdlib.h>
 #include <string.h>

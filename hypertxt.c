@@ -1,5 +1,5 @@
 /* hypertxt.c  -- hypertext link system
- * $Id: hypertxt.c,v 1.2 2001/10/22 02:48:22 bitman Exp $
+ * $Id: hypertxt.c,v 1.3 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -68,7 +68,7 @@ int findhypermessage(char* msg, stringvector* sv)
 	while (curNode != NULL) {
 		if (curNode->s[0] == ':') {
 			/* Could this be it? */
-			if (str_equ(curNode->s + 1, msg, STREQU_UNCASE | STREQU_FRONT)) {
+			if (str_equ(curNode->s + 1, msg, STREQU_UNCASE | STREQU_RFRONT)) {
 				if (curNode->s[strlen(msg) + 1] == '\0' ||
 						curNode->s[strlen(msg) + 1] == ';') {
 					/* This is it! */

@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.11 2001/10/27 19:30:42 kvance Exp $
+ * $Id: display_dos.c,v 1.12 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -159,10 +159,16 @@ void display_dos_putch(int x, int y, int ch, int co)
 
 int display_dos_getch()
 {
+	int key;
 	/* We can always release a time slice because we're always in some
 	   kind of DPMI */
 	release_time_slice();
-	return getch();
+
+	key = getch();
+	if (!key)
+		return getch() | DDOSKEY_EXT;
+	else
+		return key;
 }
 
 void display_dos_gotoxy(int x, int y)

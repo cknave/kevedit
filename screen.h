@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.18 2001/11/09 01:15:09 bitman Exp $
+ * $Id: screen.h,v 1.19 2001/11/10 07:42:39 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include "zzt.h"
 #include "kevedit.h"
 #include "svector.h"
+#include "files.h"
 
 /* line_editor flags */
 #define LINED_NORMAL   0x00
@@ -40,11 +41,6 @@
 /* line_editor responses */
 #define LINED_CANCEL 1
 #define LINED_OK     0
-
-/* General file types */
-#define FTYPE_FILE 1
-#define FTYPE_DIR  2
-#define FTYPE_ALL  3
 
 /* confirmprompt() return values */
 #define CONFIRM_YES    0
@@ -96,17 +92,13 @@ extern int boarddialog(world * w, int curboard, int firstnone, char * title,
 extern int switchboard(world * w, editorinfo * e, displaymethod * mydisplay);
 extern char *titledialog(char* prompt, displaymethod * d);
 
-/* directory reading - doesn't really belong */
-extern stringvector readdirectorytosvector(char * dir, char * extension,
-																					 int filetypes);
-
 /* panels */
 extern int dothepanel_f1(displaymethod * d, editorinfo * e);
 extern int dothepanel_f2(displaymethod * d, editorinfo * e);
 extern int dothepanel_f3(displaymethod * d, editorinfo * e);
 
 /* Prompts the user to select a char */
-extern unsigned char charselect(displaymethod * d, int c);
+extern int charselect(displaymethod * d, int c);
 
 /* Prompts the user to select a color */
 int colorselector(displaymethod * d, int * bg, int * fg, int * blink);
