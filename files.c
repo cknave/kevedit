@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.2 2001/11/10 20:03:43 bitman Exp $
+ * $Id: files.c,v 1.3 2001/11/10 22:05:12 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,61 +32,93 @@
 /**** File I/O *************************************************************/
 /***************************************************************************/
 
-#define BUFFERSIZE 1000
+#define BUFFERSIZE 42
 /* filetosvector() - loads a textfile into a new stringvector */
 stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
 {
 	stringvector v;
 	FILE * fp;
-	char buffer[BUFFERSIZE] = "";      /* Be nice and wordwrap long lines */
 	char * str = NULL;
 	int strpos = 0;
 	int c = 0;
 
 	initstringvector(&v);
 
-	/* return on bad data */
-	if (wrapwidth > editwidth || editwidth < 1)
-		return v;
+	/* Wordwarp requires a greater or equal editwidth */
+	if (wrapwidth > editwidth)
+		wrapwidth = editwidth;
 
+	/* Open the file */
 	fp = fopen(filename, "rb");
 	if (fp == NULL)
 		return v;
 
 	do {
-		strpos = 0;
+		int done = 0;
+		int bufsize = BUFFERSIZE;
+		char *buffer = str_duplen("", bufsize);
 
-		while (strpos < BUFFERSIZE && !((c = fgetc(fp)) == EOF || c == 0x0d || c == 0x0a || c == 0)) {
-			buffer[strpos++] = c;
-		}
+		strpos = 0;
+		do {
+			/* Copy characters until bufsize is reached */
+			while (strpos < bufsize &&
+						 !((c = fgetc(fp)) == EOF || c == 0x0d || c == 0x0a || c == '\x0'))
+				buffer[strpos++] = c;
+
+			if (strpos == bufsize) {
+				/* Reached the end of the buffer -- make it bigger and keep going */
+				char* newbuf;
+				bufsize *= 2;
+				newbuf = str_duplen(buffer, bufsize);
+				free(buffer);
+				buffer = newbuf;
+			} else {
+				done = 1;
+			}
+		} while (!done);
+
 		buffer[strpos] = 0;
 
 		/* remove LF after CR (assume not CR format) */
 		if (c == 0x0d)
 			fgetc(fp);
 
-		str = (char *) malloc(sizeof(char) * (editwidth + 1));
-		if (str == NULL) {
-			fclose(fp);
-			return v;
-		}
+		if (editwidth == 0) {
+			/* No editwidth, reserve just enough space to hold the string */
+			/* Assume no wordwrap (checked above), may wish to change this some day */
+			str = str_dup(buffer);
+			if (str == NULL) {
+				fclose(fp);
+				return v;
+			}
 
-		if (strpos < wrapwidth) {
-			/* simple copy */
-			strcpy(str, buffer);
 			pushstring(&v, str);
 		} else {
-			/* Push an empty string and wordwrap the buffer onto it */
-			str[0] = 0;
-			pushstring(&v, str);
-			v.cur = v.last;
-			wordwrap(&v, buffer, 0, 0, wrapwidth, editwidth);
+			/* Positive editwidth, reserve enough space for that many chars */
+			str = str_duplen("", editwidth);
+			if (str == NULL) {
+				fclose(fp);
+				return v;
+			}
+
+			if (strpos < wrapwidth) {
+				/* simple copy */
+				strcpy(str, buffer);
+				pushstring(&v, str);
+			} else {
+				/* Push an empty string and wordwrap the buffer onto it */
+				pushstring(&v, str);
+				v.cur = v.last;
+				wordwrap(&v, buffer, 0, 0, wrapwidth, editwidth);
+			}
 		}
+
+		free(buffer);
 	} while (c != EOF);
 
 	fclose(fp);
 
-	/* remove trailing blank line */
+	/* remove trailing blank line, if present */
 	v.cur = v.last;
 	if (strlen(v.cur->s) == 0)
 		removestring(&v);
