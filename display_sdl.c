@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.3 2002/03/19 21:23:00 kvance Exp $
+ * $Id: display_sdl.c,v 1.4 2002/03/20 00:55:21 bitman Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -33,254 +33,254 @@ int xstart, ystart;	/* Where the viewport begins */
 
 void display_load_charset(Uint8 *dest, Uint8 *name)
 {
-  FILE *fp;
-  fp = fopen(name, "rb");
-  fread(dest, 256 * 14, 1, fp);
-  fclose(fp);
+	FILE *fp;
+	fp = fopen(name, "rb");
+	fread(dest, 256 * 14, 1, fp);
+	fclose(fp);
 }
 
 void display_load_palette(Uint32 *dest, Uint8 *name)
 {
-  FILE *fp;
-  Uint8 palette[3 * 16];
-  Uint8 *dest_palette = (Uint8 *)dest;
-  Uint32 i2, i3, i4;
+	FILE *fp;
+	Uint8 palette[3 * 16];
+	Uint8 *dest_palette = (Uint8 *)dest;
+	Uint32 i2, i3, i4;
 
-  fp = fopen(name, "rb");
-  fread(palette, 3 * 16, 1, fp);
+	fp = fopen(name, "rb");
+	fread(palette, 3 * 16, 1, fp);
 
-  i3 = 0;
-  i4 = 0;
-  /* Convert the palette from 6 bits per component to 8 bits per component */
-  for(i2 = 0; i2 < 16; i2++)
-  {
-  	  dest_palette[i3]   = (palette[i4+2] * 255) / 63;
-	  dest_palette[i3+1] = (palette[i4+1] * 255) / 63;
-	  dest_palette[i3+2] = (palette[i4]   * 255) / 63;
-	  i3 += 4;
-	  i4 += 3;
-  }
-  fclose(fp);
+	i3 = 0;
+	i4 = 0;
+	/* Convert the palette from 6 bits per component to 8 bits per component */
+	for(i2 = 0; i2 < 16; i2++)
+	{
+		dest_palette[i3]   = (palette[i4+2] * 255) / 63;
+		dest_palette[i3+1] = (palette[i4+1] * 255) / 63;
+		dest_palette[i3+2] = (palette[i4]   * 255) / 63;
+		i3 += 4;
+		i4 += 3;
+	}
+	fclose(fp);
 }
 
 void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32
  depth, Uint32 full_screen, Uint32 hw_surface)
 {
-  Uint32 vflags = 0;
-  if(full_screen)
-  {
-    vflags |= SDL_FULLSCREEN;
-  }
-  if(hw_surface)
-  {
-    vflags |= SDL_HWSURFACE;
-  }
+	Uint32 vflags = 0;
+	if(full_screen)
+	{
+		vflags |= SDL_FULLSCREEN;
+	}
+	if(hw_surface)
+	{
+		vflags |= SDL_HWSURFACE;
+	}
 
-  vdest->video = SDL_SetVideoMode(width, height, depth, vflags);
-  vdest->buffer_surface = SDL_CreateRGBSurface(0, 640, 350, 32, 0, 0, 0, 0);
-  vdest->buffer = (Uint8 *)malloc(TEXT_MODE_VRAM);
-  vdest->char_set = (Uint8 *)malloc(256 * 14);
-  vdest->palette = (Uint32 *)malloc(4 * 16);
-  vdest->write_x = 0;
-  vdest->write_y = 0;
+	vdest->video = SDL_SetVideoMode(width, height, depth, vflags);
+	vdest->buffer_surface = SDL_CreateRGBSurface(0, 640, 350, 32, 0, 0, 0, 0);
+	vdest->buffer = (Uint8 *)malloc(TEXT_MODE_VRAM);
+	vdest->char_set = (Uint8 *)malloc(256 * 14);
+	vdest->palette = (Uint32 *)malloc(4 * 16);
+	vdest->write_x = 0;
+	vdest->write_y = 0;
 }
 
 void display_end(video_info *vdest)
 {
-  free(vdest->buffer);
-  free(vdest->char_set);
-  free(vdest->palette);
+	free(vdest->buffer);
+	free(vdest->char_set);
+	free(vdest->palette);
 
-  /* SDL should restore everything okay.. just use SDL_quit() when ready */
+	/* SDL should restore everything okay.. just use SDL_quit() when ready */
 }
 
 void display_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
 {
-  Uint8 *vram = vdest->buffer;
-  *(vram + (((y * 80) + x) * 2)) = ch;
-  *(vram + (((y * 80) + x) * 2) + 1) = co;
+	Uint8 *vram = vdest->buffer;
+	*(vram + (((y * 80) + x) * 2)) = ch;
+	*(vram + (((y * 80) + x) * 2) + 1) = co;
 }
 
 void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 {
-  vdest->write_x = x;
-  vdest->write_y = y;
+	vdest->write_x = x;
+	vdest->write_y = y;
 }
 
 void display_redraw(video_info *vdest)
 {
-  /* Updates the screen; call at the end of a cycle */
+	/* Updates the screen; call at the end of a cycle */
 
-  SDL_Rect blit_rect;
+	SDL_Rect blit_rect;
 
-  Uint32 *video_pointer = vdest->buffer_surface->pixels;
-  Uint32 *last_pointer, *end_pointer;
-  Uint8 *char_pointer;
-  Uint8 *color_pointer;
-  Uint8 *charset_pointer = vdest->char_set;
-  Uint32 *palette_pointer = vdest->palette;
-  Uint8 *current_char_pointer;
-  Uint8 char_row;
-  Uint8 char_mask;
-  Uint32 fg, bg;
-  Uint32 i, i2, i3, i4;
+	Uint32 *video_pointer = vdest->buffer_surface->pixels;
+	Uint32 *last_pointer, *end_pointer;
+	Uint8 *char_pointer;
+	Uint8 *color_pointer;
+	Uint8 *charset_pointer = vdest->char_set;
+	Uint32 *palette_pointer = vdest->palette;
+	Uint8 *current_char_pointer;
+	Uint8 char_row;
+	Uint8 char_mask;
+	Uint32 fg, bg;
+	Uint32 i, i2, i3, i4;
 
-  char_pointer = vdest->buffer;
-  color_pointer = vdest->buffer + 1;
-  current_char_pointer = charset_pointer + (*(char_pointer) * 14);
+	char_pointer = vdest->buffer;
+	color_pointer = vdest->buffer + 1;
+	current_char_pointer = charset_pointer + (*(char_pointer) * 14);
 
-  i = 25;
-  while(i)
-  {
-    i2 = 80;
-    while(i2)
-    {
-      last_pointer = video_pointer;
-      bg = *(palette_pointer + (*(color_pointer) >> 4));
-      fg = *(palette_pointer + (*(color_pointer) & 15));
+	i = 25;
+	while(i)
+	{
+		i2 = 80;
+		while(i2)
+		{
+			last_pointer = video_pointer;
+			bg = *(palette_pointer + (*(color_pointer) >> 4));
+			fg = *(palette_pointer + (*(color_pointer) & 15));
 
-      i3 = 14;
-      while(i3)
-      {
-        /* Draw an entire char row at a time.. */
-        char_mask = 0x7f;
-        char_row = *(current_char_pointer);
-        i4 = 8;
-        while(i4)
-        {
-          char_mask = (1 << (i4 - 1));
-          if((char_mask & char_row))
-          {
-             /* Draw fg color */
-            *(video_pointer) = fg;
-          }
-          else
-          {
-            /* Draw bg color */
-            *(video_pointer) = bg;
-          }
-          i4--;
-          video_pointer++;
-        }
-        end_pointer = video_pointer;
-        video_pointer += 632;
-        current_char_pointer++;
-        i3--;
-      }
-      i3 = 14;
-      char_pointer += 2;
-      color_pointer += 2;
-      current_char_pointer = charset_pointer + (*(char_pointer) * 14);
-      /* Jump to the next char */
-      i2--;
-      video_pointer = last_pointer + 8;
-    }
-    video_pointer = end_pointer;
-    i--;
-  }
+			i3 = 14;
+			while(i3)
+			{
+				/* Draw an entire char row at a time.. */
+				char_mask = 0x7f;
+				char_row = *(current_char_pointer);
+				i4 = 8;
+				while(i4)
+				{
+					char_mask = (1 << (i4 - 1));
+					if((char_mask & char_row))
+					{
+						 /* Draw fg color */
+						*(video_pointer) = fg;
+					}
+					else
+					{
+						/* Draw bg color */
+						*(video_pointer) = bg;
+					}
+					i4--;
+					video_pointer++;
+				}
+				end_pointer = video_pointer;
+				video_pointer += 632;
+				current_char_pointer++;
+				i3--;
+			}
+			i3 = 14;
+			char_pointer += 2;
+			color_pointer += 2;
+			current_char_pointer = charset_pointer + (*(char_pointer) * 14);
+			/* Jump to the next char */
+			i2--;
+			video_pointer = last_pointer + 8;
+		}
+		video_pointer = end_pointer;
+		i--;
+	}
 
-  /* Update the buffer surface to the real thing.. */
+	/* Update the buffer surface to the real thing.. */
 
-  blit_rect.x = xstart;
-  blit_rect.y = ystart;
+	blit_rect.x = xstart;
+	blit_rect.y = ystart;
 
-  SDL_BlitSurface(vdest->buffer_surface, NULL, vdest->video, &blit_rect);
-  SDL_UpdateRect(vdest->video, 0, 0, 0, 0);
+	SDL_BlitSurface(vdest->buffer_surface, NULL, vdest->video, &blit_rect);
+	SDL_UpdateRect(vdest->video, 0, 0, 0, 0);
 }
 
 void display_update(video_info *vdest, int x, int y, int width, int height)
 {
-  /* Updates a block */
+	/* Updates a block */
 
-  SDL_Rect src_rect, dest_rect;
+	SDL_Rect src_rect, dest_rect;
 
-  Uint32 *root = vdest->buffer_surface->pixels;
+	Uint32 *root = vdest->buffer_surface->pixels;
 
-  Uint32 *video_pointer = vdest->buffer_surface->pixels;
-  Uint32 *last_pointer, *end_pointer;
-  Uint8 *char_pointer;
-  Uint8 *color_pointer;
-  Uint8 *charset_pointer = vdest->char_set;
-  Uint32 *palette_pointer = vdest->palette;
-  Uint8 *current_char_pointer;
-  Uint8 char_row;
-  Uint8 char_mask;
-  Uint32 fg, bg;
-  Uint32 i, i2, i3, i4;
+	Uint32 *video_pointer = vdest->buffer_surface->pixels;
+	Uint32 *last_pointer, *end_pointer;
+	Uint8 *char_pointer;
+	Uint8 *color_pointer;
+	Uint8 *charset_pointer = vdest->char_set;
+	Uint32 *palette_pointer = vdest->palette;
+	Uint8 *current_char_pointer;
+	Uint8 char_row;
+	Uint8 char_mask;
+	Uint32 fg, bg;
+	Uint32 i, i2, i3, i4;
 
-  char_pointer = vdest->buffer + ((y*80+x)<<1);
-  color_pointer = vdest->buffer + ((y*80+x)<<1) + 1;
-  current_char_pointer = charset_pointer + (*(char_pointer) * 14);
+	char_pointer = vdest->buffer + ((y*80+x)<<1);
+	color_pointer = vdest->buffer + ((y*80+x)<<1) + 1;
+	current_char_pointer = charset_pointer + (*(char_pointer) * 14);
 
-  video_pointer += 640*(y*14);
-  video_pointer += (x<<3);
+	video_pointer += 640*(y*14);
+	video_pointer += (x<<3);
 
-  i = height;
-  while(i) {
-    i2 = width;
-    if(height != 1)
-	    video_pointer = root + ((height-i+y)*14)*(640)+(x<<3);
-    while(i2) {
-      last_pointer = video_pointer;
-      bg = *(palette_pointer + (*(color_pointer) >> 4));
-      fg = *(palette_pointer + (*(color_pointer) & 15));
+	i = height;
+	while(i) {
+		i2 = width;
+		if(height != 1)
+			video_pointer = root + ((height-i+y)*14)*(640)+(x<<3);
+		while(i2) {
+			last_pointer = video_pointer;
+			bg = *(palette_pointer + (*(color_pointer) >> 4));
+			fg = *(palette_pointer + (*(color_pointer) & 15));
 
-      i3 = 14;
-      while(i3)
-      {
-        /* Draw an entire char row at a time.. */
-        char_mask = 0x7f;
-        char_row = *(current_char_pointer);
-        i4 = 8;
-        while(i4)
-        {
-          char_mask = (1 << (i4 - 1));
-          if((char_mask & char_row))
-          {
-             /* Draw fg color */
-            *(video_pointer) = fg;
-          }
-          else
-          {
-            /* Draw bg color */
-            *(video_pointer) = bg;
-          }
-          i4--;
-          video_pointer++;
-        }
-        end_pointer = video_pointer;
-        video_pointer += 632;
-        current_char_pointer++;
-        i3--;
-      }
+			i3 = 14;
+			while(i3)
+			{
+				/* Draw an entire char row at a time.. */
+				char_mask = 0x7f;
+				char_row = *(current_char_pointer);
+				i4 = 8;
+				while(i4)
+				{
+					char_mask = (1 << (i4 - 1));
+					if((char_mask & char_row))
+					{
+						 /* Draw fg color */
+						*(video_pointer) = fg;
+					}
+					else
+					{
+						/* Draw bg color */
+						*(video_pointer) = bg;
+					}
+					i4--;
+					video_pointer++;
+				}
+				end_pointer = video_pointer;
+				video_pointer += 632;
+				current_char_pointer++;
+				i3--;
+			}
 
-      i3 = 14;
-      char_pointer += 2;
-      color_pointer += 2;
-      current_char_pointer = charset_pointer + (*(char_pointer) * 14);
-      /* Jump to the next char */
-      i2--;
-      video_pointer = last_pointer + 8;
-    }
-    /* Move char/color pointers to the next line of the block */
-    video_pointer = end_pointer;
-    char_pointer += (80-width)<<1;
-    color_pointer += (80-width)<<1;
-    current_char_pointer = charset_pointer + (*(char_pointer) * 14);
-    i--;
-  }
+			i3 = 14;
+			char_pointer += 2;
+			color_pointer += 2;
+			current_char_pointer = charset_pointer + (*(char_pointer) * 14);
+			/* Jump to the next char */
+			i2--;
+			video_pointer = last_pointer + 8;
+		}
+		/* Move char/color pointers to the next line of the block */
+		video_pointer = end_pointer;
+		char_pointer += (80-width)<<1;
+		color_pointer += (80-width)<<1;
+		current_char_pointer = charset_pointer + (*(char_pointer) * 14);
+		i--;
+	}
 
-  /* Update the buffer surface to the real thing.. */
+	/* Update the buffer surface to the real thing.. */
 
-  src_rect.x = (x<<3);
-  src_rect.y = (y*14);
-  dest_rect.x = src_rect.x+xstart;
-  dest_rect.y = src_rect.y+ystart;
-  src_rect.w = dest_rect.w = (width<<3);
-  src_rect.h = dest_rect.h = (height*14);
+	src_rect.x = (x<<3);
+	src_rect.y = (y*14);
+	dest_rect.x = src_rect.x+xstart;
+	dest_rect.y = src_rect.y+ystart;
+	src_rect.w = dest_rect.w = (width<<3);
+	src_rect.h = dest_rect.h = (height*14);
 
-  SDL_BlitSurface(vdest->buffer_surface, &src_rect, vdest->video, &dest_rect);
-  SDL_UpdateRect(vdest->video, dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
+	SDL_BlitSurface(vdest->buffer_surface, &src_rect, vdest->video, &dest_rect);
+	SDL_UpdateRect(vdest->video, dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
 }
 
 /********************************
@@ -397,6 +397,8 @@ int display_sdl_init()
 	display_load_charset(info.char_set, "default.chr");
 	display_load_palette(info.palette, "ega.pal");
 
+	/* TODO: what if default.chr and ega.pal aren't in the current dir? */
+
 	xstart = ((info.video->w) - 640) / 2;
 	ystart = ((info.video->h) - 350) / 2;
 
@@ -412,6 +414,7 @@ void display_sdl_end()
 {
 	/* Terminate SDL stuff */
 	SDL_Quit();
+	/* TODO: should we call display_end() here? anywhere? */
 }
 
 void display_sdl_putch(int x, int y, int ch, int co)
@@ -594,6 +597,7 @@ int display_sdl_getch()
 			case 'z':
 				event.key.keysym.sym = DKEY_ALT_Z;
 				break;
+			/* Add other letters of the alphabet as necessary */
 			default:
 				break;
 		}
@@ -731,6 +735,14 @@ void display_sdl_putch_discrete(int x, int y, int ch, int co)
 	display_putch(&info, x, y, ch, co);
 }
 
+void display_sdl_print_discrete(int x, int y, int c, char *ch)
+{
+	int i, len = strlen(ch);
+
+	for(i = 0; i < len; i++)
+		display_sdl_putch(x+i, y, ch[i], c);
+}
+
 void display_sdl_update(int x, int y, int w, int h)
 {
 	display_update(&info, x, y, w, h);
@@ -751,5 +763,6 @@ displaymethod display_sdl =
 	display_sdl_titlebar,
 	display_sdl_shift,
 	display_sdl_putch_discrete,
+	display_sdl_print_discrete,
 	display_sdl_update
 };

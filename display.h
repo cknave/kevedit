@@ -1,5 +1,5 @@
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.12 2002/03/19 03:09:35 kvance Exp $
+ * $Id: display.h,v 1.13 2002/03/20 00:55:21 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,8 @@ typedef struct displaymethod {
 
 	void (*putch_discrete)(int x, int y, int ch, int co);	/* Draw a character without necessarily updating the screen */
 
+	void (*print_discrete) (int x, int y, int c, char *ch);	/* Print without necessarily updating the screen */
+
 	void (*update)(int x, int y, int w, int h);	/* Update the screen after a putch_discrete() */
 
 } displaymethod;
@@ -54,9 +56,7 @@ extern displaymethod display;
 
 extern void RegisterDisplays();
 
-/* DOS keys */
-/* TODO: move to another file */
-
+/* Display Keys */
 #define DKEY_NONE       0x00
 
 /* Flags */

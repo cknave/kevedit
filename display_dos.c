@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.17 2002/03/19 03:09:35 kvance Exp $
+ * $Id: display_dos.c,v 1.18 2002/03/20 00:55:21 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -254,5 +254,6 @@ displaymethod display_dos =
 	display_dos_titlebar,
 	display_dos_shift,
 	display_dos_putch,
+	display_dos_print,
 	display_dos_update
 };
