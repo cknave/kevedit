@@ -1,8 +1,14 @@
+@Programming Reference Manual
 $ZZT-OOP Programming Language
+$(Thanks to Chronos & Tim Sweeney)
+
+!cmds;Command Reference
+!-lang;Language Overview
+!-langtut;Tutorial
+
 $Reference Manual
-$(Thanks Chronos!)
-:top;
-Contents: 
+
+:contents;Contents: 
 !fmts;Program format
 !cmds;Commands
 !msgs;Messages
@@ -24,83 +30,92 @@ associated symbol:
      Their meanings:
 
 :;     @objectname
-When this is on the first line of an
+     When this is on the first line of an
 object, it identifies the object by name.
-If an object is not given a name, there
-is no way to direct messages to it
-except when using ALL and OTHERS.
+If an object is not given a name, there is
+no way to direct messages to it except
+when using ALL and OTHERS.
 
 :;     #command
-Identifies a programming language command.
+     Identifies a programming language
+command.
 
 :;     /direction 
-Causes the object to move one space in the
-given direction.  If it is blocked, it
-will wait until it is free.
+     Causes the object to move one space
+in the given direction.  If it is blocked,
+it will wait until it is free.
 
-:;     ?direction Tells an object to try
-to move in a given direction.  If its
-movement is blocked, the command will be
-ignored.
+:;     ?direction
+     Tells an object to try to move in a
+given direction.  If its movement is
+blocked, the command will be ignored.
 
-:;     :label Identifies the part of the
-program that handles a specified message.
+:;     :label
+     Identifies the part of the program
+that handles a specified message.
 Whenever the program receives the mes-
-sage, it will execute statements
-following the label.  In ZZT.DAT text
-format, labels can also be followed by a
-;, like so: $:label;Text The text appears
-white, and hyperlinks move right to the
-line of text, retaining any text before
-it.  Unfortunately, this command does not
-work in ZZT-OOP.  However, most .HLP files
+sage, it will execute statements following
+the label.  In ZZT.DAT text format, labels
+can also be followed by a ;, like so:
+
+:;     :label;Text
+     The text appears white, and
+hyperlinks move right to the line of
+text, retaining any text before it.
+Unfortunately, this command does not work
+in ZZT-OOP.  However, most .HLP files
 implement it.
 
 :;     'comment
-Comments have no effect, but serve to
+     Comments have no effect, but serve to
 remind you (the programmer) what you were
-do- ing when you wrote the program.
-They also serve as "pre-zapped" labels
-which can be #restored.
+doing when you wrote the program.  They
+also serve as "pre-zapped" labels which
+can be #restored.
 
 :;     text
-When program execution comes to a line of
-text, the text will be displayed on the
-screen.  If only a one-line message is
-given, it will be flashed on the bottom of
-the screen as a message.  For multiple
+     When program execution comes to a
+line of text, the text will be displayed
+on the screen.  If only a one-line message
+is given, it will be flashed on the bottom
+of the screen as a message.  For multiple
 lines, a "scroll" will be opened up on
 screen and the text will appear.  The
 contents of any window can be printed
 using Alt-P.
 
 :;     $text
-This makes text white and centers it.  It
-can be used for titles, dialogue, or just
-about anything!  Note: this command does
-not work in a one-line message.  It simply
-shows the $.
+     This makes text white and centers it.
+It can be used for titles, dialogue, or
+just about anything!  Note: this command
+does not work in a one-line message.  It
+simply shows the $.
 
 :text;     !msg;text
-A hypertext-like button.  When this
+     A hypertext-like button.  When this
 statement is included among text
 descriptions, it appears to the player as
 a button...
+
 !text;Just like this.
-Then, as the user views the text, he may
-position the cur- sor on the button and
-press enter, causing the supplied message
-to be sent.
+     Then, as the user views the text, he
+may position the cursor on the button
+and press enter, causing the supplied
+message to be sent.
 
 :;     !-filename;text
-This creates a hyperlink, just like !, but
-this one opens up a ZZT window and
-displays the contents of the given file,
-as well as displaying instructions above.
-If no extension is specified, HLP is used.
+     This creates a hyperlink, just as !
+does, but this one opens up a ZZT window
+and displays the contents of the given
+file, as well as displaying instructions
+above.  If no extension is specified, HLP
+is used.
+
 NOTE: If accessed by an object, help files
 are faulted in that normal ! hyperlinks
-will not work in them.
+will not work in them. Links to other
+files will still work, but links within
+the file itself will not.
 
 Here is an example:
 !-langref;ZZT-OOP Reference Manual
@@ -154,7 +169,7 @@ $CCW <direction>
     direction.
     CW NORTH = WEST.
 $RNDP <direction>
-    A random direction per- pendicular to
+    A random direction perpendicular to
     the given direction.  For example,
     RNDP NORTH = either EAST
     or WEST.
@@ -179,7 +194,7 @@ demonstrate the use of directions:
 
      Objects can manipulate simple
 variables called flags. A flag assumes
-one of two pos- sible states: SET and
+one of two possible states: SET and
 CLEAR. Objects can alter flags, then
 take action accordingly.
 
@@ -198,12 +213,13 @@ other objects on all boards.
      Tests the condition of a flag.  If
 the flag is SET, the message is sent.
 Otherwise, the instruction is ignored.
+
      If NOT is included, the message is
 sent if the flag is NOT SET. Otherwise,
 the instruction is ignored.
-     In addition to user-
-declared flags, several "in-
-ternal" flags can be accessed
+
+     In addition to user-declared flags,
+several "internal" flags can be accessed
 by any object:
 
 $ALLIGNED
@@ -316,9 +332,10 @@ allow a SELF para meter for the #send
 command. It only sends the message to the
 object itself.
 
-In all #SEND commands, the SEND may be
-omitted, but messages with the same name
-as a command can't be sent in this way.
+     In all #SEND commands, the SEND may
+be omitted, but messages with the same
+name as a command can't be sent in this
+way.
 
 :end;#END
 
@@ -355,6 +372,7 @@ Otherwise, the given message will be sent.
      Sets the object moving in the given
 direction.  The object will continue
 moving and executing commands.
+
      To cause a program to cease walking,
 issue the "Walk idle" command.
 
@@ -378,10 +396,12 @@ the /I command.
 player's health, terminating the game. If
 the player has a high score, it will be
 recorded.
+
      Interestingly, if you immediately
 follow #endgame with #give health (n), the
 game will not be terminated, and the
 player's health will be set to n.
+
      Program execution continues past
  #endgame. In fact, only 3 commands halt
 program execution:
@@ -422,12 +442,12 @@ any fakes or water in its way.
 
 :zap;#ZAP <message>
 
-     Disables the first oc- curance of a
+     Disables the first occurance of a
 label by turning it into a comment.  For
-exam- ple, #ZAP TOUCH would turn the label
+example, #ZAP TOUCH would turn the label
  :TOUCH into the comment 'TOUCH.  Allows a
 program to have several routines with the
-same labels, so that the de- sired label
+same labels, so that the desired label
 is called at the appropriate time.
 Remember that the #SEND command always
 calls the first occurence of a label.  For
@@ -525,7 +545,7 @@ Note: All items are integers with a range
 
 :take;#TAKE <item> <qty> [<message>]
 
-     Attempts to take a cer- tain quantity
+     Attempts to take a certain quantity
 of an item from the player.  If the player
 does not have the given amount, none will
 be taken, and if a message is given, it
@@ -575,7 +595,7 @@ background as the game continues.
           "Q3ABC" would play the notes A,
           B, and C, with all three taking
           up the time of a quarter note.
-     .    Adds time-and-a- half.  For
+     .    Adds time-and-a-half.  For
           example, "H." would turn a
           half-note into a half-note tied
           to a quarter note.
@@ -693,4 +713,4 @@ object itself and all other objects
 bearing the same name, #zaps can be
 compounded and make code inaccessible.
 
-!top;< Top >
+!contents;< Contents >

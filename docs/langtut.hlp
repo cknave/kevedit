@@ -1,0 +1,281 @@
+@Programming Language Tutorial
+$ZZT-OOP
+$Programming Language Tutorial
+$(Extended by bitman)
+
+:contents;Contents
+!simple;A Simple Example Program
+!end;The Importance of #end
+!oop;Object Oriented Programming
+!flags;Using Flags
+!hyper;Hypertext Messages
+
+     The best way to learn something is to
+jump right in, so lot's not waste any
+time:
+
+     To put an object on the board, press
+F2 O.  After picking a character to
+represent the object, you can enter a
+program to control it.
+
+NOTE: The following examples use a great
+deal of comments (everything between a '
+character and the end of a line is a
+comment). ZZT will not recognize most of
+these as comments and thus they should be
+removed before using the code.
+
+:simple;A Simple Example Program
+
+ Commands    Comments
+ ----------  -----------------
+ @BadGuy     ' We are giving this object
+             ' the name "BadGuy".
+ /s/s/s      ' Start out by moving south
+               three times.
+ #shoot n    ' Next, shoot north.
+ #end        ' Now stop and wait for us to
+             ' receive a message.
+ :shot       ' When we receive a "SHOT"
+             ' message, start doing the
+             ' following commands.
+ #shoot seek ' Shoot towards the player.
+ #end        ' Stop and wait for another
+             ' message.
+ :touch      ' Do the following when we
+             ' receive a "TOUCH" message
+ Ouch! Stop touching me.
+             ' Put the preceeding text on
+             ' the screen.
+ #send shot  ' Next, send ourselves the
+             ' message "SHOT".
+
+     As soon as the player enters the
+board this object is on, the program will
+begin running at the top. This object will
+immediately move three spaces south and
+fire a shot to the north. When the program
+reaches the #end statement, the object
+will stop doing anything until a message
+is sent to it.
+
+     ZZT will send BadGuy the message
+"SHOT" whenever the player (or something
+else) shoots the BadGuy. The object will
+then shoot in the direction of the player
+and end program execution (stop running)
+until another message is sent.
+
+     Likewise, when the player (and only
+the player) touches BadGuy, the object
+will recieve the "TOUCH" message. This
+causes BadGuy to display the text "Ouch!
+Stop touching me." at the bottom of the
+screen.  This time, however, instead of
+ending the program, the object sends
+itself the message "SHOT" which causes it
+to shoot in the direction of the player.
+
+:end;The Importance of #end
+
+     An object will continue executing its
+code until it reaches either the end of
+the program or an #end statement (as well
+as in a few other situations to be
+mentioned later).
+
+$An example:
+
+ @BadCode    ' Name of the object
+ :touch      ' TOUCH label
+ Humph. Don't touch me.
+
+     In this program, the text "Humph.
+Don't touch me." will be displayed
+IMMEDIATELY.  Because there is no #end
+statement, the program will continue
+through the "TOUCH" label and begin
+executing the code intended for the touch
+message only. Do not fall into this trap!
+
+:oop;Object Oriented Programming
+
+     ZZT-OOP is a relatively simple
+language and its commands are straight-
+forward.  However, it becomes very
+powerful as objects begin to interact with
+each other.
+
+     The primary difference between
+ZZT-OOP and conventional languages such as
+BASIC is the use of messages.
+
+     The following two objects illustrate
+a more intense use of messages:
+
+$Here is the first object:
+
+ @Lefty      ' This object's name.
+ /e/e/e/e    ' Move east 4 times.
+ /w/w/w/w    ' Then west 4 times.
+ #send Righty:Do
+             ' Send the "Do" message to
+             ' the object named "Righty".
+ #end        ' And halt. 
+
+$Here is the other object:
+
+ @Righty     ' This is our name.
+ #end        ' Don't do anything until we
+             ' receive a message.
+ :do         ' Here's the "Do" message.
+ /w/w/w/w    ' Move west 4 times.
+ /e/e/e/e    ' Then east 4 times.
+ #send lefty:restart
+             ' Tell our counterpart to
+             ' restart.
+ #end        ' Done for now.
+
+     These two objects form a feedback
+loop.  When the game starts, Lefty will
+move then send a message to Righty. This
+causes Righty to move then tell Lefty to
+restart.  So lefty moves, etc, etc, etc.
+
+:flags;Using Flags
+
+     Flags are a very useful way of
+remembering information and communicating
+between objects. Objects can only send
+messages to each other if they are on the
+same board.  Flags can be used across the
+boards.
+
+     Here are two objects which use flags.
+These objects need not be on the same
+board.
+
+$Here is the first object:
+
+ @Flask      ' Flask object.
+ #end        ' Wait for message.
+ :touch      ' Player touches the flask.
+ You recieve the magical elixer.
+             ' Inform the player that they
+             ' have recieved an elixer.
+ #set elixer ' Set the flag "elixer"
+ #die        ' Cease to exist
+
+$Here is the second object:
+
+ @Wizard     ' This object is a wizard.
+ #end        ' Do nothing yet...
+ :touch      ' The player wants to talk to
+             ' the wizard.
+ #if elixer thank
+             ' If elixer has been set,
+             ' send the message "THANK".
+             ' Otherwise, continue.
+ I only talk to people with magical
+ elixers. Go away.
+ #end        ' Halt.
+ :thank      ' Thank the player for the
+             ' elixer.
+ Thank you! I have been looking everywhere
+ for my magical elixer. I'll take that
+ from you now.
+ #clear elixer
+             ' Clear the flag "elixer".
+ #end        ' Done.
+
+     When the player touches the flask
+object, it informs the player that he or
+she has recieved a magical elixer and then
+disappears (dies), which of course stops
+program execution perminantly.
+
+     The wizard, when touched, will check
+to see whether or not the elixer flag is
+set.  If the flag is not set, the wizard
+tells the player to find it for him. If it
+is set, the message "THANK" is sent,
+whereby the player is thanked and the
+elixer is taken away.
+
+     Up to ten flags may be set at one
+time in a ZZT world.
+
+:hyper;Hypertext Messages
+
+In the above example, the Wizard rudely
+takes the elixer from the player without
+even asking whether or not the player
+wishes to give it to him. This can,
+fortunately, be remedied.
+
+$A more polite Wizard
+
+ @PoliteWizard
+ #end
+ :touch
+ #if elixer thank
+ If only you had a magical elixer...
+ #end
+             ' NEW code to follow:
+ :thank      ' Thank the player for the
+             ' elixer.
+ Thank you! I have been looking everywhere
+ for my magical elixer. May I please have
+ it?
+             ' Politely ask for the elixer
+ 
+ !yes;Of course you can.
+ !no;No! It is mine!
+             ' Offer the player two
+             ' choices.
+ /i          ' Pause for input
+ #send thank ' If a choice is not made,
+             ' thank the player and ask
+             ' again.
+ :yes        ' The player decided to give
+             ' up the elixer.
+ Thank you very much. I am forever in your
+ debt.
+             ' Suck up to the player. :-)
+ #clear elixer
+ #end
+ :no         ' The player decided to not
+             ' give away the elixer.
+ Very well then. See if I ever do anything
+ nice for you.
+ #end
+
+Instead of simply taking the elixer away,
+the PoliteWizard offers the player two
+options, which will appear to the player
+as such:
+
+!;Of course you can.
+!;No! It is mine!
+
+The first option will send the message
+"yes", while the second will send the
+message "no". If neither option is
+selected, the program continues. In this
+case, the message "THANK" is sent again,
+forcing the player to make a choice.
+
+$Coming someday:
+
+* Give and Take a Little
+* Zapping Messages
+
+$- - -
+
+     Thus concludes this mini-tutorial.
+Once you think you have a grasp of the
+idea of ZZT-OOP programs and messages, you
+are ready to proceed to... 
+
+!-langref;The ZZT-OOP reference manual

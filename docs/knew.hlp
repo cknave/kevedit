@@ -1,6 +1,14 @@
 @New Features
 $New Features
 
+$New in Version 0.3.4
+!-kbasics:zzt;Run ZZT at title screen
+!-langtut;OOP Language Tutorial
+:;  *  Multi-directory file dialogs
+
+$Bugs fixed in 0.3.4
+  *  Occasional crash of Help Dialog
+
 $New in Version 0.3.3
 !-kevedit:help;Hypertext help system!!!
 !-kbrdinfo;Board Info Dialog
@@ -11,9 +19,9 @@ $New in Version 0.3.3
 !-kadvance:randfill;Floodfill advancements
 
 $Bugs fixed in 0.3.3
-  * Escape cancels save operation
-  * Cut doesn't crash when used on last
-    line in text editor
+  *  Escape cancels save operation
+  *  Cut doesn't crash when used on last
+     line in text editor
 
 $New in Version 0.3.2
 !-kadvance:backbuffer;Resizable backbuffer
