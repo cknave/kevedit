@@ -28,14 +28,14 @@ Source: "..\kevedit.zml";  DestDir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\README.txt";   DestDir: "{app}"; CopyMode: alwaysoverwrite; Flags: isreadme
 Source: "..\README-SDL.txt"; Destdir: "{app}"; CopyMode: alwaysoverwrite
 Source: "..\SDL.dll";      Destdir: "{app}"; CopyMode: alwaysoverwrite
-Source: "..\default.zln";  Destdir: "{app}"; CopyMode: alwaysoverwrite
+Source: "..\default.zln";  Destdir: "{app}"; CopyMode: alwaysskipifsameorolder
 
 [Icons]
-Name: "{group}\KevEdit"; Filename: "{app}\kevedit.exe"
+Name: "{group}\KevEdit"; Filename: "{app}\kevedit.exe"; WorkingDir: "{userdocs}"
 Name: "{group}\KevEdit Readme";  Filename: "{app}\README.txt"
 
 [Run]
-Filename: "{app}\kevedit.exe"; Description: "Launch kevedit"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\kevedit.exe"; Description: "Launch kevedit"; WorkingDir: "{userdocs}"; Flags: nowait postinstall skipifsilent
 
 [Registry]
 ; Associate KevEdit with ZZT worlds
