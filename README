@@ -4,36 +4,141 @@ KevEdit 0.2
 --------------------------------------------
 Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
 
- * This is nowhere near finished.
+ * KevEdit is nowhere near finished.
+ * This README is even further from finished.
 
-Things that are implemented so far:
+----------------------------
+Getting started with KevEdit
+----------------------------
+Copy the binary KEVEDIT.EXE to your ZZT directory.  You can run it with no
+arguments to get a blank new world, or give it a world on the command line to
+load it.
 
- * MOVING - arrows to move, alt+arrows to move faster
- * QUITTING - press 'q' to quit.  No confirmation, hope you saved.
- * DEFC - Default colour mode.  Press 'd' to toggle this, KevEdit is lots more
-   fun with this turned off.
- * DRAWING - Press tab to toggle draw mode
- * BLINKING - Press 'v' to toggle blinking
- * PLOTTING - Press space to plot
- * COLOURS - Lots of colours are available.  'c' to change foreground colours,
-   shift+'c' to change background colours.
- * PATTERNS - A full gradient of patterns along with lines and a large
-   backbuffer (bigger than ZZT's 1 block only :) are available.  'p' to change
- * BOARDS - 'b' will bring up the board scroll where you can switch boards
-   or create new ones.
- * SAVING - 's' to save the world file
- * LOADING - 'l' to load a world file
- * HELP - 'h' for help, which is just the About box now
- * THINGS - Some things, like keys and doors can go in.  Lots of others are
-   not coded in yet.
- * OBJECTS - Object support is in, but just for making custom chars.  There is
-   no program editor yet (but you'll dig the superior char-picker :)
- * GRABBING - Press enter to grab something to the backbuffer.  Gotta love
-   the big backbuffer.
---------------------------------------------
+Example:
+C> kevedit town.zzt
 
-That's all I can think of.  This is not supported at this time, please do not
-send me email asking how to use it.
+This will load town.zzt into the editor if it exists.  Otherwise, a new world
+will be created.
+
+---------------------------
+Basic movement and plotting
+---------------------------
+You control the blinking cursor around the 60x25 board with the arrow keys.
+Holding ALT with an arrow key will move faster.  Notice that the cursor
+changes the colour of the tile under it.  This is to help you find it when
+it gets lost.
+
+If you press the SPACEBAR, a white solid will be plotted where the cursor is.
+The TAB key will turn on or off drawing mode.  In drawing mode, the cursor
+plots automatically when moved.
+
+If you create an enclosed area and want to fill it in with one type of tile,
+place the cursor inside and press 'f' to flood fill the area.
+
+There are many boards in a ZZT world.  Press 'b' to view the board list,
+where you can edit a different board or create a new one.
+
+-------------------
+The KevEdit sidebar
+-------------------
+The blue bar to the right of the screen is the KEVEDIT SIDEBAR.  It displays
+information about the current state of the editor as well as keys for common
+actions.
+
+The top line of the sidebar looks something like this:
+(1, 1) 0/150
+
+The numbers in parenthesis are the coordinates of your cursor, ranging from
+(1, 1) to (60, 25).  The next numbers tell you how many PARAMETER RECORDS are
+stored on this board.  Parameter records store information for configurable
+things:  objects, scrolls, and enemies all have parameter records.  ZZT has a
+limit of 150 records per board.  Keep an eye on how many you have used so that
+you don't run out!
+
+The next line simply displays the title of the world.  Currently, the title
+is the same as the filename (it is case sensitive) but this will be
+configurable later.
+
+On the bottom of the sidebar are two horizontal bars.  The first one has a
+gradient of a solid block to empty space, a line, and more empty space.  This
+is the PATTERN SELECTOR.  Press 'p' to move the arrow forwards along the
+selector and shift+'p' to move it backwards.  In order, the tiles in the
+pattern selector are:
+
+	* Solid block
+	* Normal block
+	* Breakable block
+	* Water
+	* Empty space
+	* Line
+
+Press space to plot any of these common patterns that the arrow is over.  Next
+to the patterns is the 10 character BACKBUFFER.  When you plot an uncommon
+tile (not from the pattern selector), it will end up in the backbuffer.  To
+copy something from the board into the backbuffer, place your cursor over it
+and press ENTER.  It will appear in the backbuffer, where you can plot it like
+anything else in the pattern selector.
+
+The horizontal bar below the pattern selector is the COLOR SELECTOR.  Every
+tile you plot has a foreground and background color.  The colors on the top
+are for the foreground, which you can switch between by pressing 'c'.  There
+are fewer colors available for the background, which you can seelct by
+pressing shift+'c'.
+
+To make the foreground color blink on and off, press 'v' before you plot.
+
+------------------
+Default Color Mode
+------------------
+Next to the color selector lies the letter D.  When it is bright and capital,
+DEFAULT COLOR MODE is on.  When it is lowercase and dim, it is off.  Default
+color mode (or DefC) is a great idea that I stole from MegaZeux 1.0.  When it
+is enabled, objects get plotted with their normal colors.  Ammo is dark cyan,
+torches are brown, objects in the backbuffer are their original color, etc.
+When you turn DefC off, anything you plot will be the color chosen in the
+color selector.  This is a great way to customize game items and to change the
+color of objects.
+
+--------------
+Uncommon tiles
+--------------
+Well, it's not that they're uncommon, just not used as much as the nice
+gradient on the pattern selector.  To choose among items, creatures, and
+terrains, press F1, F2, or F3.  If you want to plot any of these, press its
+coresponding letter (it will be displayed on the sidebar).  Most of these
+are not implemented yet.  Sorry :(
+
+Objects are a special type of tile in the Creature menu.  Right now, you can
+choose a custom character for the object.  Later, an editor will be included
+to enter ZZT-OOP programming into the object.
+
+---------------
+File Operations
+---------------
+KevEdit can load and save normal ZZT worlds.  To load a world, press 'l' and
+you will be presented with a list of all world files in the current directory.
+To save your world, press 's'.  You will be prompted for an 8 letter name.
+This will be the title and filename of your world.
+
+-----
+Help!
+-----
+Someday, KevEdit will have an online help system.  For now, pressing 'h' will
+present you with a dialog box with copyright and version information.
+
+--------
+Quitting
+--------
+For your safety, pressing 'q' will ask if you really want to quit.  If you
+answer in the affirmative, KevEdit will terminate.  It will not ask you if
+you really /really/ want to quit, or perhaps you would just like to save your
+work instead, because I hate it when programs doubt my quititude.
+
+-------
+The End
+-------
+That's all I can think of.  KevEdit is not supported at this time, please do
+not send me email asking how to use it.
 
 If you find bugs, try to fix it and send me a patch :)  If you can't fix it,
 report it.
@@ -42,4 +147,4 @@ http://kevedit.sourceforge.net/ is where you can check for new releases, get
 the CVS code, post bug reports, etc.
 
     Kev Vance <kvance@tekktonik.net>
-    June 14, 2000
+    August 7, 2000

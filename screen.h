@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: screen.h,v 1.1 2000/06/15 03:58:10 kvance Exp $
+ * $Id: screen.h,v 1.2 2000/08/08 01:57:38 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 extern void drawpanel(displaymethod * d);
 extern void updatepanel(displaymethod * d, editorinfo * e, world * w);
 extern void drawscreen(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
-extern void cursorspace(displaymethod *d, world *w, editorinfo *e, char *bigboard, unsigned char paramlist[60][25]);
+extern void cursorspace(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
 
 extern void drawspot(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);
 
@@ -38,6 +38,6 @@ extern int dothepanel_f1(displaymethod * d, editorinfo * e);
 extern int dothepanel_f2(displaymethod * d, editorinfo * e);
 extern int dothepanel_f3(displaymethod * d, editorinfo * e);
 
-extern char charselect(displaymethod *d);
+extern char charselect(displaymethod * d);
 
 #endif				/* _SCREEN_H */

@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.2 2000/08/01 21:46:55 kvance Exp $
+ * $Id: main.c,v 1.3 2000/08/08 01:57:38 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -15,11 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-
-/* ***TODO***
- * Fix param handling so that moredata is duplicated
- * (rather than just copying the pointer)
  */
 
 #include <stdlib.h>
@@ -41,7 +36,7 @@ void push(int type, int color, param * p)
 	int i;
 
 	if (patparams[9] != NULL) {
-		if(patparams[9]->moredata != NULL)
+		if (patparams[9]->moredata != NULL)
 			free(patparams[9]->moredata);
 		free(patparams[9]);
 	}
@@ -55,10 +50,10 @@ void push(int type, int color, param * p)
 	if (p != NULL) {
 		patparams[0] = malloc(sizeof(param));
 		memcpy(patparams[0], p, sizeof(param));
-		if(patparams[0]->moredata != NULL) {
+		if (patparams[0]->moredata != NULL) {
 			/* dup. the data, too */
-			patparams[0]->moredata = (char *) malloc(sizeof(p->moredata));
-			memcpy(patparams[0]->moredata, p->moredata, sizeof(p->moredata));
+			patparams[0]->moredata = (char *) malloc(p->length);
+			memcpy(patparams[0]->moredata, p->moredata, p->length);
 		}
 	} else
 		patparams[0] = NULL;
@@ -68,22 +63,22 @@ void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int
 {
 	int i, x, t;
 	int u = 0;
-	#define CURRENTPARAM	myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]
-	#define NEWPARAM	myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount]
+#define CURRENTPARAM	myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]
+#define NEWPARAM	myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount]
 
 	if (myinfo->cursorx == myinfo->playerx && myinfo->cursory == myinfo->playery)
 		return;
 	if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 		/* We're overwriting a parameter */
-		if(CURRENTPARAM->moredata != NULL)
+		if (CURRENTPARAM->moredata != NULL)
 			free(CURRENTPARAM->moredata);
 		free(CURRENTPARAM);
-		for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount+1; i++) {
+		for (t = i = paramlist[myinfo->cursorx][myinfo->cursory]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
 			myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
 		}
-		for(x = 0; x < 25; x++) {
-			for(i = 0; i < 60; i++) {
-				if(paramlist[i][x] > t)
+		for (x = 0; x < 25; x++) {
+			for (i = 0; i < 60; i++) {
+				if (paramlist[i][x] > t)
 					paramlist[i][x]--;
 			}
 		}
@@ -104,28 +99,118 @@ void plot(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int
 	} else
 		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = patdefs[myinfo->pattern].color;
 	/* Plot the parameter if applicable */
-	if (myinfo->pattern > 5 && patparams[myinfo->pattern - 6] != NULL && myworld->board[myinfo->curboard]->info->objectcount < 150) {
+	if (myinfo->pattern > 5 && patparams[myinfo->pattern - 6] != NULL) {
 		myworld->board[myinfo->curboard]->info->objectcount++;
-		NEWPARAM = malloc(sizeof(param));
-		memcpy(NEWPARAM, patparams[myinfo->pattern - 6], sizeof(param));
-		if(patparams[myinfo->pattern - 6]->moredata != NULL) {
-			NEWPARAM->moredata = (char *) malloc(sizeof(patparams[myinfo->pattern - 6]->moredata));
-			memcpy(NEWPARAM->moredata, patparams[myinfo->pattern - 6]->moredata, sizeof(patparams[myinfo->pattern - 6]->moredata));
+		if (myworld->board[myinfo->curboard]->info->objectcount < 151) {
+			NEWPARAM = malloc(sizeof(param));
+			memcpy(NEWPARAM, patparams[myinfo->pattern - 6], sizeof(param));
+			if (patparams[myinfo->pattern - 6]->moredata != NULL) {
+				NEWPARAM->moredata = (char *) malloc(patparams[myinfo->pattern - 6]->length);
+				memcpy(NEWPARAM->moredata, patparams[myinfo->pattern - 6]->moredata, patparams[myinfo->pattern - 6]->length);
+			}
+			paramlist[myinfo->cursorx][myinfo->cursory] = myworld->board[myinfo->curboard]->info->objectcount;
+			NEWPARAM->x = myinfo->cursorx + 1;
+			NEWPARAM->y = myinfo->cursory + 1;
+			u = 1;
 		}
-		paramlist[myinfo->cursorx][myinfo->cursory] = myworld->board[myinfo->curboard]->info->objectcount;
-		NEWPARAM->x = myinfo->cursorx + 1;
-		NEWPARAM->y = myinfo->cursory + 1;
-		u = 1;
 	}
 	/* Oops, too many */
-	if(myworld->board[myinfo->curboard]->info->objectcount == 151) {
+	if (myworld->board[myinfo->curboard]->info->objectcount == 151) {
 		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = Z_EMPTY;
 		bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = 0x07;
+		myworld->board[myinfo->curboard]->info->objectcount--;
 		u = 1;
 	}
 	if (u == 1)
 		updatepanel(mydisplay, myinfo, myworld);
 }
+
+void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, u_int8_t * bigboard, patdef patdefs[16], int xpos, int ypos, char code, char colour)
+{
+	int i, x, t, targetcolour;
+	int u = 0;
+#define CURRENTFLOODPARAM	myworld->board[myinfo->curboard]->params[paramlist[xpos][ypos]]
+
+	/* Find the target colour */
+	if (patdefs[myinfo->pattern].type == Z_EMPTY)
+		targetcolour = 0x07;
+	else if (myinfo->pattern < 6 || myinfo->defc == 0) {
+		i = (myinfo->backc << 4) + myinfo->forec;
+		if (myinfo->blinkmode == 1)
+			i += 0x80;
+		targetcolour = i;
+	} else
+		targetcolour = patdefs[myinfo->pattern].color;
+
+	/* Is there any parameter space left? */
+	if (myinfo->pattern > 5) {
+		if (patparams[myinfo->pattern - 6] != NULL && paramlist[xpos][ypos] == 0) {
+			if (myworld->board[myinfo->curboard]->info->objectcount == 150)
+				return;
+		}
+	}
+	if (xpos == myinfo->playerx && ypos == myinfo->playery)
+		return;
+	if (paramlist[xpos][ypos] != 0) {
+		/* We're overwriting a parameter */
+		if (CURRENTFLOODPARAM->moredata != NULL)
+			free(CURRENTFLOODPARAM->moredata);
+		free(CURRENTFLOODPARAM);
+		for (t = i = paramlist[xpos][ypos]; i < myworld->board[myinfo->curboard]->info->objectcount + 1; i++) {
+			myworld->board[myinfo->curboard]->params[i] = myworld->board[myinfo->curboard]->params[i + 1];
+		}
+		for (x = 0; x < 25; x++) {
+			for (i = 0; i < 60; i++) {
+				if (paramlist[i][x] > t)
+					paramlist[i][x]--;
+			}
+		}
+		myworld->board[myinfo->curboard]->info->objectcount--;
+		paramlist[xpos][ypos] = 0;
+	}
+	/* Plot the type */
+	bigboard[(xpos + ypos * 60) * 2] = patdefs[myinfo->pattern].type;
+	/* Plot the colour */
+	bigboard[(xpos + ypos * 60) * 2 + 1] = targetcolour;
+	/* Plot the parameter if applicable */
+	if (myinfo->pattern > 5 && patparams[myinfo->pattern - 6] != NULL) {
+		myworld->board[myinfo->curboard]->info->objectcount++;
+		if (myworld->board[myinfo->curboard]->info->objectcount < 151) {
+			NEWPARAM = malloc(sizeof(param));
+			memcpy(NEWPARAM, patparams[myinfo->pattern - 6], sizeof(param));
+			if (patparams[myinfo->pattern - 6]->moredata != NULL) {
+				NEWPARAM->moredata = (char *) malloc(patparams[myinfo->pattern - 6]->length);
+				memcpy(NEWPARAM->moredata, patparams[myinfo->pattern - 6]->moredata, patparams[myinfo->pattern - 6]->length);
+			}
+			paramlist[xpos][ypos] = myworld->board[myinfo->curboard]->info->objectcount;
+			NEWPARAM->x = xpos + 1;
+			NEWPARAM->y = ypos + 1;
+		}
+	}
+	/* Oops, too many */
+	if (myworld->board[myinfo->curboard]->info->objectcount == 151) {
+		bigboard[(xpos + ypos * 60) * 2] = Z_EMPTY;
+		bigboard[(xpos + ypos * 60) * 2 + 1] = 0x07;
+		myworld->board[myinfo->curboard]->info->objectcount--;
+	}
+	if (xpos != 0) {
+		if (bigboard[((xpos - 1) + ypos * 60) * 2] == code && bigboard[((xpos - 1) + ypos * 60) * 2 + 1] == colour)
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos - 1, ypos, code, colour);
+	}
+	if (xpos != 59) {
+		if (bigboard[((xpos + 1) + ypos * 60) * 2] == code && bigboard[((xpos + 1) + ypos * 60) * 2 + 1] == colour)
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos + 1, ypos, code, colour);
+	}
+	if (ypos != 0) {
+		if (bigboard[(xpos + (ypos - 1) * 60) * 2] == code && bigboard[(xpos + (ypos - 1) * 60) * 2 + 1] == colour)
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos - 1, code, colour);
+	}
+	if (ypos != 24) {
+		if (bigboard[(xpos + (ypos + 1) * 60) * 2] == code && bigboard[(xpos + (ypos + 1) * 60) * 2 + 1] == colour)
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, xpos, ypos + 1, code, colour);
+	}
+}
+
 
 void drawscrollbox(int yoffset, displaymethod * mydisplay)
 {
@@ -139,7 +224,6 @@ void drawscrollbox(int yoffset, displaymethod * mydisplay)
 		}
 	}
 }
-
 char filelist[500][13];		/* lalala, wastey wastey */
 
 int main(int argc, char **argv)
@@ -236,8 +320,14 @@ int main(int argc, char **argv)
 			strncpy(myinfo->currentfile, argv[1], 13);
 			strncpy(myinfo->currenttitle, myworld->zhead->title, 20);
 			myinfo->currenttitle[myworld->zhead->titlelength] = '\0';
-			myinfo->curboard = 0;
-			rle_decode(myworld->board[0]->data, bigboard);
+			myinfo->curboard = myworld->zhead->startboard;
+			rle_decode(myworld->board[myworld->zhead->startboard]->data, bigboard);
+			/* Sweep the board and make all empties 0x07.  This saves space in rle
+			   and makes the floodfill work correctly */
+			for (i = 0; i < BOARD_MAX * 2; i += 2) {
+				if (bigboard[i] == Z_EMPTY)
+					bigboard[i + 1] = 0x07;
+			}
 			for (i = 0; i < 25; i++)
 				for (x = 0; x < 60; x++)
 					paramlist[x][i] = 0;
@@ -298,8 +388,8 @@ int main(int argc, char **argv)
 		/* Undo the cursorspace */
 		i = (myinfo->cursorx + myinfo->cursory * 60) * 2;
 		mydisplay->putch(myinfo->cursorx, myinfo->cursory,
-				z_getchar(bigboard[i], bigboard[i+1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], bigboard, myinfo->cursorx, myinfo->cursory), 
-				z_getcolour(bigboard[i], bigboard[i+1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]));
+				 z_getchar(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]], bigboard, myinfo->cursorx, myinfo->cursory),
+				 z_getcolour(bigboard[i], bigboard[i + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]));
 
 		switch (c) {
 		case 'q':
@@ -324,11 +414,21 @@ int main(int argc, char **argv)
 					} else
 						c = 0;
 				}
-				if(quit == 0) {
+				if (quit == 0) {
 					drawpanel(mydisplay);
 					updatepanel(mydisplay, myinfo, myworld);
 				}
 			}
+			break;
+		case 'U':
+			fp = fopen("test.out", "wb");
+			for (i = 0; i < 25; i++) {
+				for (x = 0; x < 60; x++) {
+					fprintf(fp, "%1X", paramlist[x][i]);
+				}
+				fprintf(fp, "\n");
+			}
+			fclose(fp);
 			break;
 		case 'd':
 		case 'D':
@@ -386,6 +486,12 @@ int main(int argc, char **argv)
 			if (myinfo->curboard > myworld->zhead->boardcount)
 				myinfo->curboard = 0;
 			rle_decode(myworld->board[myinfo->curboard]->data, bigboard);
+			/* Sweep the board and make all empties 0x07.  This saves space in rle and
+			   makes the floodfill work correctly */
+			for (i = 0; i < BOARD_MAX * 2; i += 2) {
+				if (bigboard[i] == Z_EMPTY)
+					bigboard[i + 1] = 0x07;
+			}
 			for (i = 0; i < 25; i++)
 				for (x = 0; x < 60; x++)
 					paramlist[x][i] = 0;
@@ -461,6 +567,7 @@ int main(int argc, char **argv)
 							}
 						} else {
 						      __saveconfirm:
+							myworld->zhead->startboard = myinfo->curboard;
 							saveworld(buffer, myworld);
 							mydisplay->print(61, 6, 0x1f, "Written.");
 							mydisplay->cursorgo(69, 6);
@@ -497,6 +604,25 @@ int main(int argc, char **argv)
 			updatepanel(mydisplay, myinfo, myworld);
 			mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
 			break;
+		case 'f':
+		case 'F':
+			/* Flood fill */
+			if (patdefs[myinfo->pattern].type == Z_EMPTY)
+				x = 0x07;
+			else if (myinfo->pattern < 6 || myinfo->defc == 0) {
+				i = (myinfo->backc << 4) + myinfo->forec;
+				if (myinfo->blinkmode == 1)
+					i += 0x80;
+				x = i;
+			} else
+				x = patdefs[myinfo->pattern].color;
+
+			if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == patdefs[myinfo->pattern].type && bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] == x)
+				break;
+			floodfill(myworld, myinfo, mydisplay, bigboard, patdefs, myinfo->cursorx, myinfo->cursory, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
+			updatepanel(mydisplay, myinfo, myworld);
+			drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+			break;
 		case 'L':
 		case 'l':
 			/* Load world */
@@ -507,8 +633,14 @@ int main(int argc, char **argv)
 				strncpy(myinfo->currentfile, filelist[listpos], 13);
 				strncpy(myinfo->currenttitle, myworld->zhead->title, 20);
 				myinfo->currenttitle[myworld->zhead->titlelength] = '\0';
-				myinfo->curboard = 0;
-				rle_decode(myworld->board[0]->data, bigboard);
+				myinfo->curboard = myworld->zhead->startboard;
+				rle_decode(myworld->board[myworld->zhead->startboard]->data, bigboard);
+				/* Sweep the board and make all empties 0x07.  This saves space in
+				   rle and makes the floodfill work correctly */
+				for (i = 0; i < BOARD_MAX * 2; i += 2) {
+					if (bigboard[i] == Z_EMPTY)
+						bigboard[i + 1] = 0x07;
+				}
 				for (i = 0; i < 25; i++)
 					for (x = 0; x < 60; x++)
 						paramlist[x][i] = 0;
@@ -705,6 +837,12 @@ int main(int argc, char **argv)
 						bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = (myinfo->backc << 4) + (myinfo->forec);
 					break;
 				}
+				if (i != -1) {
+					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
+						push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					else
+						push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+				}
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);
 				drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
@@ -720,40 +858,46 @@ int main(int argc, char **argv)
 				case -1:
 					break;
 				case Z_OBJECT:
-					if(myworld->board[myinfo->curboard]->info->objectcount == 150)
+					if (myworld->board[myinfo->curboard]->info->objectcount == 150)
 						break;
-					if(paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
+					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
 						/* We're overwriting a parameter */
-						if(CURRENTPARAM->moredata != NULL)
+						if (CURRENTPARAM->moredata != NULL)
 							free(CURRENTPARAM->moredata);
 						free(CURRENTPARAM);
 						for (t = x = paramlist[myinfo->cursorx][myinfo->cursory]; x < myworld->board[myinfo->curboard]->info->objectcount; x++)
 							myworld->board[myinfo->curboard]->params[x] = myworld->board[myinfo->curboard]->params[x + 1];
-						for(x = 0; x < 25; x++) {
-								for(e = 0; e < 60; e++) {
-										if(paramlist[e][x] > t)
-												paramlist[e][x]--;
-								}
+						for (x = 0; x < 25; x++) {
+							for (e = 0; e < 60; e++) {
+								if (paramlist[e][x] > t)
+									paramlist[e][x]--;
+							}
 						}
 						e = 1;
 					} else {
 						myworld->board[myinfo->curboard]->info->objectcount++;
 					}
 					x = bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2];
-					switch(x) {
-						case Z_WATER:
-						case Z_FOREST:
-						case Z_FAKE:
-							break;
-						default:
-							x = Z_EMPTY;
-							break;
+					switch (x) {
+					case Z_WATER:
+					case Z_FOREST:
+					case Z_FAKE:
+						break;
+					default:
+						x = Z_EMPTY;
+						break;
 					}
 					myworld->board[myinfo->curboard]->params[myworld->board[myinfo->curboard]->info->objectcount] = z_newparam_object(myinfo->cursorx + 1, myinfo->cursory + 1, charselect(mydisplay), x, bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1]);
 					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] = i;
 					bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1] = (myinfo->backc << 4) + myinfo->forec;
 					paramlist[myinfo->cursorx][myinfo->cursory] = myworld->board[myinfo->curboard]->info->objectcount;
 					break;
+				}
+				if (i != -1) {
+					if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
+						push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+					else
+						push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
 				}
 				drawpanel(mydisplay);
 				updatepanel(mydisplay, myinfo, myworld);

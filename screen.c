@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.3 2000/08/01 21:46:55 kvance Exp $
+ * $Id: screen.c,v 1.4 2000/08/08 01:57:38 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -118,20 +118,10 @@ void updatepanel(displaymethod * d, editorinfo * e, world * w)
 		/* Regular title */
 		d->print(71, 1, 0x17, e->currenttitle);
 	}
-/* NOTE: For DOS/Windows95, we should add a bit to change the titlebar:
-   INT 2F - Windows95 - TITLE - SET APPLICATION TITLE
-   AX = 168Eh
-   DX = 0000h
-   ES:DI -> ASCIZ application title (max 79 chars+NUL)
-   Return: AX = status
-   0000h failed
-   0001h successful
-   Note:   if ES:DI is 0000h:0000h or points at an empty string, the current
-   title is removed
-   BUG:    this function can return a successful status even though the title was
-   not changed; reportedly, waiting for two clock ticks after program
-   startup solves this problem
- */
+
+	strcpy(s, "KevEdit - ");
+	strncpy(&s[10], e->currenttitle, 244);
+	d->titlebar(s);
 
 	/* Draw pattern stack */
 	for (i = 0; i < 10; i++) {
@@ -158,22 +148,22 @@ void drawscreen(displaymethod * d, world * w, editorinfo * e, char *bigboard, un
 }
 
 /* Make the cursor more visible */
-void cursorspace(displaymethod *d, world *w, editorinfo *e, char *bigboard, unsigned char paramlist[60][25])
+void cursorspace(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25])
 {
 	char c, b, f;
 	int i = (e->cursorx + e->cursory * 60) * 2;
-	c = z_getcolour(bigboard[i], bigboard[i+1], w->board[e->curboard]->params[paramlist[e->cursorx][e->cursory]]);
+	c = z_getcolour(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[e->cursorx][e->cursory]]);
 	f = c & 0x0f;
 	b = (c & 0xf0) >> 4;
-	if(f < 8)
+	if (f < 8)
 		f += 8;
 	else
 		f -= 8;
-	if(f == b)
+	if (f == b)
 		c = 7;
 	else
 		c = (b << 4) + f;
-	d->putch(e->cursorx, e->cursory, z_getchar(bigboard[i], bigboard[i+1], w->board[e->curboard]->params[paramlist[e->cursorx][e->cursory]], bigboard, e->cursorx, e->cursory), c);
+	d->putch(e->cursorx, e->cursory, z_getchar(bigboard[i], bigboard[i + 1], w->board[e->curboard]->params[paramlist[e->cursorx][e->cursory]], bigboard, e->cursorx, e->cursory), c);
 }
 
 /* Update a spot around the cursor */
@@ -341,7 +331,7 @@ int filedialog(char *extention, displaymethod * mydisplay)
 	return -1;
 }
 
-char *titledialog(displaymethod *d)
+char *titledialog(displaymethod * d)
 {
 	char *t;
 	int x, y, i = 0;
@@ -349,38 +339,38 @@ char *titledialog(displaymethod *d)
 	t = (char *) malloc(35);
 	memset(t, '\0', 35);
 
-	for(y = 12; y < 12 + TITLE_BOX_DEPTH; y++) {
-		for(x = 10; x < 10 + TITLE_BOX_WIDTH; x++) {
+	for (y = 12; y < 12 + TITLE_BOX_DEPTH; y++) {
+		for (x = 10; x < 10 + TITLE_BOX_WIDTH; x++) {
 			d->putch(x, y, TITLE_BOX[i], TITLE_BOX[i + 1]);
 			i += 2;
 		}
 	}
 	i = 0;
-	while(x != 13) {
-		d->cursorgo(12+i, 13);
+	while (x != 13) {
+		d->cursorgo(12 + i, 13);
 		x = d->getch();
-		switch(x) {
-			case 8:
-				if(i > 0) {
-					i--;
-					t[i] = '\0';
-					d->putch(12+i, 13, ' ', 0x0f);
-				}
+		switch (x) {
+		case 8:
+			if (i > 0) {
+				i--;
+				t[i] = '\0';
+				d->putch(12 + i, 13, ' ', 0x0f);
+			}
+			break;
+		case 13:
+			if (i == 0)
+				x = 8;
+			break;
+		default:
+			if (i == 34)
 				break;
-			case 13:
-				if(i == 0)
-					x = 8;
+			if (x < 32)
 				break;
-			default:
-				if(i == 34)
-					break;
-				if(x < 32)
-					break;
-				t[i] = x;
-				d->putch(12+i, 13, x, 0x0f);
-				i++;
-				d->cursorgo(12+i, 13);
-				break;
+			t[i] = x;
+			d->putch(12 + i, 13, x, 0x0f);
+			i++;
+			d->cursorgo(12 + i, 13);
+			break;
 		}
 	}
 	return t;
@@ -579,51 +569,51 @@ int dothepanel_f3(displaymethod * d, editorinfo * e)
 	d->getch();
 }
 
-char charselect(displaymethod *d)
+char charselect(displaymethod * d)
 {
 	int z, e, i = 0;
 	static int x, y;
 
-	for(e = 0; e < CHAR_BOX_DEPTH; e++) {
-		for(z = 0; z < CHAR_BOX_WIDTH; z++) {
-			d->putch(z+13, e+8, CHAR_BOX[i], CHAR_BOX[i+1]);
+	for (e = 0; e < CHAR_BOX_DEPTH; e++) {
+		for (z = 0; z < CHAR_BOX_WIDTH; z++) {
+			d->putch(z + 13, e + 8, CHAR_BOX[i], CHAR_BOX[i + 1]);
 			i += 2;
 		}
 	}
 	i = 0;
-	while(1) {
-		d->cursorgo(14+x, 9+y);
-		d->putch(14+x, 9+y, (x+y*32), 0x0f);
+	while (1) {
+		d->cursorgo(14 + x, 9 + y);
+		d->putch(14 + x, 9 + y, (x + y * 32), 0x0f);
 		e = 0;
 		i = d->getch();
-		d->putch(14+x, 9+y, (x+y*32), 0x0a);
-		if(!i) {
+		d->putch(14 + x, 9 + y, (x + y * 32), 0x0a);
+		if (!i) {
 			e = 1;
 			i = d->getch();
 		}
-		if(e == 1 && i == 72) {
+		if (e == 1 && i == 72) {
 			/* Up Arrow */
-			if(y > 0)
+			if (y > 0)
 				y--;
 		}
-		if(e == 1 && i == 80) {
+		if (e == 1 && i == 80) {
 			/* Down Arrow */
-			if(y < 7)
+			if (y < 7)
 				y++;
 		}
-		if(e == 1 && i == 75) {
+		if (e == 1 && i == 75) {
 			/* Left Arrow */
-			if(x > 0)
+			if (x > 0)
 				x--;
 		}
-		if(e == 1 && i == 77) {
+		if (e == 1 && i == 77) {
 			/* Left Arrow */
-			if(x < 31)
+			if (x < 31)
 				x++;
 		}
-		if(e == 0 && i == 13) {
+		if (e == 0 && i == 13) {
 			/* Enter */
-			i = (x+y*32);
+			i = (x + y * 32);
 			break;
 		}
 	}

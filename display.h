@@ -1,5 +1,6 @@
+
 /* display.h    -- Defines for modular display
- * $Id: display.h,v 1.1 2000/06/15 03:58:04 kvance Exp $
+ * $Id: display.h,v 1.2 2000/08/08 01:57:38 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,14 +23,24 @@
 
 typedef struct displaymethod {
 	struct displaymethod *next;
-	char *name;
-	char *version;
-	int (*init) (void);
-	void (*end) (void);
-	void (*putch) (int x, int y, int ch, int co);
-	int (*getch) (void);
-	void (*cursorgo) (int x, int y);
-	void (*print) (int x, int y, int c, char *ch);
+	char *name;		// Name of display driver
+
+	char *version;		// Version of driver
+
+	int (*init) (void);	// Start the driver
+
+	void (*end) (void);	// Close the driver
+
+	void (*putch) (int x, int y, int ch, int co);	// Put ch[ar] of co[lour] at x,y
+
+	int (*getch) (void);	// DOS style getch
+
+	void (*cursorgo) (int x, int y);	// Move the cursor
+
+	void (*print) (int x, int y, int c, char *ch);	// Simple print function
+
+	void (*titlebar) (char *);	// Set the titlebar if in MS-Windows or X11
+
 } displaymethod;
 
 extern displaymethod display;
