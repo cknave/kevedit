@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: screen.h,v 1.5 2000/08/27 02:19:03 bitman Exp $
+ * $Id: screen.h,v 1.6 2000/09/09 02:33:51 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify

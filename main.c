@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.18 2000/09/06 19:00:21 kvance Exp $
+ * $Id: main.c,v 1.19 2000/09/09 02:33:51 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,9 @@
 #include "scroll.h"
 #include "zzt.h"
 #include "editbox.h"
+
+/* temp */
+#include "zzm.h"
 
 patdef patdefs[16];
 param *patparams[10];
@@ -437,6 +440,30 @@ int main(int argc, char **argv)
 			}
 		}
 		switch (c) {
+		case 'a':
+			{
+				stringvector sv;
+				char xbuf[100];
+
+				initstringvector(&sv);
+
+				pushstring(&sv, "Junk");
+				pushstring(&sv, "; $SONG TITLE 2 two");
+				pushstring(&sv, "Junk");
+				pushstring(&sv, "; garbage");
+				pushstring(&sv, "; $SONG TITLE 1 one");
+				pushstring(&sv, "Junk");
+				pushstring(&sv, "; $SONG TITLE 3 three");
+				pushstring(&sv, "Junk");
+				sprintf(xbuf, "You choose song #%d", zzmpicksong(&sv, mydisplay));
+
+				removestringvector(&sv);
+
+				pushstring(&sv, xbuf);
+				editbox(mydisplay, "yawn", &sv, 0, 0);
+				removestringvector(&sv);
+			}
+			break;
 		case '!':
 			/* open text file for edit */
 			strcpy(buffer, "");
