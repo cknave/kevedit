@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.60 2002/02/21 00:25:42 bitman Exp $
+ * $Id: main.c,v 1.61 2002/02/21 15:28:18 kvance Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -601,9 +601,10 @@ int main(int argc, char **argv)
 		    key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT ||
 		    key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN) {
 			int repeat = 0;
-			if (key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT ||
-					key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN)
+			if (key == DKEY_ALT_LEFT || key == DKEY_ALT_RIGHT)
 				repeat = 10;
+			else if(key == DKEY_ALT_UP   || key == DKEY_ALT_DOWN)
+				repeat = 5;
 
 			do {
 				/* Consider alt-direction actions */

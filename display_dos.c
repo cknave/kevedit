@@ -1,5 +1,5 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.14 2002/02/19 17:54:42 bitman Exp $
+ * $Id: display_dos.c,v 1.15 2002/02/21 15:28:18 kvance Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -38,14 +38,17 @@
 #define KBD_INT 0x09
 
 /* Locking for ISR */
-#define LOCK_VARIABLE(x)    _go32_dpmi_lock_data((void *)&x,(long)sizeof(x));
+#define END_OF_FUNCTION(x)	void x##_end() {}
+#define LOCK_FUNCTION(x)	_go32_dpmi_lock_code(x, (long)x##_end - (long)x)
+#define LOCK_VARIABLE(x)	_go32_dpmi_lock_data((void *)&x,(long)sizeof(x))
 
 _go32_dpmi_seginfo old_kb_handler;
 _go32_dpmi_seginfo new_kb_handler;
 
 short videomem;
 int windows;
-int lshift, rshift; /* 0 = shift not pressed, 1 = shift pressed */
+static int lshift, rshift; /* 0 = shift not pressed, 1 = shift pressed */
+static unsigned char last = 0;
 
 void release_time_slice()
 {
@@ -76,7 +79,6 @@ int kb_isr()
 {
 	__dpmi_regs r;
 	unsigned char key;
-	static unsigned char last = 0;
 
 	/* Get the key from port 60h */
 	asm("sti");
@@ -100,7 +102,7 @@ int kb_isr()
 	last = key;
 	return 0;
 }
-
+END_OF_FUNCTION(kb_isr)
 
 int display_dos_init()
 {
@@ -130,8 +132,10 @@ int display_dos_init()
 	lshift = rshift = 0;
 
 	/* Lock the vars used by the handler -- prevents memory swapping */
-	LOCK_VARIABLE(lshift)
-	LOCK_VARIABLE(rshift)
+//	LOCK_VARIABLE(lshift);
+//	LOCK_VARIABLE(rshift);
+//	LOCK_VARIABLE(last);
+//	LOCK_FUNCTION(kb_isr);
 
 	/* Save the old handler */
 	_go32_dpmi_get_protected_mode_interrupt_vector(KBD_INT, &old_kb_handler);
