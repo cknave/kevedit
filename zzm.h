@@ -1,5 +1,5 @@
 /* zzm.h  -- zzm file routines
- * $Id: zzm.h,v 1.4 2001/12/15 00:54:53 bitman Exp $
+ * $Id: zzm.h,v 1.5 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -55,6 +55,9 @@ void resetzzmplaystate(zzmplaystate * s);
 
 /* zzmplaynote() - plays a single note from a tune */
 zzmnote zzmgetnote(char * tune, zzmplaystate * s);
+
+/* zzmgetfrequency() - get the frequency of a zzmnote */
+int zzmgetfrequency(zzmnote note);
 
 /* Play music to PC speaker */
 void zzmPCspeakerPlaynote(zzmnote note);

@@ -1,5 +1,5 @@
 /* dialog.h - general dialog tools
- * $Id: dialog.h,v 1.3 2002/03/20 04:52:24 bitman Exp $
+ * $Id: dialog.h,v 1.4 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -76,10 +76,14 @@ void dialogAddComponent(dialog * dia, dialogComponent component);
  */
 void dialogAddCompList(dialog * dia, dialogComponent * complist, int size);
 
-/* dialogDraw(dialog, display)
+/* dialogDraw(display, dialog)
  * Draw a dialog to the given display
  */
 void dialogDraw(displaymethod * mydisplay, dialog dia);
+
+/* dialogEraseComponent(display, component)
+ * Erase the given component from the screen (rarely useful) */
+void dialogEraseComponent(displaymethod * mydisplay, dialogComponent * component);
 
 /* dialogComponentEdit(display, component, editwidth, linedflags)
  * Edit the current component in the line_editor

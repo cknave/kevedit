@@ -1,5 +1,5 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.26 2002/03/24 08:39:54 bitman Exp $
+ * $Id: screen.h,v 1.27 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -108,7 +108,7 @@ int dothepanel_f3(displaymethod * d, editorinfo * e);
 int charselect(displaymethod * d, int c);
 
 /* Prompts the user to select a color */
-int colorselector(displaymethod * d, int * bg, int * fg, int * blink);
+int colorselector(displaymethod * d, int * fg, int * bg, int * blink);
 
 /* confirmprompt() - Asks a yes/no question */
 int confirmprompt(displaymethod * mydisplay, char * prompt);

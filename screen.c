@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.48 2002/03/24 08:39:54 bitman Exp $
+ * $Id: screen.c,v 1.49 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2000-2002 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1324,7 +1324,7 @@ void colorselectdrawcursor(displaymethod* d, int curx, int cury)
 	d->update(12, 7, 34, 18);
 }
 
-int colorselector(displaymethod * d, int * bg, int * fg, int * blink)
+int colorselector(displaymethod * d, int * fg, int * bg, int * blink)
 {
 	int curx, cury;
 	int key;

@@ -30,7 +30,7 @@ CFLAGS += $(OPTIMIZE) $(SDL) $(VCSA) $(DOS) $(VERSIONFLAG) $(PATHS)
 CENTRALOBJS = misc.o menu.o editbox.o screen.o
 LIBRARYOBJS = libzzt2/libzzt2.a svector.o files.o zzm.o zzl.o selection.o zlaunch.o helplist.o hypertxt.o gradient.o
 MISCOBJS    = patbuffer.o help.o dialog.o infobox.o paramed.o register.o
-DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o panel_bd.o scroll.o tbox.o cbox.o tdialog.o
+DRAWOBJS    = panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o panel_hl.o panel_bi.o panel_wi.o panel_g1.o panel_g2.o panel_dd.o panel_fd.o panel_fn.o panel_bd.o panel_sd.o panel_ti.o scroll.o tbox.o cbox.o tdialog.o
 DISPLAYOBJS = display.o $(SDLOBJ) $(VCSAOBJ) $(DOSOBJ)
 
 OBJECTS = $(CENTRALOBJS) $(LIBRARYOBJS) $(MISCOBJS) $(DRAWOBJS) $(DISPLAYOBJS)
@@ -120,6 +120,8 @@ panel_dd.o: panel_dd.c panel_dd.h # Directory Dialog
 panel_fd.o: panel_fd.c panel_fd.h # File Dialog
 panel_fn.o: panel_fn.c panel_fn.h # File Name Dialog
 panel_bd.o: panel_bd.c panel_bd.h # Board Dialog
+panel_sd.o: panel_sd.c panel_sd.h # Stats Dialog
+panel_ti.o: panel_ti.c panel_ti.h # Tile Info
 scroll.o: scroll.c scroll.h
 tbox.o: tbox.c tbox.h
 cbox.o: cbox.c cbox.h

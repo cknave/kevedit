@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.11 2002/03/29 23:16:43 bitman Exp $
+ * $Id: paramed.c,v 1.12 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,10 @@
 #include "dialog.h"
 
 #include "display.h"
+#include "colours.h"
+
+#include "panel_ti.h"
+#include "panel_sd.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -51,9 +55,14 @@
 /* The other IDs come from the ZZT_DATAUSE_* set */
 
 /* Option IDs used in tile info */
-#define ID_ADDPARAM     1
-#define ID_RMPARAM      2
-#define ID_EDITPARAM    3
+#define ID_KIND         1
+#define ID_TILEID       2
+#define ID_COLOR        3
+#define ID_ADDPARAM     4
+#define ID_RMPARAM      5
+#define ID_EDITPARAM    6
+#define ID_UTYPE        7
+#define ID_UCOLOR       8
 
 /* Table of direction names based on direction flags */
 const char * direction_table[] = {
@@ -81,6 +90,8 @@ void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 
 	/* Build the dialog */
 	dia = buildparamdialog(w, x, y);
+
+	drawsidepanel(d, PANEL_STATS_DIALOG);
 
 	do {
 		int rebuild = 0;
@@ -439,7 +450,7 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 	if (properties & ZZT_PROPERTY_PROGRAM) {
 		option.x = 20;
 		_addlabel("Program Instruction");
-		sprintf(buffer, "%d", (int) tile.param->instruction); _addoption(buffer, ID_INSTRUCTION);
+		sprintf(buffer, "%d", (int16_t) tile.param->instruction); _addoption(buffer, ID_INSTRUCTION);
 	}
 
 	return dia;
@@ -629,9 +640,10 @@ void tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 
 	dia = buildtileinfodialog(w, x, y);
 
+	drawsidepanel(d, PANEL_TILE_INFO);
+
 	do {
 		int rebuild = 0;
-		ZZTtile t;
 
 		/* Draw the dialog */
 		dialogDraw(d, dia);
@@ -642,26 +654,7 @@ void tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 			case DKEY_DOWN: dialogNextOption(&dia); break;
 			case DKEY_UP:   dialogPrevOption(&dia); break;
 			case DKEY_ENTER:
-				rebuild = 1;
-				switch (dialogGetCurOption(dia)->id) {
-					case ID_ADDPARAM:
-						t = zztTileGet(w, x, y);
-						t.param = zztParamCreate(t);
-						/* If this is usually a non-param type, force param creation */
-						if (t.param == NULL) t.param = zztParamCreateBlank();
-						zztPlot(w, x, y, t);
-						break;
-					case ID_RMPARAM:
-						t = zztTileGet(w, x, y);
-						t.param = NULL;
-						zztPlot(w, x, y, t);
-						break;
-					case ID_EDITPARAM:
-						modifyparam(d, w, x, y);
-						break;
-					default:
-						rebuild = 0;
-				}
+				rebuild = tileinfoeditoption(d, w, x, y, dialogGetCurOption(dia));
 				break;
 			case DKEY_F1:
 				helpsectiontopic("ktileinf", "", d);
@@ -716,6 +709,46 @@ char * colorname(char * buf, int color)
 	return buf;
 }
 
+int selectcolor(displaymethod * d, int color)
+{
+	int fg    = colorfg(color),
+			bg    = colorbg(color), 
+			blink = colorblink(color);
+
+	if (!colorselector(d, &fg, &bg, &blink))
+		return makecolor(fg, bg, blink);
+
+	return -1;
+}
+
+int selecttiletype(displaymethod * d, int type)
+{
+	stringvector list;
+	int i;
+
+	/* List all available types */
+	initstringvector(&list);
+	for (i = 0; i <= ZZT_MAX_TYPE; i++) {
+		pushstring(&list, (char *) _zzt_type_name_table[i]);
+	}
+
+	/* Move to the type of the current tile */
+	svmoveby(&list, type);
+
+	/* Make user select a type */
+	if (scrolldialog("Change Tile Type", &list, d) == EDITBOX_OK) {
+		/* Retrieve the new type */
+		type = svgetposition(&list);
+	} else {
+		type = -1;
+	}
+
+	/* Remove (not delete!) the list */
+	removestringvector(&list);
+
+	return type;
+}
+
 dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 {
 	dialog dia;
@@ -723,10 +756,10 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 	char buf[256];
 
 	dialogComponent label = dialogComponentMake(DIALOG_COMP_LABEL,  0, 1, LABEL_COLOR,  NULL, ID_NONE);
-	dialogComponent value = dialogComponentMake(DIALOG_COMP_LABEL, 13, 1, OPTION_COLOR, NULL, ID_NONE);
+	dialogComponent option = dialogComponentMake(DIALOG_COMP_OPTION, 13, 1, OPTION_COLOR, NULL, ID_NONE);
 
-	/* Also use _addlabel() from buildparamdialog() */
-#define _addvalue(TEXT)      { value.text  = (TEXT); dialogAddComponent(&dia, value); value.y++; }
+	/* Also use _addlabel() and _addoption() from buildparamdialog() */
+#define _addvalue(TEXT)      { option.text  = (TEXT); option.type = DIALOG_COMP_LABEL; dialogAddComponent(&dia, option); option.y++; option.type = DIALOG_COMP_OPTION; }
 
 	/* Initialize the dialog */
 	dialogInit(&dia);
@@ -740,31 +773,33 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 	_addlabel("Color");
 	_addlabel("Coordinate");
 
-	_addvalue((char *) zztTileGetKind(tile));
+	_addoption((char *) zztTileGetKind(tile), ID_KIND);
 
 	sprintf(buf, "%d, %02Xh", tile.type, tile.type);
-	_addvalue(buf);
+	_addoption(buf, ID_TILEID);
 
-	_addvalue(colorname(buf, tile.color));
+	_addoption(colorname(buf, tile.color), ID_COLOR);
 
 	sprintf(buf, "(%d, %d)", x + 1, y + 1);
 	_addvalue(buf);
 
+	/* Advance option position */
+	option.y += 2; option.x = 0;
+
 	/* Stats vs. No Stats */
 	if (tile.param == NULL) {
-		dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, value.y + 1, 0x0F, "No Stats", ID_NONE));
-		/* TODO: center */
-		dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_OPTION, 0, value.y + 2, OPTION_COLOR, "Add Stats", ID_ADDPARAM));
+		dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, option.y - 1, 0x0F, "No Stats", ID_NONE));
+		_addoption("Add Stats", ID_ADDPARAM);
 	} else {
 		ZZTtile under = { 0, 0, NULL};
 
-		dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, value.y + 1, 0x0F, "Stats", ID_NONE));
-		/* TODO: center */
-		dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_OPTION, 0, value.y + 2, OPTION_COLOR, "Edit Stats", ID_EDITPARAM));
-		dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_OPTION, 0, value.y + 3, OPTION_COLOR, "Remove Stats", ID_RMPARAM));
+		dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, option.y - 1, 0x0F, "Stats", ID_NONE));
+		_addoption("Edit Stats", ID_EDITPARAM);
+		_addoption("Remove Stats", ID_RMPARAM);
 
 		/* Advance the label/value templates */
-		label.y += 5; value.y += 5;
+		option.y++; option.x = 13;
+		label.y = option.y;
 
 		/* Tile under info */
 		under.type = tile.param->utype;
@@ -774,8 +809,8 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 		_addlabel("Under Color");
 
 		sprintf(buf, "%d, %02X: %s", under.type, under.type, zztTileGetName(under));
-		_addvalue(buf);
-		_addvalue(colorname(buf, under.color));
+		_addoption(buf, ID_UTYPE);
+		_addoption(colorname(buf, under.color), ID_UCOLOR);
 
 		if (tile.param->program != NULL) {
 			int i, instr = tile.param->instruction, plen = tile.param->length;
@@ -790,10 +825,107 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 				buf[i] = tile.param->program[instr + i];
 			buf[i] = '\x0';
 
+			if ((int16_t) instr == -1)
+				strcpy(buf, "(Program Execution #end-ed)");
+
 			_addvalue(buf);
 		}
 	}
 
 	return dia;
+}
+
+int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComponent * opt)
+{
+	int i;
+	ZZTtile t = zztTileGet(w, x, y);
+
+	switch (opt->id) {
+		case ID_KIND:
+			i = selecttiletype(d, t.type);
+
+			if (i == -1) return 0;
+
+			t.type = i;
+			/* Update changes if the new type is valid */
+			if (t.type <= ZZT_MAX_TYPE) {
+				/* zztPlot will free the current param, so duplicate it first.
+				 * This is slightly inefficient, but we don't have to
+				 * manipulate the zzt world directly this way. */
+				t.param = zztParamDuplicate(t.param);
+				zztPlot(w, x, y, t);
+
+				/* TODO: consider allowing the player's type to be changed */
+			}
+			return 1;
+
+		case ID_TILEID:
+			/* Erase the long component name */
+			dialogEraseComponent(d, opt);
+
+			/* Edit the type in decimal */
+			sprintf(opt->text, "%d", t.type);
+			dialogComponentEdit(d, opt, 3, LINED_NUMBER);
+			sscanf(opt->text, "%d", &i);
+
+			/* Max value of 255 */
+			if (i > 255) i = 255;
+			t.type = i;
+
+			/* Plot changes */
+			t.param = zztParamDuplicate(t.param);
+			zztPlot(w, x, y, t);
+
+			return 1;
+
+		case ID_COLOR:
+			i = selectcolor(d, t.color);
+			if (i == -1)
+				return 0;
+
+			t.color = i;
+
+			/* Plot changes */
+			t.param = zztParamDuplicate(t.param);
+			zztPlot(w, x, y, t);
+			return 1;
+
+		case ID_ADDPARAM:
+			t.param = zztParamCreate(t);
+			/* If this is usually a non-param type, force param creation */
+			if (t.param == NULL) t.param = zztParamCreateBlank();
+			zztPlot(w, x, y, t);
+			return 1;
+
+		case ID_RMPARAM:
+			t.param = NULL;
+			zztPlot(w, x, y, t);
+			return 1;
+
+		case ID_EDITPARAM:
+			modifyparam(d, w, x, y);
+			drawsidepanel(d, PANEL_TILE_INFO);
+			return 1;
+
+		case ID_UTYPE:
+			i = selecttiletype(d, t.param->utype);
+			if (i == -1) return 0;
+
+			/* Directly modify value */
+			t.param->utype = i;
+			return 1;
+
+		case ID_UCOLOR:
+			i = selectcolor(d, t.param->ucolor);
+			if (i == -1)
+				return 0;
+
+			/* Directly modify value */
+			t.param->ucolor = i;
+			return 1;
+
+		default:
+			return 0;
+	}
 }
 

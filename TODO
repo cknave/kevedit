@@ -7,10 +7,8 @@ Quickly switch to adjacent board
 Show/hide all objects/stated-things
 Quick key for quick key reference (and mention on panel)
 Tile under cursor displays w/ different for/back-color always
-Stat editor & tile info panels
 Re-draw panel after zzm import
 Exploit ability of board to "link to self" using index FF
-Allow #play-back to piggy-back on other commands. i.e. /i#play
 Add monitor and horiz/vert blink wall rays to F3 menu display
 Add monitor & blink rays to terrain documentation
 

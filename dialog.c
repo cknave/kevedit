@@ -1,5 +1,5 @@
 /* dialog.c - general dialog tools
- * $Id: dialog.c,v 1.4 2002/03/24 08:39:54 bitman Exp $
+ * $Id: dialog.c,v 1.5 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -99,6 +99,22 @@ void dialogComponentDraw(displaymethod * mydisplay, dialogComponent component)
 	}
 
 	free(buffer);
+}
+
+void dialogEraseComponent(displaymethod * mydisplay, dialogComponent * component)
+{
+	int i;
+
+	switch (component->type) {
+		case DIALOG_COMP_TITLE:
+		case DIALOG_COMP_HEADING:
+			/* TODO: implement */
+			break;
+		default:
+			for (i = 0; i < strlen(component->text) && START_X + component->x + i <= END_X; i++)
+				mydisplay->putch_discrete(START_X + component->x + i, START_Y + component->y, ' ', 0x0F);
+			mydisplay->update(START_X + component->x, START_Y + component->y, i, 1);
+	}
 }
 
 

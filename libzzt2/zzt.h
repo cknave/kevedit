@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.13 2002/03/19 03:09:35 kvance Exp $
+ * $Id: zzt.h,v 1.14 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -510,6 +510,9 @@ const char * zztTileGetName(ZZTtile tile);
  */
 const char * zztTileGetKind(ZZTtile tile);
 
+/* Make the tile type name and kind tables visible (don't modify!) */
+extern const char * _zzt_type_name_table[];
+extern const char * _zzt_type_kind_table[];
 
 /***** TILE TYPES *****/
 #define ZZT_EMPTY         0x00
@@ -557,6 +560,7 @@ const char * zztTileGetKind(ZZTtile tile);
 #define ZZT_BLINKVERT     0x2B
 #define ZZT_CENTHEAD      0x2C
 #define ZZT_CENTBODY      0x2D
+
 #define ZZT_BLUETEXT      0x2F
 #define ZZT_GREENTEXT     0x30
 #define ZZT_CYANTEXT      0x31
@@ -564,6 +568,10 @@ const char * zztTileGetKind(ZZTtile tile);
 #define ZZT_PURPLETEXT    0x33
 #define ZZT_YELLOWTEXT    0x34
 #define ZZT_WHITETEXT     0x35
+
+#define ZZT_MAX_TYPE      0x35
+
+/* Kev probably made these up */
 #define ZZT_BBLUETEXT     0x37
 #define ZZT_BGREENTEXT    0x38
 #define ZZT_BCYANTEXT     0x39

@@ -1,5 +1,5 @@
 /* zzm.c  -- zzm file routines
- * $Id: zzm.c,v 1.6 2001/12/15 00:54:53 bitman Exp $
+ * $Id: zzm.c,v 1.7 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -316,11 +316,16 @@ zzmnote zzmgetnote(char * tune, zzmplaystate * s)
 	}
 }
 
+int zzmgetfrequency(zzmnote note)
+{
+	return scale[note.index] >> (MAXOCTAVE - note.octave);
+}
+
 void zzmPCspeakerPlaynote(zzmnote note)
 {
 #ifdef DOS
 	if (note.type == ZZM_NOTE) {
-		int frequency = scale[note.index] >> (MAXOCTAVE - note.octave);
+		int frequency = zzmgetfrequency(note);
 
 		/* Play the sound at the frequency for a duration */
 		sound(frequency);

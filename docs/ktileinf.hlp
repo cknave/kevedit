@@ -2,6 +2,7 @@
 $Tile Info
 
 !info;Tile Info
+!warn;Warning
 !kind;ZZT-OOP Kind
 !id;Id Number
 !color;Color
@@ -19,10 +20,12 @@ information about the tile under the
 cursor, some of which can be modified.
 Press CTRL-T to access the dialog.
 
-WARNING: modifying these values may cause
-your world to become unstable when run in
-ZZT. Stability in KevEdit will not be
-compromised.
+:warn;Warning
+
+Modifying these values may cause your
+world to become unstable when run in ZZT.
+Stability in KevEdit will not be
+affected.
 
 :kind;ZZT-OOP Kind
 
@@ -35,12 +38,27 @@ board edge type has an empty ZZT-OOP kind
 because it is created by default if no
 kind is specified.
 
+Modifying this value will allow you to
+choose from the list of known types.
+Changing the type will not modify the
+objects stats in any way! This can be used
+to create walls with object code, for
+example, though the code will not execute.
+Removing and re-adding a tile's stats will
+correct this.
+
 :id;Id Number
 
 This is the number internally assigned to
 the tile which identifies its type. The
 number is given in both decimal and
 hexadecimal notation.
+
+Be careful when modifying this value. Any
+values above 53 are more than likely to
+cause a crash in ZZT. Only change this if
+you are testing the effects of these
+types.
 
 :color;Color
 
@@ -49,6 +67,8 @@ hexadecimal with a texual description.
 Note that ZZT-OOP uses only light colors
 and cannot change a tile's background
 color.
+
+Color is completely safe to modify.
 
 :coord;Coordinate
 
@@ -76,9 +96,13 @@ wall, water, or empty underneath it.
 KevEdit automatically handles this by
 storing this information when you plot a
 tile with stats onto a fake wall, water,
-or empty. Using DELETE to remove a tile
-with stats will restore the tile
-underneath.
+or empty. On the main editing screen,
+use DELETE to remove a tile with stats
+and restore the tile underneath.
+
+Changing this value should be safe. Try
+putting unusual types (such as walls)
+under a lion, tiger, or bear.
 
 :len;Code Length
 
@@ -93,7 +117,8 @@ An object's current code is determined by
 the Program Instruction. This is the first
 line of code which will execute when the
 program begins executing. If the object is
-not executing, this will be empty.
+not executing, the message "(Program
+Execution #end-ed)" will be given.
 
 More on the Program Instruction can be
 found in:

@@ -1,5 +1,5 @@
 /* tiles.c	-- All those ZZT tiles
- * $Id: tiles.c,v 1.11 2002/03/17 09:35:58 bitman Exp $
+ * $Id: tiles.c,v 1.12 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -75,6 +75,7 @@ const char * _zzt_type_name_table[] = {
 	/* ZZT_BLINKVERT      */ "Vertical Blink Wall Ray",
 	/* ZZT_CENTHEAD       */ "Centipede Head",
 	/* ZZT_CENTBODY       */ "Centipede Body",
+	/* Invalid            */ "Unknown",
 	/* ZZT_BLUETEXT       */ "Blue Text",
 	/* ZZT_GREENTEXT      */ "Green Text",
 	/* ZZT_CYANTEXT       */ "Cyan Text",
@@ -82,7 +83,7 @@ const char * _zzt_type_name_table[] = {
 	/* ZZT_PURPLETEXT     */ "Purple Text",
 	/* ZZT_YELLOWTEXT     */ "Yellow Text",
 	/* ZZT_WHITETEXT      */ "White Text",
-	/* Invalid type       */ "Unknown",
+	/* Invalid type       */ "Unknown"
 };
 
 const char * _zzt_type_kind_table[] = {
@@ -132,6 +133,7 @@ const char * _zzt_type_kind_table[] = {
 	/* ZZT_BLINKVERT      */ "(vertical blink wall ray)",
 	/* ZZT_CENTHEAD       */ "head",
 	/* ZZT_CENTBODY       */ "segment",
+	/* Invalid            */ "(unknown)",
 	/* ZZT_BLUETEXT       */ "(blue text)",
 	/* ZZT_GREENTEXT      */ "(green text)",
 	/* ZZT_CYANTEXT       */ "(cyan text)",
@@ -190,6 +192,7 @@ const u_int8_t _zzt_display_char_table[] = {
 	186, /* ZZT_BLINKVERT      */
 	233, /* ZZT_CENTHEAD       */
 	'O', /* ZZT_CENTBODY       */
+	'?', /* Unknown            */
 	/* Text must be handled specially */
 };
 

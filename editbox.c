@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.39 2002/03/24 08:39:54 bitman Exp $
+ * $Id: editbox.c,v 1.40 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1092,8 +1092,10 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 {
 	/* Loop through the stringvector looking for #play statements */
 	while (sv->cur != NULL && !d->kbhit()) {
-		if (str_equ(sv->cur->s, "#play ", STREQU_UNCASE | STREQU_RFRONT)) {
-			char* tune = sv->cur->s + 6;
+		char* tune = strstr(sv->cur->s, "#");
+		if (str_equ(tune, "#play ", STREQU_UNCASE | STREQU_RFRONT)) {
+			int xoff = tune - sv->cur->s;
+			tune += 6;  /* Advance to notes! */
 
 			/* Get ready to parse that play line */
 			zzmplaystate s;
@@ -1114,9 +1116,9 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 
 				/* Display the part of the string which will be played now */
 				strpart = str_duplen(tune + oldpos, s.pos - oldpos);
-				d->print(oldpos + 15, 13, ZOC_MPLAY_COLOUR, strpart);
+				d->print(oldpos + 15 + xoff, 13, ZOC_MPLAY_COLOUR, strpart);
 				free(strpart);
-				d->cursorgo(oldpos + 15, 13);
+				d->cursorgo(oldpos + 15 + xoff, 13);
 
 				zzmPCspeakerPlaynote(note);
 			}

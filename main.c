@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.67 2002/03/24 08:39:54 bitman Exp $
+ * $Id: main.c,v 1.68 2002/05/04 04:17:43 bitman Exp $
  * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -362,7 +362,7 @@ int main(int argc, char **argv)
 		case 'K':
 		case DKEY_CTRL_K:
 			/* Kolor selector */
-			colorselector(mydisplay, &myinfo->backc, &myinfo->forec,
+			colorselector(mydisplay, &myinfo->forec, &myinfo->backc,
 										&myinfo->blinkmode);
 
 			myinfo->updateflags |= UD_COLOR | UD_BOARD;
