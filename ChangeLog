@@ -1,4 +1,4 @@
-0.4:
+0.3.1: October 21, 2000
 ----
 Blinkwall lines now drawn properly
 DPMI time slices are given up for more multitasking friendliness
