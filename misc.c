@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.3 2001/05/20 15:43:08 bitman Exp $
+ * $Id: misc.c,v 1.4 2001/06/03 17:45:19 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -343,7 +343,7 @@ void changeboard(displaymethod * mydisplay, world * myworld, editorinfo * myinfo
 
 void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * myinfo, char * bigboard)
 {
-	/* Save World */
+	/* Save World after prompting user for filename */
 	int i;
 	char filename[13];
 
@@ -378,6 +378,60 @@ void saveworldprompt(displaymethod * mydisplay, world * myworld, editorinfo * my
 	mydisplay->print(61, 6, 0x1f, "Written.");
 	mydisplay->cursorgo(69, 6);
 	mydisplay->getch();
+}
+
+
+void updateparamlist(world * myworld, editorinfo * myinfo, unsigned char paramlist[60][25])
+{
+	int i, x;
+	board* curboard = myworld->board[myinfo->curboard];
+
+	for (i = 0; i < 25; i++)
+		for (x = 0; x < 60; x++)
+			paramlist[x][i] = 0;
+
+	for (i = 0; i < curboard->info->objectcount + 1; i++) {
+		if (curboard->params[i]->x > 0 && curboard->params[i]->x < 61 && curboard->params[i]->y > 0 && curboard->params[i]->y < 26)
+			paramlist[curboard->params[i]->x - 1][curboard->params[i]->y - 1] = i;
+	}
+
+	myinfo->playerx = myworld->board[myinfo->curboard]->params[0]->x - 1;
+	myinfo->playery = myworld->board[myinfo->curboard]->params[0]->y - 1;
+}
+
+
+void updateinfo(world * myworld, editorinfo * myinfo, char * bigboard)
+{
+	strncpy(myinfo->currenttitle, myworld->zhead->title, 20);
+	myinfo->currenttitle[myworld->zhead->titlelength] = '\0';
+	myinfo->curboard = myworld->zhead->startboard;
+	rle_decode(myworld->board[myworld->zhead->startboard]->data, bigboard);
+}
+
+
+void previouspattern(editorinfo * myinfo)
+{
+	myinfo->pbuf->pos--;
+	if (myinfo->pbuf->pos == -1) {
+		if (myinfo->pbuf == myinfo->standard_patterns)
+			myinfo->pbuf = myinfo->backbuffer;
+		else
+			myinfo->pbuf = myinfo->standard_patterns;
+		myinfo->pbuf->pos = myinfo->pbuf->size - 1;
+	}
+}
+
+
+void nextpattern(editorinfo * myinfo)
+{
+	myinfo->pbuf->pos++;
+	if (myinfo->pbuf->pos == myinfo->pbuf->size) {
+		if (myinfo->pbuf == myinfo->standard_patterns)
+			myinfo->pbuf = myinfo->backbuffer;
+		else
+			myinfo->pbuf = myinfo->standard_patterns;
+		myinfo->pbuf->pos = 0;
+	}
 }
 
 

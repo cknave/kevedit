@@ -46,13 +46,15 @@ all: kevedit
 clean:
 	rm -f *.o kevedit
 
-kevedit: display.o main.o misc.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
-	$(CC) -o $@ display.o main.o misc.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
+kevedit: display.o main.o menu.o misc.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ)
+	$(CC) -o $@ display.o main.o menu.o misc.o register.o patbuffer.o zzm.o svector.o editbox.o panel.o panel_f1.o panel_f2.o panel_f3.o panel_ed.o screen.o scroll.o tbox.o cbox.o libzzt.o $(GGIOBJ) $(VCSAOBJ) $(DOSOBJ) $(CFLAGS)
 
 display.o: display.c display.h
 	$(CC) -o $@ display.c $(CFLAGS) -c
-main.o: main.c display.h screen.h scroll.h kevedit.h zzt.h editbox.h register.h patbuffer.h misc.h
+main.o: main.c display.h screen.h scroll.h kevedit.h zzt.h editbox.h register.h patbuffer.h misc.h menu.h
 	$(CC) -o $@ main.c $(CFLAGS) -c
+menu.o: menu.c
+	$(CC) -o $@ menu.c $(CFLAGS) -c
 misc.o: misc.c misc.h patbuffer.h
 	$(CC) -o $@ misc.c $(CFLAGS) -c
 screen.o: screen.c panel.h kevedit.h display.h zzt.h panel_f1.h panel_f2.h panel_f3.h tbox.h cbox.h editbox.h
