@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.18 2001/11/13 07:21:43 bitman Exp $
+ * $Id: misc.c,v 1.19 2001/11/14 00:57:23 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -262,8 +262,11 @@ int togglegradientmode(editorinfo * myinfo)
 {
 	/* Toggle gradient mode - pattern changes with each cursor
 	 * movement & drawmode is turned on. */
-	if (myinfo->pbuf == myinfo->standard_patterns)
-		return 0;     /* Cycling through standard_patterns not yet supported */
+	if (myinfo->pbuf == myinfo->standard_patterns) {
+		/* TODO: use drawing patterns (later) */
+		myinfo->pbuf = myinfo->backbuffer;
+		myinfo->pbuf->pos = myinfo->pbuf->size - 1;
+	}
 
 	myinfo->aqumode = 0;
 	if (myinfo->gradmode != 0) {

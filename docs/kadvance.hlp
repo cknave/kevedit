@@ -70,8 +70,7 @@ spaces at a time.
 
 This feature may, at present, only be
 used with a custom gradient. The
-backbuffer must be selected by the pattern
-selector.
+backbuffer will automatically be used.
 
 :aquire;Aquire Mode
 
