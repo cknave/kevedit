@@ -1,18 +1,37 @@
 For the 0.4.x release:
 ----------------------
-Many tiles with parameters do not use the under-colour/type option when they
-	are actually displayed.  Find these and fix the display routines and
-	plot routines.  The background colours are added to the tile colour
-	at plot time.
+Change color/pattern of current tile
+  ENTER changes char of TEXT under cursor
+Retain color mode added to defc toggle
+Quickly switch to adjacent board
+Show/hide all objects/stated-things
+Re-label ctrl-c in code editor
+Quick key for quick key reference (and mention on panel)
+Aquire mode that resizes backbuffer
+Tile under cursor displays w/ different for/back color always
+Stat editor panel/help-topic
+Re-draw panel after zzm import
+Technical info for everything
+  Add/remove stats for every kind of tile
+Exploit ability of board to "link to self" using index FF
 
 For the 0.5 release:
 --------------------
 Block copy/paste/move/export/import
 ANSI file support (as much as ZZT can do)
 Multiple backbuffers and toolkit file format
+Object library sidebar menu
 
 For the 0.6 release:
 --------------------
 Configurable keybindings
 UNIX, here we come!
 
+If Ever:
+--------
+Skins -- possibly using zzt file format as base
+F4 textwrapping
+Undo
+Font editor
+Scripting
+Change all of one kind to another
