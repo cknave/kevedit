@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.6 2000/08/14 22:00:35 kvance Exp $
+ * $Id: screen.c,v 1.7 2000/08/18 04:39:47 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,10 +29,26 @@
 #include "tbox.h"
 #include "cbox.h"
 #include "zzt.h"
+#include "scroll.h"
 
 extern char filelist[500][13];
 extern patdef patdefs[16];
 extern param *patparams[10];
+
+
+void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay)
+{
+	int t, x, i, j;
+	/* start at yoffset */
+	i = yoffset * SCROLL_BOX_WIDTH * 2;
+
+	for (t = 3 + yoffset; t < 3 + (SCROLL_BOX_DEPTH - yendoffset); t++) {
+		for (x = 5; x < 5 + SCROLL_BOX_WIDTH; x++) {
+			mydisplay->putch(x, t, SCROLL_BOX[i], SCROLL_BOX[i + 1]);
+			i += 2;
+		}
+	}
+}
 
 void drawpanel(displaymethod * d)
 {
@@ -256,7 +272,7 @@ int filedialog(char *extention, displaymethod * mydisplay)
 		return -1;
 
 	i = 0;
-	drawscrollbox(0, mydisplay);
+	drawscrollbox(0, 0, mydisplay);
 	mydisplay->print(25, 4, 0x0a, "Load World");
 	x = 0;
 	while (1) {
@@ -278,7 +294,7 @@ int filedialog(char *extention, displaymethod * mydisplay)
 	subc = 0;
 	mydisplay->cursorgo(9, 13);
 	while (subc != 27) {
-		drawscrollbox(3, mydisplay);
+		drawscrollbox(3, 0, mydisplay);
 		for (t = (offset >= 0) ? offset : 0; t < 15 && (t - offset) < x; t++) {
 			mydisplay->print(9, t + 6, 0x0a, filelist[t - offset]);
 		}
@@ -381,7 +397,7 @@ int boarddialog(world * w, editorinfo * e, displaymethod * mydisplay)
 	int i, t, listpos, offset;
 	int subc, sube;
 
-	drawscrollbox(0, mydisplay);
+	drawscrollbox(0, 0, mydisplay);
 	mydisplay->print(23, 4, 0x0a, "Switch Boards");
 
 	listpos = e->curboard;
@@ -389,7 +405,7 @@ int boarddialog(world * w, editorinfo * e, displaymethod * mydisplay)
 	subc = 0;
 	mydisplay->cursorgo(9, 13);
 	while (subc != 27) {
-		drawscrollbox(3, mydisplay);
+		drawscrollbox(3, 0, mydisplay);
 		for (t = (offset >= 0) ? offset : 0; t < 15 && (t - offset) <= w->zhead->boardcount + 1; t++) {
 			if ((t - offset) == w->zhead->boardcount + 1)
 				mydisplay->print(9, t + 6, 0x0a, "Add new board");

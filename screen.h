@@ -1,5 +1,5 @@
 /* kevedit.h    -- Editor definitions
- * $Id: screen.h,v 1.2 2000/08/08 01:57:38 kvance Exp $
+ * $Id: screen.h,v 1.3 2000/08/18 04:39:47 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 #include "display.h"
 #include "zzt.h"
 
+extern void drawscrollbox(int yoffset, int yendoffset, displaymethod * mydisplay);
 extern void drawpanel(displaymethod * d);
 extern void updatepanel(displaymethod * d, editorinfo * e, world * w);
 extern void drawscreen(displaymethod * d, world * w, editorinfo * e, char *bigboard, unsigned char paramlist[60][25]);

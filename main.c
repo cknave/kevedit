@@ -1,5 +1,5 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.8 2000/08/14 22:00:35 kvance Exp $
+ * $Id: main.c,v 1.9 2000/08/18 04:39:47 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include "screen.h"
 #include "scroll.h"
 #include "zzt.h"
+#include "editbox.h"
 
 patdef patdefs[16];
 param *patparams[10];
@@ -211,19 +212,17 @@ void floodfill(world * myworld, editorinfo * myinfo, displaymethod * mydisplay, 
 	}
 }
 
-
-void drawscrollbox(int yoffset, displaymethod * mydisplay)
+void runzzt(char* args)
 {
-	int t, x, i;
-	i = yoffset * SCROLL_BOX_WIDTH * 2;
+	char runcommand[256];           /* [12] should be enough, but... */
 
-	for (t = 3 + yoffset; t < 3 + SCROLL_BOX_DEPTH; t++) {
-		for (x = 5; x < 5 + SCROLL_BOX_WIDTH; x++) {
-			mydisplay->putch(x, t, SCROLL_BOX[i], SCROLL_BOX[i + 1]);
-			i += 2;
-		}
-	}
+	strcpy(runcommand, "zzt ");
+	strcat(runcommand, args);
+
+	system(runcommand);
 }
+
+
 char filelist[500][13];		/* lalala, wastey wastey */
 
 int main(int argc, char **argv)
@@ -721,7 +720,7 @@ int main(int argc, char **argv)
 			} else {
 				/* Help */
 				/* Actually, just an about box now */
-				drawscrollbox(0, mydisplay);
+				drawscrollbox(0, 0, mydisplay);
 				mydisplay->print(24, 4, 0x0a, "About KevEdit");
 				mydisplay->print(9, 12, 0x0a, "KevEdit R5, Version");
 				mydisplay->print(34, 12, 0x0a, VERSION);
@@ -980,14 +979,52 @@ int main(int argc, char **argv)
 			break;
 		case 13:
 			/* Modify / Grab */
-			if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
-				push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
-			else
-				push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
-			updatepanel(mydisplay, myinfo, myworld);
+			if (e == 0) {
+				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0) {
+					if (myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]] != NULL) {
+						/* we have params; lets edit them! */
+						if (bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_SCROLL || bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2] == Z_OBJECT) {
+							/* Load editor on current moredata */
+							editmoredata(mydisplay, myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+							mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+							drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+						}
+						/* TODO: modify other params */
+					}
+				}
+				e = 1;  /* set ext so that <insert> code below is used */
+			}
+
+			/* Don't break here! When we modify, we grab too! */
+		case 0x52:
+		case 'r':
+			/* Insert or 'r' */
+			if (e == 1) {
+				/* Grab */
+				if (paramlist[myinfo->cursorx][myinfo->cursory] != 0)
+					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], myworld->board[myinfo->curboard]->params[paramlist[myinfo->cursorx][myinfo->cursory]]);
+				else
+					push(bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2], bigboard[(myinfo->cursorx + myinfo->cursory * 60) * 2 + 1], NULL);
+				updatepanel(mydisplay, myinfo, myworld);
+				break;
+			}
+			else {
+				/* 'r'un zzt */
+				/* Load current world into zzt */
+				if (e == 0) {
+					mydisplay->end();
+					runzzt(myinfo->currentfile);
+					
+					/* restart display from scratch */
+					mydisplay->init();
+					drawpanel(mydisplay);
+					updatepanel(mydisplay, myinfo, myworld);
+					drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);
+					mydisplay->cursorgo(myinfo->cursorx, myinfo->cursory);
+				}
+			}
 			break;
 		}
-
 	}
 
 	mydisplay->end();
