@@ -4,11 +4,11 @@
 [Setup]
 AppName=KevEdit
 AppVerName=KevEdit 0.5.0
-AppPublisher=Ryan Phillips
-AppPublisherURL=mailto:bitman@users.sourceforge.net
-AppSupportURL=mailto:bitman@users.sourceforge.net
-AppUpdatesURL=mailto:bitman@users.sourceforge.net
-DefaultDirName={pf}\Games\ZZTUWin
+AppPublisher=Kev Vance and Ryan Phillips
+AppPublisherURL=http://kevedit.sourceforge.net/
+AppSupportURL=http://kevedit.sourceforge.net/contact.html
+AppUpdatesURL=http://kevedit.sourceforge.net/download.html
+DefaultDirName={pf}\KevEdit
 DefaultGroupName=Games\ZZT
 AlwaysCreateUninstallIcon=yes
 LicenseFile=..\Copying
@@ -17,8 +17,8 @@ OutputDir=..
 ; Cosmetics
 WindowVisible=no
 ; TODO: make some artwork!
-;WizardImageFile=..\images\install.bmp
-;WizardSmallImageFile=..\images\instsmll.bmp
+WizardImageFile=install-big.bmp
+WizardSmallImageFile=install-small.bmp
 
 [Files]
 Source: "..\kevedit.exe";  DestDir: "{app}"; CopyMode: alwaysoverwrite
