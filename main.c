@@ -1,6 +1,6 @@
 /* main.c       -- The buck starts here
- * $Id: main.c,v 1.39 2001/10/26 23:36:05 bitman Exp $
- * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+ * $Id: main.c,v 1.40 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "display.h"
 #include "kevedit.h"
@@ -37,6 +38,10 @@
 #include "infobox.h"
 
 #define MAIN_BUFLEN 255
+
+void sigInt(int i)
+{
+}
 
 int main(int argc, char **argv)
 {
@@ -105,8 +110,10 @@ int main(int argc, char **argv)
 				paramlist[x][i] = 0;
 	}
 
-	/* Draw */
+	/* Trap ctrl+c */
+	signal(SIGINT, sigInt);
 
+	/* Draw */
 	drawpanel(mydisplay);
 	updatepanel(mydisplay, myinfo, myworld);
 	drawscreen(mydisplay, myworld, myinfo, bigboard, paramlist);

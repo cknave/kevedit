@@ -1,6 +1,6 @@
 /* display_dos.c        -- Functions for the DOS display method
- * $Id: display_dos.c,v 1.10 2001/10/04 23:09:42 kvance Exp $
- * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+ * $Id: display_dos.c,v 1.11 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 2000-2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -227,7 +227,7 @@ displaymethod display_dos =
 {
 	NULL,
 	"DOS Display Method",
-	"1.0",
+	"1.1",
 	display_dos_init,
 	display_dos_end,
 	display_dos_putch,

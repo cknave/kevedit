@@ -1,6 +1,6 @@
 /* display.c    -- Functions for the modular display
- * $Id: display.c,v 1.3 2001/01/26 02:05:49 bitman Exp $
- * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+ * $Id: display.c,v 1.4 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

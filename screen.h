@@ -1,6 +1,6 @@
 /* screen.h    -- Functions for drawing
- * $Id: screen.h,v 1.14 2001/10/26 23:36:05 bitman Exp $
- * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+ * $Id: screen.h,v 1.15 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

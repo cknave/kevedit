@@ -1,6 +1,6 @@
 /* zzt.h        -- ZZT library definitions
- * $Id: zzt.h,v 1.7 2001/01/07 19:54:06 kvance Exp $
- * Copyright (C) 1998-2000 Kev Vance <kvance@tekktonik.net>
+ * $Id: zzt.h,v 1.8 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 1998-2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

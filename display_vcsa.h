@@ -1,6 +1,6 @@
 /* display_vcsa.h       -- Define for Linux console display method
- * $Id: display_vcsa.h,v 1.1 2000/06/15 03:58:10 kvance Exp $
- * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+ * $Id: display_vcsa.h,v 1.2 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

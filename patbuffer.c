@@ -1,6 +1,6 @@
 /* patbuffer.c    -- Pattern buffer (backbuffer) utilities
- * $Id: patbuffer.c,v 1.3 2001/05/12 21:15:28 bitman Exp $
- * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+ * $Id: patbuffer.c,v 1.4 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -1,5 +1,5 @@
-0.3.3
------
+0.3.3: October 27, 2001
+-----------------------
 Bug fixed in save dialog
 Bug fixed when cutting on a single line
 Fixed small memory leak when storing objects with truncated object code

@@ -1,6 +1,6 @@
 /* kevedit.h    -- Editor definitions
- * $Id: kevedit.h,v 1.8 2001/10/26 23:36:05 bitman Exp $
- * Copyright (C) 2000 Kev Vance <kvance@tekktonik.net>
+ * $Id: kevedit.h,v 1.9 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -1,5 +1,5 @@
 /* editbox.c  -- text editor/viewer in kevedit
- * $Id: editbox.c,v 1.23 2001/10/22 02:48:22 bitman Exp $
+ * $Id: editbox.c,v 1.24 2001/10/27 19:30:42 kvance Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -538,58 +538,47 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						pos = strlen(centerstr->s);
 					updateflags = U_EDITAREA;
 					break;
-
-				/******* Copy & Cut **********/
-
-				/* Shift-delete appears the same as plain delete.
-				 * For now, we won't consider shift-delete. */
-				case 45:     /* alt-x: cut selected text */
-				case 46:     /* alt-c: copy selected text */
-				case 146:    /* ctrl-insert: copy selected text */
-					/* Copy to register */
-					if (selPos != -1) {
-						stringnode *selStart = centerstr, *selEnd = centerstr;
-						int selStartPos, selEndPos;
-
-						if (selLineOffset > 0) {
-							/* Other end of selection is below current line, move end down to meet it. */
-							selStartPos = pos;
-							selEndPos = selPos;
-							for (i = 0; i < selLineOffset; i++)
-								if (selEnd->next != NULL)
-									selEnd = selEnd->next;
-						} else if (selLineOffset < 0) {
-							/* Other end of selection is above current line, move end up to meet it. */
-							selStartPos = selPos;
-							selEndPos = pos;
-							for (i = 0; i > selLineOffset; i--)
-								if (selStart->prev != NULL)
-									selStart = selStart->prev;
-						} else {
-							/* Selection is only on current line: selStartPos gets the lesser of selPos & pos */
-							if (selPos > pos) {
-								selStartPos = pos;
-								selEndPos = selPos;
-							} else {
-								selStartPos = selPos;
-								selEndPos = pos;
-							}
-						}
-
-						regyank('\"', selStart, selEnd, selStartPos, selEndPos);
-
-						/* Consider cut operation now */
-						if (editwidth && (c == 45 || c == 147)) {
-							/* Pass key on to editwidth only operations */
-							e = 1;
-						}
-					}
-					break;
-
 				default:
 					e = 1;
 			}
+		}
 		/* e is 0 */
+		if (e == 0 && (c == 24 || c == 3)) {
+			/* Copy to register */
+			if (selPos != -1) {
+				stringnode *selStart = centerstr, *selEnd = centerstr;
+				int selStartPos, selEndPos;
+
+				if (selLineOffset > 0) {
+					/* Other end of selection is below current line, move end down to meet it. */
+					selStartPos = pos;
+					selEndPos = selPos;
+					for (i = 0; i < selLineOffset; i++)
+						if (selEnd->next != NULL)
+							selEnd = selEnd->next;
+				} else if (selLineOffset < 0) {
+					/* Other end of selection is above current line, move end up to meet it. */
+					selStartPos = selPos;
+					selEndPos = pos;
+					for (i = 0; i > selLineOffset; i--)
+						if (selStart->prev != NULL)
+							selStart = selStart->prev;
+				} else {
+					/* Selection is only on current line: selStartPos gets the lesser of selPos & pos */
+					if (selPos > pos) {
+						selStartPos = pos;
+						selEndPos = selPos;
+					} else {
+						selStartPos = selPos;
+						selEndPos = pos;
+					}
+				}
+
+				regyank('\"', selStart, selEnd, selStartPos, selEndPos);
+			}
+		}
+		if(e != 0) {
+			/* KLUDGE */
 		} else if (c == 27) {
 			e = -1;
 			if (editwidth > EDITBOX_NOEDIT)
@@ -874,8 +863,27 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 					/******** Cut operation *********/
 
-					case 45:     /* alt-x: cut selected text */
 					case 147:    /* ctrl-delete: clear selected text */
+						e = 0;
+						c = 24;
+						break;
+
+					default:
+						/* act as if ext key is really not ext. This way, people used to
+						 * using alt key combos to plot special chars will not be
+						 * disappointed. */
+						e = 0;
+						break;
+				}
+			}
+			if (e == 0) {
+				/* normal key (or unknown ext key impersonating one) */
+				switch (c) {
+					case 3:
+						/* COPY is already done */
+						break;
+					case 24:
+						/* CUT */
 						/* Clear selected area */
 						sv->cur = centerstr;
 						/* Destroy the meat of the selection */
@@ -950,9 +958,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 							updateflags = U_EDITAREA;
 						}
 						break;
-
-					case 47:
-						/* alt-v: paste register */
+					case 22:
+						/* ctrl-v: paste register */
 						sv->cur = centerstr;
 						pos = regput('\"', sv, pos, wrapwidth, editwidth);
 						centerstr = sv->cur;
@@ -966,17 +973,6 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						updateflags = U_EDITAREA;
 						break;
 
-					default:
-						/* act as if ext key is really not ext. This way, people used to
-						 * using alt key combos to plot special chars will not be
-						 * disappointed. */
-						e = 0;
-						break;
-				}
-			}
-			if (e == 0) {
-				/* normal key (or unknown ext key impersonating one) */
-				switch (c) {
 					case 9:
 						/* Tab */
 						/* determin tab amount */

@@ -1,31 +1,12 @@
-!contents;Table of Contents
-$-----------------------------------------
-KevEdit 0.3.2
+-----------------------------------------
+KevEdit 0.3.3
      A world file editor for the game ZZT
-$-----------------------------------------
-Copyright (C) 2000-2001 Kev Vance  <kvance@tekktonik.net>
+-----------------------------------------
+Copyright (C) 2000-2001 Kev Vance  <kev@kvance.com>
 With many contributions by bitman  <bitman@users.sf.net>
 
-:contents;Using Kevedit
-!starting;Getting Started
-!new;* New features *
-!basics;Basic Movement and Plotting
-!sidebar;The KevEdit Sidebar
-!defc;Default Color Mode
-!uncommon;Uncommon tiles
-!creatures;Editing Creatures & Objects
-!text;Placing Text on the Board
-!file;File Operations
-!zzt;Working with ZZT
-!buffers;Resizable Backbuffers
-!advanced;Advanced Tile Editing
-!advanced;(gradient draw mode)
-!help;The Help System
-!quit;Quitting
-!support;Support
-
-:starting;Getting Started With KevEdit
-
+Getting Started With KevEdit
+----------------------------
 Copy the binary KEVEDIT.EXE to your ZZT directory.  You can run it with no
 arguments to get a blank new world, or give it a world on the command line to
 load it.
@@ -36,245 +17,26 @@ C> kevedit town.zzt
 This will load town.zzt into the editor if it exists.  Otherwise, a new world
 will be created.
 
-:new;New in Versions 0.3.2 and 0.3.3!
-!contents;<-- Back to Contents
+To learn more about using KevEdit, activate its on-line help by pressing
+'H'.
 
-!buffers;Resizable backbuffers
-!advanced;Advanced tile editing
-!help;Hypertext help dialog!!!
-!creatures;More creatures
-!creatures;Copy and paste!
-
-$Bugs fixed in 0.3.3
+New Features / Bug Fixes
+------------------------
+New features in 0.3.3
+  * Hypertext help system
+  * Board Info Dialog
+  * World Info Dialog
+  * Kolor Dialog (press K)
+  * ZZT Object Library Support
+  * Cut, copy, and paste use CTRL now
+  * Floodfill advancements
+Bugs fixed in 0.3.3
   * Escape cancels save operation
   * Cut doesn't crash on last line
 
-:basics;Basic Movement and Plotting
-!contents;<-- Back to Contents
-
-You control the blinking cursor around the 60x25 board with the arrow keys.
-Holding ALT with an arrow key will move faster.  Notice that the cursor
-changes the colour of the tile under it.  This is to help you find it when
-it gets lost.
-
-If you press the SPACEBAR, a white solid will be plotted where the cursor is.
-The TAB key will turn on or off drawing mode.  In drawing mode, the cursor
-plots automatically when moved.
-
-To plot an empty on the current space, deleting the tile on it, press the
-DELETE key.
-
-If you create an enclosed area and want to fill it in with one type of tile,
-place the cursor inside and press lowercase 'f' to flood fill the area. See
-"Advanced Tile Editing" for information on random floodfill.
-
-There are many boards in a ZZT world.  Press 'b' to view the board list,
-where you can edit a different board or create a new one.
-
-:sidebar;The KevEdit Sidebar
-!contents;<-- Back to Contents
-
-The blue bar to the right of the screen is the KEVEDIT SIDEBAR.  It displays
-information about the current state of the editor as well as keys for common
-actions.
-
-The top line of the sidebar looks something like this:
-(1, 1) 0/150
-
-The numbers in parenthesis are the coordinates of your cursor, ranging from
-(1, 1) to (60, 25).  The next numbers tell you how many PARAMETER RECORDS are
-stored on this board.  Parameter records store information for configurable
-things:  objects, scrolls, and enemies all have parameter records.  ZZT has a
-limit of 150 records per board.  Keep an eye on how many you have used so that
-you don't run out!
-
-The next line simply displays the title of the world.  Currently, the title
-is the same as the filename (it is case sensitive) but this will be
-configurable later.
-
-On the bottom of the sidebar are two horizontal bars.  The first one has a
-gradient of a solid block to empty space, a line, and more empty space.  This
-is the PATTERN SELECTOR.  Press 'p' to move the arrow forwards along the
-selector and shift+'p' to move it backwards.  In order, the tiles in the
-pattern selector are:
-
-        * Solid block
-        * Normal block
-        * Breakable block
-        * Water
-        * Empty space
-        * Line
-
-Press space to plot any of these common patterns that the arrow is over.  Next
-to the patterns is the 10 character BACKBUFFER.  When you plot an uncommon
-tile (not from the pattern selector), it will end up in the backbuffer.  To
-copy something from the board into the backbuffer, place your cursor over it
-and press ENTER.  It will appear in the backbuffer, where you can plot it like
-anything else in the pattern selector.
-
-The horizontal bar below the pattern selector is the COLOR SELECTOR.  Every
-tile you plot has a foreground and background color.  The colors on the top
-are for the foreground, which you can switch between by pressing 'c'.  There
-are fewer colors available for the background, which you can select by
-pressing shift+'c'.
-
-To make the foreground color blink on and off, press 'v' before you plot.
-
-:defc;Default Color Mode
-!contents;<-- Back to Contents
-
-Next to the color selector lies the letter D.  When it is bright and capital,
-DEFAULT COLOR MODE is on.  When it is lowercase and dim, it is off.  Default
-color mode (or DefC) is a great idea that I stole from MegaZeux 1.0.  When it
-is enabled, objects get plotted with their normal colors.  Ammo is dark cyan,
-torches are brown, objects in the backbuffer are their original color, etc.
-When you turn DefC off, anything you plot will be the color chosen in the
-color selector.  This is a great way to customize game items and to change the
-color of objects.
-
-:uncommon;Uncommon Tiles
-!contents;<-- Back to Contents
-
-Well, it's not that they're uncommon, just not used as much as the nice
-gradient on the pattern selector.  To choose among items, creatures, and
-terrains, press F1, F2, or F3.  If you want to plot any of these, press its
-corresponding letter (it will be displayed on the sidebar).  Most of these
-are not implemented yet.  Sorry :(
-
-Objects are a special type of tile in the Creature menu.  Right now, you can
-choose a custom character for the object.  Later, an editor will be included
-to enter ZZT-OOP programming into the object.
-
-:creatures;Editing Creatures & Objects
-!contents;<-- Back to Contents
-
-If a tile has editable parameters, such as a built-in enemy, object, or
-scroll, pressing ENTER will allow you to modify them.  After you have done
-this, it will be placed in the backbufffer.
-
-To copy a tile to the backbuffer without editing it, press INSERT.
-
-Objects and scrolls are programmed in the ZZT-OOP language.  When you edit
-these types, you will be presented with the object editor.  This is a simple
-text editor with features specific to ZZT programming.  ARROW KEYS move the
-cursor, ESCAPE quits, ctrl+'y' deletes a line.
-
-$******* NEW in 0.3.2 *******
-The ZZT-OOP editor even features copy and paste! Text may be highlighted by
-holding down SHIFT and using the arrow keys to navigate. Use CTRL+'c' to copy
-the selected text, CTRL+'x to cut, and CTRL+'v' to paste. CTRL-DELETE will
-clear a selected area without copying.
-
-The ZZT-OOP editor has a configurable word wrap.  alt+'+' and alt+'-' will
-increase or decrease the maximum length of a line of text.  You can also
-insert arbitrary ASCII characters into your program by pressing ctrl+'a'.  If
-the cursor is after a #char command, it will place the number of the character
-into the program instead.
-
-You can also use the editor to interface with other files.  alt+'s' will save
-your program to a file and alt+'o' will open an already saved program,
-replacing the current one.  alt+'i' will insert a saved program where the
-cursor is.  alt+'m' will load a ZZM format music file.
-
-$***** Coming Soon ******
-bitman might just work on support for the ZZTAE zzl library which allows several
-objects to be crammed into a single file for easy access.
-
-:text;Placing Text on the Board
-!contents;<-- Back to Contents
-
-$******* NEW in 0.3.2 *******
-To add readable text tiles to the board, press F4 to activate text entry mode.
-Every character you type will be written on the board.  To add a non-typable
-character, press ctrl+'a' for the ASCII selection dialog box.  To leave text
-entry mode, press F4 again.
-
-:file;File Operations
-!contents;<-- Back to Contents
-
-KevEdit can load and save normal ZZT worlds.  To load a world, press 'l' and
-you will be presented with a list of all world files in the current directory.
-To save your world, press 's'.  You will be prompted for an 8 letter name.
-This will be the title and filename of your world.
-
-:zzt;Working with ZZT
-!contents;<-- Back to Contents
-
-To aid in testing a game, pressing 'r' will run ZZT on the current world.
-It will not jump directly to the game, you still must choose your input
-device, etc.
-
-For this to work, zzt.exe and zzt.dat must be in the current directory.
-
-:buffers;Resizable Backbuffers
-!contents;<-- Back to Contents
-
-$******* NEW in 0.3.2 *******
-The backbuffer may  be  resized  using  the '<' and '>' keys. Some gradients
-may not fit in the default ten-tile backbuffer, so this may prove useful. Only
-ten tiles will be visible at once, but the backbuffer will scroll
-automatically.
-
-:advanced;Advanced Tile Editing
-!contents;<-- Back to Contents
-
-$******* NEW in 0.3.2 *******
-KevEdit includes several advanced tile editting features, including gradient
-draw mode, get mode, and random flood fill.
-
-Gradient draw mode works much the same as drawing mode (activated by the TAB
-key), except that KevEdit cycles through the backbuffer with each cursor
-movement. This can be used to easily plot gradients or other patterns. Use
-SHIFT-TAB to activate gradient mode and TAB to turn it off. When gradient mode
-is on, KevEdit will cycle through the backbuffer backward so that tiles are laid
-down in the same order they enter the buffer. To cycle forward, press SHIFT-TAB
-a second time.
-
-Get mode acts exactly in the opposite manner as drawing mode, lifting tiles into
-the backbuffer as the cursor moves. By using get mode, one can load a large
-gradient or line of objects into the backbuffer with relatively few keystrokes.
-Press 'g' to toggle get mode. The 'g' next to the backbuffer will indicate
-whether get mode is on.
-
-Random flood fill works much like normal flood fill except that tiles are chosen
-at random from the backbuffer when filling. Use capitalized 'F' to random
-flood fill a region. IMPORTANT: the type of tile you flood fill onto should not
-be present in the backbuffer. Because of the way flood fill is implemented, this
-would result in instability, and so such cases are treated as a normal floodfill
-by KevEdit. BEWARE: once an area is flood filled with random tiles, it is
-difficult to undo.
-
-In a random flood fill, all tiles used are given equal probability. To increase
-the occurance of a certain kind of tile, put more than one copy in the
-backbuffer to increase the likelyhood that it will be used.
-
-Both gradient draw mode and random flood fill use the ENTIRE backbuffer, so feel
-free to resize the backbuffer as necessary using '<' and '>'.
-
-:help;Help!
-!contents;<-- Back to Contents
-
-$******* NEW in 0.3.3 *******
-KevEdit now has a hypertext help system! If've you've got this far, either the
-insane markup in this file is giving you a headache, or you've already been
-using it! Words cannot describe the joy of this simple triumph!
-
-Of course, KevEdit only supports one help file at the moment, so everything is
-globbed together, but that could change eventually.
-
-:quit;Quitting
-!contents;<-- Back to Contents
-
-For your safety, pressing 'q' will ask if you really want to quit.  If you
-answer in the affirmative, KevEdit will terminate.  It will not ask you if
-you really /really/ want to quit, or perhaps you would just like to save your
-work instead, because I hate it when programs doubt my quititude.
-
-:support;Support
-!contents;<-- Back to Contents
-
-That concludes this monsterous text on the various usages of KevEdit. Though
-KevEdit is not supported at present, you can send emails to bitman
+Post Script
+-----------
+Though KevEdit is not supported at present, you can send emails to bitman
 <bitman_squared@hotmail.com> if you can't figure something out or just don't
 like it. Also, the kevedit-talk mailing list is a good source of updates on the
 development of KevEdit.
@@ -287,6 +49,6 @@ sort of thing.
 http://kevedit.sourceforge.net/ is where you can check for new releases, get
 the CVS code, post bug reports, etc.
 
-    Kev Vance <kvance@tekktonik.net>
+    Kev Vance <kev@kvance.com>
     Ryan Phillips <bitman@users.sf.net>
-    October 8, 2001
+    October 27, 2001

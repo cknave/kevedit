@@ -1,6 +1,6 @@
 /* libzzt.c     -- ZZT functions
- * $Id: libzzt.c,v 1.9 2001/05/12 21:15:27 bitman Exp $
- * Copyright (C) 1998-2000 Kev Vance <kvance@zeux.org>
+ * $Id: libzzt.c,v 1.10 2001/10/27 19:30:42 kvance Exp $
+ * Copyright (C) 1998-2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
