@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.19 2002/12/04 23:53:06 kvance Exp $
+ * $Id: display_sdl.c,v 1.20 2002/12/05 17:17:24 kvance Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kev@kvance.com>
  *
@@ -951,6 +951,12 @@ int display_sdl_getkey()
 
 	/* Preemptive stuff */
 	if(event.type == SDL_KEYDOWN) {
+		/* Hack for windows: alt+tab will never show up */
+		if((event.key.keysym.sym == SDLK_TAB) && 
+				(event.key.keysym.mod & KMOD_ALT)) {
+			printf("alt tab\n");
+			return DKEY_NONE;
+		}
 		switch(event.key.keysym.sym) {
 			case SDLK_RSHIFT:
 			case SDLK_LSHIFT:
@@ -980,6 +986,12 @@ int display_sdl_getkey()
 		csoc = timer;
 	/* Focus change? */
 	} else if(event.type == SDL_ACTIVEEVENT) {
+		/* Repaint if the app becomes active again */
+		if(event.active.state & SDL_APPACTIVE) {
+			if(event.active.gain == 1)
+				display_redraw(&info);
+		}
+		/* Change cursor type if focus changes */
 		if(event.active.state & SDL_APPINPUTFOCUS) {
 			if(event.active.gain && timer == 2) {
 				/* Make cursor normal */
