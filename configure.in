@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_REVISION([$Id: configure.in,v 1.6 2003/10/24 21:18:03 bitman Exp $])
+AC_REVISION([$Id: configure.in,v 1.7 2003/11/01 23:45:56 bitman Exp $])
 AC_INIT(KevEdit, 0.5.1, kev@kvance.com, kevedit)
-AC_CONFIG_SRCDIR(kevedit.c)
+AC_CONFIG_SRCDIR(src/kevedit/kevedit.c)
 
 dnl Detect host and target build environment
 AC_CANONICAL_HOST
@@ -14,6 +14,39 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
+
+dnl Determine available displays
+AC_MSG_NOTICE(Searching for available displays)
+
+dnl Check for SDL
+AM_PATH_SDL(1.2.0,
+	AC_MSG_NOTICE(Using SDL display and sound)
+	AC_DEFINE(SDL)
+	sdl=true,
+
+	AC_MSG_NOTICE(SDL not available for display))
+
+dnl This must be done before most checks because it can affect what headers
+dnl and libraries are available
+CFLAGS="$CFLAGS $SDL_CFLAGS"
+LIBS="$LIBS $SDL_LIBS"
+
+AM_CONDITIONAL(SDL, test x$sdl = xtrue)
+
+dnl Check for DOS display
+case "$host" in
+	*-*-msdos*)
+		AC_MSG_NOTICE(Using DOS display and pcspeaker sound)
+		AC_DEFINE(DOS)
+		dos=true
+		;;
+	*)
+		AC_MSG_NOTICE(DOS display not available)
+		;;
+esac
+
+AM_CONDITIONAL(DOS, test x$dos = xtrue)
+
 
 dnl Check for windows resource compiler.
 AC_CHECK_PROGS(WINDRES, windres)
@@ -38,6 +71,9 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRCOLL
 AC_CHECK_FUNCS(getcwd strdup strstr)
 
+dnl Check for math library
+AC_CHECK_LIB(m, floor)
+
 dnl Check for availability of long file names
 AC_SYS_LONG_FILE_NAMES
 
@@ -58,37 +94,12 @@ AC_DEFINE(CANGLOB)
 AC_DEFINE_UNQUOTED(keveditVERSION, "$PACKAGE_VERSION")
 AC_DEFINE_UNQUOTED(DATAPATH, ".")
 
-dnl Determine available displays
-AC_MSG_NOTICE(Searching for available displays)
-
-dnl Check for SDL
-AM_PATH_SDL(1.2.0,
-	AC_MSG_NOTICE(Using SDL display and sound)
-	AC_DEFINE(SDL)
-	sdl=true,
-
-	AC_MSG_NOTICE(SDL not available for display))
-
-CFLAGS="$CFLAGS $SDL_CFLAGS"
-LIBS="$LIBS $SDL_LIBS"
-
-AM_CONDITIONAL(SDL, test x$sdl = xtrue)
-
-dnl Check for DOS display
-case "$host" in
-	*-*-msdos*)
-		AC_MSG_NOTICE(Using DOS display and pcspeaker sound)
-		AC_DEFINE(DOS)
-		dos=true
-		;;
-	*)
-		AC_MSG_NOTICE(DOS display not available)
-		;;
-esac
-
-AM_CONDITIONAL(DOS, test x$dos = xtrue)
-
+dnl Check for glob and add it to CPPFLAGS
 AC_PROG_GNU_GLOB
+CPPFLAGS="$CPPFLAGS $GLOBINC"
 
-AC_OUTPUT(docs/Makefile glob/Makefile libzzt2/Makefile synth/Makefile Makefile)
+AC_SUBST(SRC_ROOT) SRC_ROOT='-I$(top_srcdir)/src'
+CPPFLAGS="$CPPFLAGS $SRC_ROOT"
+
+AC_OUTPUT(docs/Makefile glob/Makefile src/libzzt2/Makefile src/structures/Makefile src/display/Makefile src/synth/Makefile src/themes/Makefile src/themes/rusty/Makefile src/texteditor/Makefile src/help/Makefile src/dialogs/Makefile src/zlaunch/Makefile src/kevedit/Makefile src/Makefile Makefile)
 
