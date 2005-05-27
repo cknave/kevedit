@@ -1,5 +1,5 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.1 2003/11/01 23:45:57 bitman Exp $
+ * $Id: notes.c,v 1.2 2005/05/27 02:48:43 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -95,10 +95,10 @@ float noteFrequency(musicalNote mnote, musicSettings settings)
 		freq = basePitch;
 
 	if(note < 0)
-		freq /= 2;
+		freq /= 2.0;
 
 	/* Find the size of a half step */
-	fraction = (log(freq*2) - log(freq))/12;
+	fraction = (log(freq * 2.0) - log(freq)) / 12.0;
 
 	/* Move base freq to log */
 	freq = log(freq);
