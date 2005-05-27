@@ -1,5 +1,5 @@
 /**@file texteditor/select.c  Text editor selection, copy, and paste.
- * $Id: select.c,v 1.1 2003/12/21 03:21:29 bitman Exp $
+ * $Id: select.c,v 1.2 2005/05/27 02:50:24 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -151,6 +151,9 @@ void texteditClearSelectedText(texteditor * editor)
 		int selectionLen = bounds.endPos - bounds.startPos;
 		char * line = bounds.startLine->s;
 		int i;
+
+		/* Check for badly formed selection: endPos is before startPos. */
+		if (selectionLen < 0) selectionLen = -selectionLen;
 
 		/* Copy the end of the line onto the selected text. */
 		for (i = bounds.endPos; i < strlen(line); i++) {

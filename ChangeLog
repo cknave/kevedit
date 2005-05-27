@@ -2,6 +2,7 @@
 -----
 Bug fixed: "#if flag !msg;text" is now parsed correctly.
 Bug fixed: Messages and hypermessages now parsed correctly.
+New text editor implementation with minor usage changes.
 
 0.5.1
 -----

@@ -1,5 +1,5 @@
 /**@file texteditor/display.c  Text editor display functions.
- * $Id: display.c,v 1.2 2003/12/21 03:21:29 bitman Exp $
+ * $Id: display.c,v 1.3 2005/05/27 02:50:24 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -221,7 +221,7 @@ void texteditDisplaySelection(texteditor * editor)
 	}
 
 	/* Draw farthest line from centerstr. */
-	if (lineoffset <= btLineCount && lineoffset >= -btLineCount && text->cur->s != NULL) {
+	if (lineoffset <= btLineCount && lineoffset >= -btLineCount && text->cur != NULL && text->cur->s != NULL) {
 		/* Determine start and end positions. */
 		if (editor->selectlineoffset < 0) {
 			startPos = editor->selectpos;

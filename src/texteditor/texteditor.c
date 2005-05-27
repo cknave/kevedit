@@ -1,5 +1,5 @@
 /**@file texteditor/texteditor.c  Text editor/viewer.
- * $Id: texteditor.c,v 1.2 2003/12/21 03:21:29 bitman Exp $
+ * $Id: texteditor.c,v 1.3 2005/05/27 02:50:24 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -607,13 +607,87 @@ void texteditHelpZOC(texteditor * editor)
  */
 void texteditZZMPlay(texteditor * editor, int slurflag)
 {
-	editor->text->cur = editor->curline;
 	/** @TODO: do a damn good job of testing music */
 	/* Idea: create a copy of *editor so that we can mess around with curline and
 	 * pos and such, using existing functions to do the bulk of the display. */
 #if 0
+	editor->text->cur = editor->curline;
 	testMusic(editor->text, slurflag, editor->linewidth, flags, editor->d);
 #endif
+
+	/* Create a new view of the editor data. This allows us to move the cursor
+	 * and change display settings for the new view without affecting editor. */
+	const char* playString = "#play ";
+	const int playStringLen = 6;
+
+	texteditor editorCopy = *editor;
+	texteditor* view = &editorCopy;
+
+	/* Display everything, in case the editor has not been displayed recently. */
+	view->updateflags |= TUD_ALL;
+
+	int done;
+#ifdef SDL
+	SDL_AudioSpec spec;
+
+	/* IF opening the audio device fails, return now before we crash something. */
+	if (OpenSynth(&spec))
+		return;
+#endif
+
+	done = 0;
+
+	/* Loop through the stringvector looking for #play statements */
+	while (view->curline != NULL && !done) {
+		char* tune = strstr(view->curline->s, "#");
+		if (tune != NULL && str_equ(tune, playString, STREQU_UNCASE | STREQU_RFRONT)) {
+			/* Current note and settings */
+			musicalNote note = zzmGetDefaultNote();
+			musicSettings settings = zzmGetDefaultSettings();
+
+			int xoffset = tune - view->curline->s + playStringLen;
+			tune += playStringLen;  /* Advance to notes! */
+
+			/* Change the slur setting */
+			note.slur = slurflag;
+
+			while (note.src_pos < strlen(tune) && !done) {
+				if (view->d->getkey() != DKEY_NONE)
+					done = 1;
+
+				/* Move the cursor and re-display before playing note. */
+				view->pos = note.src_pos + xoffset;
+				texteditUpdateDisplay(view);
+
+				note = zzmGetNote(tune, note);
+
+#ifdef DOS
+				pcSpeakerPlayNote(note, settings);
+#elif defined SDL
+				SynthPlayNote(spec, note, settings);
+#endif
+			}
+		}
+		view->curline = view->curline->next;
+
+		/* Re-display edit area since the current line has changed. */
+		view->updateflags |= TUD_EDITAREA;
+	}
+
+#ifdef SDL
+	/* TODO: instead of just sitting here, display the progress of playback */
+	/* Wait until the music is done or the user presses a key */
+	while (!IsSynthBufferEmpty() && view->d->getkey() == DKEY_NONE)
+		;
+
+	CloseSynth();
+#elif defined DOS
+	pcSpeakerFinish();
+#endif
+
+	/* No need to free the view, it only exists on the stack. */
+
+	/* The edit area needs to be redisplayed now. */
 	editor->updateflags |= TUD_EDITAREA;
 }
 
@@ -656,7 +730,9 @@ void texteditZZMLoad(texteditor * editor)
  * @relates texteditor
  * @brief Rip music and browse it.
  *
- * @TODO: Remember why this function exists.
+ * This allows ZZM music files to be created from object code.
+ *
+ * @TODO: Document this feature and make it more usable.
  */
 void texteditZZMRip(texteditor * editor)
 {
@@ -828,6 +904,11 @@ void texteditBackspace(texteditor * editor)
 {
 	int i;
 
+	if (editor->selectflag) {
+		texteditClearSelectedText(editor);
+		return;
+	}
+
 	if (editor->pos > 0) {
 		/* Slide everything at or after the cursor back */
 		for (i = editor->pos - 1; i < strlen(editor->curline->s); i++)
@@ -891,6 +972,11 @@ void texteditBackspace(texteditor * editor)
 void texteditDelete(texteditor * editor)
 {
 	int i;
+
+	if (editor->selectflag) {
+		texteditClearSelectedText(editor);
+		return;
+	}
 
 	if (editor->pos < strlen(editor->curline->s)) {
 		/* Slide everything after the cursor backward */
@@ -1032,6 +1118,10 @@ void texteditInsertCharacter(texteditor * editor, int ch)
 	int i;
 
 	ch = ch & 0xFF;  /* Clear all but the first 8 bits */
+
+	/* Don't insert end-of-line character. */
+	if (ch == 0)
+		return;
 
 	if (editor->insertflag) {
 		/* insert */

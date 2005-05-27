@@ -1,5 +1,5 @@
 /* paramed.c  -- Parameter editor
- * $Id: paramed.c,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: paramed.c,v 1.2 2005/05/27 02:50:24 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 
 #include "kevedit/screen.h"
 #include "texteditor/editbox.h"
+#include "texteditor/texteditor.h"
 
 #include "libzzt2/zzt.h"
 #include "help/help.h"
@@ -230,19 +231,24 @@ ZZTparam svectortoprogram(stringvector sv)
 
 void editprogram(displaymethod * d, ZZTparam * p)
 {
+	texteditor * editor;
 	stringvector sv;
 	ZZTparam newparam;
 
 	sv = programtosvector(p, EDITBOX_ZZTWIDTH);
+	editor = createtexteditor("Program Editor", &sv, d);
 
 	/* Now that the node is full, we can edit it. */
-	sv.cur = sv.first;	/* This is redundant, but hey. */
-	editbox("Program Editor", &sv, EDITBOX_ZZTWIDTH, 1, d);
+	textedit(editor);
 
 	/* Okay, let's put the vector back in program */
-	newparam = svectortoprogram(sv);
+	newparam = svectortoprogram(*editor->text);
 
-	deletestringvector(&sv);
+	/* Free the text editor and text. */
+	deletetexteditortext(editor);
+	deletetexteditor(editor);
+
+	/* Free the old program. */
 	if (p->program != NULL)
 		free(p->program);
 

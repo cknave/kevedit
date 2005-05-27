@@ -7,7 +7,6 @@ $The Object Code Editor
 !files;Loading and Saving Text Files
 !zzm;Importing ZZT Music
 !play;Testing ZZT Music
-!zoc;ZOC Mode
 !help;Context Sensitive Help
 !txted;Text Editor (! editor)
 
@@ -66,10 +65,7 @@ a file without destroying existing work.
 Music stored in ZZM formatted files can be
 loaded into the Object Editor quite
 easily. Simply press ALT+'m', select a ZZM
-file and a song to load. When ZOC mode is
-on, #play statements will be inserted at
-the beginning of each line of music.
-!zoc;ZOC Mode
+file and a song to load.
 
 NOTE: Due to extreme laziness and the
 complexities of programming, KevEdit will
@@ -87,17 +83,6 @@ cursor to the beginning of the song and
 press CTRL-T. To hear the music without
 the slurring problem (that is, with tiny
 breaks between notes), use ALT-T.
-
-:zoc;ZOC Mode
-
-It may be useful to turn ZOC mode off when
-editing files which are not ZZT Object
-Code. All it does is turn of syntax
-highlighting and prevent #play statements
-from being inserted with ZZM music. If you
-use the editor to copy music from one ZZM
-file to another. Use ALT-Z to toggle ZOC
-mode.
 
 :help;Context Sensitive Help
 
