@@ -1,5 +1,5 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.2 2005/05/27 02:48:43 bitman Exp $
+ * $Id: notes.c,v 1.3 2005/05/28 03:17:45 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <math.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
 /**@file texteditor/lineeditor.c  Editor for a single line.
- * $Id: lineeditor.c,v 1.1 2004/02/01 06:36:44 bitman Exp $
+ * $Id: lineeditor.c,v 1.2 2005/05/28 03:17:46 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2002 Ryan Phillips <bitman@users.sourceforge.net>
@@ -19,12 +19,18 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "lineeditor.h"
 
 #include "libzzt2/strtools.h"
 #include "display/colours.h"
 
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 void lineeditorinsertcharacter(lineeditor * editor, char ch);
 

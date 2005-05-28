@@ -1,5 +1,5 @@
 /**@file structures/linkedlist.c   An abstract linked list.
- * $Id: linkedlist.c,v 1.3 2003/12/20 09:12:21 bitman Exp $
+ * $Id: linkedlist.c,v 1.4 2005/05/28 03:17:45 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sourceforge.net>
@@ -18,6 +18,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "linkedlist.h"
 

@@ -1,5 +1,5 @@
 /* zzl.c  -- ZZT Object Library file routines
- * $Id: zzl.c,v 1.1 2003/11/01 23:45:57 bitman Exp $
+ * $Id: zzl.c,v 1.2 2005/05/28 03:17:46 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 
 #include "zzl.h"

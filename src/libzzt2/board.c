@@ -1,5 +1,5 @@
 /* board.c	-- Board functions
- * $Id: board.c,v 1.1 2003/11/01 23:45:57 bitman Exp $
+ * $Id: board.c,v 1.2 2005/05/28 03:17:45 bitman Exp $
  * Copyright (C) 2001 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>

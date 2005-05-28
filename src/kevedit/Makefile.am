@@ -2,6 +2,8 @@
 
 AUTOMAKE_OPTIONS = 1.7.4
 
+AM_CPPFLAGS = -DDATAPATH=\"$(pkgdatadir)\"
+
 bin_PROGRAMS = kevedit
 
 kevedit_SOURCES = \

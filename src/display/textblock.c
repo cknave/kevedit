@@ -1,5 +1,5 @@
 /* textblock.c   -- A block of coloured display text
- * $Id: textblock.c,v 1.1 2003/11/02 21:39:41 bitman Exp $
+ * $Id: textblock.c,v 1.2 2005/05/28 03:17:45 bitman Exp $
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,9 +17,14 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "textblock.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /* Create an empty textBlock */
 textBlock *

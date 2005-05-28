@@ -1,5 +1,5 @@
 /* files.h  -- filesystem routines
- * $Id: files.c,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: files.c,v 1.2 2005/05/28 03:17:45 bitman Exp $
  * Copyright (C) 2000 Ryan Phillips <bitman@scn.org>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,10 @@
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 
 #if HAVE_SYS_TYPES_H
 #	include <sys/types.h>
@@ -29,9 +33,7 @@
 #include <unistd.h>   /* For getcwd() */
 #include <sys/stat.h>
 
-#ifdef CANGLOB
 #include <glob.h>
-#endif
 
 #include "files.h"
 
@@ -249,13 +251,10 @@ stringvector globtosvector(char * pattern, int filetypes)
 	int i;
 
 	stringvector files;
-#ifdef CANGLOB
 	glob_t listing;
-#endif
 
 	initstringvector(&files);
 
-#ifdef CANGLOB
 	/* Get the listing */
 	glob(pattern, GLOB_MARK, NULL, &listing);
 
@@ -272,7 +271,6 @@ stringvector globtosvector(char * pattern, int filetypes)
 	}
 
 	globfree(&listing);
-#endif
 	return files;
 }
 

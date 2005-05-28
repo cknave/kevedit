@@ -1,5 +1,5 @@
 /* display.c    -- Functions for the modular display
- * $Id: display.c,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: display.c,v 1.2 2005/05/28 03:17:45 bitman Exp $
  * Copyright (C) 2000 Kev Vance <kev@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,16 +17,20 @@
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
+#if defined HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "display.h"
 #include "display_stdio.h"
 
-#ifdef SDL
+#if defined(SDL)
 #include "display_sdl.h"
 #endif
-#ifdef VCSA
+#if defined(VCSA)
 #include "display_vcsa.h"
 #endif
-#ifdef DOS
+#if defined(DOS)
 #include "display_dos.h"
 #endif
 
@@ -34,11 +38,11 @@ displaymethod display;
 
 void RegisterDisplays()
 {
-#ifdef DOS
+#if defined(DOS)
 	display = display_dos;
-#elif SDL
+#elif defined(SDL)
 	display = display_sdl;
-#ifdef VCSA
+#if defined(VCSA)
 	display.next = &display_vcsa;
 #endif
 #else

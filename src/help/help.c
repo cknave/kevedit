@@ -1,5 +1,5 @@
 /* help.c  -- hypertext help system
- * $Id: help.c,v 1.1 2003/11/01 23:45:56 bitman Exp $
+ * $Id: help.c,v 1.2 2005/05/28 03:17:45 bitman Exp $
  * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "help.h"
 
@@ -143,7 +147,7 @@ void help(displaymethod* d)
 		initstringvector(&aboutdialog);
 
 		pushstring(&aboutdialog, str_dup("@About KevEdit"));
-		pushstring(&aboutdialog, str_dup("$KevEdit Version " keveditVERSION));
+		pushstring(&aboutdialog, str_dup("$KevEdit Version " PACKAGE_VERSION));
 		pushstring(&aboutdialog, str_dup("Copyright (C) 2000-2001 Kev Vance, et al."));
 		pushstring(&aboutdialog, str_dup("Distribute under the terms of the GNU GPL"));
 		editbox("", &aboutdialog, 0, EDITBOX_ZOCMODE | EDITBOX_MOVEMENT, d);

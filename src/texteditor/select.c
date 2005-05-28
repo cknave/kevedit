@@ -1,5 +1,5 @@
 /**@file texteditor/select.c  Text editor selection, copy, and paste.
- * $Id: select.c,v 1.2 2005/05/27 02:50:24 bitman Exp $
+ * $Id: select.c,v 1.3 2005/05/28 03:17:46 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -19,8 +19,15 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "select.h"
 #include "register.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 selectionBounds texteditGetSelectionBounds(texteditor * editor);
 

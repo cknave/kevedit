@@ -1,5 +1,5 @@
 /* display_stdio.c   -- Dummy display using stdio
- * $Id: display_stdio.c,v 1.3 2003/11/09 20:57:28 bitman Exp $
+ * $Id: display_stdio.c,v 1.4 2005/05/28 03:17:45 bitman Exp $
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "display_stdio.h"
 
@@ -36,6 +40,7 @@ static textBlock * textbuffer = NULL;
 void display_stdio_print_help(void);
 void display_stdio_print_buffer(int newlineFlag);
 
+int display_stdio_getch(void);
 
 int display_stdio_init(void)
 {
@@ -94,7 +99,7 @@ int display_stdio_getch(void)
 		return keycode;
 	} else if (scanf("# %d", &keycode) > 0) {
 		return keycode;
-	} else if (scanf(": %s", &command) > 0) {
+	} else if (scanf(": %s", command) > 0) {
 		/* Handle special commands */
 
 		/* Named keys */
@@ -121,9 +126,9 @@ int display_stdio_getch(void)
 
 		/* Return first character */
 		return command[0];
-	} else if (scanf("\\%c", &keycode) > 0) {
+	} else if (scanf("\\%c", (char *) &keycode) > 0) {
 		return keycode;
-	} else if (scanf("%c", &keycode) > 0) {
+	} else if (scanf("%c", (char *) &keycode) > 0) {
 		/* Ignore newlines */
 		if (keycode == '\n')
 			return display_stdio_getch();

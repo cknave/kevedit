@@ -1,5 +1,5 @@
 /* zztoop - zzt oop parser */
-/* $Id: zztoop.c,v 1.2 2004/01/04 21:51:37 bitman Exp $ */
+/* $Id: zztoop.c,v 1.3 2005/05/28 03:17:45 bitman Exp $ */
 /* Copyright (C) 2002 Ryan Phillips <bitman@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,6 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "zztoop.h"
 #include "strtools.h"

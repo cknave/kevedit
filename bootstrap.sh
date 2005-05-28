@@ -59,6 +59,8 @@ if test -z $fast; then
 	aclocal && \
 	echo "$this: Running autoconf..." && \
 	autoconf && \
+	echo "$this: Running autoheader..." && \
+	autoheader && \
 	echo "$this: Running automake..." && \
 	automake --add-missing || exit
 fi

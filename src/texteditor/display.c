@@ -1,5 +1,5 @@
 /**@file texteditor/display.c  Text editor display functions.
- * $Id: display.c,v 1.3 2005/05/27 02:50:24 bitman Exp $
+ * $Id: display.c,v 1.4 2005/05/28 03:17:45 bitman Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -19,11 +19,21 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "texteditor.h"
 
 #include "display/colours.h"
 #include "themes/theme.h"
+
+#include "kevedit/screen.h"
+
+#include <string.h>
+
+/* in texteditor.c */
+int texteditIgnoreFirstLine(texteditor * editor);
 
 void texteditDisplayLine(texteditor * editor, int offset, char * line);
 void texteditDisplayText(texteditor * editor);
