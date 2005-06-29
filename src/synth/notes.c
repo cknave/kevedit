@@ -1,6 +1,6 @@
 /* notes.c	-- Generate musical notes in chromatic scale
- * $Id: notes.c,v 1.3 2005/05/28 03:17:45 bitman Exp $
- * Copyright (C) 2001 Kev Vance <kev@kvance.com>
+ * $Id: notes.c,v 1.4 2005/06/29 03:20:34 kvance Exp $
+ * Copyright (C) 2001 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

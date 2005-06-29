@@ -2,7 +2,7 @@
 KevEdit 0.5.1
                      Powerful ZZT Editing
 -----------------------------------------
-Copyright (C) 2000-2002 Kev Vance  <kev@kvance.com>
+Copyright (C) 2000-2002 Kev Vance  <kvance@kvance.com>
 With many contributions by bitman  <bitman@users.sf.net>
 
 Getting Started With KevEdit
@@ -56,6 +56,6 @@ sort of thing.
 http://kevedit.sourceforge.net/ is where you can check for new releases, get
 the CVS code, post bug reports, etc.
 
-    Kev Vance <kev@kvance.com>
+    Kev Vance <kvance@kvance.com>
     Ryan Phillips <bitman@users.sf.net>
     December 18, 2003

@@ -1,6 +1,6 @@
 /* display_dos.h        -- DOS display method
- * $Id: display_dos.h,v 1.1 2003/11/01 23:45:56 bitman Exp $
- * Copyright (C) 2000 Kev Vance <kev@kvance.com>
+ * $Id: display_dos.h,v 1.2 2005/06/29 03:20:34 kvance Exp $
+ * Copyright (C) 2000 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

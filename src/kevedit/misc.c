@@ -1,6 +1,6 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.4 2005/05/28 03:17:45 bitman Exp $
- * Copyright (C) 2000 Kev Vance <kev@kvance.com>
+ * $Id: misc.c,v 1.5 2005/06/29 03:20:34 kvance Exp $
+ * Copyright (C) 2000 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,10 +48,10 @@
 #include <unistd.h>
 #include <time.h>
 
-#ifdef DOSEMU
+#ifdef DOSBOX
 /* Need PATH_MAX */
 #include <sys/param.h>
-#include "dosemu.h"
+#include "zlaunch/dosbox.h"
 #endif
 
 void copy(keveditor * myeditor)
@@ -211,7 +211,7 @@ void showObjects(keveditor * myeditor)
 
 void runzzt(char* path, char* world)
 {
-#ifndef DOSEMU
+#ifndef DOSBOX
 
 	/* The DOS/WINDOWS way */
 	stringvector actions, files;
@@ -242,28 +242,19 @@ void runzzt(char* path, char* world)
 
 	deletestringvector(&info);
 	/* DO NOT delete actions and files. deletezlinfo() did this already */
+
 #else
-	/* The LINUX way */
+
+	/* The LINUX way.  Really, Windows could be using this too. */
 	char cwd[PATH_MAX];
-	char *no_extension = NULL;
 
 	/* ZZT world is always in current dir */
 	getcwd(cwd, PATH_MAX);
 
-	/* No .zzt is required */
-	if(strlen(world) > 4 && world[strlen(world)-4] == '.') {
-		no_extension = str_dup(world);
-		no_extension[strlen(world)-4] = '\0';
-	}
+	/* And run DOSBox */
+	dosbox_launch(DATAPATH, cwd, world);
 
-	/* And run dosemu on something */
-	if(no_extension != NULL) {
-		dosemu_launch(DATAPATH, cwd, no_extension);
-		free(no_extension);
-	} else {
-		dosemu_launch(DATAPATH, cwd, world);
-	}
-#endif /* DOSEMU */
+#endif /* DOSBOX */
 }
 
 

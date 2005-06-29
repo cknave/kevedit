@@ -1,7 +1,7 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.3 2005/05/28 03:17:45 bitman Exp $
+ * $Id: display_sdl.c,v 1.4 2005/06/29 03:20:34 kvance Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
- * Copyright (C) 2002 Kev Vance <kev@kvance.com>
+ * Copyright (C) 2002 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

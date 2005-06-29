@@ -2,7 +2,7 @@
 KevEdit 0.5.1
                      Powerful ZZT Editing
 -----------------------------------------
-Copyright (C) 2000-2002 Kev Vance  <kev@kvance.com>
+Copyright (C) 2000-2002 Kev Vance  <kvance@kvance.com>
 With many contributions by bitman  <bitman@users.sf.net>
 
 Getting Started With KevEdit
@@ -40,8 +40,8 @@ Post Script
 Technical support for KevEdit is not guaranteed. However, you are encouraged to
 send an email to bitman <bitman@users.sf.net> if you have any questions,
 problems, or praise. Also consider posting to the "ZZT Editors" forum on
-zzt2.com if you have a general question. For announcements and general
-discussion of KevEdit, visit the Forums on KevEdit's development page:
+zzt.the-underdogs.org if you have a general question. For announcements and
+general discussion of KevEdit, visit the Forums on KevEdit's development page:
 
 http://sourceforge.net/projects/kevedit/
 
@@ -53,6 +53,6 @@ sort of thing.
 http://kevedit.sourceforge.net/ is where you can check for new releases, get
 the CVS code, post bug reports, etc.
 
-    Kev Vance <kev@kvance.com>
+    Kev Vance <kvance@kvance.com>
     Ryan Phillips <bitman@users.sf.net>
-    December 18, 2003
+    June 28, 2005
