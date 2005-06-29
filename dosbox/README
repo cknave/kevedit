@@ -1,0 +1,16 @@
+Running ZZT under DOSBox
+------------------------
+ZZT works great in DOSBox.  To automatically test worlds, we set up the
+following virtual DOS drives:
+
+C:	-> ISO image containing ZZT runtime files
+D:	-> Temporary directory containing TEST.ZZT (created by KevEdit)
+
+DOSBox starts up, and mounts those virtual drives.  It runs skip.com, a simple
+program that injects [K] [C] [ENTER] into the keyboard buffer, conveniently
+skipping over the ZZT intro crap.  Then it runs C:ZZT D:TEST to launch ZZT with
+the test world.  When ZZT exits, DOSBox runs EXIT, terminating the emulator.
+
+Painless! :)
+
+-- kvance 2005
