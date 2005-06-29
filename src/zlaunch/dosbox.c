@@ -1,5 +1,5 @@
 /* dosbox.c		-- Routines for calling DOSBOX to run ZZT
- * $Id: dosbox.c,v 1.1 2005/06/29 03:22:57 kvance Exp $
+ * $Id: dosbox.c,v 1.2 2005/06/29 04:00:35 kvance Exp $
  * Copyright (C) 2005 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,9 +24,11 @@
 /* Only do this if we want DOSBox support */
 #ifdef DOSBOX
 
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <stdio.h>
 
@@ -183,6 +185,24 @@ int _dosbox_prep_tempdir(char *tmpdir, char *datapath, char *worldpath,
 	return 0;
 }
 
+/* Remove all files in a directory.  Note: this does not erase directories! */
+void _dosbox_rm_star(char *path)
+{
+	DIR *dir = opendir(path);
+	struct dirent *ent;
+	char filename[PATH_MAX];
+	
+	if(dir == NULL)
+		return;
+	
+	while((ent = readdir(dir)) != NULL) {
+		sprintf(filename, "%s/%s", path, ent->d_name);
+		unlink(filename);
+	}
+
+	closedir(dir);
+}
+
 int dosbox_launch(char *datapath, char *worldpath, char *world)
 {
 	/* Create a temporary directory for all this stuff */
@@ -218,7 +238,8 @@ int dosbox_launch(char *datapath, char *worldpath, char *world)
 	system(commandline);
 
 	/* Clean up */
-	/* TODO: delete the temp directory */
+	_dosbox_rm_star(tmpdir);
+	rmdir(tmpdir);
 	free(tmpdir);
 	free(commandline);
 	return 0;
