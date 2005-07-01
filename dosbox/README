@@ -13,4 +13,7 @@ the test world.  When ZZT exits, DOSBox runs EXIT, terminating the emulator.
 
 Painless! :)
 
+(Note: zzt.exe and zzt.dat are in the public domain.  I wrote skip.com, and
+that is in the public domain also.  Have fun with that.)
+
 -- kvance 2005
