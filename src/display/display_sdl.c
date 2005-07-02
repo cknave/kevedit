@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.4 2005/06/29 03:20:34 kvance Exp $
+ * $Id: display_sdl.c,v 1.5 2005/07/02 21:31:30 kvance Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kvance@kvance.com>
  *
@@ -30,6 +30,14 @@
 #include "display_sdl.h"
 
 int xstart, ystart;	/* Where the viewport begins */
+static SDL_TimerID timerId;	/* Timer ID */
+static int timer, csoc;	/* Timer for cursor, current state of cursor */
+
+/* Forward defines :( */
+static Uint32 display_tick(Uint32 interval, void *blank);
+void display_curse(int x, int y);
+
+#define CURSOR_RATE 200
 
 /*************************************
  *** BEGIN TEXTMODE EMULATION CODE ***
@@ -600,6 +608,14 @@ void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 {
 	vdest->write_x = x;
 	vdest->write_y = y;
+
+	/* Here's a nice usability fix.  When we reposition the cursor, make
+	 * it visible and reset the timer. */
+	SDL_RemoveTimer(timerId);
+	timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
+	if(timer != 2)
+		timer = 0;
+	display_curse(x, y);
 }
 
 void display_redraw(video_info *vdest)
@@ -775,12 +791,8 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
  ********************************/
 video_info info;	/* Display info */
 static int shift;	/* Shift state */
-static int timer, csoc;	/* Timer for cursor, current state of cursor */
-static SDL_TimerID timerId;	/* Timer ID */
 
 static int fullscreen = 0; /* Initial fullscreen setting */
-
-#define CURSOR_RATE 400
 
 /* Nice timer update callback thing */
 static Uint32 display_tick(Uint32 interval, void *blank)
@@ -1228,9 +1240,9 @@ int display_sdl_getch()
 
 	do {
 		/* Draw the cursor if necessary */
-		if(timer)
+		if(timer == 1)
 			display_update(&info, info.write_x, info.write_y, 1, 1);
-		else
+		else if(timer == 0)
 			display_curse(info.write_x, info.write_y);
 
 		if (SDL_WaitEvent(NULL) == 0)

@@ -1,9 +1,3 @@
-0.6.x
------
-Bug fixed: "#if flag !msg;text" is now parsed correctly.
-Bug fixed: Messages and hypermessages now parsed correctly.
-New text editor implementation with minor usage changes.
-
 0.5.1
 -----
 Windows installer defaults to running KevEdit in "My Documents" folder
@@ -16,6 +10,11 @@ Bug fixed: params created for items on F3 menu
 Bug fixed: Stats editor panel updated after editing object code or passage dest
 Bug fixed: Reenter coordinates don't decrease every time a board is saved
 Bug fixed: Horizonal and vertical blink walls were reversed in F3 menu
+Bug fixed: "#if flag !msg;text" is now parsed correctly.
+Bug fixed: Messages and hypermessages now parsed correctly.
+New text editor implementation with minor usage changes.
+Usability issue: Cursor flicked on when it moves, and has a faster blink rate
+Bug fixed: SDL cursor no longer "lingers" in gradient point selection
 
 0.5.0
 -----

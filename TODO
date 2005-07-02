@@ -9,9 +9,6 @@ Exploit ability of board to "link to self" using index FF
 Add monitor & blink rays to terrain documentation
 Respond to exit event from SDL
 Option: shift+arrow draws like tab
-BUG: Inserting char 0 in the ZZT-OOP editor destroys the line.  Bad!
-BUG: syntax highlighting: "#if flag !msg;text" displays incorrectly
-
 Number boards in the board selector
 Char dialog: Alpha keys select characters 
 File dialog: Alpha keys move the cursor
@@ -27,7 +24,6 @@ For the 0.7 release:
 --------------------
 Configurable keybindings
 Configuration file
-UNIX, here we come!
 
 If Ever:
 --------

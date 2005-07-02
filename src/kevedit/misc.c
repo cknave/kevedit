@@ -1,5 +1,5 @@
 /* misc.c       -- General routines for everyday KevEditing
- * $Id: misc.c,v 1.5 2005/06/29 03:20:34 kvance Exp $
+ * $Id: misc.c,v 1.6 2005/07/02 21:31:30 kvance Exp $
  * Copyright (C) 2000 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -841,8 +841,10 @@ int promptforselection(selection sel, gradline * grad, keveditor* myeditor)
 		mydisplay->cursorgo(myeditor->cursorx, myeditor->cursory);
 		key = mydisplay->getch();
 
+		cursorspace(myeditor);
 		movebykeystroke(key, &(myeditor->cursorx), &(myeditor->cursory),
-										0, 0, 59, 24, mydisplay);
+				0, 0, 59, 24, mydisplay);
+
 		if (key == DKEY_ESC) return 1;
 		/* Check for flood selection */
 		if (key == 'f' || key == 'F' || key == 'm') {
@@ -855,14 +857,17 @@ int promptforselection(selection sel, gradline * grad, keveditor* myeditor)
 		}
 	} while (key != DKEY_ENTER && key != ' ');
 	grad->x1 = myeditor->cursorx; grad->y1 = myeditor->cursory;
-	mydisplay->putch(myeditor->cursorx, myeditor->cursory, '+', 0x0F);
+	mydisplay->putch(grad->x1, grad->y1, '+', 0x0F);
 	
 	do {
 		mydisplay->cursorgo(myeditor->cursorx, myeditor->cursory);
 		key = mydisplay->getch();
 
+		cursorspace(myeditor);
 		movebykeystroke(key, &(myeditor->cursorx), &(myeditor->cursory),
-										0, 0, 59, 24, mydisplay);
+				0, 0, 59, 24, mydisplay);
+		mydisplay->putch(grad->x1, grad->y1, '+', 0x0F);
+
 		if (key == DKEY_ESC) return 1;
 		/* Check for flood selection */
 		if (key == 'f' || key == 'F' || key == 'm') {
