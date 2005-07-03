@@ -1,5 +1,5 @@
 /**@file texteditor/texteditor.c  Text editor/viewer.
- * $Id: texteditor.c,v 1.5 2005/07/03 00:25:41 kvance Exp $
+ * $Id: texteditor.c,v 1.6 2005/07/03 00:47:11 kvance Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -179,7 +179,6 @@ void deletetexteditortext(texteditor * editor)
 		return;
 
 	deletestringvector(editor->text);
-	free(editor->text);
 
 	editor->text = NULL;
 }
