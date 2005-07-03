@@ -1,5 +1,5 @@
 /* libzzt2	-- The ZZT library that behaves like a library
- * $Id: zzt.h,v 1.2 2005/06/29 03:20:34 kvance Exp $
+ * $Id: zzt.h,v 1.3 2005/07/03 01:17:20 kvance Exp $
  * Copyright (C) 2001 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,10 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #ifndef LIBZZT2_ZZT_H
 #define LIBZZT2_ZZT_H
 
@@ -35,13 +39,23 @@ extern "C" {
  * makefile. Should we do the same thing here, or find another way
  * of determining the necessity of these typdefs? */
 
-#ifndef HAVE_U_INT8_T
 /* If you're running DOS, you'll need these defined */
+#ifndef HAVE_INT8_T
 typedef char int8_t;
+#endif
+#ifndef HAVE_INT16_T
 typedef short int int16_t;
+#endif
+#ifndef HAVE_INT32_T
 typedef int int32_t;
+#endif
+#ifndef HAVE_U_INT8_T
 typedef unsigned char u_int8_t;
+#endif
+#ifndef HAVE_U_INT16_T
 typedef unsigned short int u_int16_t;
+#endif
+#ifndef HAVE_U_INT32_T
 typedef unsigned int u_int32_t;
 #endif
 

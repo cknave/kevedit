@@ -71,6 +71,12 @@
 # endif
 #endif
 
+/* Fix for mingw32
+ * -- kvance */
+#ifdef __MINGW32__
+#define WINDOWS32
+#endif
+
 #if !defined _AMIGA && !defined VMS && !defined WINDOWS32
 # include <pwd.h>
 #endif
