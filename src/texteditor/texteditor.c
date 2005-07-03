@@ -1,5 +1,5 @@
 /**@file texteditor/texteditor.c  Text editor/viewer.
- * $Id: texteditor.c,v 1.4 2005/05/28 03:17:46 bitman Exp $
+ * $Id: texteditor.c,v 1.5 2005/07/03 00:25:41 kvance Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sf.net>
@@ -627,13 +627,16 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 	texteditor editorCopy = *editor;
 	texteditor* view = &editorCopy;
 
+	int done;
+
+#ifdef SDL
+	SDL_AudioSpec spec;
+#endif
+
 	/* Display everything, in case the editor has not been displayed recently. */
 	view->updateflags |= TUD_ALL;
 
-	int done;
 #ifdef SDL
-	SDL_AudioSpec spec;
-
 	/* IF opening the audio device fails, return now before we crash something. */
 	if (OpenSynth(&spec))
 		return;

@@ -39,8 +39,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = i686-pc-linux-gnu
-host_triplet = i686-pc-linux-gnu
-target_triplet = i686-pc-linux-gnu
+host_triplet = i586-pc-msdosdjgpp
+target_triplet = i586-pc-msdosdjgpp
 subdir = glob
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING.LIB \
 	ChangeLog
@@ -79,11 +79,11 @@ AUTOCONF = ${SHELL} /home/kvance/projects/kevedit/missing --run autoconf
 AUTOHEADER = ${SHELL} /home/kvance/projects/kevedit/missing --run autoheader
 AUTOMAKE = ${SHELL} /home/kvance/projects/kevedit/missing --run automake-1.9
 AWK = gawk
-CC = gcc
-CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2 -I/usr/include/SDL -D_REENTRANT
-CPP = gcc -E
-CPPFLAGS =   -I$(top_srcdir)/src -I$(top_builddir)
+CC = i586-pc-msdosdjgpp-gcc
+CCDEPMODE = depmode=gcc
+CFLAGS = -g -O2 
+CPP = i586-pc-msdosdjgpp-gcc -E
+CPPFLAGS =  -I$(top_srcdir)/glob -I$(top_srcdir)/src -I$(top_builddir)
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -91,10 +91,10 @@ ECHO_C =
 ECHO_N = -n
 ECHO_T = 
 EGREP = grep -E
-EXEEXT = 
-GLOBDIR = 
-GLOBINC = 
-GLOBLIB = 
+EXEEXT = .exe
+GLOBDIR = glob
+GLOBINC = -I$(top_srcdir)/glob
+GLOBLIB = $(top_builddir)/glob/libglob.a
 HAVE_WINDRES_FALSE = 
 HAVE_WINDRES_TRUE = #
 INCLUDE_PATHS = -I$(top_srcdir)/src -I$(top_builddir)
@@ -104,7 +104,7 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = ${SHELL} $(install_sh) -c -s
 LDFLAGS = 
 LIBOBJS = 
-LIBS = -lm  -L/usr/lib -Wl,-rpath,/usr/lib -lSDL -lpthread
+LIBS = -lm  
 LTLIBOBJS = 
 MAINT = #
 MAINTAINER_MODE_FALSE = 
@@ -118,20 +118,20 @@ PACKAGE_STRING = KevEdit 0.5.1
 PACKAGE_TARNAME = kevedit
 PACKAGE_VERSION = 0.5.1
 PATH_SEPARATOR = :
-RANLIB = ranlib
-SDL_CFLAGS = -I/usr/include/SDL -D_REENTRANT
-SDL_CONFIG = /usr/bin/sdl-config
-SDL_LIBS = -L/usr/lib -Wl,-rpath,/usr/lib -lSDL -lpthread
+RANLIB = i586-pc-msdosdjgpp-ranlib
+SDL_CFLAGS = 
+SDL_CONFIG = 
+SDL_LIBS = 
 SET_MAKE = 
 SHELL = /bin/sh
-STRIP = 
+STRIP = i586-pc-msdosdjgpp-strip
 VERSION = 0.5.1
 WINDRES = 
-ac_ct_CC = gcc
-ac_ct_RANLIB = ranlib
+ac_ct_CC = 
+ac_ct_RANLIB = 
 ac_ct_STRIP = 
-am__fastdepCC_FALSE = #
-am__fastdepCC_TRUE = 
+am__fastdepCC_FALSE = 
+am__fastdepCC_TRUE = #
 am__include = include
 am__leading_dot = .
 am__quote = 
@@ -144,12 +144,12 @@ build_cpu = i686
 build_os = linux-gnu
 build_vendor = pc
 datadir = ${prefix}/share
-display_objects =  display_sdl.o
+display_objects =  display_dos.o
 exec_prefix = ${prefix}
-host = i686-pc-linux-gnu
-host_alias = 
-host_cpu = i686
-host_os = linux-gnu
+host = i586-pc-msdosdjgpp
+host_alias = i586-pc-msdosdjgpp
+host_cpu = i586
+host_os = msdosdjgpp
 host_vendor = pc
 includedir = ${prefix}/include
 infodir = ${prefix}/info
@@ -164,12 +164,12 @@ prefix = /usr/local
 program_transform_name = s,x,x,
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
-synth_objects =  sdl_synth.o
+synth_objects =  pcspeaker.o
 sysconfdir = ${prefix}/etc
-target = i686-pc-linux-gnu
+target = i586-pc-msdosdjgpp
 target_alias = 
-target_cpu = i686
-target_os = linux-gnu
+target_cpu = i586
+target_os = msdosdjgpp
 target_vendor = pc
 AUTOMAKE_OPTIONS = 1.4 foreign
 noinst_LIBRARIES = libglob.a
@@ -228,18 +228,18 @@ include ./$(DEPDIR)/fnmatch.Po
 include ./$(DEPDIR)/glob.Po
 
 .c.o:
-	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
-	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
-#	source='$<' object='$@' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(COMPILE) -c $<
+#	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+#	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+	source='$<' object='$@' libtool=no \
+	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+	$(COMPILE) -c $<
 
 .c.obj:
-	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
-	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
-#	source='$<' object='$@' libtool=no \
-#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+#	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
+#	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+	source='$<' object='$@' libtool=no \
+	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+	$(COMPILE) -c `$(CYGPATH_W) '$<'`
 uninstall-info-am:
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
