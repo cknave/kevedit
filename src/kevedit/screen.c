@@ -1,5 +1,5 @@
 /* screen.c    -- Functions for drawing
- * $Id: screen.c,v 1.3 2005/06/29 03:20:34 kvance Exp $
+ * $Id: screen.c,v 1.4 2005/07/03 01:45:05 kvance Exp $
  * Copyright (C) 2000-2002 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -770,7 +770,7 @@ stringvector buildboardlist(ZZTworld * w, int firstnone)
 	for (; i < boardcount; i++)
 		pushstring(&boardlist, str_dup(w->boards[i].title));
 
-	pushstring(&boardlist, str_dup("!;Add New Board"));
+	pushstring(&boardlist, str_dup("!new;Add New Board"));
 
 	svmovetofirst(&boardlist);
 
