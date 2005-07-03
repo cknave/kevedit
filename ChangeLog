@@ -15,6 +15,7 @@ Bug fixed: Messages and hypermessages now parsed correctly.
 New text editor implementation with minor usage changes.
 Usability issue: Cursor flicked on when it moves, and has a faster blink rate
 Bug fixed: SDL cursor no longer "lingers" in gradient point selection
+Linux version now supports DOSBox for running ZZT (replacing DOSEMU)
 
 0.5.0
 -----
