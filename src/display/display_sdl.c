@@ -1,5 +1,5 @@
 /* display_sdl.c	-- SDL Textmode Emulation display method for KevEdit
- * $Id: display_sdl.c,v 1.5 2005/07/02 21:31:30 kvance Exp $
+ * $Id: display_sdl.c,v 1.6 2006/11/01 18:52:02 kvance Exp $
  * Copyright (C) 2002 Gilead Kutnick <exophase@earthlink.net>
  * Copyright (C) 2002 Kev Vance <kvance@kvance.com>
  *
@@ -914,6 +914,9 @@ int display_sdl_init()
 
 	timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
 
+	/* Enable unicode so non-QWERTY keyboards work. */
+	SDL_EnableUNICODE(1);
+
 	return 1;
 }
 
@@ -973,7 +976,6 @@ int display_sdl_getkey()
 		/* Hack for windows: alt+tab will never show up */
 		if((event.key.keysym.sym == SDLK_TAB) && 
 				(event.key.keysym.mod & KMOD_ALT)) {
-			printf("alt tab\n");
 			return DKEY_NONE;
 		}
 		switch(event.key.keysym.sym) {
@@ -1100,6 +1102,13 @@ int display_sdl_getkey()
 			break;
 		default:
 			break;
+	}
+
+	/* If it's an ASCII character, use the unicode value and not the
+	 * keymap. */
+	int unicode = event.key.keysym.unicode;
+	if(unicode >= 32 && unicode <= 126) { 
+		event.key.keysym.sym = event.key.keysym.unicode;
 	}
 
 	/* Ctrl is down */

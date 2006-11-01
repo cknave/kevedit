@@ -81,7 +81,7 @@ AUTOMAKE = ${SHELL} /home/kvance/projects/kevedit/missing --run automake-1.9
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2 -I/usr/include/SDL -D_REENTRANT
+CFLAGS = -g -O2 -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT
 CPP = gcc -E
 CPPFLAGS =   -I$(top_srcdir)/src -I$(top_builddir)
 CYGPATH_W = echo
@@ -104,7 +104,7 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = ${SHELL} $(install_sh) -c -s
 LDFLAGS = 
 LIBOBJS = 
-LIBS = -lm  -L/usr/lib -Wl,-rpath,/usr/lib -lSDL -lpthread
+LIBS = -lm  -lSDL -lpthread
 LTLIBOBJS = 
 MAINT = #
 MAINTAINER_MODE_FALSE = 
@@ -119,9 +119,9 @@ PACKAGE_TARNAME = kevedit
 PACKAGE_VERSION = 0.5.1
 PATH_SEPARATOR = :
 RANLIB = ranlib
-SDL_CFLAGS = -I/usr/include/SDL -D_REENTRANT
+SDL_CFLAGS = -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT
 SDL_CONFIG = /usr/bin/sdl-config
-SDL_LIBS = -L/usr/lib -Wl,-rpath,/usr/lib -lSDL -lpthread
+SDL_LIBS = -lSDL -lpthread
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = 
