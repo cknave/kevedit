@@ -11,11 +11,14 @@ Another bug was found by:
 	Elchonon Edelson <ene@vasco.com>
 
 DOS Music playback adapted from code by:
-  Jacob Hammond <zig16@hotmail.com>
-  WeP <wep@planetzztpp.com>
+	Jacob Hammond <zig16@hotmail.com>
+	WeP <wep@planetzztpp.com>
 
 Some documentation written by:
-  Chronos <chronos30@aol.com>
+	Chronos <chronos30@aol.com>
 
 SDL textmode emulation originally written by:
-  Gilead ``Exophase'' Kutnick <exophase@earthlink.net>
+	Gilead ``Exophase'' Kutnick <exophase@earthlink.net>
+
+Tokenizer ';' crash bug reported by:
+	``Thor Gonzales'' <gingermuffins@yahoo.ca>
