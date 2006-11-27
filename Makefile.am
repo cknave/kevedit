@@ -1,6 +1,6 @@
 # Makefile for KevEdit
 
-AUTOMAKE_OPTIONS = 1.7.4
+AUTOMAKE_OPTIONS = 1.6.3
 
 SUBDIRS = docs dosbox glob src
 

@@ -1,6 +1,6 @@
 # Makefile for KevEdit dialogs
 
-AUTOMAKE_OPTIONS = 1.7.4
+AUTOMAKE_OPTIONS = 1.6.3
 
 noinst_LIBRARIES = libdialogs.a
 

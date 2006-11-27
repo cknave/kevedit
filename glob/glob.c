@@ -20,10 +20,6 @@
  #pragma alloca
 #endif
 
-#ifdef	HAVE_CONFIG_H
-# include <config.h>
-#endif
-
 /* Enable GNU extensions in glob.h.  */
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE	1
@@ -32,6 +28,13 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+/* Must come after sys/types.h
+   -- kvance */
+#ifdef	HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 
 /* Outcomment the following line for production quality code.  */
 /* #define NDEBUG 1 */

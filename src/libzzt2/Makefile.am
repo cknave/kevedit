@@ -1,6 +1,6 @@
 # -*-Makefile-*-, or close enough
 
-#AUTOMAKE_OPTIONS =	1.6 foreign
+#AUTOMAKE_OPTIONS =	1.6.3 foreign
 
 noinst_LIBRARIES = libzzt2.a
 

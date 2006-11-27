@@ -1,6 +1,6 @@
 # Makefile for textmode display library
 
-AUTOMAKE_OPTIONS = 1.7.4
+AUTOMAKE_OPTIONS = 1.6.3
 
 noinst_LIBRARIES = libdisplay.a
 

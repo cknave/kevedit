@@ -1,6 +1,6 @@
 # Makefile for KevEdit documentation
 
-AUTOMAKE_OPTIONS = 1.7
+AUTOMAKE_OPTIONS = 1.6.3
 
 pkgdata_DATA = kevedit.zml
 

@@ -1,6 +1,6 @@
 # Makefile for help system
 
-AUTOMAKE_OPTIONS = 1.7.4
+AUTOMAKE_OPTIONS = 1.6.3
 
 AM_CPPFLAGS = -DDATAPATH=\"$(pkgdatadir)\"
 

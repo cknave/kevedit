@@ -16,10 +16,6 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#if HAVE_CONFIG_H
-# include <config.h>
-#endif
-
 /* Enable GNU extensions in fnmatch.h.  */
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE	1
@@ -38,6 +34,13 @@
 #if defined STDC_HEADERS || defined _LIBC
 # include <stdlib.h>
 #endif
+
+/* Must come after stdlib.h
+   -- kvance */
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 
 /* For platform which support the ISO C amendement 1 functionality we
    support user defined character classes.  */

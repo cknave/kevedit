@@ -1,8 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_REVISION([$Id: configure.in,v 1.13 2005/07/03 01:17:19 kvance Exp $])
+AC_REVISION([$Id: configure.in,v 1.14 2006/11/27 00:41:54 kvance Exp $])
 AC_INIT(KevEdit, 0.5.1, bitman@users.sourceforge.net, kevedit)
 AC_CONFIG_SRCDIR([src/kevedit/kevedit.c])
-AC_CONFIG_HEADER([src/config.h])
+AM_CONFIG_HEADER([src/config.h])
+
 
 dnl Detect host and target environments (target is needed by AM_PATH_SDL)
 AC_CANONICAL_HOST
@@ -44,38 +45,55 @@ fi
 #AM_CONDITIONAL(SDL, [test x$sdl = xtrue])
 fi
 
-dnl Check for DOS display
+dnl Check for windows (for glob's sake)
+AC_MSG_CHECKING(for Windows)
 case "$host" in
-	*-*-msdos*)
-		AC_MSG_NOTICE(Using DOS display and pcspeaker sound)
-		dos=true
+	*-*-*cygwin*)
+		AC_DEFINE(WINDOWS32, [1], [Define to 1 if host is Windows])
+		AC_MSG_RESULT(yes: cygwin)
+		;;
+	*-*-*mingw32*)
+		AC_DEFINE(WINDOWS32, [1], [Define to 1 if host is Windows])
+		AC_MSG_RESULT(yes: MingW)
 		;;
 	*)
-		AC_MSG_NOTICE(DOS display not available)
+		AC_MSG_RESULT(no)
 		;;
 esac
 
-if test x$dos = xtrue; then
-	AC_DEFINE(DOS, [1], [Define to 1 if host is DOS])
-	display_objects="$display_objects display_dos.o"
-	synth_objects="$synth_objects pcspeaker.o"
+AC_MSG_CHECKING(for DOS)
+case "$host" in
+	*msdos*)
+		AC_DEFINE(DOS, [1], [Define to 1 if host is DOS])
+		display_objects="$display_objects display_dos.o"
+		synth_objects="$synth_objects pcspeaker.o"
+		AC_MSG_RESULT(yes)
+		;;
+	*)
+		AC_MSG_RESULT(no)
+		;;
+esac
+
+
+AC_ARG_WITH(dosbox, AC_HELP_STRING([--without-dosbox],[include DOSBox emulation support]),dosbox=$withval,dosbox=maybe)
+if test "$dosbox" == "maybe"; then
+	if test -n "$WINDOWS32" || test -n "$DOS"; then
+		AC_MSG_NOTICE(DOS/Windows: Not enabling DOSBox support)
+	else
+		AC_MSG_NOTICE(Non-DOS/Windows: Enabling DOSBox support)
+		dosbox=yes
+	fi
 fi
-#AM_CONDITIONAL(DOS, [test x$dos = xtrue])
 
-dnl Check for Linux, to enable DOSBox support
-case "$host" in
-	*-*-linux*)
-		AC_MSG_NOTICE(Linux detected: enabling DOSBox support)
-		linux=true
-		;;
-	*)
-		AC_MSG_NOTICE(Not enabling DOSBox support)
-		;;
-esac
-
-if test x$linux = xtrue; then
+if test "$dosbox" == "yes"; then
+	AC_CHECK_PROG(MKISOFS, mkisofs, mkisofs)
+	if test -z "$MKISOFS"; then
+		AC_MSG_ERROR(mkisofs is required to build DOSBox support)
+	fi
+	AC_SUBST(MKISOFS)
 	AC_DEFINE(DOSBOX, [1], [Define to 1 if DOSBox is enabled])
 fi
+AM_CONDITIONAL(WITH_DOSBOX, [test x$dosbox != x])
 
 AC_SUBST([display_objects])
 AC_SUBST([synth_objects])
@@ -109,22 +127,6 @@ AC_CHECK_LIB(m, floor)
 
 dnl Check for availability of long file names
 AC_SYS_LONG_FILE_NAMES
-
-dnl Check for windows (for glob's sake)
-AC_MSG_CHECKING(for Windows)
-case "$host" in
-	*-*-*cygwin*)
-		AC_DEFINE(WINDOWS32, [1], [Define to 1 if host is Windows])
-		AC_MSG_RESULT(yes: cygwin)
-		;;
-	*-*-*mingw32*)
-		AC_DEFINE(WINDOWS32, [1], [Define to 1 if host is Windows])
-		AC_MSG_RESULT(yes: MingW)
-		;;
-	*)
-		AC_MSG_RESULT(no)
-		;;
-esac
 
 dnl Check for glob and add it to CPPFLAGS
 AC_PROG_GNU_GLOB

@@ -1,6 +1,6 @@
 # Makefile for KevEdit text editor
 
-AUTOMAKE_OPTIONS = 1.7.4
+AUTOMAKE_OPTIONS = 1.6.3
 
 noinst_LIBRARIES = libtexteditor.a
 

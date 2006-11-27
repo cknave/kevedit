@@ -1,12 +1,16 @@
 # Makefile for KevEdit DOSBox support
 
-AUTOMAKE_OPTIONS = 1.7
+AUTOMAKE_OPTIONS = 1.6.3
 
-pkgdata_DATA = kevedos.cfg kevedos.iso
+if WITH_DOSBOX
+isofile = kevedos.iso
+endif
+
+pkgdata_DATA = kevedos.cfg $(isofile)
 
 EXTRA_DIST = README
 
 MOSTLYCLEANFILES = kevedos.iso
 
 kevedos.iso: image $(wildcard image/*)
-	mkisofs -o $@ image
+	@MKISOFS@ -o $@ image

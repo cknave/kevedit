@@ -1,5 +1,5 @@
 /**@file structures/linkedlist.c   An abstract linked list.
- * $Id: linkedlist.c,v 1.4 2005/05/28 03:17:45 bitman Exp $
+ * $Id: linkedlist.c,v 1.5 2006/11/27 00:41:58 kvance Exp $
  * @author Ryan Phillips
  *
  * Copyright (C) 2003 Ryan Phillips <bitman@users.sourceforge.net>
@@ -26,7 +26,6 @@
 #include "linkedlist.h"
 
 #include <stdlib.h>
-#include <malloc.h>
 #include <string.h>
 
 /** An empty item. */
