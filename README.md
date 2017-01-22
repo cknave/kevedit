@@ -3,6 +3,16 @@ KevEdit
 
 KevEdit is a ZZT editor that was under development from 2000-2005 by Kevin Vance and Ryan Phillips.  It runs under DOS, Windows, and Linux.
 
+Download
+--------
+
+Binary releases are available:
+
+* [Windows installer](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-setup.exe)
+* [Windows program only](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-win32.zip)
+* [DOS](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-dos.zip)
+* [Linux i386](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-linux-i386.tgz)
+
 Screenshots
 -----------
 
