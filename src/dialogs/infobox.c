@@ -144,7 +144,7 @@ void editboardinfo(ZZTworld* myworld, displaymethod* d)
 
 dialog buildboardinfodialog(ZZTworld * myworld)
 {
-	char buffer[20];   /* Number to string buffer */
+	char buffer[24];   /* Number to string buffer */
 	int curboard = zztBoardGetCurrent(myworld);
 	int boardsize = zztBoardGetSize(zztBoardGetCurPtr(myworld));
 	dialog dia;
@@ -256,7 +256,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	} else {
 		_addoption("(None)", BRDINFO_BRDWEST);
 	}
-	
+
 	/* Board size statistics */
 
 	label.x = 4; _addlabel("Board Size:");
@@ -898,5 +898,3 @@ void worldflagclear(int curoption, ZZTworld* myworld)
 	/* Very nice */
 	zztWorldSetFlag(myworld, curoption, "");
 }
-
-
