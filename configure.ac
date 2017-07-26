@@ -1,5 +1,4 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_REVISION([$Id: configure.in,v 1.14 2006/11/27 00:41:54 kvance Exp $])
 AC_INIT(KevEdit, 0.5.1, bitman@users.sourceforge.net, kevedit)
 AC_CONFIG_SRCDIR([src/kevedit/kevedit.c])
 AM_CONFIG_HEADER([src/config.h])
@@ -28,9 +27,9 @@ AC_ARG_WITH(sdl,
 
 if test "x$with_sdl" != "xno"
 then
-	AM_PATH_SDL(1.2.0, [AC_MSG_NOTICE(Using SDL display and sound)
-			   sdl=true],
-			   [AC_MSG_NOTICE(SDL not available for display)])
+	AM_PATH_SDL2(2.0.0, [AC_MSG_NOTICE(Using SDL display and sound)
+			     sdl=true],
+			    [AC_MSG_NOTICE(SDL not available for display)])
 
 dnl This must be done before most checks because it can affect what headers
 dnl and libraries are available
@@ -106,21 +105,12 @@ AM_CONDITIONAL(HAVE_WINDRES, [test x$WINDRES != x])
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_DIRENT
-dnl AC_CHECK_HEADERS(strings.h unistd.h)
-
-dnl Checks for typedefs, structures, and compiler characteristics.
-dnl AC_C_CONST
-dnl AC_TYPE_SIZE_T
-dnl AC_HEADER_TIME
 
 AC_CHECK_TYPES([int8_t, int16_t, int32_t, u_int8_t, u_int16_t, u_int32_t])
 
 dnl Checks for library functions.
-dnl AC_FUNC_ALLOCA
-dnl AC_FUNC_FNMATCH
 AC_TYPE_SIGNAL
-dnl AC_FUNC_STRCOLL
-AC_CHECK_FUNCS(getcwd strdup strstr)
+AC_CHECK_FUNCS(getcwd strdup strstr mkdtemp)
 
 dnl Check for math library
 AC_CHECK_LIB(m, floor)

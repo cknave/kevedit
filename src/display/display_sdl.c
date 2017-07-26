@@ -29,13 +29,19 @@
 #include "display.h"
 #include "display_sdl.h"
 
-int xstart, ystart;	/* Where the viewport begins */
 static SDL_TimerID timerId;	/* Timer ID */
-static int timer, csoc;	/* Timer for cursor, current state of cursor */
+
+enum cursor_state {
+	CURSOR_HIDDEN,
+	CURSOR_VISIBLE,
+	CURSOR_INACTIVE
+};
+static enum cursor_state cursor = CURSOR_HIDDEN;
 
 /* Forward defines :( */
 static Uint32 display_tick(Uint32 interval, void *blank);
 void display_curse(int x, int y);
+void display_curse_inactive(int x, int y);
 
 #define CURSOR_RATE 200
 
@@ -507,7 +513,7 @@ const Uint8 ega_palette[] = {
 	'\x15', '\x3F', '\x3F', '\x3F', '\x15', '\x3F', '\x3F', '\x3F'
 };
 
-void display_load_charset(Uint8 *dest, Uint8 *name)
+void display_load_charset(Uint8 *dest, char *name)
 {
 	FILE *fp;
 	fp = fopen(name, "rb");
@@ -533,7 +539,7 @@ void expand_palette(Uint32 *dest, Uint8 *src)
 	}
 }
 
-void display_load_palette(Uint32 *dest, Uint8 *name)
+void display_load_palette(Uint32 *dest, char *name)
 {
 	FILE *fp;
 	Uint8 palette[3 * 16];
@@ -555,21 +561,17 @@ void display_load_default_palette(Uint32 *dest)
 	expand_palette(dest, (Uint8 *) ega_palette);
 }
 
-void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32
- depth, Uint32 full_screen, Uint32 hw_surface)
+void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 {
-	Uint32 vflags = 0;
-	if(full_screen)
-	{
-		vflags |= SDL_FULLSCREEN;
-	}
-	if(hw_surface)
-	{
-		vflags |= SDL_HWSURFACE;
-	}
-
-	vdest->video = SDL_SetVideoMode(width, height, depth, vflags);
-	vdest->buffer_surface = SDL_CreateRGBSurface(0, 640, 350, 32, 0, 0, 0, 0);
+	Uint32 window_flags = SDL_WINDOW_RESIZABLE;
+	SDL_CreateWindowAndRenderer(width, height, window_flags,
+		&vdest->window, &vdest->renderer);
+	SDL_RenderSetLogicalSize(vdest->renderer, width, height);
+                
+	vdest->texture = SDL_CreateTexture(vdest->renderer,
+		SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width,
+		height);
+	vdest->pixels = calloc(width * height, sizeof(Uint32));
 	vdest->buffer = createTextBlock(80, 25);
 	vdest->char_set = (Uint8 *)malloc(256 * 14);
 	vdest->palette = (Uint32 *)malloc(4 * 16);
@@ -579,18 +581,13 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32
 	vdest->width  = width;
 	vdest->height = height;
 	vdest->depth  = depth;
-	vdest->vflags = vflags;
-}
-
-void display_restart(video_info *vdest)
-{
-	vdest->video = SDL_SetVideoMode(vdest->width, vdest->height, vdest->depth, vdest->vflags);
-	display_redraw(vdest);
+	vdest->is_fullscreen = false;
+	vdest->is_dirty = false;
 }
 
 void display_end(video_info *vdest)
 {
-	SDL_FreeSurface(vdest->buffer_surface);
+	SDL_DestroyTexture(vdest->texture);
 
 	deleteTextBlock(vdest->buffer);
 	free(vdest->char_set);
@@ -604,8 +601,26 @@ void display_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
 	textBlockPutch(vdest->buffer, x, y, ch, co);
 }
 
+static void update_cursor(video_info *vdest) {
+	switch(cursor) {
+		case CURSOR_HIDDEN:
+			display_update_and_present(vdest, vdest->write_x,
+					vdest->write_y, 1, 1);
+			break;
+		case CURSOR_VISIBLE:
+			display_curse(vdest->write_x, vdest->write_y);
+			break;
+		case CURSOR_INACTIVE:
+			display_curse_inactive(vdest->write_x, vdest->write_y);
+			break;
+	}
+}
+
 void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 {
+	/* Redraw old position. */
+	display_update_and_present(vdest, vdest->write_x, vdest->write_y, 1, 1);
+
 	vdest->write_x = x;
 	vdest->write_y = y;
 
@@ -613,9 +628,26 @@ void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 	 * it visible and reset the timer. */
 	SDL_RemoveTimer(timerId);
 	timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
-	if(timer != 2)
-		timer = 0;
-	display_curse(x, y);
+	if(cursor == CURSOR_HIDDEN)
+		cursor = CURSOR_VISIBLE;
+	update_cursor(vdest);
+}
+
+static void display_update_texture(video_info *vdest, const SDL_Rect *rect)
+{
+	Uint32 *pixels = vdest->pixels;
+	if(rect) {
+		pixels += (rect->y * vdest->width) + rect->x;
+	}
+	SDL_UpdateTexture(vdest->texture, rect, pixels,
+			vdest->width * sizeof(Uint32));
+	SDL_RenderClear(vdest->renderer);
+	SDL_RenderCopy(vdest->renderer, vdest->texture, NULL, NULL);
+	SDL_RenderPresent(vdest->renderer);
+	
+	if(rect == NULL) {
+		vdest->is_dirty = false;
+	}
 }
 
 void display_redraw(video_info *vdest)
@@ -624,7 +656,7 @@ void display_redraw(video_info *vdest)
 
 	SDL_Rect blit_rect;
 
-	Uint32 *video_pointer = vdest->buffer_surface->pixels;
+	Uint32 *video_pointer = vdest->pixels;
 	Uint32 *last_pointer, *end_pointer;
 	Uint8 *char_pointer;
 	Uint8 *color_pointer;
@@ -691,12 +723,7 @@ void display_redraw(video_info *vdest)
 	}
 
 	/* Update the buffer surface to the real thing.. */
-
-	blit_rect.x = xstart;
-	blit_rect.y = ystart;
-
-	SDL_BlitSurface(vdest->buffer_surface, NULL, vdest->video, &blit_rect);
-	SDL_UpdateRect(vdest->video, 0, 0, 0, 0);
+	display_update_texture(vdest, NULL);
 }
 
 void display_update(video_info *vdest, int x, int y, int width, int height)
@@ -713,7 +740,7 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
 	for (rowsleft = height; rowsleft; rowsleft--) {
 
 		/* Determine the video pointer for this row */
-		Uint32 *root = vdest->buffer_surface->pixels;
+		Uint32 *root = vdest->pixels;
 		Uint32 *video_pointer = root + ((height-rowsleft+y)*14)*(640)+(x<<3);
 
 		/* Draw each column in row onto video memory */
@@ -772,27 +799,29 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
 
 		/* Do not dereference video_pointer, char_pointer, or color_pointer here! */
 	}
+	vdest->is_dirty = true;
+}
 
-	/* Update the buffer surface to the real thing.. */
-
-	src_rect.x = (x<<3);
-	src_rect.y = (y*14);
-	dest_rect.x = src_rect.x+xstart;
-	dest_rect.y = src_rect.y+ystart;
-	src_rect.w = dest_rect.w = (width<<3);
-	src_rect.h = dest_rect.h = (height*14);
-
-	SDL_BlitSurface(vdest->buffer_surface, &src_rect, vdest->video, &dest_rect);
-	SDL_UpdateRect(vdest->video, dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
+void display_update_and_present(video_info *vdest, int x, int y, int width,
+		int height)
+{
+	bool was_dirty = vdest->is_dirty;
+	display_update(vdest, x, y, width, height);
+	vdest->is_dirty = was_dirty;
+	
+	SDL_Rect rect;
+	rect.x = x * 8;
+	rect.y = y * 14;
+	rect.w = width * 8;
+	rect.h = height * 14;
+	display_update_texture(vdest, &rect);
 }
 
 /********************************
  *** BEGIN KEVEDIT GLUE LAYER ***
  ********************************/
-video_info info;	/* Display info */
+static video_info info;	/* Display info */
 static int shift;	/* Shift state */
-
-static int fullscreen = 0; /* Initial fullscreen setting */
 
 /* Nice timer update callback thing */
 static Uint32 display_tick(Uint32 interval, void *blank)
@@ -800,15 +829,14 @@ static Uint32 display_tick(Uint32 interval, void *blank)
 	SDL_Event e;
 	e.type = SDL_USEREVENT;
 	SDL_PushEvent(&e);
-	timer ^= 1;
 	return interval;
 }
 
 void display_curse(int x, int y)
 {
-	SDL_Rect src_rect, dest_rect;
+	SDL_Rect rect;
 	Uint8 color;
-	Uint32 *video_pointer = info.buffer_surface->pixels;
+	Uint32 *video_pointer = info.pixels;
 	Uint32 fg;
 	int i1, i2;
 
@@ -827,22 +855,18 @@ void display_curse(int x, int y)
 	}
 
 	/* Command SDL to update this char */
-	src_rect.x = (x<<3);
-	src_rect.y = (y*14);
-	dest_rect.x = src_rect.x+xstart;
-	dest_rect.y = src_rect.y+ystart;
-	src_rect.w = dest_rect.w = 8;
-	src_rect.h = dest_rect.h = 14;
-
-	SDL_BlitSurface(info.buffer_surface, &src_rect, info.video, &dest_rect);
-	SDL_UpdateRect(info.video, dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
+	rect.x = x * 8;
+	rect.y = y * 14;
+	rect.w = 8;
+	rect.h = 14;
+	display_update_texture(&info, &rect);
 }
 
 void display_curse_inactive(int x, int y)
 {
-	SDL_Rect src_rect, dest_rect;
+	SDL_Rect rect;
 	Uint8 color;
-	Uint32 *video_pointer = info.buffer_surface->pixels;
+	Uint32 *video_pointer = info.pixels;
 	Uint32 fg;
 	int i;
 
@@ -872,15 +896,11 @@ void display_curse_inactive(int x, int y)
 	}
 
 	/* Command SDL to update this char */
-	src_rect.x = (x<<3);
-	src_rect.y = (y*14);
-	dest_rect.x = src_rect.x+xstart;
-	dest_rect.y = src_rect.y+ystart;
-	src_rect.w = dest_rect.w = 8;
-	src_rect.h = dest_rect.h = 14;
-
-	SDL_BlitSurface(info.buffer_surface, &src_rect, info.video, &dest_rect);
-	SDL_UpdateRect(info.video, dest_rect.x, dest_rect.y, dest_rect.w, dest_rect.h);
+	rect.x = x * 8;
+	rect.y = y * 14;
+	rect.w = 8;
+	rect.h = 14;
+	display_update_texture(&info, &rect);
 }
 
 int display_sdl_init()
@@ -891,40 +911,21 @@ int display_sdl_init()
 		return 0;
 	}
 
-	/* Automatic keyboard repeat */
-	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,
-			SDL_DEFAULT_REPEAT_INTERVAL);
-
 	/* Fire up the textmode emulator */
-	display_init(&info, 640, 350, 32, fullscreen, 1);
+	display_init(&info, 640, 350, 32);
 	display_load_default_charset(info.char_set);
 	display_load_default_palette(info.palette);
 
-	/* If in fullscreen mode, don't show the mouse */
-	if(info.vflags & SDL_FULLSCREEN)
-		SDL_ShowCursor(SDL_DISABLE);
-	else
-		SDL_ShowCursor(SDL_ENABLE);
-
-	xstart = ((info.video->w) - 640) / 2;
-	ystart = ((info.video->h) - 350) / 2;
-
 	shift = 0;
-	timer = csoc = 0;
+	cursor = CURSOR_VISIBLE;
 
 	timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
-
-	/* Enable unicode so non-QWERTY keyboards work. */
-	SDL_EnableUNICODE(1);
 
 	return 1;
 }
 
 void display_sdl_end()
 {
-	/* Remember fullscreen setting */
-	fullscreen = (info.vflags & SDL_FULLSCREEN) ? 1 : 0;
-
 	/* Terminate SDL stuff */
 	display_end(&info);
 	SDL_Quit();
@@ -940,18 +941,15 @@ void display_sdl_putch(int x, int y, int ch, int co)
 void display_sdl_fullscreen()
 {
 	/* Toggle fullscreen */
-	info.vflags ^= SDL_FULLSCREEN;
+        info.is_fullscreen = !info.is_fullscreen;
 
-#ifdef WIN32
-	/* Toggle fullscreen flag and restart the display */
-	display_restart(&info);
-#else
-	/* This doesn't work in Windows */
-	SDL_WM_ToggleFullScreen(info.video);
-#endif
+	Uint32 flags = 0;
+	if(info.is_fullscreen)
+		flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+	SDL_SetWindowFullscreen(info.window, flags);
 
 	/* If in fullscreen mode, don't show the mouse */
-	if(info.vflags & SDL_FULLSCREEN)
+	if(info.is_fullscreen)
 		SDL_ShowCursor(SDL_DISABLE);
 	else
 		SDL_ShowCursor(SDL_ENABLE);
@@ -962,10 +960,7 @@ int display_sdl_getkey()
 	SDL_Event event;
 
 	/* Draw the cursor if necessary */
-	if(timer)
-		display_update(&info, info.write_x, info.write_y, 1, 1);
-	else
-		display_curse(info.write_x, info.write_y);
+	update_cursor(&info);
 
 	/* Check for a KEYDOWN event */
 	if (SDL_PollEvent(&event) == 0)
@@ -999,33 +994,25 @@ int display_sdl_getkey()
 				break;
 		}
 	/* UserEvent means it's time to update the cursor */
-	} else if(event.type == SDL_USEREVENT && timer != csoc) {
-		if(timer)
-			display_update(&info, info.write_x, info.write_y, 1, 1);
-		else
-			display_curse(info.write_x, info.write_y);
-		csoc = timer;
-	/* Focus change? */
-	} else if(event.type == SDL_ACTIVEEVENT) {
-		/* Repaint if the app becomes active again */
-		if(event.active.state & SDL_APPACTIVE) {
-			if(event.active.gain == 1)
-				display_redraw(&info);
+	} else if(event.type == SDL_USEREVENT) {
+		if(cursor == CURSOR_HIDDEN) {
+			cursor = CURSOR_VISIBLE;
+		} else if(cursor == CURSOR_VISIBLE) {
+			cursor = CURSOR_HIDDEN;
 		}
-		/* Change cursor type if focus changes */
-		if(event.active.state & SDL_APPINPUTFOCUS) {
-			if(event.active.gain && timer == 2) {
-				/* Make cursor normal */
-				csoc = timer = 1;
-				timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
-				display_curse(info.write_x, info.write_y);
-			} else {
-				/* Inactive cursor */
-				SDL_RemoveTimer(timerId);
-				timer = 2;
-				display_update(&info, info.write_x, info.write_y, 1, 1);
-				display_curse_inactive(info.write_x, info.write_y);
-			}
+		update_cursor(&info);
+	/* Focus change? */
+	} else if(event.type == SDL_WINDOWEVENT) {
+		if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+			display_redraw(&info);
+			/* Make cursor normal */
+			cursor = CURSOR_VISIBLE;
+			update_cursor(&info);
+		} else if(event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+			/* Inactive cursor */
+			SDL_RemoveTimer(timerId);
+			cursor = CURSOR_INACTIVE;
+			update_cursor(&info);
 		}
 	}
 
@@ -1102,13 +1089,6 @@ int display_sdl_getkey()
 			break;
 		default:
 			break;
-	}
-
-	/* If it's an ASCII character, use the unicode value and not the
-	 * keymap. */
-	int unicode = event.key.keysym.unicode;
-	if(unicode >= 32 && unicode <= 126) { 
-		event.key.keysym.sym = event.key.keysym.unicode;
 	}
 
 	/* Ctrl is down */
@@ -1245,15 +1225,13 @@ int display_sdl_getkey()
 
 int display_sdl_getch()
 {
+	if(info.is_dirty) {
+		display_update_texture(&info, NULL);
+	}
+
 	int key;
 
 	do {
-		/* Draw the cursor if necessary */
-		if(timer == 1)
-			display_update(&info, info.write_x, info.write_y, 1, 1);
-		else if(timer == 0)
-			display_curse(info.write_x, info.write_y);
-
 		if (SDL_WaitEvent(NULL) == 0)
 			return DKEY_NONE;
 
@@ -1265,11 +1243,6 @@ int display_sdl_getch()
 
 void display_sdl_gotoxy(int x, int y)
 {
-	/* Undraw the cursor if it's on */
-	if(csoc) {
-		display_update(&info, info.write_x, info.write_y, 1, 1);
-		display_curse(x, y);
-	}
 	display_gotoxy(&info, x, y);
 }
 
@@ -1284,7 +1257,7 @@ void display_sdl_print(int x, int y, int c, char *s)
 
 void display_sdl_titlebar(char *title)
 {
-	SDL_WM_SetCaption(title, NULL);
+	SDL_SetWindowTitle(info.window, title);
 }
 
 int display_sdl_shift()
