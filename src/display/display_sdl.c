@@ -29,7 +29,7 @@
 #include "display.h"
 #include "display_sdl.h"
 
-static SDL_TimerID timerId;	/* Timer ID */
+static SDL_TimerID timer_id = -1;
 
 enum cursor_state {
 	CURSOR_HIDDEN,
@@ -611,9 +611,24 @@ static void update_cursor(video_info *vdest) {
 			display_curse(vdest->write_x, vdest->write_y);
 			break;
 		case CURSOR_INACTIVE:
+			display_update(vdest, vdest->write_x, vdest->write_y, 1, 1);
 			display_curse_inactive(vdest->write_x, vdest->write_y);
 			break;
 	}
+}
+
+static void stop_cursor_timer() {
+	if(timer_id != -1) {
+		SDL_RemoveTimer(timer_id);
+	}
+	timer_id = -1;
+}
+
+static void start_cursor_timer() {
+	if(timer_id != -1) {
+		return;  /* Already started. */
+	}
+	timer_id = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
 }
 
 void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
@@ -626,14 +641,13 @@ void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 
 	/* Here's a nice usability fix.  When we reposition the cursor, make
 	 * it visible and reset the timer. */
-	SDL_RemoveTimer(timerId);
-	timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
-	if(cursor == CURSOR_HIDDEN)
-		cursor = CURSOR_VISIBLE;
+	stop_cursor_timer();
+	cursor = CURSOR_VISIBLE;
 	update_cursor(vdest);
+	start_cursor_timer();
 }
 
-static void display_update_texture(video_info *vdest, const SDL_Rect *rect)
+static void display_present(video_info *vdest, const SDL_Rect *rect)
 {
 	Uint32 *pixels = vdest->pixels;
 	if(rect) {
@@ -723,7 +737,7 @@ void display_redraw(video_info *vdest)
 	}
 
 	/* Update the buffer surface to the real thing.. */
-	display_update_texture(vdest, NULL);
+	display_present(vdest, NULL);
 }
 
 void display_update(video_info *vdest, int x, int y, int width, int height)
@@ -814,7 +828,7 @@ void display_update_and_present(video_info *vdest, int x, int y, int width,
 	rect.y = y * 14;
 	rect.w = width * 8;
 	rect.h = height * 14;
-	display_update_texture(vdest, &rect);
+	display_present(vdest, &rect);
 }
 
 /********************************
@@ -859,7 +873,7 @@ void display_curse(int x, int y)
 	rect.y = y * 14;
 	rect.w = 8;
 	rect.h = 14;
-	display_update_texture(&info, &rect);
+	display_present(&info, &rect);
 }
 
 void display_curse_inactive(int x, int y)
@@ -900,7 +914,7 @@ void display_curse_inactive(int x, int y)
 	rect.y = y * 14;
 	rect.w = 8;
 	rect.h = 14;
-	display_update_texture(&info, &rect);
+	display_present(&info, &rect);
 }
 
 int display_sdl_init()
@@ -919,7 +933,7 @@ int display_sdl_init()
 	shift = 0;
 	cursor = CURSOR_VISIBLE;
 
-	timerId = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
+	start_cursor_timer();
 
 	return 1;
 }
@@ -1006,11 +1020,12 @@ int display_sdl_getkey()
 		if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
 			display_redraw(&info);
 			/* Make cursor normal */
+			start_cursor_timer();
 			cursor = CURSOR_VISIBLE;
 			update_cursor(&info);
 		} else if(event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
 			/* Inactive cursor */
-			SDL_RemoveTimer(timerId);
+			stop_cursor_timer();
 			cursor = CURSOR_INACTIVE;
 			update_cursor(&info);
 		}
@@ -1226,7 +1241,10 @@ int display_sdl_getkey()
 int display_sdl_getch()
 {
 	if(info.is_dirty) {
-		display_update_texture(&info, NULL);
+		display_present(&info, NULL);
+		if(cursor != CURSOR_HIDDEN) {
+			update_cursor(&info);
+		}
 	}
 
 	int key;
