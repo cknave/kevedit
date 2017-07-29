@@ -24,10 +24,10 @@
 
 #include "display/display.h"
 
-void itemmenu(keveditor * myeditor);
-void creaturemenu(keveditor * myeditor);
-void terrainmenu(keveditor * myeditor);
-void objectlibrarymenu(keveditor * myeditor);
+int itemmenu(keveditor * myeditor);
+int creaturemenu(keveditor * myeditor);
+int terrainmenu(keveditor * myeditor);
+int objectlibrarymenu(keveditor * myeditor);
 
 
 #endif

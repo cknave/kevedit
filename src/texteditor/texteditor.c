@@ -55,7 +55,7 @@ void texteditHandleInput(texteditor * editor);
 
 void texteditHandleScrolling(texteditor * editor);
 void texteditHandleEditMovement(texteditor * editor);
-void texteditHandleEditKey(texteditor * editor);
+int texteditHandleEditKey(texteditor * editor);
 
 int texteditGrabTitle(texteditor * editor);
 int texteditIgnoreFirstLine(texteditor * editor);
@@ -63,14 +63,14 @@ void texteditValidatePosition(texteditor * editor);
 
 void texteditCursorLeft(texteditor * editor);
 void texteditCursorRight(texteditor * editor);
-void texteditHelpZOC(texteditor * editor);
+int texteditHelpZOC(texteditor * editor);
 
 void texteditZZMPlay(texteditor * editor, int slurflag);
-void texteditZZMLoad(texteditor * editor);
-void texteditZZMRip(texteditor * editor);
+int texteditZZMLoad(texteditor * editor);
+int texteditZZMRip(texteditor * editor);
 
-void texteditFileOpen(texteditor * editor, int insertflag);
-void texteditFileSave(texteditor * editor, char * prompt);
+int texteditFileOpen(texteditor * editor, int insertflag);
+int texteditFileSave(texteditor * editor, char * prompt);
 
 void texteditInsertSpaces(texteditor * editor, int count);
 void texteditInsertNewline(texteditor * editor);
@@ -79,7 +79,7 @@ void texteditBackspace(texteditor * editor);
 void texteditDelete(texteditor * editor);
 void texteditDeleteLine(texteditor * editor);
 
-void texteditInsertASCII(texteditor * editor);
+int texteditInsertASCII(texteditor * editor);
 void texteditInsertCharacter(texteditor * editor, int ch);
 void texteditInsertCharAndWrap(texteditor * editor, int ch);
 
@@ -187,10 +187,10 @@ void deletetexteditortext(texteditor * editor)
  * @relates texteditor
  * @brief Perform text editing.
  **/
-void textedit(texteditor * editor)
+int textedit(texteditor * editor)
 {
 	if (!texteditReadyToEdit(editor))
-		return;
+		return 0;
 
 	while (!editor->exitflag) {
 		/* Start by updating the display. */
@@ -204,6 +204,7 @@ void textedit(texteditor * editor)
 	}
 
 	editor->text->cur = editor->curline;
+	return editor->key;
 }
 
 
@@ -245,13 +246,16 @@ int texteditReadyToEdit(texteditor * editor)
 void texteditHandleInput(texteditor * editor)
 {
 	/* Check for exit key. */
-	if (editor->key == DKEY_ESC)
+	if (editor->key == DKEY_ESC || editor->key == DKEY_QUIT)
 		editor->exitflag = 1;
 
 	/* Allow user to copy text. */
 	texteditHandleCopy(editor);
 	/* Perform editting. */
-	texteditHandleEditKey(editor);
+	if(texteditHandleEditKey(editor) == DKEY_QUIT) {
+		editor->key = DKEY_QUIT;
+		editor->exitflag = 1;
+	}
 
 	/* Allow user to select text. */
 	texteditHandleSelection(editor);
@@ -263,6 +267,7 @@ void texteditHandleInput(texteditor * editor)
 
 /**
  * @relates texteditor
+ *
  * @brief Handle scrolling keys.
  **/
 void texteditHandleScrolling(texteditor * editor)
@@ -368,11 +373,12 @@ void texteditHandleEditMovement(texteditor * editor)
  * @relates texteditor
  * @brief Handle an edit keypress.
  **/
-void texteditHandleEditKey(texteditor * editor)
+int texteditHandleEditKey(texteditor * editor)
 {
 	if (!editor->editflag)
-		return;
+		return 0;
 
+	int next_key = 0;
 	switch (editor->key) {
 
 		/********** Insert & Delete ***********/
@@ -390,7 +396,7 @@ void texteditHandleEditKey(texteditor * editor)
 		/****** Help dialog ******/
 
 		case DKEY_F1: /* F1: help dialog */
-			texteditHelpZOC(editor);
+			next_key = texteditHelpZOC(editor);
 			break;
 
 		/********* ZZM Testing ********************/
@@ -406,24 +412,19 @@ void texteditHandleEditKey(texteditor * editor)
 
 		/********* File access operations *********/
 		case DKEY_ALT_O: /* alt+o: open file */
-			texteditFileOpen(editor, 0);
-			break;
+			return texteditFileOpen(editor, 0);
 
 		case DKEY_ALT_I: /* alt+i: insert file */
-			texteditFileOpen(editor, 1);
-			break;
+			return texteditFileOpen(editor, 1);
 
 		case DKEY_ALT_S: /* alt-s: save to file */
-			texteditFileSave(editor, "Save Object Code As");
-			break;
+			return texteditFileSave(editor, "Save Object Code As");
 
 		case DKEY_ALT_M: /* alt-m: load .zzm music */
-			texteditZZMLoad(editor);
-			break;
+			return texteditZZMLoad(editor);
 
 		case DKEY_CTRL_R: /* ctrl-r: rip music */
-			texteditZZMRip(editor);
-			break;
+			return texteditZZMRip(editor);
 
 		/******** Cut operation *********/
 
@@ -457,7 +458,7 @@ void texteditHandleEditKey(texteditor * editor)
 			break;
 
 		case DKEY_CTRL_A: /* ctrl-a: insert ascii char/decimal-value */
-			texteditInsertASCII(editor);
+			next_key = texteditInsertASCII(editor);
 			break;
 
 		default:
@@ -465,6 +466,11 @@ void texteditHandleEditKey(texteditor * editor)
 			if (editor->key < 0x7F && editor->key > 0x1F)
 				texteditInsertCharacter(editor, editor->key);
 			break;
+	}
+
+	if (next_key == DKEY_QUIT) {
+		editor->key = DKEY_QUIT;
+		editor->exitflag = 1;
 	}
 }
 
@@ -567,9 +573,10 @@ void texteditCursorRight(texteditor * editor)
  * @brief Open the ZZT-OOP help dialog. If the current line contains a ZZT-OOP
  * command, look up that command.
  **/
-void texteditHelpZOC(texteditor * editor)
+int texteditHelpZOC(texteditor * editor)
 {
 	int i;
+	int result;
 
 	/* Look for #command on current line for lookup in help */
 	i = editor->pos;
@@ -591,15 +598,16 @@ void texteditHelpZOC(texteditor * editor)
 		}
 
 		/* Display the help file with the command as the topic */
-		helpsectiontopic("langref", command, editor->d);
+		result = helpsectiontopic("langref", command, editor->d);
 		
 		free(command);
 	} else {
 		/* Display the oop help file */
-		helpsectiontopic("langref", NULL, editor->d);
+		result = helpsectiontopic("langref", NULL, editor->d);
 	}
 
 	editor->updateflags |= TUD_ALL;
+	return result;
 }
 
 /**
@@ -701,11 +709,15 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
  * @relates texteditor
  * @brief Load music from a ZZM file.
  **/
-void texteditZZMLoad(texteditor * editor)
+int texteditZZMLoad(texteditor * editor)
 {
 	char* filename;
+	bool quit = false;
 	filename = filedialog(".", "zzm", "Choose ZZT Music (ZZM) File",
-												FTYPE_ALL, editor->d);
+												FTYPE_ALL, editor->d, &quit);
+	if(quit) {
+		return DKEY_QUIT;
+	}
 
 	if (filename != NULL) {
 		stringvector zzmv;
@@ -730,6 +742,7 @@ void texteditZZMLoad(texteditor * editor)
 	free(filename);
 
 	editor->updateflags |= TUD_EDITAREA | TUD_TITLE | TUD_PANEL;
+	return 0;
 }
 
 /**
@@ -740,7 +753,7 @@ void texteditZZMLoad(texteditor * editor)
  *
  * @TODO: Document this feature and make it more usable.
  */
-void texteditZZMRip(texteditor * editor)
+int texteditZZMRip(texteditor * editor)
 {
 	/* This is mostly worthless just now */
 	stringvector ripped;
@@ -748,10 +761,12 @@ void texteditZZMRip(texteditor * editor)
 	editor->text->cur = editor->curline;
 
 	ripped = zzmripsong(editor->text, 4);
-	scrolldialog("Ripped Music", &ripped, editor->d);
+	int result = scrolldialog("Ripped Music", &ripped, editor->d);
 
 	deletestringvector(&ripped);
 	editor->updateflags |= TUD_ALL;
+
+	return (result == EDITBOX_QUIT) ? DKEY_QUIT : 0;
 }
 
 /**
@@ -761,7 +776,7 @@ void texteditZZMRip(texteditor * editor)
  * @param insertflag  Insert file at cursor when true; otherwise overwrite all
  *                    existing text.
  **/
-void texteditFileOpen(texteditor * editor, int insertflag)
+int texteditFileOpen(texteditor * editor, int insertflag)
 {
 	stringvector filetypelist;
 	char* filename = NULL;
@@ -773,19 +788,27 @@ void texteditFileOpen(texteditor * editor, int insertflag)
 	pushstring(&filetypelist, "*.hlp");
 	pushstring(&filetypelist, "*.zzm");
 	pushstring(&filetypelist, "*.*");
-	if (editbox("Select A File Type", &filetypelist, 0, 1, editor->d) == 27) {
+	int result = editbox("Select A File Type", &filetypelist, 0, 1, editor->d);
+	if(result == EDITBOX_QUIT) {
+		return DKEY_QUIT;
+	}
+	if (result == 27) {
 		editor->updateflags |= TUD_EDITAREA | TUD_TITLE;
-		return;
+		return 0;
 	}
 
-	if (filetypelist.cur != NULL)
+	if (filetypelist.cur != NULL) {
+		bool quit = false;
 		filename =
-			filedialog(".", filetypelist.cur->s + 2,
-								 (!insertflag ?
-									 "Open ZZT Object Code (ZOC) File" :
-									 "Insert ZZT Object Code (ZOC) File"),
-								 FTYPE_ALL, editor->d);
-
+				filedialog(".", filetypelist.cur->s + 2,
+						   (!insertflag ?
+							"Open ZZT Object Code (ZOC) File" :
+							"Insert ZZT Object Code (ZOC) File"),
+						   FTYPE_ALL, editor->d, &quit);
+		if(quit) {
+			return DKEY_QUIT;
+		}
+	}
 	if (filename != NULL && strlen(filename) != 0) {
 		stringvector filetext;
 		filetext = filetosvector(filename, editor->wrapwidth, editor->linewidth);
@@ -829,6 +852,7 @@ void texteditFileOpen(texteditor * editor, int insertflag)
 	removestringvector(&filetypelist);
 
 	editor->updateflags |= TUD_EDITAREA | TUD_TITLE | TUD_PANEL;
+	return 0;
 }
 
 /**
@@ -836,12 +860,16 @@ void texteditFileOpen(texteditor * editor, int insertflag)
  * @brief Save text to a file.
  * @param prompt  Prompt to give user.
  */
-void texteditFileSave(texteditor * editor, char * prompt)
+int texteditFileSave(texteditor * editor, char * prompt)
 {
 	char* filename;
 
 	/* TODO: Use a stored filename, rather than empty by default */
-	filename = filenamedialog("", "", prompt, 1, editor->d);
+	bool quit = false;
+	filename = filenamedialog("", "", prompt, 1, editor->d, &quit);
+	if(quit) {
+		return DKEY_QUIT;
+	}
 
 	if (filename != NULL) {
 		/* Save to the file */
@@ -851,6 +879,7 @@ void texteditFileSave(texteditor * editor, char * prompt)
 		free(filename);
 	}
 	editor->updateflags |= TUD_EDITAREA | TUD_PANEL | TUD_PANEL;
+	return 0;
 }
 
 /**
@@ -1066,7 +1095,7 @@ void texteditDeleteLine(texteditor * editor)
  * @brief Prompt the user for an ASCII character to insert. If the current line
  * begins with a #char command, modify the argument to #char instead.
  **/
-void texteditInsertASCII(texteditor * editor)
+int texteditInsertASCII(texteditor * editor)
 {
 	static int selChar; /* TODO: static isn't the way to go, or is it? */
 	int choice;
@@ -1083,8 +1112,10 @@ void texteditInsertASCII(texteditor * editor)
 
 		sscanf(editor->curline->s + 5, "%d", &selChar);
 		choice = charselect(editor->d, selChar);
+		if (choice == DKEY_QUIT)
+			return DKEY_QUIT;
 		if (choice == -1)
-			return;
+			return 0;
 
 		editor->curline->s[5] = ' ';
 		editor->curline->s[6] = '\x0';
@@ -1103,14 +1134,17 @@ void texteditInsertASCII(texteditor * editor)
 		/* insert ascii char */
 
 		choice = charselect(editor->d, selChar);
+		if (choice == DKEY_QUIT)
+			return DKEY_QUIT;
 		if (choice == -1)
-			return;
+			return 0;
 
 		texteditInsertCharacter(editor, choice);
 	}
 
 	/* Remember the choice for future reference */
 	selChar = choice;
+	return 0;
 }
 
 /**

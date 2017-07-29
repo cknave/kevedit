@@ -31,7 +31,7 @@ int inithelpsystem(char* datapath);
 void deletehelpsystem(void);
 
 /* help() - Displays copyright and default help section */
-void help(displaymethod* d);
+int help(displaymethod* d);
 
 /* For both helptopic() and helpfiletopic():
  * Return value is true when browsing should continue (i.e. "back") */

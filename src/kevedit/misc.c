@@ -68,7 +68,7 @@ void copy(keveditor * myeditor)
 	}
 }
 
-void paste(keveditor * myeditor)
+int paste(keveditor * myeditor)
 {
 	ZZTworld * myworld = myeditor->myworld;
 	int done = 0;
@@ -76,7 +76,7 @@ void paste(keveditor * myeditor)
 	selection pasteselection;
 
 	if (myeditor->copyBlock == NULL)
-		return;
+		return 0;
 
 	/* Initialize valid pasting region selection */
 	initselection(&pasteselection, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
@@ -93,8 +93,8 @@ void paste(keveditor * myeditor)
 	unselectpos(pasteselection, myworld->boards[zztBoardGetCurrent(myworld)].plx,
 							myworld->boards[zztBoardGetCurrent(myworld)].ply);
 
+	int key;
 	while (!done) {
-		int key;
 		ZZTblock * previewBlock;
 
 		/* Merge the current board and copyBlock onto the previewBlock */
@@ -119,7 +119,7 @@ void paste(keveditor * myeditor)
 			done = 1;
 		}
 
-		if (key == DKEY_ESC)
+		if (key == DKEY_ESC || key == DKEY_QUIT)
 			done = 1;
 
 		zztBlockFree(previewBlock);
@@ -128,6 +128,7 @@ void paste(keveditor * myeditor)
 	deleteselection(&pasteselection);
 	myeditor->clearselectflag = 1;
 	myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT;
+	return key;
 }
 
 /* TODO: make a new type "alphablock" containing a block and a selection */
@@ -177,7 +178,7 @@ void plot(keveditor * myeditor)
 	zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, pattern);
 }
 
-void showObjects(keveditor * myeditor)
+int showObjects(keveditor * myeditor)
 {
 	displaymethod * mydisplay = myeditor->mydisplay;
 	
@@ -206,7 +207,7 @@ void showObjects(keveditor * myeditor)
 	}
 
 	mydisplay->update(0, 0, board->bigboard->width, board->bigboard->height);
-	mydisplay->getch();
+	return mydisplay->getch();
 }
 
 void runzzt(char* path, char* world)
@@ -258,7 +259,7 @@ void runzzt(char* path, char* world)
 }
 
 
-void texteditordialog(displaymethod * mydisplay)
+int texteditordialog(displaymethod * mydisplay)
 {
 	/* open text file for edit */
 	texteditor * editor;
@@ -269,7 +270,7 @@ void texteditordialog(displaymethod * mydisplay)
 	regput('!', editor->text, 0, EDITBOX_ZZTWIDTH, EDITBOX_ZZTWIDTH);
 
 	/* Edit */
-	textedit(editor);
+	int result = textedit(editor);
 
 	/* Store result to the ! register */
 	regstore('!', *(editor->text));
@@ -277,6 +278,8 @@ void texteditordialog(displaymethod * mydisplay)
 	/* Free the text editor and text. */
 	deletetexteditortext(editor);
 	deletetexteditor(editor);
+
+	return result;
 }
 
 void clearboard(ZZTworld * myworld)
@@ -387,7 +390,7 @@ int togglegradientmode(keveditor * myeditor)
 	}
 }
 
-void saveworld(displaymethod * mydisplay, ZZTworld * myworld)
+int saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 {
 	/* Save World after prompting user for filename */
 	char* filename;
@@ -395,11 +398,14 @@ void saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 	char* oldfilenamebase;    /* Old filename without extension */
 	char* dotptr;             /* General pointer */
 
+	bool quit = false;
 	filename =
-		filenamedialog(zztWorldGetFilename(myworld), "zzt", "Save World As", 1, mydisplay);
+		filenamedialog(zztWorldGetFilename(myworld), "zzt", "Save World As", 1, mydisplay, &quit);
+	if (quit)
+		return DKEY_QUIT;
 
 	if (filename == NULL)
-		return;
+		return 0;
 
 	path = (char*) malloc(sizeof(char) * (strlen(filename) + 1));
 	file = (char*) malloc(sizeof(char) * (strlen(filename) + 1));
@@ -448,17 +454,19 @@ void saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 
 	mydisplay->print(61, 5, 0x1f, "Written.");
 	mydisplay->cursorgo(69, 5);
-	mydisplay->getch();
+	return mydisplay->getch();
 }
 
-ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld)
+ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld, bool *quit)
 {
-	char* filename = filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
-	ZZTworld* newworld;
+	char* filename = filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay, quit);
+	if (quit && *quit)
+		return myworld;
 	
 	if (filename == NULL)
 		return myworld;
 
+	ZZTworld* newworld;
 	newworld = zztWorldLoad(filename);
 
 	if (newworld != NULL) {
@@ -488,7 +496,7 @@ ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld)
 	return myworld;
 }
 
-void boardtransfer(displaymethod * mydisplay, ZZTworld * myworld)
+int boardtransfer(displaymethod * mydisplay, ZZTworld * myworld)
 {
 	int x, y, i = 0;
 	int choice = 0;
@@ -518,41 +526,44 @@ void boardtransfer(displaymethod * mydisplay, ZZTworld * myworld)
 		switch (key) {
 			case DKEY_UP:   choice--; if (choice < 0) choice = 2; break;
 			case DKEY_DOWN: choice++; if (choice > 2) choice = 0; break;
+			case DKEY_QUIT:
+				return DKEY_QUIT;
 		}
 	} while (key != DKEY_ENTER && key != DKEY_ESC);
 
 	if (key == DKEY_ESC)
-		return;
+		return 0;
 
 	/* Act on choice */
 	switch (choice) {
 		case 0: /* Import from ZZT world */
-			importfromworld(mydisplay, myworld);
-			break;
+			return importfromworld(mydisplay, myworld);
 		case 1: /* Import from Board */
-			importfromboard(mydisplay, myworld);
-			break;
+			return importfromboard(mydisplay, myworld);
 		case 2: /* Export to Board */
-			exporttoboard(mydisplay, myworld);
-			break;
+			return exporttoboard(mydisplay, myworld);
 	}
 }
 
-void importfromworld(displaymethod * mydisplay, ZZTworld * myworld)
+int importfromworld(displaymethod * mydisplay, ZZTworld * myworld)
 {
-	char* filename = filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay);
-	ZZTworld* inworld;
-	
+	bool quit = false;
+	char* filename = filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay, &quit);
+	if (quit)
+		return DKEY_QUIT;
 	if (filename == NULL)
-		return;
+		return 0;
 
-	inworld = zztWorldLoad(filename);
+	ZZTworld* inworld = zztWorldLoad(filename);
 
 	if (inworld != NULL) {
 		ZZTboard* brd;
 
 		/* Select a board from the new world */
-		switchboard(inworld, mydisplay);
+		int result = switchboard(inworld, mydisplay);
+        if(result == DKEY_QUIT) {
+            return DKEY_QUIT;
+        }
 
 		brd = zztBoardGetCurPtr(inworld);
 
@@ -567,21 +578,24 @@ void importfromworld(displaymethod * mydisplay, ZZTworld * myworld)
 	}
 
 	free(filename);
+	return 0;
 }
 
-void importfromboard(displaymethod * mydisplay, ZZTworld * myworld)
+int importfromboard(displaymethod * mydisplay, ZZTworld * myworld)
 {
-	char* filename = filedialog(".", "brd", "Import ZZT Board", FTYPE_ALL, mydisplay);
-	ZZTboard* brd;
+	bool quit = false;
+	char* filename = filedialog(".", "brd", "Import ZZT Board", FTYPE_ALL, mydisplay, &quit);
+	if (quit)
+		return DKEY_QUIT;
 
 	if (filename == NULL)
-		return;
+		return 0;
 
-	brd = zztBoardLoad(filename);
+	ZZTboard* brd = zztBoardLoad(filename);
 
 	if (brd == NULL)
 		/* TODO: report the error to the user */
-		return;
+		return 0;
 
 	/* Insert after current board and advance */
 	if (zztWorldInsertBoard(myworld, brd, zztBoardGetCurrent(myworld) + 1, 1))
@@ -593,18 +607,22 @@ void importfromboard(displaymethod * mydisplay, ZZTworld * myworld)
 	/* Free the free board and filename */
 	zztBoardFree(brd);
 	free(filename);
+	return 0;
 }
 
-void exporttoboard(displaymethod * mydisplay, ZZTworld * myworld)
+int exporttoboard(displaymethod * mydisplay, ZZTworld * myworld)
 {
 	char* filename;
 	ZZTboard* brd;
+	bool quit = false;
 
 	/* Prompt for a filename */
-	filename = filenamedialog("", "brd", "Export to Board", 1, mydisplay);
+	filename = filenamedialog("", "brd", "Export to Board", 1, mydisplay, &quit);
+	if (quit)
+		return DKEY_QUIT;
 
 	if (filename == NULL)
-		return;
+		return 0;
 
 	/* Grab the current board by the horns */
 	brd = zztBoardGetCurPtr(myworld);
@@ -615,6 +633,7 @@ void exporttoboard(displaymethod * mydisplay, ZZTworld * myworld)
 	/* Decompress; it is the current board, after all */
 	zztBoardDecompress(brd);
 	free(filename);
+	return 0;
 }
 
 void previouspattern(keveditor * myeditor)
@@ -846,6 +865,7 @@ int promptforselection(selection sel, gradline * grad, keveditor* myeditor)
 				0, 0, 59, 24, mydisplay);
 
 		if (key == DKEY_ESC) return 1;
+		if (key == DKEY_QUIT) return DKEY_QUIT;
 		/* Check for flood selection */
 		if (key == 'f' || key == 'F' || key == 'm') {
 			floodselect(block, sel, myeditor->cursorx, myeditor->cursory);
@@ -869,6 +889,7 @@ int promptforselection(selection sel, gradline * grad, keveditor* myeditor)
 		mydisplay->putch(grad->x1, grad->y1, '+', 0x0F);
 
 		if (key == DKEY_ESC) return 1;
+		if (key == DKEY_QUIT) return DKEY_QUIT;
 		/* Check for flood selection */
 		if (key == 'f' || key == 'F' || key == 'm') {
 			floodselect(block, sel, myeditor->cursorx, myeditor->cursory);
@@ -921,7 +942,7 @@ int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, pat
 			case '-': if (grad->randomness > 0)  grad->randomness--; break;
 		}
 	} while (key != DKEY_ESC && key != DKEY_ENTER &&
-					 key != DKEY_TAB && key != ' ');
+					 key != DKEY_TAB && key != ' ' && key != DKEY_QUIT);
 
 	return key;
 }
@@ -958,7 +979,7 @@ void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pb
 	}
 }
 
-void dogradient(keveditor * myeditor)
+int dogradient(keveditor * myeditor)
 {
 	displaymethod* mydisplay = myeditor->mydisplay;
 	ZZTworld* myworld = myeditor->myworld;
@@ -993,10 +1014,11 @@ void dogradient(keveditor * myeditor)
 		grad.x2 = myeditor->cursorx;
 		grad.y2 = myeditor->cursory;
 	} else {
-		if (promptforselection(sel, &grad, myeditor)) {
+		int result = promptforselection(sel, &grad, myeditor);
+		if (result) {
 			/* Escape was pressed */
 			deleteselection(&sel);
-			return;
+			return result;
 		}
 	}
 
@@ -1015,7 +1037,7 @@ void dogradient(keveditor * myeditor)
 		pickgradientpoint(myworld, &grad.x2, &grad.y2, sel, *fillbuffer, &grad, randomseed, mydisplay);
 		myeditor->cursorx = grad.x2; myeditor->cursory = grad.y2;
 
-		if (key == DKEY_ESC) { deleteselection(&sel); return; }
+		if (key == DKEY_ESC || key == DKEY_QUIT) { deleteselection(&sel); return key; }
 		if (key != DKEY_TAB && key != ' ') break;
 
 		/* Pick the starting point */
@@ -1023,7 +1045,7 @@ void dogradient(keveditor * myeditor)
 		pickgradientpoint(myworld, &grad.x1, &grad.y1, sel, *fillbuffer, &grad, randomseed, mydisplay);
 		myeditor->cursorx = grad.x1; myeditor->cursory = grad.y1;
 
-		if (key == DKEY_ESC) { deleteselection(&sel); return; }
+		if (key == DKEY_ESC || key == DKEY_QUIT) { deleteselection(&sel); return key; }
 	} while (key == DKEY_TAB || key == ' ');
 
 	/* Fill the selection by the gradient line */
@@ -1036,5 +1058,6 @@ void dogradient(keveditor * myeditor)
 
 	myeditor->clearselectflag = 1;
 	deleteselection(&sel);
+	return 0;
 }
 

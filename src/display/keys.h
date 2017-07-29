@@ -111,5 +111,7 @@
 #define DKEY_ALT_PLUS   (131 | DDOSKEY_EXT)
 #define DKEY_ALT_EQUALS (131 | DDOSKEY_EXT)
 
+/* Special keys */
+#define DKEY_QUIT       0x900DB133
 
 #endif

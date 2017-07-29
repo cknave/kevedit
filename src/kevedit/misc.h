@@ -20,6 +20,8 @@
 #ifndef _MISC_H
 #define _MISC_H 1
 
+#include <stdbool.h>
+
 #include "kevedit.h"
 
 #include "display/display.h"
@@ -33,7 +35,7 @@
 
 /* Copy and paste */
 void copy(keveditor * myeditor);
-void paste(keveditor * myeditor);
+int paste(keveditor * myeditor);
 int countparams(ZZTblock *block);
 int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcsel, int x, int y);
 
@@ -41,12 +43,12 @@ int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcse
 void plot(keveditor * myeditor);
 
 /* Make objects more obvious */
-void showObjects(keveditor * myeditor);
+int showObjects(keveditor * myeditor);
 
 /* Running zzt */
 void runzzt(char* path, char* world);
 
-void texteditordialog(displaymethod * mydisplay);
+int texteditordialog(displaymethod * mydisplay);
 
 void clearboard(ZZTworld * myworld);
 ZZTworld * clearworld(ZZTworld * myworld);
@@ -56,13 +58,13 @@ void exitgradientmode(keveditor * myeditor);
 int toggledrawmode(keveditor * myeditor);
 int togglegradientmode(keveditor * myeditor);
 
-void saveworld(displaymethod * mydisplay, ZZTworld * myworld);
-ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld);
+int saveworld(displaymethod * mydisplay, ZZTworld * myworld);
+ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld, bool *quit);
 
-void boardtransfer(displaymethod * mydisplay, ZZTworld * myworld);
-void importfromworld(displaymethod * mydisplay, ZZTworld * myworld);
-void importfromboard(displaymethod * mydisplay, ZZTworld * myworld);
-void exporttoboard(displaymethod * mydisplay, ZZTworld * myworld);
+int boardtransfer(displaymethod * mydisplay, ZZTworld * myworld);
+int importfromworld(displaymethod * mydisplay, ZZTworld * myworld);
+int importfromboard(displaymethod * mydisplay, ZZTworld * myworld);
+int exporttoboard(displaymethod * mydisplay, ZZTworld * myworld);
 
 void previouspattern(keveditor * myeditor);
 void nextpattern(keveditor * myeditor);
@@ -86,6 +88,6 @@ int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, pat
 void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, displaymethod * mydisplay);
 
 /* Do the gradient */
-void dogradient(keveditor * myeditor);
+int dogradient(keveditor * myeditor);
 
 #endif

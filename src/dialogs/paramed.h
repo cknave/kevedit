@@ -36,12 +36,12 @@
 /* modifyparam(display, world, x, y)
  * Modify the parameter for the given tile
  */
-void modifyparam(displaymethod * d, ZZTworld * w, int x, int y);
+int modifyparam(displaymethod * d, ZZTworld * w, int x, int y);
 
 /* editprogram(display, param)
  * edit program in param p
  */
-void editprogram(displaymethod * d, ZZTparam * p);
+int editprogram(displaymethod * d, ZZTparam * p);
 
 /* programtosvector(param, editwidth)
  * creates a string vector from the given param
@@ -98,7 +98,7 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 /* tileinfo(display, world, x, y)
  * Display/edit info for the current tile
  */
-void tileinfo(displaymethod * d, ZZTworld * w, int x, int y);
+int tileinfo(displaymethod * d, ZZTworld * w, int x, int y);
 
 /* buildtileinfodialog(world, x, y)
  * Builds info for dialog at (x, y)
@@ -128,6 +128,6 @@ int paramlistdialog(displaymethod * d, ZZTblock * block, int curparam, char * ti
 
 /* statsinfo(display, world)
  * Browse through and edit the stats on the current board */
-void statsinfo(displaymethod * d, ZZTworld * w);
+int statsinfo(displaymethod * d, ZZTworld * w);
 
 #endif

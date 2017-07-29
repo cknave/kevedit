@@ -67,6 +67,9 @@ int line_editor(int x, int y, int color, char* str, int editwidth, int flags, di
 
 			case DKEY_ESC:
 				return LINED_CANCEL;
+
+			case DKEY_QUIT:
+				return LINED_QUIT;
 		}
 	}
 }
@@ -184,9 +187,9 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 	buffer = (char *) malloc(sizeof(char) * (editwidth + 1));
 
 	sprintf(buffer, "%d", *number);
-	if (line_editor(x, y, color, buffer, editwidth,
-									LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d)
-			== LINED_OK) {
+	int result = line_editor(x, y, color, buffer, editwidth,
+			LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d);
+	if(result == LINED_OK) {
 		sscanf(buffer, "%d", number);
 		if (*number > maxval)
 			*number = maxval;
@@ -195,12 +198,12 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 	}
 
 	free(buffer);
-	return LINED_CANCEL;
+	return result;
 }
 
 /* filenamedialog() - Prompts user to enter a file name, returns a malloc()ed
  *                    value representing entered value, NULL on cancel. */
-char* filenamedialog(char* initname, char* extension, char* prompt, int askoverwrite, displaymethod * mydisplay)
+char* filenamedialog(char* initname, char* extension, char* prompt, int askoverwrite, displaymethod * mydisplay, bool *quit)
 {
 	const int maxlen = 15;   /* 15 chars should be enough for a zzt filename */
 	int extlen = strlen(extension);   /* length of given extension */
@@ -245,6 +248,9 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 
 	pos = strlen(filenamebuffer);
 
+    if (quit)
+        *quit = false;
+
 	/* Edit */
 	while (!done) {
 		int key;  /* Key returned from line editor */
@@ -279,11 +285,18 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 					do {
 						key = mydisplay->getch();
 					} while (!(key == 'y' || key == 'Y' || key == 'n' || key == 'N' ||
-										 key == DKEY_ESC));
+										 key == DKEY_ESC || key == DKEY_QUIT));
 					mydisplay->print(61, 5, 0x1f, "          ");
 					mydisplay->print(72, 5, 0x1f, "   ");
 
-					if (key != 'y' && key != 'Y') {
+                    if (key == DKEY_QUIT) {
+                        if (quit)
+                            *quit = true;
+                        done = 1;
+                        break;
+                    }
+
+                    if (key != 'y' && key != 'Y') {
 						/* Unless user chose to overwrite, prompt for a different file */
 						free(result);
 						result = NULL;
@@ -299,6 +312,12 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 				done = 1;
 				break;
 
+            case DKEY_QUIT:
+                if (quit)
+                    *quit = true;
+                done = 1;
+                break;
+
 			case DKEY_CTRL_D:  /* ctrl-d: change directory */
 			case DKEY_CTRL_F:  /* ctrl-f: change folder */
 				{
@@ -306,7 +325,11 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 
 					newpath =
 						filedialog(path, "", "Choose a Directory",
-											 FTYPE_DIR, mydisplay);
+											 FTYPE_DIR, mydisplay, quit);
+                    if (quit && *quit) {
+                        done = 1;
+                        break;
+                    }
 
 					/* TODO: Refresh the screen or something */
 					drawscrollbox(mydisplay, 0, 0, 1);
@@ -641,7 +664,7 @@ void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y,
 }
 
 
-char * filedialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay)
+char * filedialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay, bool *quit)
 {
 	int done = 0;
 	char* result = NULL;
@@ -654,6 +677,9 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 		drawsidepanel(mydisplay, PANEL_FILEDIALOG);
 
 	files = readdirectorytosvector(curdir, extension, filetypes);
+
+    if (quit)
+        *quit = false;
 
 	while (!done) {
 		int response;
@@ -712,6 +738,12 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 			case EDITBOX_CANCEL:
 				done = 1;
 				break;
+
+            case EDITBOX_QUIT:
+                if(quit)
+                    *quit = true;
+                done = 1;
+                break;
 		}
 	}
 
@@ -722,7 +754,7 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 }
 
 
-char *titledialog(char* prompt, displaymethod * d)
+char *titledialog(char* prompt, displaymethod * d, bool *quit)
 {
 	char *t;
 	int x, y, i = 0;
@@ -747,7 +779,10 @@ char *titledialog(char* prompt, displaymethod * d)
 	memset(t, '\0', 35);
 
 	/* Do the editing */
-	line_editor(12, 13, 0x0f, t, 34, LINED_NORMAL, d);
+	int result = line_editor(12, 13, 0x0f, t, 34, LINED_NORMAL, d);
+    if(quit) {
+        *quit = (result == LINED_QUIT);
+    }
 	return t;
 }
 
@@ -793,6 +828,10 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 	do {
 		response = browsedialog(title, &boardlist, mydisplay);
 
+		if (response == EDITBOX_QUIT) {
+			return DKEY_QUIT;
+		}
+
 		if (response == EDITBOX_HELP) {
 			helpsectiontopic("kbasics", "brdselect", mydisplay);
 			drawsidepanel(mydisplay, PANEL_BOARD_DIALOG);
@@ -832,7 +871,12 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 
 	if (response == EDITBOX_OK) {
 		if (boardlist.cur == boardlist.last) {
-			zztWorldAddBoard(w, titledialog("Enter Title", mydisplay));
+			bool quit = false;
+			title = titledialog("Enter Title", mydisplay, &quit);
+			if(quit) {
+				return DKEY_QUIT;
+			}
+			zztWorldAddBoard(w, title);
 		}
 
 		curboard = svgetposition(&boardlist);
@@ -847,6 +891,9 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 int switchboard(ZZTworld * w, displaymethod * mydisplay)
 {
 	int newboard = boarddialog(w, zztBoardGetCurrent(w), "Switch Boards", 0, mydisplay);
+    if(newboard == DKEY_QUIT) {
+        return DKEY_QUIT;
+    }
 
 	zztBoardSelect(w, newboard);
 	return newboard;
@@ -929,8 +976,10 @@ int dothepanel_f1(keveditor * e)
 			return ZZT_CWCONV;
 		case '2':
 			return ZZT_CCWCONV;
-		}
-	}
+        case DKEY_QUIT:
+            return DKEY_QUIT;
+        }
+    }
 }
 
 int dothepanel_f2(keveditor * e)
@@ -1007,7 +1056,9 @@ int dothepanel_f2(keveditor * e)
 		case 's':
 		case 'S':
 			return ZZT_CENTBODY;
-		}
+        case DKEY_QUIT:
+            return DKEY_QUIT;
+        }
 	}
 }
 
@@ -1100,7 +1151,9 @@ int dothepanel_f3(keveditor * e)
 		case 'D':
 		case 'd':
 			return ZZT_PLAYER;
-		}
+        case DKEY_QUIT:
+            return DKEY_QUIT;
+        }
 	}
 }
 
@@ -1147,6 +1200,8 @@ int charselect(displaymethod * d, int c)
 				/* Return the char we recieved without doing anything,
 				 * unless it was -1 */
 				return (c != -1)? c : (x + y * 32);
+			case DKEY_QUIT:
+				return DKEY_QUIT;
 		}
 	}
 }
@@ -1327,10 +1382,12 @@ int colorselector(displaymethod * d, textcolor * color)
 
 			case DKEY_ESC:
 				return 1;
+
+			case DKEY_QUIT:
+				return DKEY_QUIT;
 		}
 	}
 }
-
 
 int confirmprompt(displaymethod * mydisplay, char * prompt)
 {
@@ -1353,6 +1410,8 @@ int confirmprompt(displaymethod * mydisplay, char * prompt)
 			return CONFIRM_NO;
 		else if (i == DKEY_ESC)
 			return CONFIRM_CANCEL;
+		else if (i == DKEY_QUIT)
+			return CONFIRM_QUIT;
 	}
 }
 

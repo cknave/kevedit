@@ -40,7 +40,7 @@
 
 #include <stdlib.h>
 
-void itemmenu(keveditor * myeditor)
+int itemmenu(keveditor * myeditor)
 {
 	ZZTworld * myworld = myeditor->myworld;
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
@@ -49,12 +49,15 @@ void itemmenu(keveditor * myeditor)
 	tile.color = encodecolor(myeditor->color);
 
 	choice = dothepanel_f1(myeditor);
-	tile.type = choice;
+	if(choice == DKEY_QUIT) {
+		return DKEY_QUIT;
+	}
 
+	tile.type = choice;
 	if (tile.type == ZZT_PLAYER) {
 		/* The player is a special case */
 		zztPlotPlayer(myworld, myeditor->cursorx, myeditor->cursory);
-		return;
+		return 0;
 	}
 
 	/* Create params -- zztParamCreate() returns NULL for types which have no params */
@@ -88,10 +91,11 @@ void itemmenu(keveditor * myeditor)
 	/* Free our copy of the params */
 	if (tile.param != NULL)
 		zztParamFree(tile.param);
+	return 0;
 }
 
 
-void creaturemenu(keveditor * myeditor)
+int creaturemenu(keveditor * myeditor)
 {
 	ZZTworld * myworld = myeditor->myworld;
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
@@ -100,6 +104,9 @@ void creaturemenu(keveditor * myeditor)
 	tile.color = encodecolor(myeditor->color);
 
 	choice = dothepanel_f2(myeditor);
+	if(choice == DKEY_QUIT) {
+		return DKEY_QUIT;
+	}
 	tile.type = choice;
 
 	/* Everything has params */
@@ -147,7 +154,7 @@ void creaturemenu(keveditor * myeditor)
 }
 
 
-void terrainmenu(keveditor * myeditor)
+int terrainmenu(keveditor * myeditor)
 {
 	ZZTworld * myworld = myeditor->myworld;
 	ZZTtile tile = { ZZT_EMPTY, 0x0, NULL };
@@ -156,8 +163,11 @@ void terrainmenu(keveditor * myeditor)
 	tile.color = encodecolor(myeditor->color);
 
 	choice = dothepanel_f3(myeditor);
-	tile.type = choice;
+	if(choice == DKEY_QUIT) {
+		return DKEY_QUIT;
+	}
 
+	tile.type = choice;
 	if (tile.type == ZZT_PLAYER)
 		/* The dead player should be paramless */
 		tile.param = NULL;
@@ -192,7 +202,7 @@ void terrainmenu(keveditor * myeditor)
 }
 
 
-void loadobjectlibrary(keveditor * myeditor)
+int loadobjectlibrary(keveditor * myeditor)
 {
 	displaymethod * mydisplay = myeditor->mydisplay;
 	ZZTworld * myworld = myeditor->myworld;
@@ -203,20 +213,24 @@ void loadobjectlibrary(keveditor * myeditor)
 	/* No fair drawing over the player */
 	if (zztBoardGetCurPtr(myworld)->plx == myeditor->cursorx &&
 	    zztBoardGetCurPtr(myworld)->ply == myeditor->cursory)
-		return;
+		return 0;
 
 	/* Prompt for a file and load it */
+	bool quit = false;
 	filename =
-		filedialog(".", "zzl", "Select an Object Library", FTYPE_ALL, mydisplay);
+		filedialog(".", "zzl", "Select an Object Library", FTYPE_ALL, mydisplay, &quit);
+	if (quit)
+		return DKEY_QUIT;
 	if (filename == NULL)
-		return;
+		return 0;
 	zzlv = filetosvector(filename, EDITBOX_ZZTWIDTH*2, EDITBOX_ZZTWIDTH*2);
 	free(filename);
 
 	/* Have the user select an object */
-	if (zzlpickobject(&zzlv, mydisplay) != EDITBOX_OK) {
+	int result = zzlpickobject(&zzlv, mydisplay);
+	if (result != EDITBOX_OK) {
 		deletestringvector(&zzlv);
-		return;
+		return (result == EDITBOX_QUIT) ? DKEY_QUIT : 0;
 	}
 
 	/* Put the object into the backbuffer and plot it to the screen */
@@ -232,9 +246,10 @@ void loadobjectlibrary(keveditor * myeditor)
 
 	/* Finish */
 	deletestringvector(&zzlv);
+	return 0;
 }
 
-void saveobjecttolibrary(keveditor * myeditor)
+int saveobjecttolibrary(keveditor * myeditor)
 {
 	displaymethod * mydisplay = myeditor->mydisplay;
 	ZZTworld * myworld = myeditor->myworld;
@@ -245,18 +260,25 @@ void saveobjecttolibrary(keveditor * myeditor)
 
 	/* Can't save what's under the cursor unless it's an object */
 	if (obj.type != ZZT_OBJECT)
-		return;
+		return 0;
 
 	/* Prompt for and load a file */
+	bool quit = false;
 	filename =
-		filedialog(".", "zzl", "Save to Which Object Library?", FTYPE_ALL, mydisplay);
+		filedialog(".", "zzl", "Save to Which Object Library?", FTYPE_ALL, mydisplay, &quit);
+	if (quit)
+		return DKEY_QUIT;
 	if (filename == NULL)
-		return;
+		return 0;
 
 	zzlv = filetosvector(filename, EDITBOX_ZZTWIDTH*2, EDITBOX_ZZTWIDTH*2);
 
 	/* Prompt for a title */
-	title = titledialog("Name Your Object", mydisplay);
+	quit = false;
+	title = titledialog("Name Your Object", mydisplay, &quit);
+	if(quit) {
+		return DKEY_QUIT;
+	}
 
 	/* Append the object to the library */
 	if (!zzlappendobject(&zzlv, obj, title, EDITBOX_ZZTWIDTH)) {
@@ -267,9 +289,10 @@ void saveobjecttolibrary(keveditor * myeditor)
 	deletestringvector(&zzlv);
 	free(title);
 	free(filename);
+	return 0;
 }
 
-void saveobjecttonewlibrary(keveditor * myeditor)
+int saveobjecttonewlibrary(keveditor * myeditor)
 {
 	displaymethod * mydisplay = myeditor->mydisplay;
 	ZZTworld * myworld = myeditor->myworld;
@@ -282,16 +305,23 @@ void saveobjecttonewlibrary(keveditor * myeditor)
 
 	/* Can't save what's under the cursor unless it's an object */
 	if (obj.type != ZZT_OBJECT)
-		return;
+		return 0;
 
 	/* Prompt for file name */
+	bool quit = false;
 	filename =
-		filenamedialog("mylib.zzl", "zzl", "New Object Library", 1, mydisplay);
+		filenamedialog("mylib.zzl", "zzl", "New Object Library", 1, mydisplay, &quit);
+	if (quit)
+		return DKEY_QUIT;
 	if (filename == NULL)
-		return;
+		return 0;
 
 	/* Generate the zzl header */
-	pushstring(&zzlv, titledialog("Name Your Library", mydisplay));
+    quit = false;
+    char *library_title = titledialog("Name Your Library", mydisplay, &quit);
+    if(quit)
+        return DKEY_QUIT;
+	pushstring(&zzlv, title);
 	pushstring(&zzlv, str_dup("*"));
 	pushstring(&zzlv, str_dup("* Format (by CyQ):"));
 	pushstring(&zzlv, str_dup("* "));
@@ -305,7 +335,9 @@ void saveobjecttonewlibrary(keveditor * myeditor)
 	pushstring(&zzlv, str_dup("* "));
 
 	/* Prompt for an object title */
-	title = titledialog("Name Your Object", mydisplay);
+	title = titledialog("Name Your Object", mydisplay, &quit);
+    if(quit)
+        return DKEY_QUIT;
 
 	/* Append the object to the library */
 	if (!zzlappendobject(&zzlv, obj, title, EDITBOX_ZZTWIDTH)) {
@@ -318,7 +350,7 @@ void saveobjecttonewlibrary(keveditor * myeditor)
 	free(filename);
 }
 
-void objectlibrarymenu(keveditor * myeditor)
+int objectlibrarymenu(keveditor * myeditor)
 {
 	displaymethod * mydisplay = myeditor->mydisplay;
 	stringvector menu;
@@ -330,22 +362,26 @@ void objectlibrarymenu(keveditor * myeditor)
 	pushstring(&menu, "!save;Save Object to Existing Library");
 	pushstring(&menu, "!new;Save Object to New Library");
 
+    int result;
 	do {
-		if (scrolldialog("Object Library Menu", &menu, mydisplay) != EDITBOX_OK) {
+		result = scrolldialog("Object Library Menu", &menu, mydisplay);
+		if (result != EDITBOX_OK) {
 			removestringvector(&menu);
-			return;
+			return (result == EDITBOX_QUIT) ? DKEY_QUIT : 0;
 		}
 	} while (!ishypermessage(menu));
 
 	choice = gethypermessage(menu);
 
+
 	if (str_equ(choice, "load", 0))
-		loadobjectlibrary(myeditor);
+		result = loadobjectlibrary(myeditor);
 	else if (str_equ(choice, "save", 0))
-		saveobjecttolibrary(myeditor);
+		result = saveobjecttolibrary(myeditor);
 	else if (str_equ(choice, "new", 0))
-		saveobjecttonewlibrary(myeditor);
+		result = saveobjecttonewlibrary(myeditor);
 
 	removestringvector(&menu);
+    return result;
 }
 

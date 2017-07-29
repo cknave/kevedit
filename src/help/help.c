@@ -137,11 +137,11 @@ void helploadtopic(char* topic)
 	}
 }
 
-void help(displaymethod* d)
+int help(displaymethod* d)
 {
 	helploadmetafile();  /* Load the metafile if it hasn't already been loaded */
 	if (findsection(&helplist, "index") != NULL) {
-		helpsectiontopic("index", NULL, d);
+		return helpsectiontopic("index", NULL, d);
 	} else {
 		stringvector aboutdialog;
 		initstringvector(&aboutdialog);
@@ -150,10 +150,13 @@ void help(displaymethod* d)
 		pushstring(&aboutdialog, str_dup("$KevEdit Version " PACKAGE_VERSION));
 		pushstring(&aboutdialog, str_dup("Copyright (C) 2000-2005 Kev Vance, et al."));
 		pushstring(&aboutdialog, str_dup("Distribute under the terms of the GNU GPL"));
-		editbox("", &aboutdialog, 0, EDITBOX_ZOCMODE | EDITBOX_MOVEMENT, d);
+		int result = editbox("", &aboutdialog, 0, EDITBOX_ZOCMODE | EDITBOX_MOVEMENT, d);
 
 		deletestringvector(&aboutdialog);
+		if (result == EDITBOX_QUIT)
+			return DKEY_QUIT;
 	}
+	return 0;
 }
 
 int
@@ -195,6 +198,8 @@ helptopic(stringvector section, char* topic, displaymethod* d)
 				free(msg);
 
 				/* If we are done browsing, return as such */
+				if (keepbrowsing == DKEY_QUIT)
+					return DKEY_QUIT;
 				if (!keepbrowsing)
 					return 0;
 			}
@@ -204,6 +209,8 @@ helptopic(stringvector section, char* topic, displaymethod* d)
 		} else if (retcode == EDITBOX_CANCEL) {
 			/* Finished */
 			return 0;
+		} else if (retcode == EDITBOX_QUIT) {
+			return DKEY_QUIT;
 		}
 	}
 }

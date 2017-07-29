@@ -1029,6 +1029,8 @@ int display_sdl_getkey()
 			cursor = CURSOR_INACTIVE;
 			update_cursor(&info);
 		}
+	} else if(event.type == SDL_QUIT) {
+		return DKEY_QUIT;
 	}
 
 	if (event.type != SDL_KEYDOWN)

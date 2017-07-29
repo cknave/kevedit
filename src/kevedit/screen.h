@@ -20,6 +20,8 @@
 #ifndef _SCREEN_H
 #define _SCREEN_H 1
 
+#include <stdbool.h>
+
 #include "display/display.h"
 #include "display/colours.h"
 
@@ -46,6 +48,7 @@
 #define LINED_SNUMBER  LINED_NOALPHA | LINED_NOSPACES | LINED_NOPERIOD
 
 /* line_editor responses */
+#define LINED_QUIT   2
 #define LINED_CANCEL 1
 #define LINED_OK     0
 
@@ -53,8 +56,9 @@
 #define CONFIRM_YES    0
 #define CONFIRM_NO     1
 #define CONFIRM_CANCEL 2
+#define CONFIRM_QUIT   3
 
-/* line_editor() - edit a string of characters on a single line 
+/* line_editor() - edit a string of characters on a single line
  * 	str:       buffer to be edited
  * 	editwidth: maximum length string in buffer
  * 	flags:     select which classes of characters may not be used
@@ -95,15 +99,15 @@ void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y,
 
 /* file dialogs */
 char * filedialog(char * dir, char * extension, char * title, int filetypes,
-									displaymethod * mydisplay);
+		displaymethod * mydisplay, bool *quit);
 char* filenamedialog(char* initname, char* extension, char* prompt,
-										 int askoverwrite, displaymethod * mydisplay);
+		int askoverwrite, displaymethod * mydisplay, bool *quit);
 
 
 /* board dialogs */
 int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, displaymethod * mydisplay);
 int switchboard(ZZTworld * w, displaymethod * mydisplay);
-char *titledialog(char* prompt, displaymethod * d);
+char *titledialog(char* prompt, displaymethod * d, bool *quit);
 
 /* panels */
 int dothepanel_f1(keveditor * e);

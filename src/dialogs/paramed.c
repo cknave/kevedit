@@ -88,13 +88,13 @@ const char * direction_table[] = {
 };
 
 
-void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
+int modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 {
 	dialog dia;
 	int key;
 
 	if (zztTileGet(w, x, y).param == NULL)
-		return;
+		return 0;
 
 	/* Build the dialog */
 	dia = buildparamdialog(w, x, y);
@@ -125,6 +125,9 @@ void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 				break;
 		}
 
+		if (rebuild == DKEY_QUIT) {
+			key = DKEY_QUIT;
+		}
 		if (rebuild == 2) {
 			/* Redraw the side panel */
 			drawsidepanel(d, PANEL_STATS_DIALOG);
@@ -140,9 +143,10 @@ void modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 			dia = buildparamdialog(w, x, y);
 			dia.curoption = curoption;
 		}
-	} while (key != DKEY_ESC);
+	} while (key != DKEY_ESC && key != DKEY_QUIT);
 
 	dialogFree(&dia);
+	return key;
 }
 
 stringvector programtosvector(ZZTparam * p, int editwidth)
@@ -233,7 +237,7 @@ ZZTparam svectortoprogram(stringvector sv)
 	return p;
 }
 
-void editprogram(displaymethod * d, ZZTparam * p)
+int editprogram(displaymethod * d, ZZTparam * p)
 {
 	texteditor * editor;
 	stringvector sv;
@@ -243,7 +247,7 @@ void editprogram(displaymethod * d, ZZTparam * p)
 	editor = createtexteditor("Program Editor", &sv, d);
 
 	/* Now that the node is full, we can edit it. */
-	textedit(editor);
+	int result = textedit(editor);
 
 	/* Okay, let's put the vector back in program */
 	newparam = svectortoprogram(*editor->text);
@@ -258,6 +262,7 @@ void editprogram(displaymethod * d, ZZTparam * p)
 
 	p->length = newparam.length;
 	p->program = newparam.program;
+	return result;
 }
 
 
@@ -545,13 +550,20 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 
 	switch (opt->id) {
 		case ID_PROGRAM:
-			editprogram(d, tile.param);
+			if (editprogram(d, tile.param) == DKEY_QUIT)
+				return DKEY_QUIT;
 			return 2;
-		case ZZT_DATAUSE_PASSAGEDEST:
-			tile.param->data[2] = boarddialog(w, tile.param->data[2], "Passage Destination", 0, d);
+		case ZZT_DATAUSE_PASSAGEDEST: {
+			int result = boarddialog(w, tile.param->data[2], "Passage Destination", 0, d);
+			if (result == DKEY_QUIT)
+				return DKEY_QUIT;
+			tile.param->data[2] = result;
 			return 2;
+		}
 		case ZZT_DATAUSE_CHAR:
 			num = charselect(d, tile.param->data[0]);
+			if (num == DKEY_QUIT)
+				return DKEY_QUIT;
 			if (num != -1)
 				tile.param->data[0] = num;
 			return 1;
@@ -582,10 +594,11 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 		case ID_CYCLE:
 		case ID_DATA0:
 		case ID_DATA1:
-		case ID_DATA2:
+		case ID_DATA2: {
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
-			if (dialogComponentEdit(d, opt, 3, LINED_NUMBER) == LINED_OK) {
+			int result = dialogComponentEdit(d, opt, 3, LINED_NUMBER);
+			if (result == LINED_OK) {
 				sscanf(opt->text, "%d", &num);
 				/* No exceeding the bounds of an 8-bit number */
 				if (num > 255) num = 255;
@@ -608,15 +621,19 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 						tile.param->data[zztParamDatauseLocate(opt->id)] = num;
 						break;
 				}
+			} else if (result == LINED_QUIT) {
+				return DKEY_QUIT;
 			}
 			return 1;
+		}
 		/* signed 8-bit values -- ack! */
 		case ID_XSTEP:
-		case ID_YSTEP:
+		case ID_YSTEP: {
 			/* almost like regular 8-bits... */
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
-			if (dialogComponentEdit(d, opt, 4, LINED_SNUMBER) == LINED_OK) {
+			int result = dialogComponentEdit(d, opt, 4, LINED_SNUMBER);
+			if (result == LINED_OK) {
 				sscanf(opt->text, "%d", &num);
 				/* No exceeding the bounds of a signed 8-bit number */
 				if (num > 127) num = 127;
@@ -625,11 +642,15 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 				if (opt->text[0] == '\x0') num = 0;
 				if (opt->id == ID_XSTEP) tile.param->xstep = num;
 				else tile.param->ystep = num;
+			} else if (result == LINED_QUIT) {
+				return DKEY_QUIT;
 			}
 			return 1;
-		case ID_FIRERATE:
+		}
+		case ID_FIRERATE: {
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
-			if (dialogComponentEdit(d, opt, 3, LINED_NUMBER) == LINED_OK) {
+			int result = dialogComponentEdit(d, opt, 3, LINED_NUMBER);
+			if (result == LINED_OK) {
 				int firerateindex = zztParamDatauseLocate(ZZT_DATAUSE_FIRERATEMODE);
 				sscanf(opt->text, "%d", &num);
 				/* No exceeding the bounds of a 7-bit number */
@@ -639,31 +660,42 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 
 				tile.param->data[firerateindex] &= 0x80;
 				tile.param->data[firerateindex] |= num;
+			} else if (result == LINED_QUIT) {
+				return DKEY_QUIT;
 			}
 			return 1;
-		case ID_BIND:
+		}
+		case ID_BIND: {
 			num = tile.param->bindindex;
 			if (num == 0)
 				num = -1;  /* For #bind, 0 means none */
 
-			num = paramlistdialog(d, zztBoardGetBlock(w), num, "Select object to bind with");
+			int result = paramlistdialog(d, zztBoardGetBlock(w), num, "Select object to bind with");
+			if (result == DKEY_QUIT)
+				return DKEY_QUIT;
 
+			num = result;
 			if (num == -1)
 				num = 0;
 			tile.param->bindindex = num;
 			return 1;
-		case ID_INSTRUCTION:
+		}
+		case ID_INSTRUCTION: {
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
-			if (dialogComponentEdit(d, opt, 6, LINED_SNUMBER) == LINED_OK) {
+			int result = dialogComponentEdit(d, opt, 6, LINED_SNUMBER);
+			if (result == LINED_OK) {
 				sscanf(opt->text, "%d", &num);
 				/* zero's are special */
 				if (opt->text[0] == '\x0') num = 0;
 					tile.param->instruction = num;
+			} else if (result == LINED_QUIT) {
+				return DKEY_QUIT;
 			}
 			return 1;
+		}
 		case ID_LEADER:
-		case ID_FOLLOWER:
+		case ID_FOLLOWER: {
 			if (opt->id == ID_LEADER)
 				num = tile.param->leaderindex;
 			else
@@ -671,8 +703,12 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			if (num == 0xFFFF)
 				num = -1;  /* For #bind, 0 means none */
 
-			num = paramlistdialog(d, zztBoardGetBlock(w), num, "Select object to bind with");
+			int result = paramlistdialog(d, zztBoardGetBlock(w), num, "Select object to bind with");
+			if (result == DKEY_QUIT) {
+				return DKEY_QUIT;
+			}
 
+			num = result;
 			if (num == -1)
 				num = 0xFFFF;
 			if (opt->id == ID_LEADER)
@@ -680,6 +716,7 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			else
 				tile.param->followerindex = num;
 			return 1;
+		}
 		case ID_PROJECTILE:
 			tile.param->data[zztParamDatauseLocate(ZZT_DATAUSE_FIRERATEMODE)] ^= 0x80;
 			return 1;
@@ -768,7 +805,7 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 
 /* Tile info dialog */
 
-void tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
+int tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 {
 	dialog dia;
 	int key;
@@ -796,6 +833,10 @@ void tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 				break;
 		}
 
+		if (rebuild == DKEY_QUIT) {
+			key = DKEY_QUIT;
+			break;
+		}
 		if (rebuild) {
 			/* Rebuild dialog */
 			rebuild = 0;
@@ -803,9 +844,10 @@ void tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 			dialogFree(&dia);
 			dia = buildtileinfodialog(w, x, y);
 		}
-	} while (key != DKEY_ESC);
+	} while (key != DKEY_ESC && key != DKEY_QUIT);
 
 	dialogFree(&dia);
+	return key;
 }
 
 const char * _color_name_table[] = {
@@ -851,9 +893,11 @@ int selectcolor(displaymethod * d, int color)
 	tcolor.bg    = colorbg(color);
 	tcolor.blink = colorblink(color);
 
-	if (!colorselector(d, &tcolor))
+	int result = colorselector(d, &tcolor);
+	if (result == DKEY_QUIT)
+		return DKEY_QUIT;
+	if (!result)
 		return encodecolor(tcolor);
-
 	return -1;
 }
 
@@ -872,9 +916,12 @@ int selecttiletype(displaymethod * d, int type)
 	svmoveby(&list, type);
 
 	/* Make user select a type */
-	if (scrolldialog("Change Tile Type", &list, d) == EDITBOX_OK) {
+	int result = scrolldialog("Change Tile Type", &list, d);
+	if (result == EDITBOX_OK) {
 		/* Retrieve the new type */
 		type = svgetposition(&list);
+	} else if (result == EDITBOX_QUIT) {
+		type = DKEY_QUIT;
 	} else {
 		type = -1;
 	}
@@ -986,6 +1033,7 @@ int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComp
 			i = selecttiletype(d, t.type);
 
 			if (i == -1) return 0;
+			if (i == DKEY_QUIT) return DKEY_QUIT;
 
 			t.type = i;
 			/* Update changes if the new type is valid */
@@ -1006,7 +1054,9 @@ int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComp
 
 			/* Edit the type in decimal */
 			sprintf(opt->text, "%d", t.type);
-			dialogComponentEdit(d, opt, 3, LINED_NUMBER);
+			if(dialogComponentEdit(d, opt, 3, LINED_NUMBER) == LINED_QUIT) {
+				return DKEY_QUIT;
+			}
 			sscanf(opt->text, "%d", &i);
 
 			/* Max value of 255 */
@@ -1021,6 +1071,8 @@ int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComp
 
 		case ID_COLOR:
 			i = selectcolor(d, t.color);
+			if (i == DKEY_QUIT)
+				return DKEY_QUIT;
 			if (i == -1)
 				return 0;
 
@@ -1044,12 +1096,14 @@ int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComp
 			return 1;
 
 		case ID_EDITPARAM:
-			modifyparam(d, w, x, y);
+			if (modifyparam(d, w, x, y) == DKEY_QUIT)
+				return DKEY_QUIT;
 			drawsidepanel(d, PANEL_TILE_INFO);
 			return 1;
 
 		case ID_UTYPE:
 			i = selecttiletype(d, t.param->utype);
+			if (i == DKEY_QUIT) return DKEY_QUIT;
 			if (i == -1) return 0;
 
 			/* Directly modify value */
@@ -1058,6 +1112,7 @@ int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComp
 
 		case ID_UCOLOR:
 			i = selectcolor(d, t.param->ucolor);
+			if (i == DKEY_QUIT) return DKEY_QUIT;
 			if (i == -1)
 				return 0;
 
@@ -1173,6 +1228,8 @@ int paramlistdialog(displaymethod * d, ZZTblock * block, int curparam, char * ti
 	/* Change the current param if the user okay */
 	if (response == EDITBOX_OK) {
 		curparam = svgetposition(&paramlist) - 1;
+	} else if (response == EDITBOX_QUIT) {
+		curparam = DKEY_QUIT;
 	}
 
 	/* Free up all that memory we used */
@@ -1181,7 +1238,7 @@ int paramlistdialog(displaymethod * d, ZZTblock * block, int curparam, char * ti
 	return curparam;
 }
 
-void statsinfo(displaymethod * d, ZZTworld * w)
+int statsinfo(displaymethod * d, ZZTworld * w)
 {
 	ZZTblock * block = zztBoardGetBlock(w);
 	stringvector paramlist;
@@ -1201,11 +1258,14 @@ void statsinfo(displaymethod * d, ZZTworld * w)
 				continue;
 
 			/* Modify the param */
-			modifyparam(d, w, param->x, param->y);
+			if(modifyparam(d, w, param->x, param->y) == DKEY_QUIT)
+				response = EDITBOX_QUIT;
 		}
-	} while (response != EDITBOX_CANCEL);
+	} while (response != EDITBOX_CANCEL && response != EDITBOX_QUIT);
 
 	/* Free up all that memory we used */
 	deletestringvector(&paramlist);
+
+	return response;
 }
 

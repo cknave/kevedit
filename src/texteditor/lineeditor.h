@@ -43,6 +43,7 @@
 #define LINED_SNUMBER  LINED_NOALPHA | LINED_NOSPACES | LINED_NOPERIOD
 
 /* Return values. */
+#define LINED_QUIT   2  /**< User cancelled and requested quit. */
 #define LINED_CANCEL 1  /**< User cancelled input, so disregard value of line. */
 #define LINED_OK     0  /**< User confirmed input. */
 

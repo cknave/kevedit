@@ -64,12 +64,17 @@
 #define BRDINFO_BRDEAST  11
 #define BRDINFO_BRDWEST  12
 
+#define UPDATE_NONE 0
+#define UPDATE_DIALOG 1
+#define UPDATE_SCREEN 2
+#define UPDATE_QUIT 3
+
 dialog buildboardinfodialog(ZZTworld * myworld);
 int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt);
 int boardinfodeltaoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt, int delta);
 int boardinfostaroption(ZZTworld* myworld, dialogComponent* opt);
 
-void editboardinfo(ZZTworld* myworld, displaymethod* d)
+int editboardinfo(ZZTworld* myworld, displaymethod* d)
 {
 	dialog dia;
 	int key;
@@ -123,8 +128,13 @@ void editboardinfo(ZZTworld* myworld, displaymethod* d)
 				break;
 		}
 
+		if (rebuild == UPDATE_QUIT) {
+			key = DKEY_QUIT;
+			break;
+		}
+
 		/* Rebuild of 2 means update panel as well as dialog */
-		if (rebuild == 2)
+		if (rebuild == UPDATE_SCREEN)
 			drawsidepanel(d, PANEL_BOARDINFO);
 
 		if (rebuild) {
@@ -137,9 +147,10 @@ void editboardinfo(ZZTworld* myworld, displaymethod* d)
 			dia = buildboardinfodialog(myworld);
 			dia.curoption = curoption;
 		}
-	} while (key != DKEY_ESC);
+	} while (key != DKEY_ESC && key != DKEY_QUIT);
 
 	dialogFree(&dia);
+	return key;
 }
 
 dialog buildboardinfodialog(ZZTworld * myworld)
@@ -272,6 +283,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 
 int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt)
 {
+	int edit_result = -1;
 	switch (opt->id) {
 		case BRDINFO_TITLE:
 			/* Change the title of the board */
@@ -279,48 +291,77 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 			 * but this would display poorly in any editor, so we'll
 			 * use the width of a text-box (42) as the maximum. */
 			opt->x = 0; opt->color = 0x0F;
-			if (dialogComponentEdit(d, opt, 42, LINED_NORMAL) == LINED_OK)
+			edit_result = dialogComponentEdit(d, opt, 42, LINED_NORMAL);
+			if(edit_result == LINED_OK) {
 				zztBoardSetTitle(myworld, opt->text);
-			/* Update */
-			return 1;
+				return UPDATE_DIALOG;
+			}
+			break;
 
 		case BRDINFO_MESSAGE:
 			/* 58 chars is the actual limit, but 42 is enough */
-			if (dialogComponentEdit(d, opt, 42, LINED_NORMAL) == LINED_OK)
+			edit_result = dialogComponentEdit(d, opt, 42, LINED_NORMAL);
+			if(edit_result == LINED_OK) {
 				zztBoardSetMessage(myworld, opt->text);
-			/* Update */
-			return 1;
+				return UPDATE_DIALOG;
+			}
+			break;
 
-		case BRDINFO_BRDNORTH:
-			zztBoardSetBoard_n(myworld, boarddialog(myworld, zztBoardGetBoard_n(myworld), "Board to the North", 1, d));
-			return 2;
+		case BRDINFO_BRDNORTH: {
+			int board = boarddialog(myworld, zztBoardGetBoard_n(myworld), "Board to the North", 1, d);
+			if(board == DKEY_QUIT) {
+				return UPDATE_QUIT;
+			} else {
+				zztBoardSetBoard_n(myworld, board);
+				return UPDATE_SCREEN;
+			}
+		}
 
-		case BRDINFO_BRDSOUTH:
-			zztBoardSetBoard_s(myworld, boarddialog(myworld, zztBoardGetBoard_s(myworld), "Board to the South", 1, d));
-			return 2;
+		case BRDINFO_BRDSOUTH:{
+			int board = boarddialog(myworld, zztBoardGetBoard_s(myworld), "Board to the North", 1, d);
+			if(board == DKEY_QUIT) {
+				return UPDATE_QUIT;
+			} else {
+				zztBoardSetBoard_s(myworld, board);
+				return UPDATE_SCREEN;
+			}
+		}
 
-		case BRDINFO_BRDEAST:
-			zztBoardSetBoard_e(myworld, boarddialog(myworld, zztBoardGetBoard_e(myworld), "Board to the East", 1, d));
-			return 2;
+		case BRDINFO_BRDEAST:{
+			int board = boarddialog(myworld, zztBoardGetBoard_e(myworld), "Board to the North", 1, d);
+			if(board == DKEY_QUIT) {
+				return UPDATE_QUIT;
+			} else {
+				zztBoardSetBoard_e(myworld, board);
+				return UPDATE_SCREEN;
+			}
+		}
 
-		case BRDINFO_BRDWEST:
-			zztBoardSetBoard_w(myworld, boarddialog(myworld, zztBoardGetBoard_w(myworld), "Board to the West", 1, d));
-			return 2;
+		case BRDINFO_BRDWEST:{
+			int board = boarddialog(myworld, zztBoardGetBoard_w(myworld), "Board to the North", 1, d);
+			if(board == DKEY_QUIT) {
+				return UPDATE_QUIT;
+			} else {
+				zztBoardSetBoard_w(myworld, board);
+				return UPDATE_SCREEN;
+			}
+		}
 
 		case BRDINFO_DARKNESS:
 			zztBoardSetDarkness(myworld, !zztBoardGetDarkness(myworld));
-			return 1;
+			return UPDATE_DIALOG;
 
 		case BRDINFO_REENTER:
 			zztBoardSetReenter(myworld, !zztBoardGetReenter(myworld));
-			return 1;
+			return UPDATE_DIALOG;
 
 		case BRDINFO_REENTERX:
 		case BRDINFO_REENTERY:
 		case BRDINFO_MAXSHOTS:
 			if (opt->text[0] == '0') /* If the number is zero */
 				opt->text[0] = '\x0';  /* Clear the text */
-			if (dialogComponentEdit(d, opt, 3, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES) == LINED_OK) {
+            edit_result = dialogComponentEdit(d, opt, 3, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES);
+			if (edit_result == LINED_OK) {
 				int number;
 				sscanf(opt->text, "%d", &number);
 				if (strlen(opt->text) == 0)
@@ -333,8 +374,9 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 					case BRDINFO_REENTERY: zztBoardSetReenter_y(myworld, number-1); break;
 					case BRDINFO_MAXSHOTS: zztBoardSetMaxshots (myworld, number); break;
 				}
+                return UPDATE_DIALOG;
 			}
-			return 1;
+            break;
 
 		case BRDINFO_TIMELIM:
 			if (zztBoardGetTimelimit(myworld) == 0) {
@@ -343,7 +385,8 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 				d->print(opt->x + 9, opt->y + 6, 0x00, "          ");
 			}
 
-			if (dialogComponentEdit(d, opt, 5, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES) == LINED_OK) {
+			edit_result = dialogComponentEdit(d, opt, 5, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES);
+            if (edit_result == LINED_OK) {
 				long int timelimit;
 				sscanf(opt->text, "%ld", &timelimit);
 				if (strlen(opt->text) == 0)
@@ -352,10 +395,15 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 					zztBoardSetTimelimit(myworld, 32767);
 				else
 					zztBoardSetTimelimit(myworld, timelimit);
+                return UPDATE_DIALOG;
 			}
-			return 1;
+            break;
 	}
-	return 0;
+	if(edit_result == -1)
+		return UPDATE_NONE;
+	if(edit_result == LINED_QUIT)
+		return UPDATE_QUIT;
+	return UPDATE_DIALOG;
 }
 
 int boardinfodeltaoption(displaymethod * d, ZZTworld* myworld, dialogComponent* opt, int delta)
@@ -453,14 +501,14 @@ int boardinfostaroption(ZZTworld* myworld, dialogComponent* opt)
 void drawstaticworldinfo(displaymethod* d);
 void drawworldinfo(ZZTworld* myworld, displaymethod* d);
 int worldinfoeditoption(int curoption, ZZTworld* myworld,
-												int cursorx, int cursory, displaymethod* d);
+		int cursorx, int cursory, displaymethod* d);
 int worldinfodirectionoption(int curoption, ZZTworld* myworld,
-												int cursorx, int cursory, int dir, displaymethod* d);
+		int cursorx, int cursory, int dir, displaymethod* d);
 void worldinfotogglekey(ZZTworld* myworld, int whichkey);
-void editworldflags(ZZTworld* myworld, displaymethod* d);
+int editworldflags(ZZTworld* myworld, displaymethod* d);
 
 /* editworldinfo() - brings up dialog box for editing world info */
-void editworldinfo(ZZTworld* myworld, displaymethod* d)
+int editworldinfo(ZZTworld* myworld, displaymethod* d)
 {
 	int curoption = WLDINFO_NAME;
 	int cursorx, cursory;
@@ -471,9 +519,8 @@ void editworldinfo(ZZTworld* myworld, displaymethod* d)
 
 	cursorx = 31;
 
+	int key;
 	do {
-		int key;
-
 		/* Position the cursors */
 		cursory = curoption + 6;
 		if (curoption > WLDINFO_NAME)
@@ -514,59 +561,47 @@ void editworldinfo(ZZTworld* myworld, displaymethod* d)
 				break;
 
 			case DKEY_ESC:
+			case DKEY_QUIT:
 				done = 1;
 				break;
 		}
 
 		if (curoption != WLDINFO_KEYS) {
+			int result;
 			switch (key) {
 				case DKEY_ENTER:
-					if (worldinfoeditoption(curoption, myworld,
-																	cursorx, cursory, d)) {
-						drawstaticworldinfo(d);
-						drawworldinfo(myworld, d);
-					}
+					result = worldinfoeditoption(curoption, myworld, cursorx, cursory, d);
 					break;
 
 				case DKEY_LEFT:
-					if (worldinfodirectionoption(curoption, myworld,
-																			 cursorx, cursory, -10, d)) {
-						drawstaticworldinfo(d);
-						drawworldinfo(myworld, d);
-					}
+					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, -10, d);
 					break;
 
 				case '-':
-					if (worldinfodirectionoption(curoption, myworld,
-																			 cursorx, cursory, -1, d)) {
-						drawstaticworldinfo(d);
-						drawworldinfo(myworld, d);
-					}
+					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, -1, d);
 					break;
 
 				case DKEY_RIGHT:
-					if (worldinfodirectionoption(curoption, myworld,
-																			 cursorx, cursory, 10, d)) {
-						drawstaticworldinfo(d);
-						drawworldinfo(myworld, d);
-					}
+					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, 10, d);
 					break;
 
 				case '+':
-					if (worldinfodirectionoption(curoption, myworld,
-																			 cursorx, cursory, 1, d)) {
-						drawstaticworldinfo(d);
-						drawworldinfo(myworld, d);
-					}
+					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, 1, d);
 					break;
 
 				case DKEY_F1:
 					helpsectiontopic("kwldinfo", NULL, d);
-					drawstaticworldinfo(d);
-					drawworldinfo(myworld, d);
+					result = 1;
 					break;
 			}
-
+			if(result != 0) {
+				drawstaticworldinfo(d);
+				drawworldinfo(myworld, d);
+			}
+			if(result == DKEY_QUIT) {
+				done = 1;
+				key = DKEY_QUIT;
+			}
 		} else {
 			/* Current option is BRDINFO_KEYS */
 
@@ -585,6 +620,7 @@ void editworldinfo(ZZTworld* myworld, displaymethod* d)
 			}
 		}
 	} while (!done);
+	return key;
 }
 
 void drawstaticworldinfo(displaymethod* d)
@@ -653,80 +689,86 @@ void drawworldinfo(ZZTworld* myworld, displaymethod* d)
 }
 
 int worldinfoeditoption(int curoption, ZZTworld* myworld,
-												int cursorx, int cursory, displaymethod* d)
+		int cursorx, int cursory, displaymethod* d)
 {
 	int tempnum;
 	char buffer[35];
 	ZZTworldinfo * header = myworld->header;
 
+	int lined_result = -1;
 	switch (curoption) {
 		case WLDINFO_NAME:
 			/* Change the title of the board */
 			strcpy(buffer, header->title);
-			if (line_editor(cursorx, cursory, 0x0f, buffer, 19, LINED_NORMAL, d)
-					== LINED_OK) {
+			lined_result = line_editor(cursorx, cursory, 0x0f, buffer, 19, LINED_NORMAL, d);
+			if(lined_result == LINED_OK) {
 				zztWorldSetTitle(myworld, buffer);
 			}
-			/* Update */
-			return 1;
+			break;
 
 		case WLDINFO_ISSAVED:
 			header->savegame = !header->savegame;
 			return 1;
 
 		case WLDINFO_FLAGS:
-			editworldflags(myworld, d);
+			if(editworldflags(myworld, d) == DKEY_QUIT) {
+				return DKEY_QUIT;
+			}
 			return 1;
 
 		case WLDINFO_AMMO:
 			tempnum = header->ammo;
-			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->ammo = tempnum;
-			return 1;
+			break;
 
 		case WLDINFO_GEMS:
 			tempnum = header->gems;
-			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->gems = tempnum;
-			return 1;
+			break;
 
 		case WLDINFO_HEALTH:
 			tempnum = header->health;
-			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->health = tempnum;
-			return 1;
+			break;
 
 		case WLDINFO_TORCHES:
 			tempnum = header->torches;
-			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->torches = tempnum;
-			return 1;
+			break;
 
 		case WLDINFO_SCORE:
 			tempnum = header->score;
-			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->score = tempnum;
-			return 1;
+			break;
 
 		case WLDINFO_TCYCLES:
 			tempnum = header->torchcycles;
-			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->torchcycles = tempnum;
-			return 1;
+			break;
 
 		case WLDINFO_ECYCLES:
 			tempnum = header->energizercycles;
-			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->energizercycles = tempnum;
 			return 1;
 
 		case WLDINFO_TIMEPASSED:
 			tempnum = header->timepassed;
-			line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->timepassed = tempnum;
-			return 1;
+			break;
 	}
 
+	if(lined_result == LINED_OK)
+		return 1;
+	if(lined_result == LINED_QUIT)
+		return DKEY_QUIT;
 	return 0;
 }
 
@@ -786,7 +828,7 @@ void worldflagedit(int curoption, ZZTworld* myworld,
 									 int cursorx, int cursory, displaymethod* d);
 void worldflagclear(int curoption, ZZTworld* myworld);
 
-void editworldflags(ZZTworld* myworld, displaymethod* d)
+int editworldflags(ZZTworld* myworld, displaymethod* d)
 {
 	int curoption = 0;
 	int cursorx, cursory;
@@ -797,9 +839,8 @@ void editworldflags(ZZTworld* myworld, displaymethod* d)
 
 	cursorx = 31;
 
+	int key;
 	do {
-		int key;
-
 		/* Position the cursor */
 		cursory = curoption + 9;
 
@@ -828,6 +869,7 @@ void editworldflags(ZZTworld* myworld, displaymethod* d)
 				break;
 
 			case DKEY_ESC:
+			case DKEY_QUIT:
 				done = 1;
 				break;
 
@@ -845,6 +887,7 @@ void editworldflags(ZZTworld* myworld, displaymethod* d)
 				break;
 		}
 	} while (!done);
+	return key;
 }
 
 void drawstaticflags(displaymethod * d)

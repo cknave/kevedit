@@ -128,7 +128,7 @@ texteditor * createtexteditor(char * title, stringvector * text, displaymethod *
 void deletetexteditor(texteditor * editor);
 void deletetexteditortext(texteditor * editor);
 
-void textedit(texteditor * editor);
+int textedit(texteditor * editor);
 
 /* For now, just use the real EDITBOX */
 #include "editbox.h"

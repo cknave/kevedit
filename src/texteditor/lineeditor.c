@@ -107,7 +107,7 @@ void deletelineeditor(lineeditor * editor)
  * @relates lineeditor
  * @brief Perform editing using a lineeditor.
  *
- * @returns Either LINED_OK or LINED_CANCEL.
+ * @returns Either LINED_OK, LINED_CANCEL, or LINED_QUIT.
  **/
 int editline(lineeditor * editor)
 {
@@ -129,6 +129,9 @@ int editline(lineeditor * editor)
 			/* Escape means done, but result should be ignored. */
 			case DKEY_ESC:
 				return LINED_CANCEL;
+
+			case DKEY_QUIT:
+				return LINED_QUIT;
 
 			/* Handle the key using the lineeditor. */
 			default:

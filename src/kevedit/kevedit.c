@@ -428,6 +428,8 @@ void keveditHandleNumberKeys(keveditor * myeditor)
 
 void keveditHandleKeypress(keveditor * myeditor)
 {
+	int next_key = DKEY_NONE;
+
 	/* Act on key pressed */
 	switch (myeditor->key) {
 		case DKEY_NONE:
@@ -446,38 +448,47 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 		case 'q':
 		case 'Q':
+		case DKEY_QUIT: {
 			/* Quit */
-			if (confirmprompt(myeditor->mydisplay, "Quit?") == CONFIRM_YES) {
+			int result = confirmprompt(myeditor->mydisplay, "Quit?");
+			if(result == CONFIRM_YES || result == CONFIRM_QUIT) {
 				myeditor->quitflag = 1;
 			} else {
 				myeditor->updateflags |= UD_PANEL;
 			}
 			break;
+		}
 		case 'n':
-		case 'N':
-			if (confirmprompt(myeditor->mydisplay, "Make new world?") == CONFIRM_YES) {
+		case 'N': {
+			int result = confirmprompt(myeditor->mydisplay, "Make new world?");
+			if (result == CONFIRM_YES) {
 				myeditor->myworld = clearworld(myeditor->myworld);
-
 				myeditor->updateflags |= UD_BOARD;
+			} else if (result == CONFIRM_QUIT) {
+				next_key = DKEY_QUIT;
 			}
 
 			myeditor->updateflags |= UD_PANEL;
 			break;
+		}
 		case 'z':
-		case 'Z':
-			if (confirmprompt(myeditor->mydisplay, "Clear board?") == CONFIRM_YES) {
+		case 'Z': {
+			int result = confirmprompt(myeditor->mydisplay, "Clear board?");
+			if (result == CONFIRM_YES) {
 				clearboard(myeditor->myworld);
-
 				myeditor->updateflags |= UD_BOARD;
+			} else if (result == CONFIRM_QUIT) {
+				next_key = DKEY_QUIT;
 			}
 
 			myeditor->updateflags |= UD_PANEL;
 			break;
-
+		}
 		case 'b':
 		case 'B':
-			switchboard(myeditor->myworld, myeditor->mydisplay);
-
+			if(switchboard(myeditor->myworld, myeditor->mydisplay) == DKEY_QUIT) {
+				next_key = DKEY_QUIT;
+			}
 			myeditor->updateflags |= UD_ALL | UD_BOARDTITLE;
 			break;
 		case DKEY_PAGEDOWN:
@@ -496,27 +507,27 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case 'i':
 		case 'I':
 			/* Board Info */
-			editboardinfo(myeditor->myworld, myeditor->mydisplay);
-
+			next_key = editboardinfo(myeditor->myworld, myeditor->mydisplay);
 			myeditor->updateflags |= UD_ALL;
 			break;
 		case 'w':
 		case 'W':
 			/* World Info */
-			editworldinfo(myeditor->myworld, myeditor->mydisplay);
+			next_key = editworldinfo(myeditor->myworld, myeditor->mydisplay);
 
 			myeditor->updateflags |= UD_ALL | UD_WORLDTITLE;
 			break;
 		case DKEY_CTRL_T:
 			/* Tile Info */
-			tileinfo(myeditor->mydisplay, myeditor->myworld, myeditor->cursorx, myeditor->cursory);
+			next_key = tileinfo(myeditor->mydisplay, myeditor->myworld, myeditor->cursorx, myeditor->cursory);
 
 			myeditor->updateflags |= UD_ALL;
 			break;
 
 		case DKEY_CTRL_S:
 			/* Stats Info */
-			statsinfo(myeditor->mydisplay, myeditor->myworld);
+			if (statsinfo(myeditor->mydisplay, myeditor->myworld) == EDITBOX_QUIT)
+				next_key = DKEY_QUIT;
 
 			myeditor->updateflags |= UD_ALL;
 			break;
@@ -526,27 +537,30 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case 's':
 		case 'S':
 			/* Save world */
-			saveworld(myeditor->mydisplay, myeditor->myworld);
+			next_key = saveworld(myeditor->mydisplay, myeditor->myworld);
 			myeditor->updateflags |= UD_ALL | UD_WORLDTITLE;
 			break;
 		case 'l':
-		case 'L':
+		case 'L': {
 			/* Load world */
-			myeditor->myworld = loadworld(myeditor->mydisplay, myeditor->myworld);
+			bool quit = false;
+			myeditor->myworld = loadworld(myeditor->mydisplay, myeditor->myworld, &quit);
+			if(quit) {
+				next_key = DKEY_QUIT;
+			}
 			myeditor->updateflags |= UD_ALL | UD_BOARDTITLE | UD_WORLDTITLE;
 			break;
+		}
 		case 't':
 		case 'T':
 			/* Transfer board */
-			boardtransfer(myeditor->mydisplay, myeditor->myworld);
-
+			next_key = boardtransfer(myeditor->mydisplay, myeditor->myworld);
 			myeditor->updateflags |= UD_ALL | UD_BOARDTITLE;
 			break;
 		case 'o':
 		case 'O':
 			/* Load object from library */
-			objectlibrarymenu(myeditor);
-			
+			next_key = objectlibrarymenu(myeditor);
 			myeditor->updateflags |= UD_ALL;
 			break;
 
@@ -572,7 +586,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case 'K':
 		case DKEY_CTRL_K:
 			/* Kolor selector */
-			colorselector(myeditor->mydisplay, &(myeditor->color));
+			next_key = colorselector(myeditor->mydisplay, &(myeditor->color));
 			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 
 			myeditor->updateflags |= UD_COLOR | UD_BOARD;
@@ -597,7 +611,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case 'h':
 		case 'H':
 			/* Help */
-			help(myeditor->mydisplay);
+			next_key = help(myeditor->mydisplay);
 
 			myeditor->updateflags |= UD_ALL;
 			break;
@@ -616,13 +630,13 @@ void keveditHandleKeypress(keveditor * myeditor)
 			break;
 		case '!':
 			/* Open text editor */
-			texteditordialog(myeditor->mydisplay);
+			next_key = texteditordialog(myeditor->mydisplay);
 
 			myeditor->updateflags |= UD_ALL;
 			break;
 		case DKEY_CTRL_O:
 			/* Show all objects */
-			showObjects(myeditor);
+			next_key = showObjects(myeditor);
 
 			myeditor->updateflags |= UD_BOARD;
 			break;
@@ -665,7 +679,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 			break;
 		case 'g':
 		case 'G':
-			dogradient(myeditor);
+			next_key = dogradient(myeditor);
 			myeditor->updateflags |= UD_ALL;
 			break;
 
@@ -674,7 +688,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 			break;
 
 		case DKEY_CTRL_V:
-			paste(myeditor);
+			next_key = paste(myeditor);
 			break;
 
 		case DKEY_CTRL_X:
@@ -749,17 +763,17 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 		case DKEY_F1:
 			/* F1 panel */
-			itemmenu(myeditor);
+			next_key = itemmenu(myeditor);
 			myeditor->updateflags |= UD_ALL;  /* TODO: can we narrow this down? */
 			break;
 		case DKEY_F2:
 			/* F2 panel */
-			creaturemenu(myeditor);
+			next_key = creaturemenu(myeditor);
 			myeditor->updateflags |= UD_ALL;  /* TODO: can we narrow this down? */
 			break;
 		case DKEY_F3:
 			/* F3 panel */
-			terrainmenu(myeditor);
+			next_key = terrainmenu(myeditor);
 			myeditor->updateflags |= UD_ALL;  /* TODO: can we narrow this down? */
 			break;
 		case DKEY_F4:
@@ -770,7 +784,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 		case DKEY_ENTER:
 			/* Modify / Grab */
-			modifyparam(myeditor->mydisplay, myeditor->myworld, myeditor->cursorx, myeditor->cursory);
+			next_key = modifyparam(myeditor->mydisplay, myeditor->myworld, myeditor->cursorx, myeditor->cursory);
 
 			/* TODO: if the current tile is text, edit the char */
 
@@ -794,6 +808,12 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 			myeditor->updateflags |= UD_PATTERNS;
 			break;
+	}
+
+	/* Pass through quit immediately. */
+	if(next_key == DKEY_QUIT) {
+		myeditor->key = DKEY_QUIT;
+		keveditHandleKeypress(myeditor);
 	}
 }
 

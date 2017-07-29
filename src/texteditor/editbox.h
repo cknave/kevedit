@@ -30,7 +30,8 @@
 #define EDITBOX_FORWARD  3     /* RIGHT-ARROW */
 #define EDITBOX_BACK     4     /* BACKSPACE */
 #define EDITBOX_BACKWARD 5     /* LEFT-ARROW */
-#define EDITBOX_HELP     6     /* F1 */
+#define EDITBOX_HELP     6     /** F1 */
+#define EDITBOX_QUIT     7     /* User requested to quit KevEdit */
 
 /* Flags */
 #define EDITBOX_ZOCMODE  1     /* Use ZZT markup / syntax highlighting */

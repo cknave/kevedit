@@ -363,6 +363,10 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 				else
 					done = EDITBOX_CANCEL;
 				break;
+
+			case DKEY_QUIT:
+				done = EDITBOX_QUIT;
+				break;
 		}
 
 		/* Keys pertaining to browsing only */
@@ -583,14 +587,19 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 							break;
 						}
 
-						if (filetypelist.cur != NULL)
-							filename =
-								filedialog(".", filetypelist.cur->s + 2,
-													 (key == DKEY_ALT_O ?
-													   "Open ZZT Object Code (ZOC) File" :
-													   "Insert ZZT Object Code (ZOC) File"),
-													 FTYPE_ALL, d);
-
+						if (filetypelist.cur != NULL) {
+                            bool quit = false;
+                            filename =
+                                    filedialog(".", filetypelist.cur->s + 2,
+                                               (key == DKEY_ALT_O ?
+                                                "Open ZZT Object Code (ZOC) File" :
+                                                "Insert ZZT Object Code (ZOC) File"),
+                                               FTYPE_ALL, d, &quit);
+                            if(quit) {
+                                done = EDITBOX_QUIT;
+                                break;
+                            }
+                        }
 						if (filename != NULL && strlen(filename) != 0) {
 							stringvector newsvector;
 							newsvector = filetosvector(filename, wrapwidth, editwidth);
@@ -632,9 +641,14 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 				case DKEY_ALT_S: /* alt-s: save to file */
 					{
+						bool quit = false;
 						char* filename;
 						filename = filenamedialog(savefilename, "", "Save Object Code As",
-																			1, d);
+																			1, d, &quit);
+						if (quit) {
+							done = EDITBOX_QUIT;
+							break;
+						}
 						if (filename != NULL) {
 							/* Save to the file */
 							svectortofile(sv, filename);
@@ -650,9 +664,14 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 				case DKEY_ALT_M: /* alt-m: load .zzm music */
 					{
+                        bool quit = false;
 						char* filename;
 						filename = filedialog(".", "zzm", "Choose ZZT Music (ZZM) File",
-																	FTYPE_ALL, d);
+																	FTYPE_ALL, d, &quit);
+                        if(quit) {
+                            done = EDITBOX_QUIT;
+                            break;
+                        }
 						if (filename != NULL) {
 							stringvector zzmv;
 							zzmv = filetosvector(filename, 80, 80);

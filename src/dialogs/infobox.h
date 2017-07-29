@@ -25,9 +25,9 @@
 #include "kevedit/kevedit.h"
 
 /* editboardinfo() - brings up dialog box for editing board info */
-void editboardinfo(ZZTworld* myworld, displaymethod* d);
+int editboardinfo(ZZTworld* myworld, displaymethod* d);
 
 /* editworldinfo() - brings up dialog box for editing world info */
-void editworldinfo(ZZTworld* myworld, displaymethod* d);
+int editworldinfo(ZZTworld* myworld, displaymethod* d);
 
 #endif
