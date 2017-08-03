@@ -22,7 +22,6 @@
 #endif
 
 #include <unistd.h>
-#include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -34,11 +33,6 @@
 #include "texteditor/register.h"
 
 #include "dialogs/files.h"
-
-/* Interrupt signal for CTRL-C (do nothing) */
-void sigInt(int i)
-{
-}
 
 ZZTworld * getWorldFromArg(char * arg, char * datapath);
 displaymethod * pickdisplay(displaymethod * rootdisplay);
@@ -59,9 +53,6 @@ int main(int argc, char **argv)
 		       mydisplay->name, mydisplay->version); 
 		return 1;
 	}
-
-	/* Trap ctrl+c */
-	signal(SIGINT, sigInt);
 
 	/* Assume DOS model of keeping program data the same dir as kevedit binary */
 	datapath = locateself(argv[0]);  
