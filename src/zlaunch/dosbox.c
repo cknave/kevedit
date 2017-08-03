@@ -31,6 +31,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 
 #define DOSBOX_EXE_NAME		"dosbox"
 #define DOSBOX_CONF_NAME	"kevedos.cfg"

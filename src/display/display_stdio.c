@@ -225,7 +225,7 @@ void display_stdio_print_help(void)
 		"\t           one of (shift, SHIFT, brief, verbose, print).\n\n"
 		;
 
-	printf(message);
+	printf("%s", message);
 }
 
 void display_stdio_print_buffer(int newlineFlag)
