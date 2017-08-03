@@ -51,7 +51,7 @@ int OpenSynth(SDL_AudioSpec * spec)
 	desired.channels = 1;
 	desired.samples = 4096;
 	desired.callback = AudioCallback;
-	desired.userdata = &obtained;
+	desired.userdata = spec;
 
 	/* Open audio device */
 	if(SDL_OpenAudio(&desired, &obtained) < 0) {
@@ -197,7 +197,7 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 	SDL_UnlockAudio();
 }
 
-void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len)
+void AudioCallback(void *userdata, Uint8 *stream, int len)
 {
 	int i;
 	for(i = 0; i < len && playbufferloc < playbuffermax; i++) {
@@ -205,7 +205,7 @@ void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len)
 		playbufferloc++;
 	}
 	for(; i < len; i++)
-		stream[i] = ((SDL_AudioSpec *) spec)->silence;
+		stream[i] = ((SDL_AudioSpec *)userdata)->silence;
 }
 
 void AudioCleanUp()

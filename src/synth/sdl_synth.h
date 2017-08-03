@@ -53,7 +53,7 @@ void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings sett
 void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds);
 
 /* Internal audio callback function (don't call manually!) */
-void AudioCallback(SDL_AudioSpec *spec, Uint8 *stream, int len);
+void AudioCallback(void *userdata, Uint8 *stream, int len);
 
 /* Cleanup memory used by audio system */
 void AudioCleanUp();
