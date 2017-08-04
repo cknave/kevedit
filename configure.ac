@@ -9,7 +9,7 @@ AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
 dnl Use automake
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
@@ -116,12 +116,35 @@ AC_CHECK_LIB(m, floor)
 dnl Check for availability of long file names
 AC_SYS_LONG_FILE_NAMES
 
-dnl Check for glob and add it to CPPFLAGS
-AC_PROG_GNU_GLOB
-CPPFLAGS="$CPPFLAGS $GLOBINC"
+dnl Check the system to see if it provides GNU glob.  If not, use our
+dnl local version.
+AC_CACHE_CHECK([if system libc has GNU glob], [make_cv_sys_gnu_glob],
+[ AC_EGREP_CPP([gnu glob],[
+#include <features.h>
+#include <glob.h>
+#include <fnmatch.h>
+
+#define GLOB_INTERFACE_VERSION 1
+#if !defined _LIBC && defined __GNU_LIBRARY__ && __GNU_LIBRARY__ > 1
+# include <gnu-versions.h>
+# if _GNU_GLOB_INTERFACE_VERSION == GLOB_INTERFACE_VERSION
+   gnu glob
+# endif
+#endif],
+        [make_cv_sys_gnu_glob=yes],
+        [make_cv_sys_gnu_glob=no])])
+AS_IF([test "$make_cv_sys_gnu_glob" = no],
+[ GLOBINC='-I../../glob'
+  GLOBLIB=../../glob/libglob.a
+])
+AC_SUBST([GLOBINC])
+AC_SUBST([GLOBLIB])
+
+# Tell automake about this, so it can build the right .c files.
+AM_CONDITIONAL([USE_LOCAL_GLOB], [test "$make_cv_sys_gnu_glob" = no])
 
 dnl Add some useful include paths
-AC_SUBST(INCLUDE_PATHS) INCLUDE_PATHS='-I$(top_srcdir)/src -I$(top_builddir)'
+AC_SUBST(INCLUDE_PATHS) INCLUDE_PATHS='-I$(top_srcdir)/src -I$(top_builddir) $(GLOBINC)'
 CPPFLAGS="$CPPFLAGS $INCLUDE_PATHS"
 
 AC_CONFIG_FILES([docs/Makefile

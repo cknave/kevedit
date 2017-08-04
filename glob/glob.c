@@ -1,23 +1,28 @@
-/* Copyright (C) 1991,92,93,94,95,96,97,98,99 Free Software Foundation, Inc.
+/* Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999 Free
+Software Foundation, Inc.
 
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Library General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Library General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
 
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Library General Public License for more details.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License for more details.
 
-   You should have received a copy of the GNU Library General Public
-   License along with this library; see the file COPYING.LIB.  If not,
-   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+You should have received a copy of the GNU Library General Public License
+along with this library; see the file COPYING.LIB.  If not, write to the Free
+Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+USA.  */
 
 /* AIX requires this to be the first thing in the file.  */
 #if defined _AIX && !defined __GNUC__
  #pragma alloca
+#endif
+
+#ifdef	HAVE_CONFIG_H
+# include <config.h>
 #endif
 
 /* Enable GNU extensions in glob.h.  */
@@ -26,12 +31,8 @@
 #endif
 
 #include <errno.h>
+#include <sys/types.h>
 #include <sys/stat.h>
-
-#ifdef	HAVE_CONFIG_H
-# include <config.h>
-#endif
-
 
 /* Outcomment the following line for production quality code.  */
 /* #define NDEBUG 1 */
@@ -69,12 +70,6 @@
 #   define POSIX
 #  endif
 # endif
-#endif
-
-/* Fix for mingw32
- * -- kvance */
-#ifdef __MINGW32__
-#define WINDOWS32
 #endif
 
 #if !defined _AMIGA && !defined VMS && !defined WINDOWS32
@@ -127,7 +122,7 @@ extern int errno;
 #endif
 
 
-#if (defined POSIX || defined WINDOWS32) && !defined __GNU_LIBRARY__
+#if (defined DOS || defined POSIX || defined WINDOWS32) && !defined __GNU_LIBRARY__
 /* Posix does not require that the d_ino field be present, and some
    systems do not provide it. */
 # define REAL_DIR_ENTRY(dp) 1
@@ -187,19 +182,20 @@ extern void bcopy ();
 # define mempcpy(Dest, Src, Len) __mempcpy (Dest, Src, Len)
 #endif
 
-#ifndef	__GNU_LIBRARY__
+#if !defined __GNU_LIBRARY__ && !defined __DJGPP__
 # ifdef	__GNUC__
 __inline
 # endif
 # ifndef __SASC
 #  ifdef WINDOWS32
 static void *
+my_realloc (void *p, unsigned int n)
 #  else
 static char *
-# endif
 my_realloc (p, n)
      char *p;
      unsigned int n;
+#  endif
 {
   /* These casts are the for sake of the broken Ultrix compiler,
      which warns of illegal pointer combinations otherwise.  */
@@ -209,7 +205,7 @@ my_realloc (p, n)
 }
 # define	realloc	my_realloc
 # endif /* __SASC */
-#endif /* __GNU_LIBRARY__ */
+#endif /* __GNU_LIBRARY__ || __DJGPP__ */
 
 
 #if !defined __alloca && !defined __GNU_LIBRARY__
@@ -305,11 +301,8 @@ static int glob_in_dir __P ((const char *pattern, const char *directory,
 static int prefix_array __P ((const char *prefix, char **array, size_t n));
 static int collated_compare __P ((const __ptr_t, const __ptr_t));
 
-#ifdef VMS
-/* these compilers like prototypes */
 #if !defined _LIBC || !defined NO_GLOB_PATTERN_P
-int __glob_pattern_p (const char *pattern, int quote);
-#endif
+int __glob_pattern_p __P ((const char *pattern, int quote));
 #endif
 
 /* Find the end of the sub-pattern in a brace expression.  We define
@@ -1309,7 +1302,7 @@ glob_in_dir (pattern, directory, flags, errfunc, pglob)
 	    {
 	      int fnm_flags = ((!(flags & GLOB_PERIOD) ? FNM_PERIOD : 0)
 			       | ((flags & GLOB_NOESCAPE) ? FNM_NOESCAPE : 0)
-#if defined _AMIGA || defined VMS
+#if defined HAVE_CASE_INSENSITIVE_FS
 				   | FNM_CASEFOLD
 #endif
 				   );
