@@ -220,8 +220,9 @@ void listRemoveAll(linkedlist * list)
 		return;
 
 	list->cur = list->last;
-	while (!listIsEmpty(list))
-		listRemoveItem(list).value;
+	while (!listIsEmpty(list)) {
+		listitem item = listRemoveItem(list);
+	}
 
 	return;
 }

@@ -26,11 +26,8 @@
 #endif
 
 #include <errno.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 
-/* Must come after sys/types.h
-   -- kvance */
 #ifdef	HAVE_CONFIG_H
 # include <config.h>
 #endif

@@ -174,10 +174,9 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_TITLE, 0, 0, 0x0F, "Board Info", ID_NONE));
 
 	/* Board title */
-#if 0
-	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_HEADING, 0, 0, 0x0F, "Title", ID_NONE));
-#endif
-	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_OPTION, 21 - (strlen(zztBoardGetTitle(myworld)) / 2), 0, OPTION_COLOR, zztBoardGetTitle(myworld), BRDINFO_TITLE));
+	dialogAddComponent(&dia, dialogComponentMake(DIALOG_COMP_OPTION,
+				21 - (strlen((char *)zztBoardGetTitle(myworld)) / 2),
+				0, OPTION_COLOR, (char *)zztBoardGetTitle(myworld), BRDINFO_TITLE));
 
 	/* Basic board info */
 	_addlabel("       Board is dark:");
@@ -215,7 +214,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 	 * param[1], of all places. If said stat is missing, no message is
 	 * displayed. TODO: support this automatically in libzzt2. */
 	label.x = 0;
-	_addlabel(zztBoardGetMessage(myworld));
+	_addlabel((char *)zztBoardGetMessage(myworld));
 
 	/* Advance template cursors */
 	label.y += 1; option.y += 2;
@@ -234,7 +233,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 
 	/* North */
 	if (zztBoardGetBoard_n(myworld) > 0) {
-		_addoption(myworld->boards[zztBoardGetBoard_n(myworld)].title, BRDINFO_BRDNORTH);
+		_addoption((char *)myworld->boards[zztBoardGetBoard_n(myworld)].title, BRDINFO_BRDNORTH);
 		if (curboard > 0 && myworld->boards[zztBoardGetBoard_n(myworld)].info.board_s == curboard)
 			_addstar();
 	} else {
@@ -243,7 +242,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 
 	/* South */
 	if (zztBoardGetBoard_s(myworld) > 0) {
-		_addoption(myworld->boards[zztBoardGetBoard_s(myworld)].title, BRDINFO_BRDSOUTH);
+		_addoption((char *)myworld->boards[zztBoardGetBoard_s(myworld)].title, BRDINFO_BRDSOUTH);
 		if (curboard > 0 && myworld->boards[zztBoardGetBoard_s(myworld)].info.board_n == curboard)
 			_addstar();
 	} else {
@@ -252,7 +251,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 
 	/* East */
 	if (zztBoardGetBoard_e(myworld) > 0) {
-		_addoption(myworld->boards[zztBoardGetBoard_e(myworld)].title, BRDINFO_BRDEAST);
+		_addoption((char *)myworld->boards[zztBoardGetBoard_e(myworld)].title, BRDINFO_BRDEAST);
 		if (curboard > 0 && myworld->boards[zztBoardGetBoard_e(myworld)].info.board_w == curboard)
 			_addstar();
 	} else {
@@ -261,7 +260,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 
 	/* West */
 	if (zztBoardGetBoard_w(myworld) > 0) {
-		_addoption(myworld->boards[zztBoardGetBoard_w(myworld)].title, BRDINFO_BRDWEST);
+		_addoption((char *)myworld->boards[zztBoardGetBoard_w(myworld)].title, BRDINFO_BRDWEST);
 		if (curboard > 0 && myworld->boards[zztBoardGetBoard_w(myworld)].info.board_e == curboard)
 			_addstar();
 	} else {
@@ -658,7 +657,7 @@ void drawworldinfo(ZZTworld* myworld, displaymethod* d)
 	int i;
 
 	/* Start at the top */
-	d->print_discrete(31,  6, 0x0B, zztWorldGetTitle(myworld));
+	d->print_discrete(31,  6, 0x0B, (char *)zztWorldGetTitle(myworld));
 
 	/* List the keys */
 	for (i = ZZT_KEY_BLUE; i <= ZZT_KEY_WHITE; i++) {
@@ -699,7 +698,7 @@ int worldinfoeditoption(int curoption, ZZTworld* myworld,
 	switch (curoption) {
 		case WLDINFO_NAME:
 			/* Change the title of the board */
-			strcpy(buffer, header->title);
+			strcpy(buffer, (char *)header->title);
 			lined_result = line_editor(cursorx, cursory, 0x0f, buffer, 19, LINED_NORMAL, d);
 			if(lined_result == LINED_OK) {
 				zztWorldSetTitle(myworld, buffer);
@@ -918,7 +917,7 @@ void drawflags(ZZTworld * myworld, displaymethod * d)
 	int i;
 
 	for (i = 0; i < ZZT_MAX_FLAGS; i++) {
-		d->print_discrete(31, 9 + i, 0x0B, zztWorldGetFlag(myworld, i));
+		d->print_discrete(31, 9 + i, 0x0B, (char *)zztWorldGetFlag(myworld, i));
 	}
 
 	/* Update the display */
@@ -930,7 +929,7 @@ void worldflagedit(int curoption, ZZTworld* myworld,
 {
 	char buffer[ZZT_FLAG_SIZE + 1];
 
-	strcpy(buffer, zztWorldGetFlag(myworld, curoption));
+	strcpy(buffer, (char *)zztWorldGetFlag(myworld, curoption));
 	if (line_editor(cursorx, cursory, 0x0B, buffer, ZZT_FLAG_SIZE, LINED_NOLOWER, d) == LINED_OK) {
 		zztWorldSetFlag(myworld, curoption, buffer);
 	}

@@ -86,7 +86,7 @@ void dialogComponentDraw(displaymethod * mydisplay, dialogComponent component)
 	buffer = str_duplen(component.text, END_X - (START_X + component.x) + 1);
 	if (strlen(component.text) > strlen(buffer)) {
 		int i;
-		for (i = 0; i < 3 && strlen(buffer) - 1 - i >= 0; i++)
+		for (i = 0; i < 3 && strlen(buffer) >= i + 1; i++)
 			buffer[strlen(buffer) - 1 - i] = '.';
 	}
 
@@ -100,7 +100,7 @@ void dialogComponentDraw(displaymethod * mydisplay, dialogComponent component)
 			break;
 		default:
 			mydisplay->print_discrete(START_X + component.x, START_Y + component.y,
-											 component.color, buffer);
+					component.color, buffer);
 	}
 
 	free(buffer);

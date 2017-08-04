@@ -79,7 +79,7 @@ const ZZTprofile _zzt_param_profile_table[] = {
 };
 
 /* Data[] use default value look-up table */
-u_int16_t _zzt_datause_default_table[] = {
+uint16_t _zzt_datause_default_table[] = {
 	/* ZZT_DATAUSE_NONE         */ 0,
 	/* ZZT_DATAUSE_PASSAGEDEST  */ 0,
 	/* ZZT_DATAUSE_DUPRATE      */ 4,
@@ -117,7 +117,7 @@ char * _zzt_datause_name_table[] = {
 };
 
 /* Which data[] element does each datause occur in? */
-u_int16_t _zzt_datause_location_table[] = {
+uint16_t _zzt_datause_location_table[] = {
 	/* ZZT_DATAUSE_NONE         */ 0,
 	/* ZZT_DATAUSE_PASSAGEDEST  */ 2,
 	/* ZZT_DATAUSE_DUPRATE      */ 1,
@@ -211,7 +211,7 @@ int zztParamCopyPtr(ZZTparam *dest, ZZTparam *src)
 	memcpy(dest, src, sizeof(ZZTparam));
 	if (src->program != NULL) {
 		/* dup. the data, too */
-		dest->program = (char *) malloc(src->length);
+		dest->program = (uint8_t *) malloc(src->length);
 		if (dest->program == NULL)
 			return 0;
 		memcpy(dest->program, src->program, src->length);
@@ -232,7 +232,7 @@ ZZTparam *zztParamDuplicate(ZZTparam *param)
 	return dup;
 }
 
-u_int8_t zztParamGetProperties(ZZTtile tile)
+uint8_t zztParamGetProperties(ZZTtile tile)
 {
 	if (tile.type > ZZT_CENTBODY)
 		return ZZT_PROPERTY_NOPARAM;

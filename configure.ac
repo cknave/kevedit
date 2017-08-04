@@ -106,8 +106,6 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_DIRENT
 
-AC_CHECK_TYPES([int8_t, int16_t, int32_t, u_int8_t, u_int16_t, u_int32_t])
-
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(getcwd strdup strstr mkdtemp)

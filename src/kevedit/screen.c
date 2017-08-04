@@ -417,7 +417,7 @@ void updatepanel(keveditor * e)
 	ZZTworld * w = e->myworld;
 	int i, x;
 	char s[255];
-	char * title = zztWorldGetTitle(w);
+	char * title = (char *)zztWorldGetTitle(w);
 	int uf = e->updateflags;
 
 	if (uf & UD_PANEL)
@@ -803,7 +803,7 @@ stringvector buildboardlist(ZZTworld * w, int firstnone)
 
 	/* Retrive the list of titles */
 	for (; i < boardcount; i++)
-		pushstring(&boardlist, str_dup(w->boards[i].title));
+		pushstring(&boardlist, str_dup((char *)w->boards[i].title));
 
 	pushstring(&boardlist, str_dup("!new;Add New Board"));
 

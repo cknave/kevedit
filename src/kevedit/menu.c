@@ -151,6 +151,7 @@ int creaturemenu(keveditor * myeditor)
 		if (tile.param != NULL)
 			zztParamFree(tile.param);
 	}
+	return 0;
 }
 
 
@@ -199,6 +200,7 @@ int terrainmenu(keveditor * myeditor)
 		if (tile.param != NULL)
 			zztParamFree(tile.param);
 	}
+	return 0;
 }
 
 
@@ -348,6 +350,7 @@ int saveobjecttonewlibrary(keveditor * myeditor)
 	deletestringvector(&zzlv);
 	free(title);
 	free(filename);
+	return 0;
 }
 
 int objectlibrarymenu(keveditor * myeditor)

@@ -468,10 +468,7 @@ int texteditHandleEditKey(texteditor * editor)
 			break;
 	}
 
-	if (next_key == DKEY_QUIT) {
-		editor->key = DKEY_QUIT;
-		editor->exitflag = 1;
-	}
+	return next_key;
 }
 
 /**

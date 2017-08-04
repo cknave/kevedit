@@ -25,7 +25,6 @@
 #ifdef DOSBOX
 
 #include <sys/param.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <dirent.h>

@@ -34,11 +34,11 @@ int zztParamCopyPtr(ZZTparam *dest, ZZTparam *src);
 
 /* Helper functions native to board.c */
 
-int _zzt_rle_decode(u_int8_t *packed, ZZTblock *block)
+int _zzt_rle_decode(uint8_t *packed, ZZTblock *block)
 {
 	int ofs = 0, count = 0;
 	int maxcount = block->width * block->height;
-	u_int8_t i;
+	uint8_t i;
 
 	/* NOTE: we assume that the decompressed rle string is not smaller than the
 	 * size of the block. A larger rle string will safely generate an error */
@@ -59,9 +59,9 @@ int _zzt_rle_encoded_size(ZZTblock *block)
 {
 	int size = 0, ofs = 0;
 	int maxcount = block->width * block->height;
-	u_int8_t blocks;
-	u_int8_t type;
-	u_int8_t color;
+	uint8_t blocks;
+	uint8_t type;
+	uint8_t color;
 
 	/* Get size of RLE data */
 	do {
@@ -80,15 +80,15 @@ int _zzt_rle_encoded_size(ZZTblock *block)
 	return size;
 }
 
-u_int8_t *_zzt_rle_encode(ZZTblock *block)
+uint8_t *_zzt_rle_encode(ZZTblock *block)
 {
 	int size = 0, ofs = 0, ofs2 = 0;
 	int maxcount = block->width * block->height;
-	u_int8_t blocks = 1;
-	u_int8_t type;
-	u_int8_t color;
+	uint8_t blocks = 1;
+	uint8_t type;
+	uint8_t color;
 
-	u_int8_t *packed;
+	uint8_t *packed;
 
 	/* NOTE: the compressed string will only represent as many tiles as
 	 * are in the given block. If the block is not ZZT size, the encoded
@@ -295,7 +295,7 @@ ZZTboard *zztBoardCreate(char *title)
 	/* Create new board */
 	ZZTboard *board = malloc(sizeof(ZZTboard));
 	memset(&board->info, 0, sizeof(ZZTboardinfo));
-	strncpy(board->title, title, ZZT_BOARD_TITLE_SIZE);
+	strncpy((char *)board->title, title, ZZT_BOARD_TITLE_SIZE);
 	board->title[ZZT_BOARD_TITLE_SIZE] = '\0';
 	board->info.maxshots = 255;
 	board->bigboard = NULL;
@@ -434,9 +434,9 @@ int zztBoardCompress(ZZTboard *board)
 	return 1;
 }
 
-u_int16_t zztBoardGetSize(ZZTboard *board)
+uint16_t zztBoardGetSize(ZZTboard *board)
 {
-	u_int16_t size = 0;
+	uint16_t size = 0;
 	int i;
 
 	size += 0x34; /* Header */
@@ -758,109 +758,109 @@ ZZTblock * zztBoardGetBlock(ZZTworld *world)
 
 void zztBoardSetTitle(ZZTworld *world, char *title)
 {
-	strncpy(world->boards[world->cur_board].title, title, ZZT_BOARD_TITLE_SIZE);
+	strncpy((char *)world->boards[world->cur_board].title, title, ZZT_BOARD_TITLE_SIZE);
 	world->boards[world->cur_board].title[ZZT_BOARD_TITLE_SIZE] = '\0';
 }	
-void zztBoardSetMaxshots(ZZTworld *world, u_int8_t maxshots)
+void zztBoardSetMaxshots(ZZTworld *world, uint8_t maxshots)
 {
 	world->boards[world->cur_board].info.maxshots = maxshots;
 }
-void zztBoardSetDarkness(ZZTworld *world, u_int8_t darkness)
+void zztBoardSetDarkness(ZZTworld *world, uint8_t darkness)
 {
 	world->boards[world->cur_board].info.darkness = darkness;
 }
-void zztBoardSetBoard_n(ZZTworld *world, u_int8_t board_n)
+void zztBoardSetBoard_n(ZZTworld *world, uint8_t board_n)
 {
 	world->boards[world->cur_board].info.board_n = board_n;
 }
-void zztBoardSetBoard_s(ZZTworld *world, u_int8_t board_s)
+void zztBoardSetBoard_s(ZZTworld *world, uint8_t board_s)
 {
 	world->boards[world->cur_board].info.board_s = board_s;
 }
-void zztBoardSetBoard_w(ZZTworld *world, u_int8_t board_w)
+void zztBoardSetBoard_w(ZZTworld *world, uint8_t board_w)
 {
 	world->boards[world->cur_board].info.board_w = board_w;
 }
-void zztBoardSetBoard_e(ZZTworld *world, u_int8_t board_e)
+void zztBoardSetBoard_e(ZZTworld *world, uint8_t board_e)
 {
 	world->boards[world->cur_board].info.board_e = board_e;
 }
-void zztBoardSetReenter(ZZTworld *world, u_int8_t reenter)
+void zztBoardSetReenter(ZZTworld *world, uint8_t reenter)
 {
 	world->boards[world->cur_board].info.reenter = reenter;
 }
-void zztBoardSetReenter_x(ZZTworld *world, u_int8_t reenter_x)
+void zztBoardSetReenter_x(ZZTworld *world, uint8_t reenter_x)
 {
 	world->boards[world->cur_board].info.reenter_x = reenter_x;
 }
-void zztBoardSetReenter_y(ZZTworld *world, u_int8_t reenter_y)
+void zztBoardSetReenter_y(ZZTworld *world, uint8_t reenter_y)
 {
 	world->boards[world->cur_board].info.reenter_y = reenter_y;
 }
 void zztBoardSetMessage(ZZTworld *world, char *message)
 {
-	strncpy(world->boards[world->cur_board].info.message, message, ZZT_MESSAGE_SIZE);
+	strncpy((char *)world->boards[world->cur_board].info.message, message, ZZT_MESSAGE_SIZE);
 	world->boards[world->cur_board].info.message[ZZT_MESSAGE_SIZE] = '\0';
 }
-void zztBoardSetTimelimit(ZZTworld *world, u_int16_t timelimit)
+void zztBoardSetTimelimit(ZZTworld *world, uint16_t timelimit)
 {
 	world->boards[world->cur_board].info.timelimit = timelimit;
 }
-void zztBoardSetParamcount(ZZTworld *world, u_int16_t paramcount)
+void zztBoardSetParamcount(ZZTworld *world, uint16_t paramcount)
 {
 	// XXX Don't ever use this, it's just here for completeness
 	world->boards[world->cur_board].info.paramcount = paramcount;
 }
 
-u_int8_t *zztBoardGetTitle(ZZTworld *world)
+uint8_t *zztBoardGetTitle(ZZTworld *world)
 {
 	return world->boards[world->cur_board].title;
 }
-u_int8_t zztBoardGetMaxshots(ZZTworld *world)
+uint8_t zztBoardGetMaxshots(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.maxshots;
 }
-u_int8_t zztBoardGetDarkness(ZZTworld *world)
+uint8_t zztBoardGetDarkness(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.darkness;
 }
-u_int8_t zztBoardGetBoard_n(ZZTworld *world)
+uint8_t zztBoardGetBoard_n(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.board_n;
 }
-u_int8_t zztBoardGetBoard_s(ZZTworld *world)
+uint8_t zztBoardGetBoard_s(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.board_s;
 }
-u_int8_t zztBoardGetBoard_w(ZZTworld *world)
+uint8_t zztBoardGetBoard_w(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.board_w;
 }
-u_int8_t zztBoardGetBoard_e(ZZTworld *world)
+uint8_t zztBoardGetBoard_e(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.board_e;
 }
-u_int8_t zztBoardGetReenter(ZZTworld *world)
+uint8_t zztBoardGetReenter(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.reenter;
 }
-u_int8_t zztBoardGetReenter_x(ZZTworld *world)
+uint8_t zztBoardGetReenter_x(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.reenter_x;
 }
-u_int8_t zztBoardGetReenter_y(ZZTworld *world)
+uint8_t zztBoardGetReenter_y(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.reenter_y;
 }
-u_int8_t *zztBoardGetMessage(ZZTworld *world)
+uint8_t *zztBoardGetMessage(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.message;
 }
-u_int16_t zztBoardGetTimelimit(ZZTworld *world)
+uint16_t zztBoardGetTimelimit(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.timelimit;
 }
-u_int16_t zztBoardGetParamcount(ZZTworld *world)
+uint16_t zztBoardGetParamcount(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.paramcount;
 }

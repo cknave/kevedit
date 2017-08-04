@@ -31,18 +31,18 @@
 /* ----------- */
 /* ZZT files are on a 16-bit little-endian architecture */
 #define _zzt_outb(a, fp)	fwrite(a, 1, 1, fp)
-size_t _zzt_outw(u_int16_t *a, FILE *fp)
+size_t _zzt_outw(uint16_t *a, FILE *fp)
 {
-	size_t result; u_int8_t b = (*a & 0x00FF);
+	size_t result; uint8_t b = (*a & 0x00FF);
 	result = fwrite(&b, 1, 1, fp);
 	b = (*a & 0xFF00) >> 8;
 	result += fwrite(&b, 1, 1, fp);
 	return result;
 }
 #define _zzt_inb(a, fp)		fread(a, 1, 1, fp)
-size_t _zzt_inw(u_int16_t *a, FILE *fp)
+size_t _zzt_inw(uint16_t *a, FILE *fp)
 {
-        size_t result; u_int8_t b = 0;
+        size_t result; uint8_t b = 0;
         result = fread(&b, 1, 1, fp);
         *a = b;
         result += fread(&b, 1, 1, fp);
@@ -58,7 +58,7 @@ size_t _zzt_outs(char *s, int len, FILE *fp)
 }
 size_t _zzt_outspad(char *s, int len, int total, FILE *fp)
 {
-	size_t result = 0; int i; u_int8_t b = 0;
+	size_t result = 0; int i; uint8_t b = 0;
 	if(len > total)
 		return -1;
 	result += _zzt_outs(s, len, fp);
@@ -77,7 +77,7 @@ size_t _zzt_ins(char *s, int len, FILE *fp)
 }
 size_t _zzt_inspad(char *s, int len, int total, FILE *fp)
 {
-	size_t result = 0; int i; u_int8_t b = 0;
+	size_t result = 0; int i; uint8_t b = 0;
 	if(len > total)
 		return -1;
 	result += _zzt_ins(s, len, fp);
@@ -97,9 +97,9 @@ size_t _zzt_inspad(char *s, int len, int total, FILE *fp)
 
 int zztWorldWrite(ZZTworld *world, FILE *fp)
 {
-	unsigned char magicnumber[] = "\xFF\xFF";
-	u_int16_t w;
-	u_int8_t b;
+	char *magicnumber = "\xFF\xFF";
+	uint16_t w;
+	uint8_t b;
 	int i;
 
 	/* Header */
@@ -119,14 +119,18 @@ int zztWorldWrite(ZZTworld *world, FILE *fp)
 	_zzt_outb_ordie(&world->header->magic1[0], fp);	/* TODO */
 	_zzt_outb_ordie(&world->header->magic1[1], fp);	/* XXX */
 	_zzt_outw_ordie(&world->header->score, fp);
-	b = strlen(world->header->title);
+	b = strlen((char *)world->header->title);
 	_zzt_outb_ordie(&b, fp);
-	_zzt_outspad_ordie(world->header->title, strlen(world->header->title), ZZT_WORLD_TITLE_SIZE, fp);
+	_zzt_outspad_ordie((char *)world->header->title,
+			strlen((char *)world->header->title),
+			ZZT_WORLD_TITLE_SIZE, fp);
 	/* Flags */
 	for(i = 0; i < ZZT_MAX_FLAGS; i++) {
-		b = strlen(world->header->flags[i]);
+		b = strlen((char *)world->header->flags[i]);
 		_zzt_outb_ordie(&b, fp);
-		_zzt_outspad_ordie(world->header->flags[i], strlen(world->header->flags[i]), ZZT_FLAG_SIZE, fp);
+		_zzt_outspad_ordie((char *)world->header->flags[i],
+				strlen((char *)world->header->flags[i]),
+				ZZT_FLAG_SIZE, fp);
 	}
 	/* More header */
 	_zzt_outw_ordie(&world->header->timepassed, fp);
@@ -151,8 +155,8 @@ ZZTworld *zztWorldRead(FILE *fp)
 	unsigned char magicnumber[2];
 	int i;
 
-	u_int8_t len;
-	u_int16_t bcount;
+	uint8_t len;
+	uint16_t bcount;
 
 	/* Read & check header */
 	_zzt_inb_or(&magicnumber[0], fp) return NULL;
@@ -186,14 +190,14 @@ ZZTworld *zztWorldRead(FILE *fp)
 	_zzt_inb_or(&len, fp) freeworld;
 	if(len > ZZT_WORLD_TITLE_SIZE)
 		freeworld;
-	_zzt_inspad_or(world->header->title, len, ZZT_WORLD_TITLE_SIZE, fp) freeworld;
+	_zzt_inspad_or((char *)world->header->title, len, ZZT_WORLD_TITLE_SIZE, fp) freeworld;
 	/* Flags */
 	for(i = 0; i < ZZT_MAX_FLAGS; i++) {
 		world->header->flags[i][0] = '\0';
 		_zzt_inb_or(&len, fp) freeworld;
 		if(len > ZZT_FLAG_SIZE)
 			freeworld;
-		_zzt_inspad_or(world->header->flags[i], len, ZZT_FLAG_SIZE, fp) freeworld;
+		_zzt_inspad_or((char *)world->header->flags[i], len, ZZT_FLAG_SIZE, fp) freeworld;
 	}
 	/* More header */
 	_zzt_inw_or(&world->header->timepassed, fp) freeworld;
@@ -222,7 +226,7 @@ ZZTworld *zztWorldRead(FILE *fp)
 }
 
 /* It takes a lot of work to free stuff made while creating a board */
-void _zzt_boardread_freestuff(ZZTboard *board, u_int8_t *packed, ZZTparam *params, int numparams)
+void _zzt_boardread_freestuff(ZZTboard *board, uint8_t *packed, ZZTparam *params, int numparams)
 {
 	int i;
 	/* packed data */
@@ -243,12 +247,12 @@ ZZTboard *zztBoardRead(FILE *fp)
 {
 	ZZTboard *board = malloc(sizeof(ZZTboard));
 	unsigned int packsize = 1000*3, packofs = 0, tiles = 0;
-	u_int8_t *packed = malloc(packsize);
+	uint8_t *packed = malloc(packsize);
 
-	u_int16_t w;
-	u_int8_t len;
+	uint16_t w;
+	uint8_t len;
 
-	u_int8_t number, code, color;
+	uint8_t number, code, color;
 
 	int i;
 
@@ -262,7 +266,7 @@ ZZTboard *zztBoardRead(FILE *fp)
 	_zzt_inb_or(&len, fp) freeboard;
 	if(len > ZZT_BOARD_TITLE_SIZE)
 		freeboard;
-	_zzt_inspad_or(board->title, len, ZZT_BOARD_TITLE_SIZE, fp) freeboard;
+	_zzt_inspad_or((char *)board->title, len, ZZT_BOARD_TITLE_SIZE, fp) freeboard;
 	/* Put a null-zero at the end of the title to make it a valid C-string */
 	board->title[len] = '\0';
 	/* Board packed tiles */
@@ -298,7 +302,7 @@ ZZTboard *zztBoardRead(FILE *fp)
 	if(len > ZZT_MESSAGE_SIZE)
 		freeboard;
 	board->info.message[0] = '\0';
-	_zzt_inspad_or(board->info.message, len, ZZT_MESSAGE_SIZE, fp) freeboard;
+	_zzt_inspad_or((char *)board->info.message, len, ZZT_MESSAGE_SIZE, fp) freeboard;
 	_zzt_inb_or(&board->info.reenter_x, fp) freeboard;
 	_zzt_inb_or(&board->info.reenter_y, fp) freeboard;
 	board->info.reenter_x--;
@@ -347,7 +351,7 @@ ZZTboard *zztBoardRead(FILE *fp)
 		_zzt_inspad_or(NULL, 0, 8, fp) freeboard;
 		if(w != 0) {
 			board->params[i].program = malloc(w+1);
-			_zzt_ins_or(board->params[i].program, w, fp) freeboard;
+			_zzt_ins_or((char *)board->params[i].program, w, fp) freeboard;
 			board->params[i].program[w] = '\0';
 		}
 	}
@@ -361,9 +365,9 @@ ZZTboard *zztBoardRead(FILE *fp)
 
 int zztBoardWrite(ZZTboard *board, FILE *fp)
 {
-	u_int16_t size;
-	u_int16_t w;
-	u_int8_t b;
+	uint16_t size;
+	uint16_t w;
+	uint8_t b;
 	int i, ofs;
 
 	ZZTparam *p;
@@ -383,13 +387,13 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 
 	/* Write board header */
 	_zzt_outw_ordie(&size, fp);
-	b = strlen(board->title);
+	b = strlen((char *)board->title);
 	if (b > ZZT_BOARD_TITLE_SIZE)
 		b = ZZT_BOARD_TITLE_SIZE;
 	_zzt_outb_ordie(&b, fp);
-	_zzt_outspad_ordie(board->title, b, ZZT_BOARD_TITLE_SIZE, fp);
+	_zzt_outspad_ordie((char *)board->title, b, ZZT_BOARD_TITLE_SIZE, fp);
 	/* Write board */
-	_zzt_outs_ordie(board->packed, ofs, fp);
+	_zzt_outs_ordie((char *)board->packed, ofs, fp);
 	/* Write board info */
 	_zzt_outb_ordie(&board->info.maxshots, fp);
 	_zzt_outb_ordie(&board->info.darkness, fp);
@@ -398,9 +402,9 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 	_zzt_outb_ordie(&board->info.board_w, fp);
 	_zzt_outb_ordie(&board->info.board_e, fp);
 	_zzt_outb_ordie(&board->info.reenter, fp);
-	b = strlen(board->info.message);
+	b = strlen((char *)board->info.message);
 	_zzt_outb_ordie(&b, fp);
-	_zzt_outspad_ordie(board->info.message, b, ZZT_MESSAGE_SIZE, fp);
+	_zzt_outspad_ordie((char *)board->info.message, b, ZZT_MESSAGE_SIZE, fp);
 	/* Increment re-entry points by 1 before storing to file */
 	board->info.reenter_x++;
 	board->info.reenter_y++;
@@ -440,7 +444,7 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 		w = (p->length != 0 ? p->length : -p->bindindex);
 		_zzt_outw_ordie(&w, fp);
 		_zzt_outspad_ordie(NULL, 0, 8, fp);
-		_zzt_outs_ordie(p->program, p->length, fp);
+		_zzt_outs_ordie((char *)p->program, p->length, fp);
 	}
 	return 1;
 }

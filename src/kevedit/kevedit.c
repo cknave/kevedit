@@ -222,7 +222,7 @@ void keveditUpdateInterface(keveditor * myeditor)
 
 	if (uf & UD_BOARDTITLE) {
 		/* Draw the board title this time only */
-		char * title = zztBoardGetTitle(myeditor->myworld);
+		char * title = (char *)zztBoardGetTitle(myeditor->myworld);
 		mydisplay->print(30 - strlen(title) / 2, 0, 0x70, title);
 
 		/* Neat trick: next time this function is called, update the board

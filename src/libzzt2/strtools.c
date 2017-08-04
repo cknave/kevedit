@@ -83,9 +83,6 @@ char * str_dupadd(char * s, unsigned int add)
 	char* copy;
 	int duplen = strlen(s) + add;
 
-	if (add < 0)
-		return NULL;
-
 	copy = (char *) malloc(sizeof(char) * (duplen + 1));
 	if (copy == NULL)
 		return NULL;

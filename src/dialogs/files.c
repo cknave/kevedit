@@ -22,9 +22,6 @@
 #endif
 
 
-#if HAVE_SYS_TYPES_H
-#	include <sys/types.h>
-#endif
 #include <dirent.h>
 #include <unistd.h>
 #include <stdlib.h>

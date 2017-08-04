@@ -149,7 +149,7 @@ const char * _zzt_type_kind_table[] = {
 };
 
 /* Look-up table for converting zzt types to display chars */
-const u_int8_t _zzt_display_char_table[] = {
+const uint8_t _zzt_display_char_table[] = {
 	' ', /* ZZT_EMPTY          */
 	'E', /* ZZT_EDGE           */
 	'T', /* ZZT_MESSAGETIMER   */
@@ -201,7 +201,7 @@ const u_int8_t _zzt_display_char_table[] = {
 };
 
 /* Look-up table for line characters */
-const u_int8_t _zzt_display_char_line_table[] = {
+const uint8_t _zzt_display_char_line_table[] = {
 	249, /*  (none) */
 	208, /* n       */
 	210, /*   s     */
@@ -680,9 +680,9 @@ ZZTtile zztTileGet(ZZTworld * world, int x, int y)
 }
 
 /* Helper function for zztTileGetDisplayChar */
-u_int8_t _zzt_display_char_line(ZZTblock * block, int x, int y)
+uint8_t _zzt_display_char_line(ZZTblock * block, int x, int y)
 {
-	u_int8_t flags;
+	uint8_t flags;
 
 	flags = 0;
 
@@ -698,7 +698,7 @@ u_int8_t _zzt_display_char_line(ZZTblock * block, int x, int y)
 	return _zzt_display_char_line_table[flags];
 }
 
-u_int8_t zztLoneTileGetDisplayChar(ZZTtile tile)
+uint8_t zztLoneTileGetDisplayChar(ZZTtile tile)
 {
 	if (tile.type > ZZT_BWHITETEXT)
 		return '?';
@@ -727,7 +727,7 @@ u_int8_t zztLoneTileGetDisplayChar(ZZTtile tile)
 	return _zzt_display_char_table[tile.type];
 }
 
-u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile)
+uint8_t zztLoneTileGetDisplayColor(ZZTtile tile)
 {
 	switch (tile.type) {
 		case ZZT_EMPTY:  return 0x0F;
@@ -752,7 +752,7 @@ u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile)
 	return tile.color;
 }
 
-u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y)
+uint8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y)
 {
 	ZZTtile tile = zztTileAt(block, x, y);
 
@@ -763,14 +763,14 @@ u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y)
 	return zztLoneTileGetDisplayChar(tile);
 }
 
-u_int8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y)
+uint8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y)
 {
 	ZZTtile tile = zztTileAt(block, x, y);
 
 	return zztLoneTileGetDisplayColor(tile);
 }
 
-u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y) {
+uint8_t zztGetDisplayChar(ZZTworld * world, int x, int y) {
 	ZZTboard* brd = zztBoardGetCurPtr(world);
 
 	/* Error if board cannot be decompressed */
@@ -788,7 +788,7 @@ u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y) {
 	return zztTileGetDisplayChar(brd->bigboard, x, y);
 }
 
-u_int8_t zztGetDisplayColor(ZZTworld * world, int x, int y) {
+uint8_t zztGetDisplayColor(ZZTworld * world, int x, int y) {
 	ZZTboard* brd = zztBoardGetCurPtr(world);
 
 	/* Error if board cannot be decompressed */

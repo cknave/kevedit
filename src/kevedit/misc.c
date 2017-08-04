@@ -187,7 +187,7 @@ int showObjects(keveditor * myeditor)
 
 	for (x = 0; x < board->bigboard->width; x++) {
 		for (y = 0; y < board->bigboard->height; y++) {
-			u_int8_t ch, color;
+			uint8_t ch, color;
 			ZZTtile tile = zztTileGet(myeditor->myworld, x, y);
 			if (tile.type != ZZT_OBJECT)
 				continue;
@@ -427,8 +427,8 @@ int saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 		*dotptr = '\0';
 
 	if ((!str_equ(zztWorldGetFilename(myworld), file, STREQU_UNCASE) &&
-	     str_equ(oldfilenamebase, zztWorldGetTitle(myworld), STREQU_UNCASE)) ||
-	    str_equ("UNTITLED", zztWorldGetTitle(myworld), 0)) {
+	     str_equ(oldfilenamebase, (char *)zztWorldGetTitle(myworld), STREQU_UNCASE)) ||
+	    str_equ("UNTITLED", (char *)zztWorldGetTitle(myworld), 0)) {
 		char* newtitle = str_dup(file);
 		dotptr = strrchr(newtitle, '.');
 		if (dotptr != NULL)
@@ -543,6 +543,7 @@ int boardtransfer(displaymethod * mydisplay, ZZTworld * myworld)
 		case 2: /* Export to Board */
 			return exporttoboard(mydisplay, myworld);
 	}
+	return 0;
 }
 
 int importfromworld(displaymethod * mydisplay, ZZTworld * myworld)

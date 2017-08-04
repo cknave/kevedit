@@ -20,12 +20,9 @@
 #ifndef DISPLAY_TEXTBLOCK_H
 #define DISPLAY_TEXTBLOCK_H 1
 
-#ifdef HAVE_U_INT8_T
-#include <sys/types.h>
-typedef u_int8_t textDatum;
-#else
-typedef unsigned char textDatum;
-#endif
+#include <stdint.h>
+
+typedef uint8_t textDatum;
 
 /* A block of text with given width and height */
 typedef struct textBlock {

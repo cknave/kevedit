@@ -223,7 +223,7 @@ ZZTparam svectortoprogram(stringvector sv)
 
 	/* lets make room for all that program */
 	pos = 0;
-	p.program = (char *) malloc(sizeof(char) * p.length);
+	p.program = (uint8_t *) malloc(p.length);
 
 	for (sv.cur = sv.first; sv.cur != NULL; sv.cur = sv.cur->next) {
 		int i;
@@ -333,7 +333,7 @@ char * scalestring(char * buffer, int data)
 
 char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w)
 {
-	u_int8_t data = tile.param->data[which];
+	uint8_t data = tile.param->data[which];
 
 	switch (zztParamDatauseGet(tile, which)) {
 		case ZZT_DATAUSE_FIRERATEMODE:
@@ -384,7 +384,7 @@ char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w
 			break;
 		case ZZT_DATAUSE_PASSAGEDEST:
 			if (data < zztWorldGetBoardcount(w))
-				strcpy(buffer, w->boards[data].title);
+				strcpy(buffer, (char *)w->boards[data].title);
 			break;
 		case ZZT_DATAUSE_CHAR:
 			sprintf(buffer, "%c - #char %d - %02Xh", (data != 0 ? data : ' '), data, data);
@@ -405,7 +405,7 @@ char * paramdatavaluestring(char * buffer, ZZTtile tile, int which, ZZTworld * w
 dialog buildparamdialog(ZZTworld * w, int x, int y)
 {
 	ZZTtile tile = zztTileGet(w, x, y);
-	u_int8_t properties = zztParamGetProperties(tile);
+	uint8_t properties = zztParamGetProperties(tile);
 	dialog dia;
 
 	int i;

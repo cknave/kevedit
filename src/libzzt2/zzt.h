@@ -18,45 +18,13 @@
  */
 
 #include <stdio.h>
-#include <sys/types.h>
-
-#ifdef HAVE_STDINT_H
 #include <stdint.h>
-#endif
 
 #ifndef LIBZZT2_ZZT_H
 #define LIBZZT2_ZZT_H
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-/* Perhaps we can put these type defines in another file?
- * "types.h" seems okay, but something like "sizetypes.h" would be more
- * appropriate. This only seems to be needed by the DOS version of DJGPP */
-
-/* Also, this used to use #ifdef DOS, but that was setup by the KevEdit
- * makefile. Should we do the same thing here, or find another way
- * of determining the necessity of these typdefs? */
-
-/* If you're running DOS, you'll need these defined */
-#ifndef HAVE_INT8_T
-typedef char int8_t;
-#endif
-#ifndef HAVE_INT16_T
-typedef short int int16_t;
-#endif
-#ifndef HAVE_INT32_T
-typedef int int32_t;
-#endif
-#ifndef HAVE_U_INT8_T
-typedef unsigned char u_int8_t;
-#endif
-#ifndef HAVE_U_INT16_T
-typedef unsigned short int u_int16_t;
-#endif
-#ifndef HAVE_U_INT32_T
-typedef unsigned int u_int32_t;
 #endif
 
 
@@ -114,54 +82,54 @@ typedef unsigned int u_int32_t;
 
 /* ZZT param profile -- description of tile with param data */
 typedef struct ZZTprofile {
-	u_int8_t properties;
-	u_int16_t cycledefault;
+	uint8_t properties;
+	uint16_t cycledefault;
 	int datause[3];
 } ZZTprofile;
 
 /* ZZT board info -- settings for a board */
 typedef struct ZZTboardinfo {
-	u_int8_t maxshots;	/* Max. player bullets that can be onscreen */
-	u_int8_t darkness;	/* Set if dark */
-	u_int8_t board_n;	/* Point to board on North border */
-	u_int8_t board_s;	/* Point to board on South border */
-	u_int8_t board_w;	/* Point to board on West border */
-	u_int8_t board_e;	/* Point to board on East border */
-	u_int8_t reenter;	/* Set for re-enter if zapped */
-	u_int8_t message[ZZT_MESSAGE_SIZE+1];	/* Board message */
-	u_int8_t reenter_x;	/* Reenter x-coord */
-	u_int8_t reenter_y;	/* Reenter y-coord */
-	u_int16_t timelimit;	/* Time limit for board */
-	u_int16_t paramcount;	/* How many parameter records on board */
+	uint8_t maxshots;	/* Max. player bullets that can be onscreen */
+	uint8_t darkness;	/* Set if dark */
+	uint8_t board_n;	/* Point to board on North border */
+	uint8_t board_s;	/* Point to board on South border */
+	uint8_t board_w;	/* Point to board on West border */
+	uint8_t board_e;	/* Point to board on East border */
+	uint8_t reenter;	/* Set for re-enter if zapped */
+	uint8_t message[ZZT_MESSAGE_SIZE+1];	/* Board message */
+	uint8_t reenter_x;	/* Reenter x-coord */
+	uint8_t reenter_y;	/* Reenter y-coord */
+	uint16_t timelimit;	/* Time limit for board */
+	uint16_t paramcount;	/* How many parameter records on board */
 } ZZTboardinfo;
 
 /* ZZT parameter record -- objects, scrolls, enemies, etc. */
 /* Many fields are used for different things based on the type of enemy.
    Refer to the ZZT File Format */
 typedef struct ZZTparam {
-	u_int8_t index;   /* Position of param in list */
-	u_int8_t x;		/* X position */
-	u_int8_t y;		/* Y position */
-	u_int16_t xstep;	/* X step */
-	u_int16_t ystep;	/* Y step */
-	u_int16_t cycle;	/* Cycle (speed) */
-	u_int8_t data[3];	/* Generic data */
-	u_int16_t leaderindex;	/* Index of leader (usually for centipedes, -1 if none) */
-	u_int16_t followerindex;	/* Index of follower (centipedes, -1 if none) */
-	u_int8_t utype;		/* Type of tile underneath */
-	u_int8_t ucolor;	/* Color of tile underneath */
-	u_int8_t magic[4];	/* UNKNOWN */
-	u_int16_t instruction;	/* Index to current instruction */
-	u_int16_t length;	/* Length of program */
-	u_int8_t *program;	/* Program (if any) */
+	uint8_t index;   /* Position of param in list */
+	uint8_t x;		/* X position */
+	uint8_t y;		/* Y position */
+	uint16_t xstep;	/* X step */
+	uint16_t ystep;	/* Y step */
+	uint16_t cycle;	/* Cycle (speed) */
+	uint8_t data[3];	/* Generic data */
+	uint16_t leaderindex;	/* Index of leader (usually for centipedes, -1 if none) */
+	uint16_t followerindex;	/* Index of follower (centipedes, -1 if none) */
+	uint8_t utype;		/* Type of tile underneath */
+	uint8_t ucolor;	/* Color of tile underneath */
+	uint8_t magic[4];	/* UNKNOWN */
+	uint16_t instruction;	/* Index to current instruction */
+	uint16_t length;	/* Length of program */
+	uint8_t *program;	/* Program (if any) */
 
-	u_int16_t bindindex;	/* Index of object bound to (zero if none) */
+	uint16_t bindindex;	/* Index of object bound to (zero if none) */
 } ZZTparam;
 
 /* ZZT tile info -- the basic building-block of a decompressed board */
 typedef struct ZZTtile {
-	u_int8_t type;
-	u_int8_t color;
+	uint8_t type;
+	uint8_t color;
 	ZZTparam * param;
 } ZZTtile;
 
@@ -180,9 +148,9 @@ typedef struct ZZTblock {
 
 /* ZZT board -- fill a ZZT world with these */
 typedef struct ZZTboard {
-	u_int8_t title[ZZT_BOARD_TITLE_SIZE+1];	/* Board title */
+	uint8_t title[ZZT_BOARD_TITLE_SIZE+1];	/* Board title */
 	ZZTboardinfo info;			/* Board info */
-	u_int8_t *packed;			/* RLE packed board data */
+	uint8_t *packed;			/* RLE packed board data */
 	ZZTparam *params;			/* Array of parameters */
 	ZZTblock *bigboard;   /* Data & params when unpacked */
 
@@ -191,22 +159,22 @@ typedef struct ZZTboard {
 
 /* ZZT world info -- stuff from the ZZT file header */
 typedef struct ZZTworldinfo {
-	u_int16_t boardcount;	/* Boards in world */
-	u_int16_t ammo;		/* Ammo count */
-	u_int16_t gems;		/* Gems count */
-	u_int8_t keys[7];	/* Keys */
-	u_int16_t health;	/* Health count */
-	u_int16_t startboard;	/* Number of board to start on */
-	u_int16_t torches;	/* Torch count */
-	u_int16_t torchcycles;	/* How many cycles of torch left */
-	u_int16_t energizercycles; /* How many cycles of energizer left */
-	u_int8_t magic1[2];	/* UNKNOWN */
-	u_int16_t score;	/* Score */
-	u_int8_t title[ZZT_WORLD_TITLE_SIZE+1];	/* World title */
-	u_int8_t flags[ZZT_MAX_FLAGS][ZZT_FLAG_SIZE+1];	/* 10 flags, 20 chars each */
-	u_int16_t timepassed;	/* Time passed in savegame */
-	u_int8_t magic2[2];	/* ALSO UNKNOWN */
-	u_int8_t savegame;	/* Set if savegame */
+	uint16_t boardcount;	/* Boards in world */
+	uint16_t ammo;		/* Ammo count */
+	uint16_t gems;		/* Gems count */
+	uint8_t keys[7];	/* Keys */
+	uint16_t health;	/* Health count */
+	uint16_t startboard;	/* Number of board to start on */
+	uint16_t torches;	/* Torch count */
+	uint16_t torchcycles;	/* How many cycles of torch left */
+	uint16_t energizercycles; /* How many cycles of energizer left */
+	uint8_t magic1[2];	/* UNKNOWN */
+	uint16_t score;	/* Score */
+	uint8_t title[ZZT_WORLD_TITLE_SIZE+1];	/* World title */
+	uint8_t flags[ZZT_MAX_FLAGS][ZZT_FLAG_SIZE+1];	/* 10 flags, 20 chars each */
+	uint16_t timepassed;	/* Time passed in savegame */
+	uint8_t magic2[2];	/* ALSO UNKNOWN */
+	uint8_t savegame;	/* Set if savegame */
 } ZZTworldinfo;
 
 /* World structure -- create one of these */
@@ -251,24 +219,24 @@ int zztWorldSave(ZZTworld *world);
  * Determine the total size of the world in bytes
  * TODO: write this function
  */
-u_int32_t zztWorldGetSize(ZZTworld *world);
+uint32_t zztWorldGetSize(ZZTworld *world);
 /* zztWorldSetXXXXX()
  * Set a world info variable
  */
-void zztWorldSetBoardcount(ZZTworld *world, u_int16_t count);	/* Don't ever use */
-void zztWorldSetAmmo(ZZTworld *world, u_int16_t ammo);
-void zztWorldSetGems(ZZTworld *world, u_int16_t gems);
-void zztWorldSetKey(ZZTworld *world, int number, u_int8_t state);
-void zztWorldSetHealth(ZZTworld *world, u_int16_t health);
-void zztWorldSetStartboard(ZZTworld *world, u_int16_t startboard);
-void zztWorldSetTorches(ZZTworld *world, u_int16_t torches);
-void zztWorldSetTorchcycles(ZZTworld *world, u_int16_t torchcycles);
-void zztWorldSetEnergizercycles(ZZTworld *world, u_int16_t energizercycles);
-void zztWorldSetScore(ZZTworld *world, u_int16_t score);
+void zztWorldSetBoardcount(ZZTworld *world, uint16_t count);	/* Don't ever use */
+void zztWorldSetAmmo(ZZTworld *world, uint16_t ammo);
+void zztWorldSetGems(ZZTworld *world, uint16_t gems);
+void zztWorldSetKey(ZZTworld *world, int number, uint8_t state);
+void zztWorldSetHealth(ZZTworld *world, uint16_t health);
+void zztWorldSetStartboard(ZZTworld *world, uint16_t startboard);
+void zztWorldSetTorches(ZZTworld *world, uint16_t torches);
+void zztWorldSetTorchcycles(ZZTworld *world, uint16_t torchcycles);
+void zztWorldSetEnergizercycles(ZZTworld *world, uint16_t energizercycles);
+void zztWorldSetScore(ZZTworld *world, uint16_t score);
 void zztWorldSetTitle(ZZTworld *world, char *title);
 void zztWorldSetFlag(ZZTworld *world, int number, char *word);
-void zztWorldSetTimepassed(ZZTworld *world, u_int16_t time);
-void zztWorldSetSavegame(ZZTworld *world, u_int8_t flag);
+void zztWorldSetTimepassed(ZZTworld *world, uint16_t time);
+void zztWorldSetSavegame(ZZTworld *world, uint8_t flag);
 /* zztWorldSetFilename(world, name)
  * Set the filename of the world
  */
@@ -276,20 +244,20 @@ void zztWorldSetFilename(ZZTworld *world, char *name);
 /* zztWorldGetXXXXX()
  * Get a world info variable
  */
-u_int16_t zztWorldGetBoardcount(ZZTworld *world);
-u_int16_t zztWorldGetAmmo(ZZTworld *world);
-u_int16_t zztWorldGetGems(ZZTworld *world);
-u_int8_t zztWorldGetKey(ZZTworld *world, int number);
-u_int16_t zztWorldGetHealth(ZZTworld *world);
-u_int16_t zztWorldGetStartboard(ZZTworld *world);
-u_int16_t zztWorldGetTorches(ZZTworld *world);
-u_int16_t zztWorldGetTorchcycles(ZZTworld *world);
-u_int16_t zztWorldGetEnergizercycles(ZZTworld *world);
-u_int16_t zztWorldGetScore(ZZTworld *world);
-u_int8_t *zztWorldGetTitle(ZZTworld *world);
-u_int8_t *zztWorldGetFlag(ZZTworld *world, int number);
-u_int16_t zztWorldGetTimepassed(ZZTworld *world);
-u_int8_t zztWorldGetSavegame(ZZTworld *world);
+uint16_t zztWorldGetBoardcount(ZZTworld *world);
+uint16_t zztWorldGetAmmo(ZZTworld *world);
+uint16_t zztWorldGetGems(ZZTworld *world);
+uint8_t zztWorldGetKey(ZZTworld *world, int number);
+uint16_t zztWorldGetHealth(ZZTworld *world);
+uint16_t zztWorldGetStartboard(ZZTworld *world);
+uint16_t zztWorldGetTorches(ZZTworld *world);
+uint16_t zztWorldGetTorchcycles(ZZTworld *world);
+uint16_t zztWorldGetEnergizercycles(ZZTworld *world);
+uint16_t zztWorldGetScore(ZZTworld *world);
+uint8_t *zztWorldGetTitle(ZZTworld *world);
+uint8_t *zztWorldGetFlag(ZZTworld *world, int number);
+uint16_t zztWorldGetTimepassed(ZZTworld *world);
+uint8_t zztWorldGetSavegame(ZZTworld *world);
 /* zztWorldGetFilename(world)
  * Get the filename of the world
  */
@@ -355,7 +323,7 @@ int zztBoardCompress(ZZTboard *board);
 /* zztBoardGetSize(board)
  * Determine the size of a board in bytes
  */
-u_int16_t zztBoardGetSize(ZZTboard *board);
+uint16_t zztBoardGetSize(ZZTboard *board);
 /* zztWorldAddBoard(world, title)
  * Create a blank board at the end of the world with the given title
  */
@@ -378,34 +346,34 @@ int zztWorldMoveBoard(ZZTworld *world, int src, int dest);
  * Set a board info variable
  */ 
 void zztBoardSetTitle(ZZTworld *world, char *title);
-void zztBoardSetMaxshots(ZZTworld *world, u_int8_t maxshots);
-void zztBoardSetDarkness(ZZTworld *world, u_int8_t darkness);
-void zztBoardSetBoard_n(ZZTworld *world, u_int8_t board_n);
-void zztBoardSetBoard_s(ZZTworld *world, u_int8_t board_s);
-void zztBoardSetBoard_w(ZZTworld *world, u_int8_t board_w);
-void zztBoardSetBoard_e(ZZTworld *world, u_int8_t board_e);
-void zztBoardSetReenter(ZZTworld *world, u_int8_t reenter);
-void zztBoardSetReenter_x(ZZTworld *world, u_int8_t reenter_x);
-void zztBoardSetReenter_y(ZZTworld *world, u_int8_t reenter_y);
+void zztBoardSetMaxshots(ZZTworld *world, uint8_t maxshots);
+void zztBoardSetDarkness(ZZTworld *world, uint8_t darkness);
+void zztBoardSetBoard_n(ZZTworld *world, uint8_t board_n);
+void zztBoardSetBoard_s(ZZTworld *world, uint8_t board_s);
+void zztBoardSetBoard_w(ZZTworld *world, uint8_t board_w);
+void zztBoardSetBoard_e(ZZTworld *world, uint8_t board_e);
+void zztBoardSetReenter(ZZTworld *world, uint8_t reenter);
+void zztBoardSetReenter_x(ZZTworld *world, uint8_t reenter_x);
+void zztBoardSetReenter_y(ZZTworld *world, uint8_t reenter_y);
 void zztBoardSetMessage(ZZTworld *world, char *message);
-void zztBoardSetTimelimit(ZZTworld *world, u_int16_t timelimit);
-void zztBoardSetParamcount(ZZTworld *world, u_int16_t paramcount);	/* Don't ever use */
+void zztBoardSetTimelimit(ZZTworld *world, uint16_t timelimit);
+void zztBoardSetParamcount(ZZTworld *world, uint16_t paramcount);	/* Don't ever use */
 /* zztBoardGetXXXXX()
  * Get a board info variable
  */ 
-u_int8_t *zztBoardGetTitle(ZZTworld *world);
-u_int8_t zztBoardGetMaxshots(ZZTworld *world);
-u_int8_t zztBoardGetDarkness(ZZTworld *world);
-u_int8_t zztBoardGetBoard_n(ZZTworld *world);
-u_int8_t zztBoardGetBoard_s(ZZTworld *world);
-u_int8_t zztBoardGetBoard_w(ZZTworld *world);
-u_int8_t zztBoardGetBoard_e(ZZTworld *world);
-u_int8_t zztBoardGetReenter(ZZTworld *world);
-u_int8_t zztBoardGetReenter_x(ZZTworld *world);
-u_int8_t zztBoardGetReenter_y(ZZTworld *world);
-u_int8_t *zztBoardGetMessage(ZZTworld *world);
-u_int16_t zztBoardGetTimelimit(ZZTworld *world);
-u_int16_t zztBoardGetParamcount(ZZTworld *world);
+uint8_t *zztBoardGetTitle(ZZTworld *world);
+uint8_t zztBoardGetMaxshots(ZZTworld *world);
+uint8_t zztBoardGetDarkness(ZZTworld *world);
+uint8_t zztBoardGetBoard_n(ZZTworld *world);
+uint8_t zztBoardGetBoard_s(ZZTworld *world);
+uint8_t zztBoardGetBoard_w(ZZTworld *world);
+uint8_t zztBoardGetBoard_e(ZZTworld *world);
+uint8_t zztBoardGetReenter(ZZTworld *world);
+uint8_t zztBoardGetReenter_x(ZZTworld *world);
+uint8_t zztBoardGetReenter_y(ZZTworld *world);
+uint8_t *zztBoardGetMessage(ZZTworld *world);
+uint16_t zztBoardGetTimelimit(ZZTworld *world);
+uint16_t zztBoardGetParamcount(ZZTworld *world);
 
 /***** FILE I/O ******/
 /* zztWorldWrite(world, fp)
@@ -468,7 +436,7 @@ ZZTparam *zztParamDuplicate(ZZTparam *param);
 /* zztParamGetProperties(tile)
  * Get the parameter properties for the given tile
  */
-u_int8_t zztParamGetProperties(ZZTtile tile);
+uint8_t zztParamGetProperties(ZZTtile tile);
 /* zztParamDatauseGet(tile, which)
  * Determine the use for data[which] in tile's param
  */
@@ -543,17 +511,17 @@ ZZTtile zztTileGet(ZZTworld * world, int x, int y);
  * zztGetDisplayChar(world, x, y)
  * Gets the display character of the tile at (x, y)
  */
-u_int8_t zztLoneTileGetDisplayChar(ZZTtile tile);
-u_int8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y);
-u_int8_t zztGetDisplayChar(ZZTworld * world, int x, int y);
+uint8_t zztLoneTileGetDisplayChar(ZZTtile tile);
+uint8_t zztTileGetDisplayChar(ZZTblock * block, int x, int y);
+uint8_t zztGetDisplayChar(ZZTworld * world, int x, int y);
 /* zztLoneTileGetDisplayChar(tile)
  * zztTileGetDisplayColor(block, x, y)
  * zztGetDisplayColor(world, x, y)
  * Gets the display colour of the tile at (x, y)
  */
-u_int8_t zztLoneTileGetDisplayColor(ZZTtile tile);
-u_int8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y);
-u_int8_t zztGetDisplayColor(ZZTworld * world, int x, int y);
+uint8_t zztLoneTileGetDisplayColor(ZZTtile tile);
+uint8_t zztTileGetDisplayColor(ZZTblock * block, int x, int y);
+uint8_t zztGetDisplayColor(ZZTworld * world, int x, int y);
 /* zztTileGetName(tile)
  * Returns a descriptive name for a tile (do not modify!)
  */
