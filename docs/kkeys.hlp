@@ -28,7 +28,12 @@ INSERT
 CTRL-O
   Reveal hidden objects
 ALT-ENTER
-  Toggle fullscreen
+  Toggle fullscreen (GUI only)
+CTRL-MINUS
+  Decrease zoom level (GUI only)
+CTRL-PLUS / CTRL-EQUALS
+  Increase zoom level (GUI only)
+
 
 :info;Info Dialogs
  i - Board Info

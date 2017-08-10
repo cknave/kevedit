@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/param.h>
 #include "SDL.h"
 
 #include "display.h"
@@ -44,6 +45,7 @@ void display_curse(int x, int y);
 void display_curse_inactive(int x, int y);
 
 #define CURSOR_RATE 200
+#define ZOOM_STEP 1.0f
 
 /*************************************
  *** BEGIN TEXTMODE EMULATION CODE ***
@@ -567,7 +569,7 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 	SDL_CreateWindowAndRenderer(width, height, window_flags,
 		&vdest->window, &vdest->renderer);
 	SDL_RenderSetLogicalSize(vdest->renderer, width, height);
-                
+
 	vdest->texture = SDL_CreateTexture(vdest->renderer,
 		SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width,
 		height);
@@ -831,6 +833,49 @@ void display_update_and_present(video_info *vdest, int x, int y, int width,
 	display_present(vdest, &rect);
 }
 
+static float get_window_zoom_level(SDL_Window *window) {
+	int width = 0;
+	int height = 0;
+	SDL_GetWindowSize(window, &width, &height);
+
+	float zoom_x = width / 640.0f;
+	float zoom_y = height / 350.0f;
+	return MIN(zoom_x, zoom_y);
+}
+
+static float get_window_max_zoom_level(SDL_Window *window) {
+	int index = SDL_GetWindowDisplayIndex(window);
+	SDL_Rect bounds;
+	SDL_GetDisplayBounds(index, &bounds);
+
+	float max_zoom_x = bounds.w / 640.0f;
+	float max_zoom_y = bounds.h / 350.0f;
+	return MIN(max_zoom_x, max_zoom_y);
+}
+
+static inline float round_to_nearest_half(float x) {
+	return roundf(2.0f * x) / 2.0f;
+}
+
+static inline float floor_to_nearest_half(float x) {
+	return floorf(2.0f * x) / 2.0f;
+}
+
+static void shrink_window(video_info *vdest) {
+	float zoom = get_window_zoom_level(vdest->window);
+	zoom = round_to_nearest_half(zoom - ZOOM_STEP);
+	zoom = MAX(1.0f, zoom);
+	SDL_SetWindowSize(vdest->window, 640 * zoom, 350 * zoom);
+}
+
+static void grow_window(video_info *vdest) {
+	float zoom = get_window_zoom_level(vdest->window);
+	float max_zoom = get_window_max_zoom_level(vdest->window);
+	zoom = MIN(max_zoom, zoom + ZOOM_STEP);
+	zoom = floor_to_nearest_half(zoom);
+	SDL_SetWindowSize(vdest->window, 640 * zoom, 350 * zoom);
+}
+
 /********************************
  *** BEGIN KEVEDIT GLUE LAYER ***
  ********************************/
@@ -955,7 +1000,7 @@ void display_sdl_putch(int x, int y, int ch, int co)
 void display_sdl_fullscreen()
 {
 	/* Toggle fullscreen */
-        info.is_fullscreen = !info.is_fullscreen;
+	info.is_fullscreen = !info.is_fullscreen;
 
 	Uint32 flags = 0;
 	if(info.is_fullscreen)
@@ -997,11 +1042,30 @@ int display_sdl_getkey()
 				/* Shift, ctrl, and alt don't count */
 				event.type = SDL_KEYUP;
 				break;
+			case SDLK_MINUS:
+			case SDLK_KP_MINUS:
+				if(event.key.keysym.mod & KMOD_CTRL) {
+				    if(!info.is_fullscreen) {
+					shrink_window(&info);
+				    }
+				}
+				break;
+			case SDLK_PLUS:
+			case SDLK_EQUALS:
+			case SDLK_KP_PLUS:
+				if(event.key.keysym.mod & KMOD_CTRL) {
+				    if(!info.is_fullscreen) {
+					grow_window(&info);
+				    }
+				}
+				break;
 			case SDLK_RETURN:
 				/* Fullscreen toggle */
 				if(event.key.keysym.mod & KMOD_ALT) {
 					event.type = SDL_KEYUP;
-					display_sdl_fullscreen();
+					if(!event.key.repeat) {
+					    display_sdl_fullscreen();
+					}
 				}
 				break;
 			default:
