@@ -218,12 +218,16 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 		return NULL;
 
 	/* Reserve some space */
-	filenamebuffer = (char *) malloc(sizeof(char) * (maxlen + 1));
-	path = (char *) malloc(sizeof(char) * (strlen(initname) + 1));
+        int path_size = strlen(initname) + 1;
+        if(path_size < 2) {
+            path_size = 2;  /* at least enough space for "." */
+        }
+	path = malloc(path_size);
+	filenamebuffer = malloc(maxlen + 1);
 
 	/* Parse the initial filename */
 	fileof(filenamebuffer, initname, maxlen + 1);
-	pathof(path, initname, strlen(initname) + 1);
+	pathof(path, initname, path_size);
 
 	/* if extension is given, remove extension from buffer */
 	if (extlen > 0)

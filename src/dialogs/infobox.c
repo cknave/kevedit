@@ -566,7 +566,7 @@ int editworldinfo(ZZTworld* myworld, displaymethod* d)
 		}
 
 		if (curoption != WLDINFO_KEYS) {
-			int result;
+			int result = 0;
 			switch (key) {
 				case DKEY_ENTER:
 					result = worldinfoeditoption(curoption, myworld, cursorx, cursory, d);

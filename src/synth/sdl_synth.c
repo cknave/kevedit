@@ -135,7 +135,7 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 
 	if(playbuffersize != 0 && playbufferloc != 0) {
 		/* Shift buffer back to zero */
-		memcpy(masterplaybuffer,
+		memmove(masterplaybuffer,
 			&masterplaybuffer[playbufferloc],
 			playbuffersize-playbufferloc);
 		playbuffermax -= playbufferloc;

@@ -592,6 +592,7 @@ void display_end(video_info *vdest)
 	deleteTextBlock(vdest->buffer);
 	free(vdest->char_set);
 	free(vdest->palette);
+	free(vdest->pixels);
 
 	/* SDL should restore everything okay.. just use SDL_quit() when ready */
 }
@@ -684,7 +685,6 @@ void display_redraw(video_info *vdest)
 
 	char_pointer = vdest->buffer->data;
 	color_pointer = vdest->buffer->data + 1;
-	current_char_pointer = charset_pointer + (*(char_pointer) * 14);
 
 	i = 25;
 	while(i)
@@ -692,6 +692,7 @@ void display_redraw(video_info *vdest)
 		i2 = 80;
 		while(i2)
 		{
+			current_char_pointer = charset_pointer + (*(char_pointer) * 14);
 			last_pointer = video_pointer;
 			bg = *(palette_pointer + (*(color_pointer) >> 4));
 			fg = *(palette_pointer + (*(color_pointer) & 15));
@@ -727,7 +728,6 @@ void display_redraw(video_info *vdest)
 			i3 = 14;
 			char_pointer += 2;
 			color_pointer += 2;
-			current_char_pointer = charset_pointer + (*(char_pointer) * 14);
 			/* Jump to the next char */
 			i2--;
 			video_pointer = last_pointer + 8;
