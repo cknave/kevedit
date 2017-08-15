@@ -3,32 +3,30 @@
 
 [Setup]
 AppName=KevEdit
-AppVerName=KevEdit 0.5.1
+AppVerName=KevEdit @VERSION@
 AppPublisher=Kev Vance and Ryan Phillips
-AppPublisherURL=http://kevedit.sourceforge.net/
-AppSupportURL=http://kevedit.sourceforge.net/contact.html
-AppUpdatesURL=http://kevedit.sourceforge.net/download.html
+AppPublisherURL=http://github.com/cknave/kevedit
+AppSupportURL=https://github.com/cknave/kevedit/issues
+AppUpdatesURL=https://github.com/cknave/kevedit/releases
 DefaultDirName={pf}\KevEdit
 DefaultGroupName=Games\ZZT
-LicenseFile=COPYING.txt
-InfoBeforeFile=README.txt
-OutputDir=..
+LicenseFile=Z:\work\COPYING.txt
+InfoBeforeFile=Z:\work\kevedit\README.md
+OutputDir=Z:\dist
 ; Cosmetics
 WindowVisible=no
-WizardImageFile=install-big.bmp
-WizardSmallImageFile=install-small.bmp
+WizardImageFile=Z:\platform\windows\install-big.bmp
+WizardSmallImageFile=Z:\platform\windows\install-small.bmp
 
 [Files]
-Source: "AUTHORS.txt";  DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "ChangeLog.txt"; DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "COPYING.txt";  DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "kevedit.exe";  DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "kevedit.zml";  DestDir: "{app}"; CopyMode: alwaysoverwrite
-Source: "README.txt";   DestDir: "{app}"; CopyMode: alwaysoverwrite; Flags: isreadme
-Source: "README-SDL.txt"; Destdir: "{app}"; CopyMode: alwaysoverwrite
-Source: "SDL.dll";      Destdir: "{app}"; CopyMode: alwaysoverwrite
-;Stop releasing this file with KevEdit: it will be built automatically if needed
-;Source: "..\default.zln";  Destdir: "{app}"; CopyMode: alwaysskipifsameorolder
+Source: "Z:\work\AUTHORS.txt";  DestDir: "{app}"; Flags: ignoreversion
+Source: "Z:\work\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Z:\work\COPYING.txt";  DestDir: "{app}"; Flags: ignoreversion
+Source: "Z:\work\kevedit\src\kevedit\kevedit.exe";  DestDir: "{app}"; Flags: ignoreversion
+Source: "Z:\work\kevedit\docs\kevedit.zml";  DestDir: "{app}"; Flags: ignoreversion
+Source: "Z:\work\kevedit\README.md";   DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "Z:\work\sdl\README-SDL.txt"; Destdir: "{app}"; Flags: ignoreversion
+Source: "Z:\work\sdl\SDL2.dll";      Destdir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\KevEdit"; Filename: "{app}\kevedit.exe"; WorkingDir: "{userdocs}"

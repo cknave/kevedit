@@ -112,6 +112,7 @@
 #define DKEY_ALT_EQUALS (131 | DDOSKEY_EXT)
 
 /* Special keys */
-#define DKEY_QUIT       0x900DB133
+#define DKEY_QUIT       0x700DA100
+#define DKEY_DROPFILE	0x44524f50
 
 #endif

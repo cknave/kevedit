@@ -1,0 +1,15 @@
+FROM centos:6
+ARG MAKE_OPTS=-j12
+ARG SDL_VERSION
+
+RUN yum groupinstall -y "Development Tools" && \
+    yum install -y fuse-devel mkisofs sudo unzip
+
+COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp/
+RUN cd /tmp && \
+    tar xvzf SDL2-${SDL_VERSION}.tar.gz && \
+    cd SDL2-${SDL_VERSION} && \
+    ./configure && \
+    make ${MAKE_OPTS} && \
+    make install && \
+    rm -f /tmp/SDL2-${SDL_VERSION}.tar.gz

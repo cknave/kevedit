@@ -59,7 +59,7 @@ int toggledrawmode(keveditor * myeditor);
 int togglegradientmode(keveditor * myeditor);
 
 int saveworld(displaymethod * mydisplay, ZZTworld * myworld);
-ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld, bool *quit);
+ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld, char *filename, bool *quit);
 
 int boardtransfer(displaymethod * mydisplay, ZZTworld * myworld);
 int importfromworld(displaymethod * mydisplay, ZZTworld * myworld);

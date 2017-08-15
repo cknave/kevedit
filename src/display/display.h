@@ -17,13 +17,6 @@
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
-#ifdef SDL
-/* The OS X port of SDL requires this to be included in the file containing
- * main(). Be sure to include display.h in said file whether you need
- * the display there or not. */
-#include "SDL.h"
-#endif
-
 #include "keys.h"
 
 
@@ -77,6 +70,9 @@ typedef struct displaymethod {
 
 	/* Update a region of the screen after a discrete write */
 	void (*update) (int x, int y, int w, int h);
+
+	/** Path of the last file drop event. */
+	char *dropped_file;
 
 } displaymethod;
 

@@ -270,6 +270,8 @@ displaymethod display_stdio = {
 
 	display_stdio_discrete_putch,
 	display_stdio_discrete_print,
-	display_stdio_update
+	display_stdio_update,
+
+	NULL,
 };
 

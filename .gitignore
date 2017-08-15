@@ -1,14 +1,22 @@
+*~
 *.o
 *.a
 *.exe
 .deps
+.DS_Store
 
 /docs/kevedit.zml
 /dosbox/kevedos.iso
-/inst/kevedit.spec
+/inst/dist
+/inst/platform/windows/kevedit.iss
+/inst/vendor/SDL*
+/inst/vendor/kevedit*
+/inst/work
 /src/config.h
 /src/config.h.in
 /src/stamp-h1
+/src/**/test
+/src/kevedit/kevedit
 
 Makefile
 Makefile.in

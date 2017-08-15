@@ -1,0 +1,24 @@
+FROM multiarch/crossbuild:latest
+ARG MAKE_OPTS=-j12
+ARG SDL_VERSION
+ARG ISPACK_VERSION
+
+RUN apt-get update && \
+    apt-get install -y genisoimage innoextract pkgconf wine && \
+    ln -sf /usr/bin/genisoimage /usr/bin/mkisofs
+
+ENV PATH="/usr/x86_64-w64-mingw32/bin:${PATH}"
+COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp/
+RUN cd /tmp && \
+    tar xvzf SDL2-${SDL_VERSION}.tar.gz && \
+    cd SDL2-${SDL_VERSION} && \
+    ./configure --host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 && \
+    make ${MAKE_OPTS} && \
+    make install && \
+    rm -f /tmp/SDL2-${SDL_VERSION}.tar.gz
+
+COPY vendor/ispack-${ISPACK_VERSION}-unicode.exe /tmp/
+RUN mkdir /innosetup && \
+    innoextract -d /innosetup /tmp/ispack-${ISPACK_VERSION}-unicode.exe && \
+    rm -f /tmp/ispack-${ISPACK_VERSION}-unicode.exe
+    

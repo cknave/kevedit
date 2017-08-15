@@ -47,6 +47,14 @@ void display_curse_inactive(int x, int y);
 #define CURSOR_RATE 200
 #define ZOOM_STEP 1.0f
 
+/* No MIN/MAX on mingw32 */
+#ifndef MIN
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
 /*************************************
  *** BEGIN TEXTMODE EMULATION CODE ***
  *************************************/
@@ -565,7 +573,7 @@ void display_load_default_palette(Uint32 *dest)
 
 void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 {
-	Uint32 window_flags = SDL_WINDOW_RESIZABLE;
+	Uint32 window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 	SDL_CreateWindowAndRenderer(width, height, window_flags,
 		&vdest->window, &vdest->renderer);
 	SDL_RenderSetLogicalSize(vdest->renderer, width, height);
@@ -596,6 +604,11 @@ void display_end(video_info *vdest)
 	free(vdest->palette);
 	free(vdest->pixels);
 
+	if(display.dropped_file) {
+		free(display.dropped_file);
+		display.dropped_file = NULL;
+	}
+	
 	/* SDL should restore everything okay.. just use SDL_quit() when ready */
 }
 
@@ -853,6 +866,17 @@ static float get_window_max_zoom_level(SDL_Window *window) {
 	return MIN(max_zoom_x, max_zoom_y);
 }
 
+static void get_pixel_size(video_info *vdest, float *size_x, float *size_y) {
+	int window_w, window_h;
+	SDL_GetWindowSize(vdest->window, &window_w, &window_h);
+
+	int pixel_w, pixel_h;
+	SDL_GetRendererOutputSize(vdest->renderer, &pixel_w, &pixel_h);
+
+	*size_x = (float)pixel_w / window_w;
+	*size_y = (float)pixel_h / window_h;
+}
+
 static inline float round_to_nearest_half(float x) {
 	return roundf(2.0f * x) / 2.0f;
 }
@@ -862,18 +886,28 @@ static inline float floor_to_nearest_half(float x) {
 }
 
 static void shrink_window(video_info *vdest) {
-	float zoom = get_window_zoom_level(vdest->window);
+	float pixel_w, pixel_h;
+	get_pixel_size(vdest, &pixel_w, &pixel_h);
+	float pixel_size = MAX(pixel_w, pixel_h);
+
+	float zoom = get_window_zoom_level(vdest->window) * pixel_size;
 	zoom = round_to_nearest_half(zoom - ZOOM_STEP);
-	zoom = MAX(1.0f, zoom);
-	SDL_SetWindowSize(vdest->window, 640 * zoom, 350 * zoom);
+	zoom = MAX(pixel_size, zoom);
+
+	SDL_SetWindowSize(vdest->window, 640 * zoom / pixel_w, 350 * zoom / pixel_h);
 }
 
 static void grow_window(video_info *vdest) {
-	float zoom = get_window_zoom_level(vdest->window);
-	float max_zoom = get_window_max_zoom_level(vdest->window);
+	float pixel_w, pixel_h;
+	get_pixel_size(vdest, &pixel_w, &pixel_h);
+	float pixel_size = MAX(pixel_w, pixel_h);
+
+	float zoom = get_window_zoom_level(vdest->window) * pixel_size;
+	float max_zoom = get_window_max_zoom_level(vdest->window) * pixel_size;
 	zoom = MIN(max_zoom, zoom + ZOOM_STEP);
 	zoom = floor_to_nearest_half(zoom);
-	SDL_SetWindowSize(vdest->window, 640 * zoom, 350 * zoom);
+
+	SDL_SetWindowSize(vdest->window, 640 * zoom / pixel_w, 350 * zoom / pixel_h);
 }
 
 /********************************
@@ -1023,7 +1057,15 @@ int display_sdl_getkey()
 
 	/* Check for a KEYDOWN event */
 	if (SDL_PollEvent(&event) == 0)
-	return DKEY_NONE;
+		return DKEY_NONE;
+
+	if(event.type == SDL_DROPFILE) {
+		if(display.dropped_file) {
+			free(display.dropped_file);
+		}
+		display.dropped_file = event.drop.file;
+		return DKEY_DROPFILE;
+	}
 
 	/* Preemptive stuff */
 	if(event.type == SDL_KEYDOWN) {
@@ -1044,7 +1086,7 @@ int display_sdl_getkey()
 				break;
 			case SDLK_MINUS:
 			case SDLK_KP_MINUS:
-				if(event.key.keysym.mod & KMOD_CTRL) {
+				if(event.key.keysym.mod & (KMOD_CTRL | KMOD_GUI)) {
 				    if(!info.is_fullscreen) {
 					shrink_window(&info);
 				    }
@@ -1053,7 +1095,7 @@ int display_sdl_getkey()
 			case SDLK_PLUS:
 			case SDLK_EQUALS:
 			case SDLK_KP_PLUS:
-				if(event.key.keysym.mod & KMOD_CTRL) {
+				if(event.key.keysym.mod & (KMOD_CTRL | KMOD_GUI)) {
 				    if(!info.is_fullscreen) {
 					grow_window(&info);
 				    }
@@ -1383,5 +1425,6 @@ displaymethod display_sdl =
 	display_sdl_shift,
 	display_sdl_putch_discrete,
 	display_sdl_print_discrete,
-	display_sdl_update
+	display_sdl_update,
+	NULL,
 };

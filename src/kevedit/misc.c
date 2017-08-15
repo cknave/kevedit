@@ -459,11 +459,15 @@ int saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 	return mydisplay->getch();
 }
 
-ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld, bool *quit)
+ZZTworld * loadworld(displaymethod * mydisplay, ZZTworld * myworld, char *filename, bool *quit)
 {
-	char* filename = filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay, quit);
-	if (quit && *quit)
-		return myworld;
+	if(filename) {
+		filename = str_dup(filename);
+	} else {
+		filename = filedialog(".", "zzt", "Load World", FTYPE_ALL, mydisplay, quit);
+		if (quit && *quit)
+			return myworld;
+	}
 	
 	if (filename == NULL)
 		return myworld;

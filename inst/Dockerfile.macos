@@ -1,0 +1,17 @@
+FROM multiarch/crossbuild:latest
+ARG MAKE_OPTS=-j12
+ARG SDL_VERSION
+
+RUN apt-get update && \
+    apt-get install -y pkgconf genisoimage && \
+    ln -sf /usr/bin/genisoimage /usr/bin/mkisofs
+
+ENV PATH="/usr/osxcross/bin:${PATH}"
+COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp/
+RUN cd /tmp && \
+    tar xvzf SDL2-${SDL_VERSION}.tar.gz && \
+    cd SDL2-${SDL_VERSION} && \
+    ./configure --host=x86_64-apple-darwin14 --prefix=/usr/osxcross CC=x86_64-apple-darwin14-clang && \
+    make ${MAKE_OPTS} && \
+    make install && \
+    rm -f /tmp/SDL2-${SDL_VERSION}.tar.gz

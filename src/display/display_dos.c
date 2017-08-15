@@ -279,5 +279,7 @@ displaymethod display_dos =
 
 	display_dos_putch,
 	display_dos_print,
-	display_dos_update
+	display_dos_update,
+
+	NULL,
 };

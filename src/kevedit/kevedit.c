@@ -544,7 +544,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case 'L': {
 			/* Load world */
 			bool quit = false;
-			myeditor->myworld = loadworld(myeditor->mydisplay, myeditor->myworld, &quit);
+			myeditor->myworld = loadworld(myeditor->mydisplay, myeditor->myworld, NULL, &quit);
 			if(quit) {
 				next_key = DKEY_QUIT;
 			}
@@ -807,6 +807,13 @@ void keveditHandleKeypress(keveditor * myeditor)
 			}
 
 			myeditor->updateflags |= UD_PATTERNS;
+			break;
+
+		case DKEY_DROPFILE:
+			// TODO(kvance): only allow this on startup
+			// or make dropping push a quit event and check drop on quit
+			myeditor->myworld = loadworld(myeditor->mydisplay, myeditor->myworld, display.dropped_file, NULL);
+			myeditor->updateflags |= UD_ALL | UD_BOARDTITLE | UD_WORLDTITLE;
 			break;
 	}
 

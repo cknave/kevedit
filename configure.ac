@@ -9,7 +9,7 @@ AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
 dnl Use automake
-AM_INIT_AUTOMAKE([subdir-objects])
+AM_INIT_AUTOMAKE([1.11 subdir-objects])
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
@@ -150,7 +150,7 @@ CPPFLAGS="$CPPFLAGS $INCLUDE_PATHS"
 AC_CONFIG_FILES([docs/Makefile
 		 dosbox/Makefile
                  glob/Makefile
-                 inst/kevedit.spec
+                 inst/platform/windows/kevedit.iss
                  src/libzzt2/Makefile
                  src/structures/Makefile
                  src/display/Makefile
