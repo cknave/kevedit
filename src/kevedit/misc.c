@@ -253,7 +253,9 @@ void runzzt(char* path, char* world)
 	getcwd(cwd, PATH_MAX);
 
 	/* And run DOSBox */
-	dosbox_launch(DATAPATH, cwd, world);
+	if(!dosbox_launch(path, cwd, world)) {
+            dosbox_launch(DATAPATH, cwd, world);
+        }
 
 #endif /* DOSBOX */
 }

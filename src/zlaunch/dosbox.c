@@ -215,13 +215,13 @@ int dosbox_launch(char *datapath, char *worldpath, char *world)
 	sprintf(tmpdir, "%s%s%s", P_tmpdir, "/", DOSBOX_TEMPLATE);
 	if(mkdtemp(tmpdir) == NULL) {
 		free(tmpdir);
-		return -1;
+		return 0;
 	}
 
 	/* Fill the temp dir with the necessary files */
 	if(_dosbox_prep_tempdir(tmpdir, datapath, worldpath, world) < 0) {
 		free(tmpdir);
-		return -1;
+		return 0;
 	}
 
 	/* Generate the DOSBOX commandline */
@@ -243,7 +243,7 @@ int dosbox_launch(char *datapath, char *worldpath, char *world)
 	rmdir(tmpdir);
 	free(tmpdir);
 	free(commandline);
-	return 0;
+	return 1;
 }
 
 #endif /* DOSBOX */

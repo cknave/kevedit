@@ -474,8 +474,11 @@ locateself(char* argv0)
 	if (strchr(path, ':') != NULL)
 		return path;
 
-	/* path is a relative path, so we need to prepend the current dir */
+	/* Return an absolute path. */
+	if (path[0] == '/')
+		return path;
 
+	/* path is a relative path, so we need to prepend the current dir */
 	cwd = getcwd(NULL, CWDMAXLEN + 1);
 	if (cwd == NULL)
 		return path;
