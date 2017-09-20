@@ -7,9 +7,9 @@ RUN yum groupinstall -y "Development Tools" && \
 
 COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp/
 RUN cd /tmp && \
-    tar xvzf SDL2-${SDL_VERSION}.tar.gz && \
+    tar xzf SDL2-${SDL_VERSION}.tar.gz && \
     cd SDL2-${SDL_VERSION} && \
     ./configure && \
     make ${MAKE_OPTS} && \
     make install && \
-    rm -f /tmp/SDL2-${SDL_VERSION}.tar.gz
+    rm -rf /tmp/SDL2-${SDL_VERSION}*

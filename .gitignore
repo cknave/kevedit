@@ -1,7 +1,6 @@
 *~
 *.o
 *.a
-*.exe
 .deps
 .DS_Store
 

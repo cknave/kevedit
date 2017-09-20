@@ -22,6 +22,7 @@ automake --add-missing
 make
 
 # Add txt extension to docs
+# TODO: fix dos newlines
 for fn in AUTHORS ChangeLog COPYING; do
     cp /work/kevedit/$fn /work/$fn.txt
 done

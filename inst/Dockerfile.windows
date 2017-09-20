@@ -10,12 +10,12 @@ RUN apt-get update && \
 ENV PATH="/usr/x86_64-w64-mingw32/bin:${PATH}"
 COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp/
 RUN cd /tmp && \
-    tar xvzf SDL2-${SDL_VERSION}.tar.gz && \
+    tar xzf SDL2-${SDL_VERSION}.tar.gz && \
     cd SDL2-${SDL_VERSION} && \
     ./configure --host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 && \
     make ${MAKE_OPTS} && \
     make install && \
-    rm -f /tmp/SDL2-${SDL_VERSION}.tar.gz
+    rm -rf /tmp/SDL2-${SDL_VERSION}*
 
 COPY vendor/ispack-${ISPACK_VERSION}-unicode.exe /tmp/
 RUN mkdir /innosetup && \

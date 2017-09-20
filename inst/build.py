@@ -115,6 +115,26 @@ def build_windows(source, args):
         source=source, uid_gid=UID_GID, sdl_version=SDL_VERSION)
 
 
+def build_dos(source, args):
+    # TODO: maybe fetch build-djgpp
+
+    source = get_source_filename(args.version)
+
+    shell("""
+        docker build
+        -f Dockerfile.dos -t kevedit/build_dos
+        .
+        """)
+    shell("""
+        docker run
+        -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
+        -u {uid_gid}
+        kevedit/build_dos /platform/dos/build_dos.sh {source} {version}
+        """,
+        work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
+        source=source, uid_gid=UID_GID, version=args.version)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Build KevEdit for multiple platforms')

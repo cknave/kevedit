@@ -1,0 +1,26 @@
+FROM alpine:3.6
+ARG BUILD_DJGPP_VERSION=2.8
+ARG GCC_VERSION=7.2.0
+ARG DJGPP_MIRROR=http://na.mirror.garr.it/mirrors
+ENV ENABLE_LANGUAGES=c
+
+RUN apk add --no-cache autoconf automake bash bison build-base curl flex \
+    libc6-compat make patch sdl2-dev tar texinfo xz zip zlib-dev
+
+COPY vendor/build-djgpp-${BUILD_DJGPP_VERSION}.tar.gz /tmp/
+
+# Okay, this sed command:
+# 1) Replace the mirror with a fast one.
+# 2) Remove the . from GCC_VERSION_SHORT.  Not sure why this is needed.
+# 3) Don't exit with status 1 at the (successful) end of the script.
+RUN cd /tmp && \
+    tar xzf build-djgpp-${BUILD_DJGPP_VERSION}.tar.gz && \
+    cd build-djgpp-${BUILD_DJGPP_VERSION} && \
+    sed -ie 's/\(DJGPP_DOWNLOAD_BASE\)=.*/\1="${DJGPP_MIRROR}"/; \
+             s/\(GCC_VERSION_SHORT=[^.]\+\)\.\(.*\)/\1\2/; \
+             s/^exit 1$//' \
+            script/${GCC_VERSION} && \
+    ./build-djgpp.sh ${GCC_VERSION} && \
+    rm -rf /tmp/build-djgpp-${BUILD_DJGPP_VERSION} \
+           /tmp/build-djgpp-${BUILD_DJGPP_VERSION}.tar.gz
+ENV PATH="/usr/local/djgpp/bin:${PATH}"
