@@ -2,9 +2,10 @@
 set -e -x
 
 SOURCE="$1"
-SDL_VERSION="$2"
-if [ -z "$SOURCE" ] || [ -z "$SDL_VERSION" ]; then
-    echo "USAGE: build_windows.sh <source.zip> <sdl version>"
+VERSION="$2"
+SDL_VERSION="$3"
+if [ -z "$SOURCE" ] || [ -z "$VERSION" ] || [ -z "$SDL_VERSION" ]; then
+    echo "USAGE: build_windows.sh <source.zip> <kevedit version> <sdl version>"
     exit 1
 fi
 
@@ -21,11 +22,12 @@ automake --add-missing
 ./configure --host=x86_64-w64-mingw32 CFLAGS="-O3"
 make
 
-# Add txt extension to docs
-# TODO: fix dos newlines
+# Add .txt and fix newlines
 for fn in AUTHORS ChangeLog COPYING; do
     cp /work/kevedit/$fn /work/$fn.txt
+    sed -e 's/$/\r/' </work/kevedit/$fn >/work/$fn.txt
 done
+sed -e 's/$/\r/' </work/kevedit/README.md >/work/README.md
 
 # Extract SDL runtime
 rm -rf /work/sdl
@@ -34,3 +36,4 @@ cd /work/sdl
 unzip -j /vendor/SDL2-${SDL_VERSION}-win32-x64.zip
 
 HOME=/work wine /innosetup/app/ISCC.exe - </work/kevedit/inst/platform/windows/kevedit.iss
+mv /dist/setup.exe /dist/kevedit-${VERSION}-setup.exe

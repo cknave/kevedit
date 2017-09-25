@@ -64,11 +64,11 @@ def build_appimage(source, args):
         -v {work}:/work -v {dist}:/dist -v {vendor}:/vendor
         kevedit/build_appimage sh -c "
           /vendor/appimagetool-x86_64.AppImage /work/appdir/KevEdit.AppDir
-            /dist/KevEdit-x86_64.AppImage &&
-          chown {uid_gid} /dist/KevEdit-x86_64.AppImage"
+            /dist/KevEdit-{version}-x86_64.AppImage &&
+          chown {uid_gid} /dist/KevEdit-{version}-x86_64.AppImage"
         """,
         work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
-        uid_gid=UID_GID)
+        uid_gid=UID_GID, version=args.version)
 
 
 def build_macos(source, args):
@@ -109,10 +109,11 @@ def build_windows(source, args):
         docker run
         -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
         -u {uid_gid}
-        kevedit/build_windows /platform/windows/build_windows.sh {source} {sdl_version}
+        kevedit/build_windows
+        /platform/windows/build_windows.sh {source} {version} {sdl_version}
         """,
         work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
-        source=source, uid_gid=UID_GID, sdl_version=SDL_VERSION)
+        source=source, uid_gid=UID_GID, version=args.version, sdl_version=SDL_VERSION)
 
 
 def build_dos(source, args):
