@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <limits.h>
 
 #include "kevedit.h"
 #include "display/display.h"
@@ -36,6 +38,7 @@
 
 ZZTworld * getWorldFromArg(char * arg, char * datapath);
 displaymethod * pickdisplay(displaymethod * rootdisplay);
+static char *find_datapath(char *argv0);
 
 int main(int argc, char **argv)
 {
@@ -54,15 +57,22 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	/* Assume DOS model of keeping program data the same dir as kevedit binary */
-	datapath = locateself(argv[0]);  
+	/* Search a few places for the data files. */
+        char *exe_path = locateself(argv[0]);
+	datapath = find_datapath(exe_path);
 	inithelpsystem(datapath);
+
+        /* Linux appimage: restore the original working directory. */
+        char *owd = getenv("OWD");
+        if(owd) {
+            chdir(owd);
+        }
 
 	myworld = NULL;
 
 	/* Did we get a world on the command line? */
 	if (argc > 1)
-		myworld = getWorldFromArg(argv[1], datapath);
+		myworld = getWorldFromArg(argv[1], exe_path);
 
 	/* Create the blank world */
 	if (myworld == NULL)
@@ -169,5 +179,33 @@ displaymethod * pickdisplay(displaymethod * rootdisplay)
 
 	free(string);
 	return mydisplay;
+}
+
+char *find_datapath(char *argv0) {
+    /* Look for kevedit.zml in a few places relative to the executable's path. */
+    char *exe_path = locateself(argv0);
+    if(!exe_path) {
+        return NULL;
+    }
+
+    char *relative_paths[] = {
+        "",
+        "/share/kevedit",
+        "/../Resources",
+    };
+
+    char pathbuf[PATH_MAX];
+    int i;
+    for(i = 0; i < sizeof(relative_paths)/sizeof(*relative_paths); i++) {
+        snprintf(pathbuf, PATH_MAX, "%s%s/kevedit.zml", exe_path, relative_paths[i]);
+        if(access(pathbuf, F_OK) == 0) {
+            /* Return a copy of the final path without the test file. */
+            snprintf(pathbuf, PATH_MAX, "%s%s", exe_path, relative_paths[i]);
+            return strdup(pathbuf);
+        }
+    }
+
+    /* Couldn't find it, just return the original path. */
+    return exe_path;
 }
 
