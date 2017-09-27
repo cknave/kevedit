@@ -13,6 +13,8 @@ DefaultGroupName=Games\ZZT
 LicenseFile=Z:\work\COPYING.txt
 InfoBeforeFile=Z:\work\README.md
 OutputDir=Z:\dist
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
 ; Cosmetics
 WindowVisible=no
 WizardImageFile=Z:\platform\windows\install-big.bmp
