@@ -30,7 +30,8 @@ cd src/kevedit
 rm kevedit
 SDL_LIBS=$(/usr/osxcross/bin/sdl2-config --static-libs | sed -e 's/-lSDL2//')
 make kevedit LIBS="$SDL_LIBS /usr/osxcross/lib/libSDL2.a"
-cp kevedit /work/KevEdit.app/Contents/MacOS
+cp -a kevedit /work/KevEdit.app/Contents/MacOS
+cp -a ../../docs/kevedit.zml ../../soundfx.zzm /work/KevEdit.app/Contents/Resources/
 
 rm -rf /dist/KevEdit.app
 cp -a /work/KevEdit.app /dist

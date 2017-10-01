@@ -60,6 +60,7 @@ int main(int argc, char **argv)
 	/* Search a few places for the data files. */
         char *exe_path = locateself(argv[0]);
 	datapath = find_datapath(exe_path);
+        free(exe_path);
 	inithelpsystem(datapath);
 
         /* Linux appimage: restore the original working directory. */
@@ -181,9 +182,8 @@ displaymethod * pickdisplay(displaymethod * rootdisplay)
 	return mydisplay;
 }
 
-char *find_datapath(char *argv0) {
+char *find_datapath(char *exe_path) {
     /* Look for kevedit.zml in a few places relative to the executable's path. */
-    char *exe_path = locateself(argv0);
     if(!exe_path) {
         return NULL;
     }
@@ -206,6 +206,6 @@ char *find_datapath(char *argv0) {
     }
 
     /* Couldn't find it, just return the original path. */
-    return exe_path;
+    return strdup(exe_path);
 }
 
