@@ -63,6 +63,15 @@ int main(int argc, char **argv)
         free(exe_path);
 	inithelpsystem(datapath);
 
+        /* macOS: if we started in /, move to somewhere more useful. */
+        char cwd[PATH_MAX];
+        if(getcwd(cwd, sizeof(cwd)) && !strcmp(cwd, "/")) {
+            char *home = getenv("HOME");
+            if(home) {
+                chdir(home);
+            }
+        }
+
         /* Linux appimage: restore the original working directory. */
         char *owd = getenv("OWD");
         if(owd) {
