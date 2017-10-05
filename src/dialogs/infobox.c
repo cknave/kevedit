@@ -139,10 +139,7 @@ int editboardinfo(ZZTworld* myworld, displaymethod* d)
 
 		if (rebuild) {
 			/* Rebuild dialog */
-			int curoption;
-			rebuild = 0;
-
-			curoption = dia.curoption;
+			int curoption = dia.curoption;
 			dialogFree(&dia);
 			dia = buildboardinfodialog(myworld);
 			dia.curoption = curoption;
@@ -755,7 +752,7 @@ int worldinfoeditoption(int curoption, ZZTworld* myworld,
 			tempnum = header->energizercycles;
 			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
 			header->energizercycles = tempnum;
-			return 1;
+			break;
 
 		case WLDINFO_TIMEPASSED:
 			tempnum = header->timepassed;

@@ -135,10 +135,7 @@ int modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 
 		if (rebuild) {
 			/* Rebuild param dialog */
-			int curoption;
-			rebuild = 0;
-
-			curoption = dia.curoption;
+			int curoption = dia.curoption;
 			dialogFree(&dia);
 			dia = buildparamdialog(w, x, y);
 			dia.curoption = curoption;
@@ -839,8 +836,6 @@ int tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 		}
 		if (rebuild) {
 			/* Rebuild dialog */
-			rebuild = 0;
-
 			dialogFree(&dia);
 			dia = buildtileinfodialog(w, x, y);
 		}

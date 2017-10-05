@@ -158,7 +158,6 @@ int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcse
 		/* If the loop stopped short of using every column in src, advance
 		 * the srcpos index to ignore these columns */
 		srcpos += (src->width + x) - col;
-		col = src->width + x;
 	}
 
 	/* Success! */
@@ -192,7 +191,6 @@ int showObjects(keveditor * myeditor)
 			if (tile.type != ZZT_OBJECT)
 				continue;
 
-			ch    = zztLoneTileGetDisplayChar(tile);
 			color = zztLoneTileGetDisplayColor(tile);
 
 			/* Make invisible chars smile */
@@ -957,7 +955,7 @@ int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, pat
 void gradientfillbyselection(ZZTworld * myworld, selection fillsel, patbuffer pbuf, gradline grad, int randomseed, int preview, displaymethod * mydisplay)
 {
 	int x = -1, y = 0;
-	ZZTtile pattern = pbuf.patterns[pbuf.pos];
+	ZZTtile pattern;
 	ZZTblock * prevBlock = NULL;
 
 	if (randomseed != 0)

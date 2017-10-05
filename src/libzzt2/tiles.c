@@ -447,7 +447,6 @@ int zztBlockPaste(ZZTblock *dest, ZZTblock *src,
 		/* If the loop stopped short of using every column in src, advance
 		 * the srcpos index to ignore these columns */
 		srcpos += (src->width + x) - col;
-		col = src->width + x;
 	}
 
 	/* Success! */

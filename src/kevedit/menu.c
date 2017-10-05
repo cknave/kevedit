@@ -319,11 +319,11 @@ int saveobjecttonewlibrary(keveditor * myeditor)
 		return 0;
 
 	/* Generate the zzl header */
-    quit = false;
-    char *library_title = titledialog("Name Your Library", mydisplay, &quit);
-    if(quit)
-        return DKEY_QUIT;
-	pushstring(&zzlv, title);
+	quit = false;
+	char *library_title = titledialog("Name Your Library", mydisplay, &quit);
+	if(quit)
+		return DKEY_QUIT;
+	pushstring(&zzlv, library_title);
 	pushstring(&zzlv, str_dup("*"));
 	pushstring(&zzlv, str_dup("* Format (by CyQ):"));
 	pushstring(&zzlv, str_dup("* "));

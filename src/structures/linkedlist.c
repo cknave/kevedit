@@ -221,7 +221,7 @@ void listRemoveAll(linkedlist * list)
 
 	list->cur = list->last;
 	while (!listIsEmpty(list)) {
-		listitem item = listRemoveItem(list);
+		listRemoveItem(list);
 	}
 
 	return;

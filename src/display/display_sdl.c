@@ -716,7 +716,6 @@ void display_redraw(video_info *vdest)
 			while(i3)
 			{
 				/* Draw an entire char row at a time.. */
-				char_mask = 0x7f;
 				char_row = *(current_char_pointer);
 				i4 = 8;
 				while(i4)
@@ -740,7 +739,6 @@ void display_redraw(video_info *vdest)
 				current_char_pointer++;
 				i3--;
 			}
-			i3 = 14;
 			char_pointer += 2;
 			color_pointer += 2;
 			/* Jump to the next char */
