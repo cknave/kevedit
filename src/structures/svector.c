@@ -355,10 +355,10 @@ int wordwrap(stringvector * sv, char *str, int inspos, int pos, int wrapwidth, i
 	longstr[i]   = 0;
 
 	/* determine location of newpos */
-	if (pos >= inspos)
-		newpos = pos + strlen(str);
-	else if (pos < 0)
+	if (pos < 0)
 		newpos = inspos - pos - 1;
+	else
+		newpos = pos + strlen(str);
 
 	if (longlen <= wrapwidth) {
 		/* no need to wordwrap; we can just copy longstr over sv->cur->s */
