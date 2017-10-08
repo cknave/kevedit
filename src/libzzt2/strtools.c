@@ -131,9 +131,13 @@ int str_equ(const char *str1, const char *str2, int flags)
    	return 0;
 
 	lwr1 = (char *) malloc(strlen(str1) * sizeof(char) + 1);
-	lwr2 = (char *) malloc(strlen(str2) * sizeof(char) + 1);
-	if (lwr1 == NULL || lwr2 == NULL)
+	if (lwr1 == NULL)
 		return -1;
+	lwr2 = (char *) malloc(strlen(str2) * sizeof(char) + 1);
+	if (lwr2 == NULL) {
+		free(lwr1);
+		return -1;
+	}
 
 	strcpy(lwr1, str1);
 	strcpy(lwr2, str2);

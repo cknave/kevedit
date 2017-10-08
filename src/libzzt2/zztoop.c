@@ -73,7 +73,7 @@ ZZTOOPcomponent * zztoopRemoveComponents(ZZTOOPparser * parser)
 	return chain;
 }
 
-void zztoopAddComponent(ZZTOOPparser * parser, ZZTOOPcomponent * component)
+int zztoopAddComponent(ZZTOOPparser * parser, ZZTOOPcomponent * component)
 {
 	/* Assume component->next == NULL */
 
@@ -81,36 +81,56 @@ void zztoopAddComponent(ZZTOOPparser * parser, ZZTOOPcomponent * component)
 		/* Add component as first and last item */
 		parser->first = component;
 		parser->last  = component;
+		return 1;
 	} else if (parser->last != NULL) {
 		/* Add component to last and advance last */
 		parser->last->next = component;
 		parser->last = component;
+		return 1;
+	} else {
+		return 0;
 	}
 }
 
-void zztoopAddToken(ZZTOOPparser * parser, int type, int value)
+int zztoopAddToken(ZZTOOPparser * parser, int type, int value)
 {
-		zztoopAddComponent(parser, zztoopCreateComponent(type, value, parser->token, parser->tokenPos));
-		zztoopNextToken(parser);
+	ZZTOOPcomponent *component = zztoopCreateComponent(type, value, parser->token, parser->tokenPos);
+	if(!zztoopAddComponent(parser, component)) {
+		free(component);
+		return 0;
+	}
+	zztoopNextToken(parser);
+	return 1;
 }
 
-void zztoopAddRemainder(ZZTOOPparser * parser, int type, int value)
+int zztoopAddRemainder(ZZTOOPparser * parser, int type, int value)
 {
 	/* TODO: consider stopping at newline characters */
 	char * remainder = parser->line + parser->tokenPos;
-	zztoopAddComponent(parser, zztoopCreateComponent(type, value, remainder, parser->tokenPos));
+	ZZTOOPcomponent *component = zztoopCreateComponent(type, value, remainder, parser->tokenPos);
+	if(!zztoopAddComponent(parser, component)) {
+		free(component);
+		return 0;
+	}
 
 	/* Flush the token */
 	parser->nextTokenPos = strlen(parser->line);
 	zztoopNextToken(parser);
+	return 1;
 }
 
-void zztoopAddWhitespace(ZZTOOPparser * parser)
+int zztoopAddWhitespace(ZZTOOPparser * parser)
 {
-	if (parser->tokenType == ZOOPTOK_WHITESPACE) {
-		zztoopAddComponent(parser, zztoopCreateComponent(ZOOPTYPE_NONE, 0, parser->token, parser->tokenPos));
-		zztoopNextToken(parser);
+	if (parser->tokenType != ZOOPTOK_WHITESPACE) {
+		return 0;
 	}
+	ZZTOOPcomponent *component = zztoopCreateComponent(ZOOPTYPE_NONE, 0, parser->token, parser->tokenPos);
+	if(!zztoopAddComponent(parser, component)) {
+		free(component);
+		return 0;
+	}
+	zztoopNextToken(parser);
+	return 1;
 }
 
 /**** Component creation/destruction **/

@@ -179,16 +179,16 @@ ZZTOOPcomponent * zztoopRemoveComponents(ZZTOOPparser * parser);
 /* private: */
 
 /* Add a component to the parser */
-void zztoopAddComponent(ZZTOOPparser * parser, ZZTOOPcomponent * component);
+int zztoopAddComponent(ZZTOOPparser * parser, ZZTOOPcomponent * component);
 
 /* Add the current token to the parser and move on */
-void zztoopAddToken(ZZTOOPparser * parser, int type, int value);
+int zztoopAddToken(ZZTOOPparser * parser, int type, int value);
 
 /* Add remainder of the line (including token) as a component with given type and value */
-void zztoopAddRemainder(ZZTOOPparser * parser, int type, int value);
+int zztoopAddRemainder(ZZTOOPparser * parser, int type, int value);
 
 /* Add the next token if it is whitespace and advance */
-void zztoopAddWhitespace(ZZTOOPparser * parser);
+int zztoopAddWhitespace(ZZTOOPparser * parser);
 
 
 /* Create a new component

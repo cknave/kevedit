@@ -106,16 +106,14 @@ ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 	initstringvector(&objectcode);
 
 	curline = zzlv.cur->next;
-	if(curline == NULL) {
+	if(curline == NULL || curline->s == NULL) {
 		return result;
 	}
 
 	/* Retrieve the specifications for this object */
-	if (curline != NULL && curline->s != NULL) {
-		if (sscanf(curline->s, "%d,%d,%d,%d,%d,%d,%d",
-               &lines, &ch, &fgcolour, &bgcolour, &xstep, &ystep, &cycle) < 7) {
-			return result;
-		}
+	if (sscanf(curline->s, "%d,%d,%d,%d,%d,%d,%d",
+				&lines, &ch, &fgcolour, &bgcolour, &xstep, &ystep, &cycle) < 7) {
+		return result;
 	}
 
 	/* Retrieve the object code */
