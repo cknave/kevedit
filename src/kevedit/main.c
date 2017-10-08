@@ -162,11 +162,12 @@ displaymethod * pickdisplay(displaymethod * rootdisplay)
 
 	/* More than 1 display method available, user must choose */
 	int selected = 0;
+	int i;
 	do {
 		char buffer[16];
 		printf("Select a display method:\n\n");
 		mydisplay = rootdisplay;
-		for (int i = 1; i <= num_displays; i++) {
+		for (i = 1; i <= num_displays; i++) {
 			printf("[%d] %s\n", i, mydisplay->name);
 			mydisplay = mydisplay->next;
 		}
@@ -176,7 +177,7 @@ displaymethod * pickdisplay(displaymethod * rootdisplay)
 	} while(selected < 1 || selected > num_displays);
 
 	mydisplay = rootdisplay;
-	for(int i = 1; i < selected; i++) {
+	for(i = 1; i < selected; i++) {
 		mydisplay = mydisplay->next;
 	}
 	return mydisplay;
