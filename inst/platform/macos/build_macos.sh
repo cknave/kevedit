@@ -35,6 +35,7 @@ cp -a ../../docs/kevedit.zml \
       ../../soundfx.zzm \
       ../../dosbox/kevedos.cfg \
       ../../dosbox/kevedos.iso \
+      /platform/macos/kevedit.icns \
       /work/KevEdit.app/Contents/Resources/
 
 rm -rf /dist/KevEdit.app
