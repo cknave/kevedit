@@ -148,46 +148,36 @@ ZZTworld * getWorldFromArg(char * arg, char * datapath)
 
 displaymethod * pickdisplay(displaymethod * rootdisplay)
 {
-	int x, i;
 	displaymethod* mydisplay = rootdisplay;
-	char *string = (char *) malloc(sizeof(char) * 256);
-
-	/* How many display methods? */
-	for (x = 1; x < 9; x++) {
-		if (mydisplay->next == NULL) {
-			break;
-		}
+	int num_displays = 1;
+	while(mydisplay->next != NULL) {
 		mydisplay = mydisplay->next;
+		num_displays++;
 	}
 
-	if (x > 1) {
-		/* More than 1 display method available, user must choose */
-		printf("Hi.  This seems to be your first time running KevEdit.  What display method\n"
-		       "works best on your platform?\n\n");
+	if(num_displays == 1) {
+		return rootdisplay;
+	}
 
+	/* More than 1 display method available, user must choose */
+	int selected = 0;
+	do {
+		char buffer[16];
+		printf("Select a display method:\n\n");
 		mydisplay = rootdisplay;
-		for (i = 0; i < x; i++) {
-			printf("[%d] %s\n", i + 1, mydisplay->name);
-			if (mydisplay->next != NULL)
-				mydisplay = mydisplay->next;
-		}
-		do {
-			printf("\nSelect [1-%i]: ", x);
-			fgets(string, 255, stdin);
-			i = string[0];
-		}
-		while (i > 49 && i < 51);
-		i -= '1';
-		printf("\n%d SELECT\n", i);
-		mydisplay = rootdisplay;
-		for (x = 0; x < i; x++) {
+		for (int i = 1; i <= num_displays; i++) {
+			printf("[%d] %s\n", i, mydisplay->name);
 			mydisplay = mydisplay->next;
 		}
-	} else {
-		mydisplay = rootdisplay;
-	}
+		printf("\nSelect [1-%d]: ", num_displays);
+		fgets(buffer, sizeof(buffer), stdin);
+		sscanf(buffer, "%d", &selected);
+	} while(selected < 1 || selected > num_displays);
 
-	free(string);
+	mydisplay = rootdisplay;
+	for(int i = 1; i < selected; i++) {
+		mydisplay = mydisplay->next;
+	}
 	return mydisplay;
 }
 

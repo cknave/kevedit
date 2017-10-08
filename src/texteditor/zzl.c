@@ -97,7 +97,7 @@ int zzlpickobject(stringvector * zzlv, displaymethod * d)
 ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 {
 	int lines, ch, fgcolour, bgcolour, xstep, ystep, cycle;
-	ZZTtile result;
+	ZZTtile result = { .type = -1 };
 	ZZTparam objcodeparam;
 	stringvector objectcode;
 	stringnode* curline;
@@ -106,12 +106,14 @@ ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 	initstringvector(&objectcode);
 
 	curline = zzlv.cur->next;
+	if(curline == NULL) {
+		return result;
+	}
 
 	/* Retrieve the specifications for this object */
 	if (curline != NULL && curline->s != NULL) {
 		if (sscanf(curline->s, "%d,%d,%d,%d,%d,%d,%d",
                &lines, &ch, &fgcolour, &bgcolour, &xstep, &ystep, &cycle) < 7) {
-			result.type = -1;
 			return result;
 		}
 	}

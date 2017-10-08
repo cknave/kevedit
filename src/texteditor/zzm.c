@@ -48,9 +48,12 @@ stringvector zzmpullsong(stringvector * zzmv, int songnum)
 		    str_equ(curline->s, "; $SONG ", STREQU_UNCASE | STREQU_FRONT)) {
 			int cursongnum = 0;
 			sscanf(curline->s + 8, "%d", &cursongnum);
-			if (cursongnum == songnum)
+			if (cursongnum == songnum) {
 				for (curline = curline->next; curline != NULL && curline->s[0] != ';'; curline = curline->next)
 					pushstring(&songlines, strcpy((char *) malloc(strlen(curline->s)+2), curline->s));
+				if (curline == NULL)
+					break;
+			}
 		}
 	}
 	
