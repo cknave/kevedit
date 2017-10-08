@@ -60,7 +60,6 @@ int main(int argc, char **argv)
 	/* Search a few places for the data files. */
         char *exe_path = locateself(argv[0]);
 	datapath = find_datapath(exe_path);
-        free(exe_path);
 	inithelpsystem(datapath);
 
         /* macOS: if we started in /, move to somewhere more useful. */
@@ -83,6 +82,8 @@ int main(int argc, char **argv)
 	/* Did we get a world on the command line? */
 	if (argc > 1)
 		myworld = getWorldFromArg(argv[1], exe_path);
+
+        free(exe_path);
 
 	/* Create the blank world */
 	if (myworld == NULL)

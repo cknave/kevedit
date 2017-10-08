@@ -300,10 +300,10 @@ stringvector globdirectorytosvector(char * dir, char * pattern, int filetypes)
 			pushstring(&files, zocname);
 
 			free(smallname);
+		} else {
+			fileof(smallname, fullfiles.cur->s, strlen(fullfiles.cur->s));
+			pushstring(&files, smallname);
 		}
-		
-		fileof(smallname, fullfiles.cur->s, strlen(fullfiles.cur->s));
-		pushstring(&files, smallname);
 	}
 
 	deletestringvector(&fullfiles);
