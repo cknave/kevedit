@@ -26,3 +26,6 @@ automake --add-missing
 ./configure --prefix=/work/appdir/KevEdit.AppDir/usr CFLAGS='-O3'
 make
 make install
+
+mkdir -p /work/appdir/KevEdit.AppDir/usr/lib
+cp -a /usr/local/lib/libSDL2*.so* /work/appdir/KevEdit.AppDir/usr/lib/
