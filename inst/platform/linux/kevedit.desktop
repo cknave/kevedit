@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=KevEdit
+Comment=ZZT Editor
+Exec=kevedit
+Icon=kevedit
+Terminal=false
+Type=Application
+StartupNotify=false

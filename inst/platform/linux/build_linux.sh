@@ -8,9 +8,7 @@ if [ -z "$SOURCE" ]; then
 fi
 
 rm -rf /work/appdir
-mkdir /work/appdir
-cp -a /platform/linux/KevEdit.AppDir /work/appdir
-cp /vendor/AppRun-x86_64 /work/appdir/KevEdit.AppDir/AppRun
+mkdir -p /work/appdir/KevEdit.AppDir
 
 rm -rf /work/kevedit
 mkdir /work/kevedit
@@ -26,6 +24,10 @@ automake --add-missing
 ./configure --prefix=/work/appdir/KevEdit.AppDir/usr CFLAGS='-O3'
 make
 make install
+
+cp -a /platform/linux/kevedit.desktop /work/appdir/KevEdit.AppDir/
+cp -a /work/kevedit/inst/icon512.png /work/appdir/KevEdit.AppDir/kevedit.png
+cp /vendor/AppRun-x86_64 /work/appdir/KevEdit.AppDir/AppRun
 
 mkdir -p /work/appdir/KevEdit.AppDir/usr/lib
 cp -a /usr/local/lib/libSDL2*.so* /work/appdir/KevEdit.AppDir/usr/lib/

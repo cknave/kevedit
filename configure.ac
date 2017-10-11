@@ -74,14 +74,36 @@ case "$host" in
 esac
 
 
+AC_MSG_CHECKING(for macOS)
+case "$host" in
+	*darwin*)
+		AC_DEFINE(MACOS, [1], [Define to 1 if host is macOS])
+		AC_MSG_RESULT(yes)
+		;;
+	*)
+		AC_MSG_RESULT(no)
+		;;
+esac
+
 AC_ARG_WITH(dosbox, AC_HELP_STRING([--without-dosbox],[include DOSBox emulation support]),dosbox=$withval,dosbox=maybe)
 if test "$dosbox" == "maybe"; then
-	if test -n "$WINDOWS32" || test -n "$DOS"; then
-		AC_MSG_NOTICE(DOS/Windows: Not enabling DOSBox support)
+	if test -n "$DOS"; then
+		AC_MSG_NOTICE(DOS: Not enabling DOSBox support)
 	else
-		AC_MSG_NOTICE(Non-DOS/Windows: Enabling DOSBox support)
+		AC_MSG_NOTICE(Non-DOS: Enabling DOSBox support)
 		dosbox=yes
 	fi
+fi
+AM_CONDITIONAL([FREEDESKTOP], [test "$freedesktop" = "yes"])
+
+AC_ARG_WITH(freedesktop, AC_HELP_STRING([--with-freedesktop],[install desktop file and icons for GNOME/KDE]),freedesktop=$withval,freedesktop=maybe)
+if test "$freedesktop" == "maybe"; then
+    if test -n "$WINDOWS32" || test -n "$DOS" || test -n "$MACOS"; then
+                AC_MSG_NOTICE(DOS/Windows/Mac: Not installing desktop file and icons)
+        else
+                AC_MSG_NOTICE(Non-DOS/Windows/Mac: Installing desktop file and icons)
+                freedesktop=yes
+        fi
 fi
 
 if test "$dosbox" == "yes"; then
