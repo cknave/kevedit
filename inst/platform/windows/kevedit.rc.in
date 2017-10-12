@@ -1,0 +1,24 @@
+1 VERSIONINFO
+FILEVERSION    @WINDRES_VERSION@
+PRODUCTVERSION @WINDRES_VERSION@
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "Kevin Vance et al."
+      VALUE "FileDescription", "KevEdit ZZT Editor"
+      VALUE "FileVersion", "@VERSION@"
+      VALUE "InternalName", "kevedit"
+      VALUE "LegalCopyright", "Kevin Vance et al."
+      VALUE "OriginalFilename", "kevedit.exe"
+      VALUE "ProductName", "KevEdit"
+      VALUE "ProductVersion", "@VERSION@"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END
+kevedit ICON "kevedit.ico"

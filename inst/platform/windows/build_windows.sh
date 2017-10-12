@@ -27,7 +27,7 @@ for fn in AUTHORS ChangeLog COPYING; do
     cp /work/kevedit/$fn /work/$fn.txt
     sed -e 's/$/\r/' </work/kevedit/$fn >/work/$fn.txt
 done
-sed -e 's/$/\r/' </work/kevedit/README.md >/work/README.md
+sed -e 's/$/\r/' </work/kevedit/README.md >/work/README.txt
 
 # Extract SDL runtime
 rm -rf /work/sdl

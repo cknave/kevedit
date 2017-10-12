@@ -7,8 +7,7 @@ AM_CPPFLAGS = -DDATAPATH=\"$(pkgdatadir)\"
 bin_PROGRAMS = kevedit
 
 if HAVE_WINDRES
-windres_SOURCES = resources.rc
-MOSTLYCLEANFILES = resources.rc
+windres_SOURCES = $(top_srcdir)/inst/platform/windows/kevedit.rc
 endif
 
 kevedit_SOURCES = \
@@ -21,8 +20,4 @@ kevedit_LDADD = ../zlaunch/libzlaunch.a ../texteditor/libtexteditor.a ../dialogs
 .rc.o:
 	$(WINDRES) -o $@ $<
 
-resources.o: resources.rc
-
-resources.rc:
-	echo kevedit ICON \"$(top_srcdir)/kevedit.ico\" > $@
-
+resources.o: $(windres_SOURCES)

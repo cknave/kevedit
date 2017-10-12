@@ -122,6 +122,7 @@ AC_SUBST([synth_objects])
 dnl Check for windows resource compiler.
 AC_CHECK_PROGS(WINDRES, windres)
 AC_SUBST(WINDRES)
+AC_SUBST(WINDRES_VERSION, $(echo AC_PACKAGE_VERSION | tr . ,))
 AM_CONDITIONAL(HAVE_WINDRES, [test x$WINDRES != x])
 
 dnl Checks for header files.
@@ -173,6 +174,7 @@ AC_CONFIG_FILES([docs/Makefile
 		 dosbox/Makefile
                  glob/Makefile
                  inst/platform/windows/kevedit.iss
+                 inst/platform/windows/kevedit.rc
                  src/libzzt2/Makefile
                  src/structures/Makefile
                  src/display/Makefile

@@ -11,7 +11,7 @@ AppUpdatesURL=https://github.com/cknave/kevedit/releases
 DefaultDirName={pf}\KevEdit
 DefaultGroupName=Games\ZZT
 LicenseFile=Z:\work\COPYING.txt
-InfoBeforeFile=Z:\work\README.md
+InfoBeforeFile=Z:\work\README.txt
 OutputDir=Z:\dist
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
@@ -26,13 +26,13 @@ Source: "Z:\work\ChangeLog.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Z:\work\COPYING.txt";  DestDir: "{app}"; Flags: ignoreversion
 Source: "Z:\work\kevedit\src\kevedit\kevedit.exe";  DestDir: "{app}"; Flags: ignoreversion
 Source: "Z:\work\kevedit\docs\kevedit.zml";  DestDir: "{app}"; Flags: ignoreversion
-Source: "Z:\work\README.md";   DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "Z:\work\README.txt";   DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "Z:\work\sdl\README-SDL.txt"; Destdir: "{app}"; Flags: ignoreversion
 Source: "Z:\work\sdl\SDL2.dll";      Destdir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\KevEdit"; Filename: "{app}\kevedit.exe"; WorkingDir: "{userdocs}"
-Name: "{group}\KevEdit Readme";  Filename: "{app}\README.md"
+Name: "{group}\KevEdit Readme";  Filename: "{app}\README.txt"
 Name: "{group}\Uninstall KevEdit"; Filename: "{uninstallexe}"
 
 [Run]

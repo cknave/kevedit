@@ -3,6 +3,7 @@
 *.a
 .deps
 .DS_Store
+.dirstamp
 
 /docs/kevedit.zml
 /dosbox/kevedos.iso
