@@ -3,8 +3,17 @@ ARG MAKE_OPTS=-j12
 ARG SDL_VERSION
 
 RUN apt-get update && \
-    apt-get install -y pkgconf genisoimage && \
-    ln -sf /usr/bin/genisoimage /usr/bin/mkisofs
+    apt-get install -y libssl-dev genisoimage pkgconf zlib1g-dev && \
+    ln -sf /usr/bin/genisoimage /usr/bin/mkisofs && \
+    cd /tmp && \
+    git clone https://github.com/hamstergene/libdmg-hfsplus.git && \
+    cd libdmg-hfsplus && \
+    git checkout 756153e98431dc09c74b9db2cd740c382703fff7 && \
+    cmake . && \
+    cd dmg && \
+    make && \
+    cp -a dmg /usr/local/bin && \
+    rm -rf /tmp/libdmg-hfsplus
 
 ENV PATH="/usr/osxcross/bin:${PATH}"
 COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp/
