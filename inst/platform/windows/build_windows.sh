@@ -1,4 +1,6 @@
 #!/bin/sh
+# KevEdit windows build script
+# Run in kevedit/build_windows container
 set -e -x
 
 SOURCE="$1"

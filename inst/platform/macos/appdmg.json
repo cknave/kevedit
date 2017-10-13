@@ -1,0 +1,18 @@
+{
+  "title": "KevEdit",
+  "background": "dmg background.png",
+  "contents": [
+    {
+      "x": 125,
+      "y": 175,
+      "type": "file",
+      "path": "KevEdit.app"
+    },
+    {
+      "x": 355,
+      "y": 175,
+      "type": "link",
+      "path": "/Applications"
+    }
+  ]
+}

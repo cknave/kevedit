@@ -9,6 +9,7 @@
 /dosbox/kevedos.iso
 /inst/dist
 /inst/platform/windows/kevedit.iss
+/inst/platform/windows/kevedit.rc
 /inst/vendor/SDL*
 /inst/vendor/kevedit*
 /inst/work

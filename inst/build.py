@@ -85,10 +85,10 @@ def build_macos(source, args):
         docker run
         -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
         -u {uid_gid}
-        kevedit/build_macos /platform/macos/build_macos.sh {source}
+        kevedit/build_macos /platform/macos/build_macos.sh {source} {version}
         """,
         work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
-        source=source, uid_gid=UID_GID)
+        source=source, uid_gid=UID_GID, version=args.version)
 
 
 def build_windows(source, args):

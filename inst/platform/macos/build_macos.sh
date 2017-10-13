@@ -1,9 +1,12 @@
 #!/bin/sh
+# KevEdit macOS build script
+# Run in kevedit/build_macos container
 set -e -x
 
 SOURCE="$1"
-if [ -z "$SOURCE" ]; then
-    echo "USAGE: build_macos.sh <source.zip>"
+VERSION="$2"
+if [ -z "$SOURCE" ] || [ -z "$VERSION" ]; then
+    echo "USAGE: build_macos.sh <source.zip> <kevedit version>"
     exit 1
 fi
 
@@ -38,5 +41,19 @@ cp -a ../../docs/kevedit.zml \
       /platform/macos/kevedit.icns \
       /work/KevEdit.app/Contents/Resources/
 
-rm -rf /dist/KevEdit.app
-cp -a /work/KevEdit.app /dist
+rm -rf /work/dmg
+mkdir /work/dmg
+
+cp -a /work/KevEdit.app /work/dmg/
+ln -s /Applications /work/dmg/
+
+mkdir /work/dmg/.background
+cp -a /platform/macos/background.tiff \
+      /work/dmg/.background/dmg\ background.tiff
+
+cp -a /platform/macos/dmg.DS_Store \
+      /work/dmg/.DS_Store
+
+genisoimage -V KevEdit -D -R -apple -no-pad \
+    -o "/dist/KevEdit-${VERSION}.dmg" \
+    /work/dmg/

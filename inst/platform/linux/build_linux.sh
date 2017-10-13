@@ -1,4 +1,6 @@
 #!/bin/sh
+# KevEdit linux AppImage build script
+# Run in kevedit/build_appimage container
 set -e -x
 
 SOURCE="$1"

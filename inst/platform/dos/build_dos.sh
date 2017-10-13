@@ -1,4 +1,6 @@
 #!/bin/sh
+# KevEdit DOS build script
+# Run in kevedit/build_dos container
 set -e -x
 
 SOURCE="$1"
