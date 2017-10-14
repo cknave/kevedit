@@ -10,8 +10,8 @@
 /inst/dist
 /inst/platform/windows/kevedit.iss
 /inst/platform/windows/kevedit.rc
-/inst/vendor/SDL*
-/inst/vendor/kevedit*
+/inst/vendor
+/inst/vendor
 /inst/work
 /src/config.h
 /src/config.h.in

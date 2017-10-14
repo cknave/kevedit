@@ -55,5 +55,5 @@ cp -a /platform/macos/dmg.DS_Store \
       /work/dmg/.DS_Store
 
 genisoimage -V KevEdit -D -R -apple -no-pad \
-    -o "/dist/KevEdit-${VERSION}.dmg" \
+    -o "/dist/kevedit-${VERSION}.dmg" \
     /work/dmg/

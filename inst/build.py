@@ -78,8 +78,8 @@ def build_appimage(source, args):
         -v {work}:/work -v {dist}:/dist -v {vendor}:/vendor
         kevedit/build_appimage sh -c "
           /vendor/{appimage_tool} /work/appdir/KevEdit.AppDir
-            /dist/KevEdit-{version}-x86_64.AppImage &&
-          chown {uid_gid} /dist/KevEdit-{version}-x86_64.AppImage"
+            /dist/kevedit-{version}-x86_64.AppImage &&
+          chown {uid_gid} /dist/kevedit-{version}-x86_64.AppImage"
         """,
         work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
         appimage_tool=get_appimagetool_filename(APPIMAGE_VERSION), uid_gid=UID_GID,
