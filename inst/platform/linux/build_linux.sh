@@ -4,8 +4,9 @@
 set -e -x
 
 SOURCE="$1"
-if [ -z "$SOURCE" ]; then
-    echo "USAGE: build_linux.sh <source.zip>"
+APPIMAGE_VERSION="$2"
+if [ -z "$SOURCE" ] || [ -z "$APPIMAGE_VERSION" ]; then
+    echo "USAGE: build_linux.sh <source.zip> <AppImage version>"
     exit 1
 fi
 
@@ -29,7 +30,7 @@ make install
 
 cp -a /platform/linux/kevedit.desktop /work/appdir/KevEdit.AppDir/
 cp -a /work/kevedit/inst/icon512.png /work/appdir/KevEdit.AppDir/kevedit.png
-cp /vendor/AppRun-x86_64 /work/appdir/KevEdit.AppDir/AppRun
+cp /vendor/AppRun-${APPIMAGE_VERSION}-x86_64 /work/appdir/KevEdit.AppDir/AppRun
 
 mkdir -p /work/appdir/KevEdit.AppDir/usr/lib
 cp -a /usr/local/lib/libSDL2*.so* /work/appdir/KevEdit.AppDir/usr/lib/
