@@ -1,10 +1,14 @@
-KevEdit
-=======
+# KevEdit
 
-KevEdit is a ZZT editor that was under development from 2000-2005 by Kevin Vance and Ryan Phillips.  It runs under DOS, Windows, and Linux.
+KevEdit is a ZZT editor that was under development from 2000-2005 by Kevin
+Vance and Ryan Phillips.  It runs under DOS, Windows, macOS, and Linux.
 
-Download
---------
+As of 2017 it is maintained by Kevin Vance on github.  Maintenance is focused
+on improvements for running KevEdit on modern computers while still supporting
+DOS.
+
+
+## Download
 
 Binary releases are available:
 
@@ -13,8 +17,43 @@ Binary releases are available:
 * [DOS](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-dos.zip)
 * [Linux i386](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-linux-i386.tgz)
 
-Screenshots
------------
+
+## Usage
+
+    $ kevedit [file.zzt]
+
+Press `H` in the editor to access the interactive help.
+
+
+## Building from source
+
+    $ ./bootstrap.sh
+    $ ./configure
+    $ make
+    $ sudo make install
+
+
+## Creating binary artifacts
+
+Docker containers are provided for building Linux AppImage binaries, as well as
+cross-compiling to macOS, Windows, and DOS.  This is automated by a python
+build script:
+
+    $ cd inst
+    $ ./build.py [appimage] [dos] [macos] [windows]
+    $ ls dist
+
+
+## Building docker images
+
+To build and the docker images and tag them as 'latest' instead of pulling them
+from Docker Hub:
+
+    $ cd inst
+    $ ./build.py -i build -t [appimage] [dos] [macos] [windows]
+
+
+## Screenshots
 
 ![The main KevEdit interface](https://cloud.githubusercontent.com/assets/4196901/22183137/b51c68e6-e084-11e6-874d-3458041f4308.gif)
 ![KevEdit navigates a world with the Board Selector](https://cloud.githubusercontent.com/assets/4196901/22183135/b515754a-e084-11e6-9fe3-2483eb67ca79.gif)
