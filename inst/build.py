@@ -252,7 +252,7 @@ def parse_args():
         sys.exit(1)
 
     if args.version is None:
-        args.version = check_output('git rev-parse --verify HEAD')
+        args.version = check_output('git describe --tags HEAD')
         log.info('Version not specified, using current git version %s', args.version)
 
     return args
