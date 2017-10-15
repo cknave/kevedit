@@ -1,3 +1,17 @@
+1.0.0
+-----
+Add macOS support
+Support high DPI screens
+Respond to window close event and ctrl-C (non-DOS)
+Allow resizing window
+Add ctrl+ ctrl- shortcuts for scaling window
+Support DOSBox on Windows
+Upgrade to SDL 2.0
+Add high resolution icons
+Add docker images for building binaries
+New build script for creating binaries
+Fixes for buffer overflows, memory leaks, and other bugs
+
 0.5.1
 -----
 Windows installer defaults to running KevEdit in "My Documents" folder

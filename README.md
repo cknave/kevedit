@@ -12,10 +12,10 @@ DOS.
 
 Binary releases are available:
 
-* [Windows installer](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-setup.exe)
-* [Windows program only](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-win32.zip)
-* [DOS](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-dos.zip)
-* [Linux i386](https://github.com/cknave/kevedit/releases/download/v0.5.1/kevedit-0.5.1-linux-i386.tgz)
+* [DOS](https://github.com/cknave/kevedit/releases/download/v1.0.0/kevedit-1.0.0-dos.zip)
+* [macOS 64-bit app](https://github.com/cknave/kevedit/releases/download/v1.0.0/kevedit-1.0.0-macos.dmg)
+* [Linux x86_64 AppImage](https://github.com/cknave/kevedit/releases/download/v1.0.0/kevedit-1.0.0-x86_64.AppImage)
+* [Windows x64 installer](https://github.com/cknave/kevedit/releases/download/v1.0.0/kevedit-1.0.0-setup.exe)
 
 
 ## Usage

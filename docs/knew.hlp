@@ -1,6 +1,17 @@
 @New Features
 $New Features
 
+$New in Version 1.0.0
+!-kbasics;Zoom with CTRL + and CTRL - (non DOS)
+:;  *  Add macOS support
+:;  *  Support high DPI screens
+:;  *  Respond to window close and ctrl-C (non DOS)
+:;  *  Allow resizing window
+:;  *  Support DOSBox on Windows
+
+$ Bugs fixed in version 1.0.0
+:;  *  Many memory-related crashes fixed
+
 $New in Version 0.5.1
 !-langtut;Improved syntax highlighting
 !-ksupport;Support help topic
