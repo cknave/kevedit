@@ -12,6 +12,7 @@ import sys
 
 # Versions of 3rd party software to fetch
 APPIMAGE_VERSION = '9'
+BUILD_DJGPP_VERSION = '2.8'
 ISPACK_VERSION = '5.5.3'
 SDL_VERSION = '2.0.5'
 
@@ -54,9 +55,15 @@ def main():
 
 
 def build_appimage(source, args):
-    """Build Linux x86_64 AppImage to DIST_DIR."""
+    """Build Linux x86_64 AppImage to DIST_DIR.
+
+    :param str source: path to KevEdit source zip
+    :param args: command line arguments namespace
+    """
+    """"""
     maybe_fetch_appimage(APPIMAGE_VERSION)
 
+    log.debug('Building AppImage docker image...')
     shell("""
         docker build
         -f Dockerfile.appimage -t kevedit/build_appimage
@@ -64,6 +71,7 @@ def build_appimage(source, args):
         .
         """,
         sdl_version=SDL_VERSION)
+    log.debug('Compiling executable for AppImage...')
     shell("""
         docker run
         -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
@@ -72,6 +80,7 @@ def build_appimage(source, args):
         """,
         work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
         source=source, uid_gid=UID_GID, appimage_version=APPIMAGE_VERSION)
+    log.debug('Packing AppImage artifact...')
     # Need --privileged for fuse support, required by appimagetool
     shell("""
         docker run --privileged
@@ -87,9 +96,12 @@ def build_appimage(source, args):
 
 
 def build_macos(source, args):
-    """Build macOS x86_64 .app in a .dmg archive to DIST_DIR."""
-    source = get_source_filename(args.version)
+    """Build macOS x86_64 .app in a .dmg archive to DIST_DIR.
 
+    :param str source: path to KevEdit source zip
+    :param args: command line arguments namespace
+    """
+    log.debug('Building macOS docker image...')
     shell("""
         docker build
         -f Dockerfile.macos -t kevedit/build_macos
@@ -97,6 +109,7 @@ def build_macos(source, args):
         .
         """,
         sdl_version=SDL_VERSION)
+    log.debug('Building macOS .dmg artifact...')
     shell("""
         docker run
         -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
@@ -108,12 +121,15 @@ def build_macos(source, args):
 
 
 def build_windows(source, args):
-    """Build windows x64 .exe in a self-executing installer to DIST_DIR."""
+    """Build windows x64 .exe in a self-executing installer to DIST_DIR.
+
+    :param str source: path to KevEdit source zip
+    :param args: command line arguments namespace
+    """
     maybe_fetch_sdl_windows_runtime(SDL_VERSION)
     maybe_fetch_ispack(ISPACK_VERSION)
 
-    source = get_source_filename(args.version)
-
+    log.debug('Building Windows docker image...')
     shell("""
         docker build
         -f Dockerfile.windows -t kevedit/build_windows
@@ -121,7 +137,8 @@ def build_windows(source, args):
         --build-arg ISPACK_VERSION={ispack_version}
         .
         """,
-        sdl_version=SDL_VERSION, ispack_version=ISPACK_VERSION),
+        sdl_version=SDL_VERSION, ispack_version=ISPACK_VERSION)
+    log.debug('Bulding Windows setup.exe artifact...')
     shell("""
         docker run
         -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
@@ -134,16 +151,21 @@ def build_windows(source, args):
 
 
 def build_dos(source, args):
-    """Build DOS 32-bit .exe in a .zip file to DIST_DIR."""
-    # TODO: maybe fetch build-djgpp
+    """Build DOS 32-bit .exe in a .zip file to DIST_DIR.
 
-    source = get_source_filename(args.version)
+    :param str source: path to KevEdit source zip
+    :param args: command line arguments namespace
+    """
+    maybe_fetch_build_djgpp(BUILD_DJGPP_VERSION)
 
+    log.debug('Building DOS docker image...')
     shell("""
         docker build
         -f Dockerfile.dos -t kevedit/build_dos
         .
         """)
+
+    log.debug('Building DOS zip artifact...')
     shell("""
         docker run
         -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
@@ -283,6 +305,25 @@ def maybe_fetch_appimage(version):
         os.chmod(path, 0o755)
 
 
+def maybe_fetch_build_djgpp(version):
+    """Fetch the build-djgpp source if it doesn't already exist in VENDOR_DIR.
+
+    :param str version: build-djgpp version (build script version, *not* DJGPP version)
+    """
+    filename = 'build-djgpp-{}.tar.gz'.format(version)
+    build_src = os.path.join(VENDOR_DIR, filename)
+    if os.path.exists(build_src):
+        log.debug('build-djgpp file %s already exists; will not fetch', build_src)
+        return
+
+    validate_runs(['wget', '--version'], 'wget is required to fetch build-djgpp')
+
+    url = 'https://github.com/andrewwutw/build-djgpp/archive/v{}.tar.gz'.format(version)
+    log.debug('Fetching build-djgpp source...')
+    subprocess.check_call(['wget', url, '-O', build_src])
+    log.info('Fetched build-djgpp %s', version)
+
+
 def make_source_archive(version, path=VENDOR_DIR):
     """Retrieve the selected version from git and save as a zip file.
 
@@ -391,6 +432,7 @@ def maybe_make_dirs(*dirs):
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
+        log.debug('Created directory %s', d)
 
 
 if __name__ == '__main__':
