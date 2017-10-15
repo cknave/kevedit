@@ -27,6 +27,10 @@
 #include <stdio.h>
 #include <limits.h>
 
+#ifdef DOS
+#include <signal.h>
+#endif
+
 #include "kevedit.h"
 #include "display/display.h"
 #include "libzzt2/zzt.h"
@@ -56,6 +60,11 @@ int main(int argc, char **argv)
 		       mydisplay->name, mydisplay->version); 
 		return 1;
 	}
+
+#ifdef DOS
+        /* On DOS, ctrl-C shouldn't interrupt since it's a valid keypress. */
+        signal(SIGINT, SIG_IGN);
+#endif
 
 	/* Search a few places for the data files. */
         char *exe_path = locateself(argv[0]);
