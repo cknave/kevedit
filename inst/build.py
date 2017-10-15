@@ -46,7 +46,6 @@ def main():
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
 
     maybe_make_dirs(WORK_DIR, DIST_DIR)
-    maybe_fetch_sdl_source(SDL_VERSION)
     make_source_archive(args.version)
 
     source = get_source_filename(args.version)
@@ -54,126 +53,161 @@ def main():
         globals()['build_' + target](source, args)
 
 
-def build_appimage(source, args):
+def build_appimage(source, args, image_version='1.0'):
     """Build Linux x86_64 AppImage to DIST_DIR.
 
     :param str source: path to KevEdit source zip
     :param args: command line arguments namespace
+    :param str image_version: docker image version
     """
     """"""
     maybe_fetch_appimage(APPIMAGE_VERSION)
 
-    log.debug('Building AppImage docker image...')
-    shell("""
-        docker build
-        -f Dockerfile.appimage -t kevedit/build_appimage
-        --build-arg SDL_VERSION={sdl_version}
-        .
-        """,
-        sdl_version=SDL_VERSION)
+    if args.docker_images == 'pull':
+        log.debug('Pulling AppImage docker image...')
+        shell('docker pull kevedit/build_appimage:{version}', version=image_version)
+    else:
+        maybe_fetch_sdl_source(SDL_VERSION)
+        log.debug('Building AppImage docker image...')
+        shell("""
+              docker build
+              -f Dockerfile.appimage -t kevedit/build_appimage:{image_version}
+              --build-arg SDL_VERSION={sdl_version}
+              .
+              """,
+              image_version=image_version, sdl_version=SDL_VERSION)
+        maybe_tag_latest('kevedit/build_appimage', image_version, args)
+
     log.debug('Compiling executable for AppImage...')
     shell("""
-        docker run
-        -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
-        -u {uid_gid}
-        kevedit/build_appimage /platform/linux/build_linux.sh {source} {appimage_version}
-        """,
-        work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
-        source=source, uid_gid=UID_GID, appimage_version=APPIMAGE_VERSION)
+          docker run
+          -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
+          -u {uid_gid}
+          kevedit/build_appimage:{image_version}
+          /platform/linux/build_linux.sh {source} {appimage_version}
+          """,
+          work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
+          image_version=image_version, source=source, uid_gid=UID_GID,
+          appimage_version=APPIMAGE_VERSION)
+
     log.debug('Packing AppImage artifact...')
     # Need --privileged for fuse support, required by appimagetool
     shell("""
-        docker run --privileged
-        -v {work}:/work -v {dist}:/dist -v {vendor}:/vendor
-        kevedit/build_appimage sh -c "
-          /vendor/{appimage_tool} /work/appdir/KevEdit.AppDir
-            /dist/kevedit-{version}-x86_64.AppImage &&
-          chown {uid_gid} /dist/kevedit-{version}-x86_64.AppImage"
-        """,
-        work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
-        appimage_tool=get_appimagetool_filename(APPIMAGE_VERSION), uid_gid=UID_GID,
-        version=args.version)
+          docker run --privileged
+          -v {work}:/work -v {dist}:/dist -v {vendor}:/vendor
+          kevedit/build_appimage sh -c "
+            /vendor/{appimage_tool} /work/appdir/KevEdit.AppDir
+              /dist/kevedit-{version}-x86_64.AppImage &&
+            chown {uid_gid} /dist/kevedit-{version}-x86_64.AppImage"
+          """,
+          work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
+          appimage_tool=get_appimagetool_filename(APPIMAGE_VERSION), uid_gid=UID_GID,
+          version=args.version)
 
 
-def build_macos(source, args):
+def build_macos(source, args, image_version='1.0'):
     """Build macOS x86_64 .app in a .dmg archive to DIST_DIR.
 
     :param str source: path to KevEdit source zip
     :param args: command line arguments namespace
+    :param str image_version: docker image version
     """
-    log.debug('Building macOS docker image...')
-    shell("""
-        docker build
-        -f Dockerfile.macos -t kevedit/build_macos
-        --build-arg SDL_VERSION={sdl_version}
-        .
-        """,
-        sdl_version=SDL_VERSION)
+    if args.docker_images == 'pull':
+        log.debug('Pulling macOS docker image...')
+        shell('docker pull kevedit/build_macos:{version}', version=image_version)
+    else:
+        maybe_fetch_sdl_source(SDL_VERSION)
+        log.debug('Building macOS docker image...')
+        shell("""
+              docker build
+              -f Dockerfile.macos -t kevedit/build_macos:{image_version}
+              --build-arg SDL_VERSION={sdl_version}
+              .
+              """,
+              image_version=image_version, sdl_version=SDL_VERSION)
+        maybe_tag_latest('kevedit/build_macos', image_version, args)
+
     log.debug('Building macOS .dmg artifact...')
     shell("""
-        docker run
-        -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
-        -u {uid_gid}
-        kevedit/build_macos /platform/macos/build_macos.sh {source} {version}
-        """,
-        work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
-        source=source, uid_gid=UID_GID, version=args.version)
+          docker run
+          -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
+          -u {uid_gid}
+          kevedit/build_macos:{image_version}
+          /platform/macos/build_macos.sh {source} {version}
+          """,
+          work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
+          image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
-def build_windows(source, args):
+def build_windows(source, args, image_version='1.0'):
     """Build windows x64 .exe in a self-executing installer to DIST_DIR.
 
     :param str source: path to KevEdit source zip
     :param args: command line arguments namespace
+    :param str image_version: docker image version
     """
     maybe_fetch_sdl_windows_runtime(SDL_VERSION)
-    maybe_fetch_ispack(ISPACK_VERSION)
 
-    log.debug('Building Windows docker image...')
-    shell("""
-        docker build
-        -f Dockerfile.windows -t kevedit/build_windows
-        --build-arg SDL_VERSION={sdl_version}
-        --build-arg ISPACK_VERSION={ispack_version}
-        .
-        """,
-        sdl_version=SDL_VERSION, ispack_version=ISPACK_VERSION)
+    if args.docker_images == 'pull':
+        log.debug('Pulling Windows docker image...')
+        shell('docker pull kevedit/build_windows:{version}', version=image_version)
+    else:
+        maybe_fetch_ispack(ISPACK_VERSION)
+        log.debug('Building Windows docker image...')
+        shell("""
+              docker build
+              -f Dockerfile.windows -t kevedit/build_windows:{image_version}
+              --build-arg SDL_VERSION={sdl_version}
+              --build-arg ISPACK_VERSION={ispack_version}
+              .
+              """,
+              image_version=image_version, sdl_version=SDL_VERSION, ispack_version=ISPACK_VERSION)
+        maybe_tag_latest('kevedit/build_windows', image_version, args)
+
     log.debug('Bulding Windows setup.exe artifact...')
     shell("""
-        docker run
-        -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
-        -u {uid_gid}
-        kevedit/build_windows
-        /platform/windows/build_windows.sh {source} {version} {sdl_version}
-        """,
-        work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
-        source=source, uid_gid=UID_GID, version=args.version, sdl_version=SDL_VERSION)
+          docker run
+          -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
+          -u {uid_gid}
+          kevedit/build_windows:{image_version}
+          /platform/windows/build_windows.sh {source} {version} {sdl_version}
+          """,
+          work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
+          image_version=image_version, source=source, uid_gid=UID_GID, version=args.version,
+          sdl_version=SDL_VERSION)
 
 
-def build_dos(source, args):
+def build_dos(source, args, image_version='1.0'):
     """Build DOS 32-bit .exe in a .zip file to DIST_DIR.
 
     :param str source: path to KevEdit source zip
     :param args: command line arguments namespace
+    :param str image_version: docker image version
     """
-    maybe_fetch_build_djgpp(BUILD_DJGPP_VERSION)
-
-    log.debug('Building DOS docker image...')
-    shell("""
-        docker build
-        -f Dockerfile.dos -t kevedit/build_dos
-        .
-        """)
+    if args.docker_images == 'pull':
+        log.debug('Pulling DOS docker image...')
+        shell('docker pull kevedit/build_dos:{version}', version=image_version)
+    else:
+        maybe_fetch_build_djgpp(BUILD_DJGPP_VERSION)
+        log.debug('Building DOS docker image...')
+        shell("""
+              docker build
+              -f Dockerfile.dos -t kevedit/build_dos:{image_version}
+              .
+              """,
+              image_version=image_version)
+        maybe_tag_latest('kevedit/build_dos', image_version, args)
 
     log.debug('Building DOS zip artifact...')
     shell("""
-        docker run
-        -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
-        -u {uid_gid}
-        kevedit/build_dos /platform/dos/build_dos.sh {source} {version}
-        """,
-        work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
-        source=source, uid_gid=UID_GID, version=args.version)
+          docker run
+          -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
+          -u {uid_gid}
+          kevedit/build_dos:{image_version}
+          /platform/dos/build_dos.sh {source} {version}
+          """,
+          work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
+          image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
 def parse_args():
@@ -183,9 +217,19 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(
         description='Build KevEdit for multiple platforms')
+
+    # optional arguments
     parser.add_argument('-v', '--version', metavar='VERSION', help='KevEdit version to build')
     parser.add_argument('-d', '--debug', action='store_true', help='Enable debug logging')
 
+    # optional maintainer arguments
+    mc_group = parser.add_argument_group('maintainer arguments')
+    mc_group.add_argument('-i', '--docker-images', choices=['build', 'pull'], default='pull',
+                          help='Method to get docker build images')
+    mc_group.add_argument('-t', '--tag', action='store_true',
+                          help="Tag docker image as 'latest' after building")
+
+    # positional arguments
     target_choices = ['all'] + TARGETS
     target_list = ', '.join(sorted(target_choices))
     parser.add_argument(
@@ -201,6 +245,11 @@ def parse_args():
             parser.print_usage()
             sys.exit(1)
         args.targets = TARGETS
+
+    if args.tag and args.docker_images != 'build':
+        print('The --tag argument can only be used with --docker-images=build')
+        parser.print_usage()
+        sys.exit(1)
 
     if args.version is None:
         args.version = check_output('git rev-parse --verify HEAD')
@@ -347,6 +396,18 @@ def make_source_archive(version, path=VENDOR_DIR):
 
     log.debug('Restoring directory...')
     os.chdir(cwd)
+
+
+def maybe_tag_latest(name, version, args):
+    """Tag a docker image 'latest' if the --tag option was set.
+
+    :param str name: docker image name
+    :param str version: version number tag
+    :param args: arguments namespace
+    """
+    if not args.tag:
+        return
+    shell('docker tag {name}:{version} {name}:latest', name=name, version=version)
 
 
 def get_source_filename(version):
