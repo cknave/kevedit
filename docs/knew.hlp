@@ -1,33 +1,37 @@
 @New Features
 $New Features
 
+$ Bugs fixed in version 1.0.1
+*  Fixes for linux .desktop file
+
 $New in Version 1.0.0
 !-kbasics;Zoom with CTRL + and CTRL - (non DOS)
-:;  *  Add macOS support
-:;  *  Support high DPI screens
-:;  *  Respond to window close and ctrl-C (non DOS)
-:;  *  Allow resizing window
-:;  *  Support DOSBox on Windows
+*  Add macOS support
+*  Support high DPI screens
+*  Respond to window close and ctrl-C
+     (non DOS)
+*  Allow resizing window
+*  Support DOSBox on Windows
 
 $ Bugs fixed in version 1.0.0
-:;  *  Many memory-related crashes fixed
+*  Many memory-related crashes fixed
 
 $New in Version 0.5.1
 !-langtut;Improved syntax highlighting
 !-ksupport;Support help topic
 !-kbasics:text;F4 text entry wraps at end of line
 !-kselect;Select discriminates by object char
-:;  *  DOS virtual shift: toggle using F12
+*  DOS virtual shift: toggle using F12
 
 $Bugs fixed in version 0.5.1
-:;  *  Duplicator cycle speed is not 0
-:;  *  Params created for F3 menu items
-:;  *  Stats Editor panel updated
+*  Duplicator cycle speed is not 0
+*  Params created for F3 menu items
+*  Stats Editor panel updated
 !-kbrdinfo:zap;Re-Enter X and Y fixed
-:;  *  Blink walls reversed in F3 menu
+*  Blink walls reversed in F3 menu
 
 $New in Version 0.5.0
-:;  *  Native Linux and Windows support
+*  Native Linux and Windows support
 !-kstats;Stats Editor documentation
 !-kselect;Tile Selection
 !-kselect:copy;Copy and Paste
@@ -38,18 +42,18 @@ $New in Version 0.5.0
 !-kbackbuf:acquire;Acquire Mode grows backbuffer
 !-kstats:bind;Bind Index in Stats Editor
 !-kbasics:zzt;ALT-T runs zzt for testing
-:;  *  CTRL-K selects color (for F4 mode)
-:;  *  CTRL-O reveals hidden objects
+*  CTRL-K selects color (for F4 mode)
+*  CTRL-O reveals hidden objects
 
 $Bugs fixed in 0.5.0
-:;  *  Monitor recognized as valid type
-:;  *  Object Editor panel updated
-:;  *  Saved games using #bind now load
-:;  *  Object #lock-ing supported
-:;  *  Time remaining available for bombs
+*  Monitor recognized as valid type
+*  Object Editor panel updated
+*  Saved games using #bind now load
+*  Object #lock-ing supported
+*  Time remaining available for bombs
 
 $New in Version 0.4.0
-:;  *  Libzzt2 - greater stability
+*  Libzzt2 - greater stability
 !-kbasics:brdselect;Board Movement and Deletion
 !-kbasics:uncommon;All uncommon tiles now available
 !-kbasics:creatures;Creature Editing
@@ -62,19 +66,19 @@ $New in Version 0.4.0
 !-kbasics:zzt;Extended help when running ZZT
 
 $Bugs fixed in 0.4.0
-:;  *  Terrain under creatures remains
-:;  *  Paste w/o copy first does not crash
+*  Terrain under creatures remains
+*  Paste w/o copy first does not crash
 
 $New in Version 0.3.4
 !-kadvance:gradtool;Gradient Tool
 !-kbasics:zzt;Run ZZT at title screen
 !-langtut;OOP Language Tutorial
-:;  *  Multi-directory file dialogs
-:;  *  ALT works better in draw mode
+*  Multi-directory file dialogs
+*  ALT works better in draw mode
 
 $Bugs fixed in 0.3.4
-  *  Occasional crash of Help Dialog
-  *  Memory leak in backbuffer on Quit
+*  Occasional crash of Help Dialog
+*  Memory leak in backbuffer on Quit
 
 $New in Version 0.3.3
 !-kevedit:help;Hypertext help system
@@ -86,8 +90,8 @@ $New in Version 0.3.3
 !-kadvance:randfill;Floodfill advancements
 
 $Bugs fixed in 0.3.3
-  *  Escape cancels save operation
-  *  Cut doesn't crash when used on last
+*  Escape cancels save operation
+*  Cut doesn't crash when used on last
      line in text editor
 
 $New in Version 0.3.2
