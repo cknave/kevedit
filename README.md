@@ -46,7 +46,7 @@ build script:
 
 ## Building docker images
 
-To build and the docker images and tag them as 'latest' instead of pulling them
+To build the docker images and tag them as 'latest' instead of pulling them
 from Docker Hub:
 
     $ cd inst
