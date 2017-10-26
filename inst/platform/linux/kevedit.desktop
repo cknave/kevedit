@@ -7,4 +7,4 @@ Icon=kevedit
 Terminal=false
 Type=Application
 StartupNotify=false
-Categories=Game
+Categories=Game;
