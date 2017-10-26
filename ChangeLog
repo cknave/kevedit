@@ -1,3 +1,7 @@
+1.0.2
+-----
+Fix Linux .desktop file for desktop-file-validator 0.22
+
 1.0.1
 -----
 Fixes for Linux .desktop file

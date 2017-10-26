@@ -1,6 +1,9 @@
 @New Features
 $New Features
 
+$ Bugs fixed in version 1.0.2
+*  Fixes for linux .desktop file validator
+
 $ Bugs fixed in version 1.0.1
 *  Fixes for linux .desktop file
 
