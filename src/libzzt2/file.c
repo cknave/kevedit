@@ -21,6 +21,7 @@
 #include <config.h>
 #endif
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -226,19 +227,21 @@ ZZTworld *zztWorldRead(FILE *fp)
 }
 
 /* It takes a lot of work to free stuff made while creating a board */
-void _zzt_boardread_freestuff(ZZTboard *board, uint8_t *packed, ZZTparam *params, int numparams)
+void _zzt_boardread_freestuff(ZZTboard *board, uint8_t *packed)
 {
 	int i;
 	/* packed data */
-	free(packed); 
+	if(packed) {
+		free(packed);
+	}
 	/* programs for params */
-	for(i = 0; i < numparams; i++) {
-		if(params[i].length != 0)
-			free(params[i].program);
+	for(i = 0; i < board->info.paramcount; i++) {
+		if(board->params[i].length != 0)
+			free(board->params[i].program);
 	}
 	/* params */
-	if(params != NULL)
-		free(params);
+	if(board->params != NULL)
+		free(board->params);
 	/* board data */
 	free(board);
 }
@@ -246,34 +249,37 @@ void _zzt_boardread_freestuff(ZZTboard *board, uint8_t *packed, ZZTparam *params
 ZZTboard *zztBoardRead(FILE *fp)
 {
 	ZZTboard *board = malloc(sizeof(ZZTboard));
+	board->params = NULL;
+	board->info.paramcount = 0;
+
+	bool success = false;
+
 	unsigned int packsize = 1000*3, packofs = 0, tiles = 0;
 	uint8_t *packed = malloc(packsize);
-
 	uint16_t w;
 	uint8_t len;
-
 	uint8_t number, code, color;
-
 	int i;
 
 	/* Boards read from a file are initially compressed */
 	board->bigboard = NULL;
 
-#define freeboard { _zzt_boardread_freestuff(board, packed, NULL, 0); return NULL; }
+	uint16_t board_size;
+	_zzt_inw_or(&board_size, fp) goto boardReadDone;
+	long board_end_offset = ftell(fp) + board_size;
 
 	/* Board header */
-	_zzt_inw_or(&w, fp) freeboard;	/* discard size */
-	_zzt_inb_or(&len, fp) freeboard;
+	_zzt_inb_or(&len, fp) goto boardReadDone;
 	if(len > ZZT_BOARD_TITLE_SIZE)
-		freeboard;
-	_zzt_inspad_or((char *)board->title, len, ZZT_BOARD_TITLE_SIZE, fp) freeboard;
+		goto boardReadDone;
+	_zzt_inspad_or((char *)board->title, len, ZZT_BOARD_TITLE_SIZE, fp) goto boardReadDone;
 	/* Put a null-zero at the end of the title to make it a valid C-string */
 	board->title[len] = '\0';
 	/* Board packed tiles */
 	do {
-		_zzt_inb_or(&number, fp) freeboard;
-		_zzt_inb_or(&code, fp) freeboard;
-		_zzt_inb_or(&color, fp) freeboard;
+		_zzt_inb_or(&number, fp) goto boardReadDone;
+		_zzt_inb_or(&code, fp) goto boardReadDone;
+		_zzt_inb_or(&color, fp) goto boardReadDone;
 		packed[packofs++] = number;
 		packed[packofs++] = code;
 		packed[packofs++] = color;
@@ -287,56 +293,54 @@ ZZTboard *zztBoardRead(FILE *fp)
 	board->packed = malloc(packsize);
 	memcpy(board->packed, packed, packsize);
 	free(packed);
+	packed = board->packed;
 
-#undef freeboard
 	/* Board info */
-#define freeboard { _zzt_boardread_freestuff(board, board->packed, NULL, 0); return NULL; }
-	_zzt_inb_or(&board->info.maxshots, fp) freeboard;
-	_zzt_inb_or(&board->info.darkness, fp) freeboard;
-	_zzt_inb_or(&board->info.board_n, fp) freeboard;
-	_zzt_inb_or(&board->info.board_s, fp) freeboard;
-	_zzt_inb_or(&board->info.board_w, fp) freeboard;
-	_zzt_inb_or(&board->info.board_e, fp) freeboard;
-	_zzt_inb_or(&board->info.reenter, fp) freeboard;
-	_zzt_inb_or(&len, fp) freeboard;
+	_zzt_inb_or(&board->info.maxshots, fp) goto boardReadDone;
+	_zzt_inb_or(&board->info.darkness, fp) goto boardReadDone;
+	_zzt_inb_or(&board->info.board_n, fp) goto boardReadDone;
+	_zzt_inb_or(&board->info.board_s, fp) goto boardReadDone;
+	_zzt_inb_or(&board->info.board_w, fp) goto boardReadDone;
+	_zzt_inb_or(&board->info.board_e, fp) goto boardReadDone;
+	_zzt_inb_or(&board->info.reenter, fp) goto boardReadDone;
+	_zzt_inb_or(&len, fp) goto boardReadDone;
 	if(len > ZZT_MESSAGE_SIZE)
-		freeboard;
+		goto boardReadDone;
 	board->info.message[0] = '\0';
-	_zzt_inspad_or((char *)board->info.message, len, ZZT_MESSAGE_SIZE, fp) freeboard;
-	_zzt_inb_or(&board->info.reenter_x, fp) freeboard;
-	_zzt_inb_or(&board->info.reenter_y, fp) freeboard;
+	_zzt_inspad_or((char *)board->info.message, len, ZZT_MESSAGE_SIZE, fp) goto boardReadDone;
+	_zzt_inb_or(&board->info.reenter_x, fp) goto boardReadDone;
+	_zzt_inb_or(&board->info.reenter_y, fp) goto boardReadDone;
 	board->info.reenter_x--;
 	board->info.reenter_y--;
-	_zzt_inw_or(&board->info.timelimit, fp) freeboard;
-	_zzt_inspad_or(NULL, 0, 16, fp) freeboard;
-	_zzt_inw_or(&w, fp) freeboard;
+	_zzt_inw_or(&board->info.timelimit, fp) goto boardReadDone;
+	_zzt_inspad_or(NULL, 0, 16, fp) goto boardReadDone;
+	_zzt_inw_or(&w, fp) goto boardReadDone;
 	board->info.paramcount = w+1;
-#undef freeboard
+
 	/* All the parameter records */
-#define freeboard { _zzt_boardread_freestuff(board, board->packed, board->params, board->info.paramcount); return NULL; }
 	board->params = malloc(sizeof(ZZTparam)*board->info.paramcount);
 	memset(board->params, 0, sizeof(ZZTparam)*board->info.paramcount);
 	for(i = 0; i < board->info.paramcount; i++) {
-		_zzt_inb_or(&board->params[i].x, fp) freeboard;
-		_zzt_inb_or(&board->params[i].y, fp) freeboard;
+		_zzt_inb_or(&board->params[i].x, fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].y, fp) goto boardReadDone;
 		board->params[i].x--;
 		board->params[i].y--;
-		_zzt_inw_or(&board->params[i].xstep, fp) freeboard;
-		_zzt_inw_or(&board->params[i].ystep, fp) freeboard;
-		_zzt_inw_or(&board->params[i].cycle, fp) freeboard;
-		_zzt_inb_or(&board->params[i].data[0], fp) freeboard;
-		_zzt_inb_or(&board->params[i].data[1], fp) freeboard;
-		_zzt_inb_or(&board->params[i].data[2], fp) freeboard;
-		_zzt_inw_or(&board->params[i].followerindex, fp) freeboard;
-		_zzt_inw_or(&board->params[i].leaderindex, fp) freeboard;
-		_zzt_inb_or(&board->params[i].utype, fp) freeboard;
-		_zzt_inb_or(&board->params[i].ucolor, fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic[0], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic[1], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic[2], fp) freeboard;
-		_zzt_inb_or(&board->params[i].magic[3], fp) freeboard;
-		_zzt_inw_or(&board->params[i].instruction, fp) freeboard;
-		_zzt_inw_or(&w, fp) freeboard;
+		_zzt_inw_or(&board->params[i].xstep, fp) goto boardReadDone;
+		_zzt_inw_or(&board->params[i].ystep, fp) goto boardReadDone;
+		_zzt_inw_or(&board->params[i].cycle, fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].data[0], fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].data[1], fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].data[2], fp) goto boardReadDone;
+		_zzt_inw_or(&board->params[i].followerindex, fp) goto boardReadDone;
+		_zzt_inw_or(&board->params[i].leaderindex, fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].utype, fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].ucolor, fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].magic[0], fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].magic[1], fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].magic[2], fp) goto boardReadDone;
+		_zzt_inb_or(&board->params[i].magic[3], fp) goto boardReadDone;
+		_zzt_inw_or(&board->params[i].instruction, fp) goto boardReadDone;
+		_zzt_inw_or(&w, fp) goto boardReadDone;
 		/* An object bound to another with param index i
 		 * will have a program length of -i, or 65536 - i.
 		 * An object will never be bound to the player (where i == 0) */
@@ -348,10 +352,10 @@ ZZTboard *zztBoardRead(FILE *fp)
 			board->params[i].length = 0;
 			w = 0;  /* Important: don't look for a program */
 		}
-		_zzt_inspad_or(NULL, 0, 8, fp) freeboard;
+		_zzt_inspad_or(NULL, 0, 8, fp) goto boardReadDone;
 		if(w != 0) {
 			board->params[i].program = malloc(w+1);
-			_zzt_ins_or((char *)board->params[i].program, w, fp) freeboard;
+			_zzt_ins_or((char *)board->params[i].program, w, fp) goto boardReadDone;
 			board->params[i].program[w] = '\0';
 		}
 	}
@@ -359,6 +363,20 @@ ZZTboard *zztBoardRead(FILE *fp)
 	/* Read the player x and y positions */
 	board->plx = board->params[0].x;
 	board->ply = board->params[0].y;
+	success = true;
+
+boardReadDone:
+	if(!success) {
+		_zzt_boardread_freestuff(board, packed);
+		board = NULL;
+	}
+
+	/*
+	 * Seek to the next board.  In a normal world, we're already at this position
+	 * but if a board was corrupted there could be extra bytes between here and
+	 * the next board.
+	 */
+	fseek(fp, board_end_offset, SEEK_SET);
 
 	return board;
 }
