@@ -1,6 +1,10 @@
 @New Features
 $New Features
 
+$ Bugs fixed in version 1.0.3
+*  Fixes reading boards after a corrupt
+   board
+
 $ Bugs fixed in version 1.0.2
 *  Fixes for linux .desktop file validator
 
