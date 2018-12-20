@@ -98,7 +98,7 @@ typedef struct ZZTOOPparser {
 #define ZOOPCOMMANDCOUNT    27
 #define ZOOPMESSAGECOUNT     5
 #define ZOOPFLAGCOUNT        5
-#define ZOOPITEMCOUNT        5
+#define ZOOPITEMCOUNT        6
 #define ZOOPCOLOURCOUNT      7
 #define ZOOPDIRCOUNT        15
 #define ZOOPDIRMODCOUNT      4

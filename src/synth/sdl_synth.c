@@ -100,6 +100,7 @@ void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings sett
 	if (note.type == NOTETYPE_DRUM) {
 		/* Okay, these drums sound terrible, but they're better than nothing. */
 		int i;
+		float breaktime = wait - ((float)DRUMBREAK) * DRUMCYCLES / 1000;
 
 		/* Loop through each drum cycle */
 		for (i = 0; i < DRUMCYCLES; i++) {
@@ -107,7 +108,9 @@ void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings sett
 		}
 
 		/* Add a break based on the current duration */
-		AddToBuffer(audiospec, 0, wait - ((float)DRUMBREAK) * DRUMCYCLES / 1000);
+		if( breaktime > 0 ) {
+			AddToBuffer(audiospec, 0, breaktime);
+		}
 	}
 
 	if (spacing != 0.0)

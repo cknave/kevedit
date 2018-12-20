@@ -716,7 +716,7 @@ const char * zztoopflags[ZOOPFLAGCOUNT] =
 
 const char * zztoopitems[ZOOPITEMCOUNT] =
 {
-	"ammo", "gems", "torches", "health", "score"
+	"ammo", "gems", "torches", "health", "score", "time"
 };
 
 const char * zztoopcolours[ZOOPCOLOURCOUNT] =

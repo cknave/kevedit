@@ -30,6 +30,7 @@ void pcSpeakerPlayNote(musicalNote note, musicSettings settings)
 	int frequency = noteFrequency(note, settings);
 	int wait = noteDuration(note, settings);
 	int spacing = noteSpacing(note, settings);
+	int drumbreaktime = wait - DRUMBREAK * DRUMCYCLES;
 
 	if (note.type == NOTETYPE_NOTE) {
 		/* Play the sound at the frequency for a duration */
@@ -55,7 +56,9 @@ void pcSpeakerPlayNote(musicalNote note, musicSettings settings)
 		nosound();
 
 		/* Add a break based on the current duration */
-		delay(wait - DRUMBREAK * DRUMCYCLES);
+		if( drumbreaktime > 0 ) {
+			delay(drumbreaktime);
+		}
 	}
 
 	if (spacing != 0.0) {

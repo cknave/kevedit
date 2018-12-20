@@ -685,13 +685,22 @@ uint8_t _zzt_display_char_line(ZZTblock * block, int x, int y)
 
 	flags = 0;
 
-	if (y == 0 || (zztTileAt(block, x, y - 1).type == ZZT_LINE))
+	uint8_t neighbortype;
+
+	neighbortype = zztTileAt(block, x, y - 1).type;
+	if (y == 0 || neighbortype == ZZT_LINE || neighbortype == ZZT_EDGE)
 		flags |= 1;
-	if (y == block->height - 1 || (zztTileAt(block, x, y + 1).type == ZZT_LINE))
+           
+	neighbortype = zztTileAt(block, x, y + 1).type;
+	if (y == block->height - 1 || neighbortype == ZZT_LINE || neighbortype == ZZT_EDGE)
 		flags |= 2;
-	if (x == 0 || (zztTileAt(block, x - 1, y).type == ZZT_LINE))
+           
+	neighbortype = zztTileAt(block, x - 1, y).type;
+	if (x == 0 || neighbortype == ZZT_LINE || neighbortype == ZZT_EDGE)
 		flags |= 4;
-	if (x == block->width - 1 || (zztTileAt(block, x + 1, y).type == ZZT_LINE))
+           
+	neighbortype = zztTileAt(block, x + 1, y).type;
+	if (x == block->width - 1 || neighbortype == ZZT_LINE || neighbortype == ZZT_EDGE)
 		flags |= 8;
 
 	return _zzt_display_char_line_table[flags];
