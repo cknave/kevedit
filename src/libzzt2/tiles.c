@@ -703,7 +703,7 @@ uint8_t _zzt_display_char_line(ZZTblock * block, int x, int y)
 	if (x == block->width - 1 || neighbortype == ZZT_LINE || neighbortype == ZZT_EDGE)
 		flags |= 8;
 
-	return _zzt_display_char_line_table[flags];	
+	return _zzt_display_char_line_table[flags];
 }
 
 uint8_t zztLoneTileGetDisplayChar(ZZTtile tile)
