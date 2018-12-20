@@ -1,3 +1,9 @@
+1.0.4
+-----
+Fix rendering linewalls next to edge tiles inside the board
+Fix syntax highlighting for "time"
+Fix crash when trying to play a 32nd triplet drum sound
+
 1.0.3
 -----
 Fix reading boards after a corrupt board

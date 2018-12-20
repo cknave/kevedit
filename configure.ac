@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(KevEdit, 1.0.3, kvance@kvance.com, kevedit)
+AC_INIT(KevEdit, 1.0.4, kvance@kvance.com, kevedit)
 AC_CONFIG_SRCDIR([src/kevedit/kevedit.c])
 AM_CONFIG_HEADER([src/config.h])
 
