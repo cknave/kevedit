@@ -417,27 +417,51 @@ int boardinfodeltaoption(displaymethod * d, ZZTworld* myworld, dialogComponent* 
 			return 1;
 
 		case BRDINFO_BRDNORTH:
-			if (info->board_n + delta <= zztWorldGetBoardcount(myworld) &&
-					info->board_n + delta >= 0)
+			if (info->board_n + delta >= zztWorldGetBoardcount(myworld) ) {
+				info->board_n = zztWorldGetBoardcount(myworld) - 1;
+			}
+			else if( info->board_n + delta < 0) {
+				info->board_n = 0;
+			}
+			else {
 				info->board_n += delta;
+			}
 			return 1;
 
 		case BRDINFO_BRDSOUTH:
-			if (info->board_s + delta <= zztWorldGetBoardcount(myworld) &&
-					info->board_s + delta >= 0)
+			if (info->board_s + delta >= zztWorldGetBoardcount(myworld) ) {
+				info->board_s = zztWorldGetBoardcount(myworld) - 1;
+			}
+			else if( info->board_s + delta < 0) {
+				info->board_s = 0;
+			}
+			else {
 				info->board_s += delta;
+			}
 			return 1;
 
 		case BRDINFO_BRDEAST:
-			if (info->board_e + delta <= zztWorldGetBoardcount(myworld) &&
-					info->board_e + delta >= 0)
+			if (info->board_e + delta >= zztWorldGetBoardcount(myworld) ) {
+				info->board_e = zztWorldGetBoardcount(myworld) - 1;
+			}
+			else if( info->board_e + delta < 0) {
+				info->board_e = 0;
+			}
+			else {
 				info->board_e += delta;
+			}
 			return 1;
 
 		case BRDINFO_BRDWEST:
-			if (info->board_w + delta <= zztWorldGetBoardcount(myworld) &&
-					info->board_w + delta >= 0)
+			if (info->board_w + delta >= zztWorldGetBoardcount(myworld) ) {
+				info->board_w = zztWorldGetBoardcount(myworld) - 1;
+			}
+			else if( info->board_w + delta < 0) {
+				info->board_w = 0;
+			}
+			else {
 				info->board_w += delta;
+			}
 			return 1;
 
 		default:
