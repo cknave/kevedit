@@ -11,10 +11,11 @@ import subprocess
 import sys
 
 # Versions of 3rd party software to fetch
-APPIMAGE_VERSION = '9'
-BUILD_DJGPP_VERSION = '2.8'
-ISPACK_VERSION = '5.5.3'
-SDL_VERSION = '2.0.5'
+APPIMAGE_VERSION = '11'
+BUILD_DJGPP_VERSION = '2.9'
+INNOEXTRACT_VERSION = '1.7'
+ISPACK_VERSION = '5.5.8'
+SDL_VERSION = '2.0.9'
 
 
 # All build targets
@@ -53,7 +54,7 @@ def main():
         globals()['build_' + target](source, args)
 
 
-def build_appimage(source, args, image_version='1.0'):
+def build_appimage(source, args, image_version='1.1'):
     """Build Linux x86_64 AppImage to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -105,7 +106,7 @@ def build_appimage(source, args, image_version='1.0'):
           version=args.version)
 
 
-def build_macos(source, args, image_version='1.0'):
+def build_macos(source, args, image_version='1.1'):
     """Build macOS x86_64 .app in a .dmg archive to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -139,7 +140,7 @@ def build_macos(source, args, image_version='1.0'):
           image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
-def build_windows(source, args, image_version='1.0'):
+def build_windows(source, args, image_version='1.1'):
     """Build windows x64 .exe in a self-executing installer to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -153,15 +154,18 @@ def build_windows(source, args, image_version='1.0'):
         shell('docker pull kevedit/build_windows:{version}', version=image_version)
     else:
         maybe_fetch_ispack(ISPACK_VERSION)
+        maybe_fetch_innoextract(INNOEXTRACT_VERSION)
         log.debug('Building Windows docker image...')
         shell("""
               docker build
               -f Dockerfile.windows -t kevedit/build_windows:{image_version}
               --build-arg SDL_VERSION={sdl_version}
               --build-arg ISPACK_VERSION={ispack_version}
+              --build-arg INNOEXTRACT_VERSION={innoextract_version}
               .
               """,
-              image_version=image_version, sdl_version=SDL_VERSION, ispack_version=ISPACK_VERSION)
+              image_version=image_version, sdl_version=SDL_VERSION, ispack_version=ISPACK_VERSION,
+              innoextract_version=INNOEXTRACT_VERSION)
         maybe_tag_latest('kevedit/build_windows', image_version, args)
 
     log.debug('Bulding Windows setup.exe artifact...')
@@ -177,7 +181,7 @@ def build_windows(source, args, image_version='1.0'):
           sdl_version=SDL_VERSION)
 
 
-def build_dos(source, args, image_version='1.0'):
+def build_dos(source, args, image_version='1.1'):
     """Build DOS 32-bit .exe in a .zip file to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -371,6 +375,36 @@ def maybe_fetch_build_djgpp(version):
     log.debug('Fetching build-djgpp source...')
     subprocess.check_call(['wget', url, '-O', build_src])
     log.info('Fetched build-djgpp %s', version)
+
+
+def maybe_fetch_innoextract(version):
+    """Fetch the innoextract binary if it doesn't already exist in VENDOR_DIR.
+
+    :param str version: build-djgpp version (build script version, *not* DJGPP version)
+    """
+    inex_filename = 'innoextract-{}-linux.tar.xz'.format(version)
+    inex_src = os.path.join(VENDOR_DIR, inex_filename)
+    inex_sig = os.path.join(VENDOR_DIR, inex_filename + '.sig')
+    if os.path.exists(inex_src):
+        log.debug('innoextract file %s already exists; will not fetch', inex_src)
+        return
+
+    # Validate that we can fetch and check the signature first.
+    validate_runs(['wget', '--version'], 'wget is required to fetch innoextract')
+    validate_runs(['gpg', '--version'], 'gpg is required to fetch innoextract')
+
+    log.debug('Fetching innoextract source...')
+    subprocess.check_call(
+        ['wget', 'https://github.com/dscharrer/innoextract/releases/download/{}/{}'.format(
+         version, inex_filename), '-O', inex_src])
+    log.debug('Fetching innoextract signature...')
+    subprocess.check_call(
+        ['wget', 'https://github.com/dscharrer/innoextract/releases/download/{}/{}.sig'.format(
+         version, inex_filename), '-O', inex_sig])
+
+    log.debug('Checking innoextract signature...')
+    subprocess.check_call(['gpg', '--verify', inex_sig, inex_src])
+    log.debug('Fetched innoextract %d', version)
 
 
 def make_source_archive(version, path=VENDOR_DIR):

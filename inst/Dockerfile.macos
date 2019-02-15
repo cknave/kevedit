@@ -2,7 +2,11 @@ FROM multiarch/crossbuild:latest
 ARG MAKE_OPTS=-j12
 ARG SDL_VERSION
 
-RUN apt-get update && \
+# multiarch is getting quite out of date at this point, and no longer has
+# security updates
+RUN grep -v http://security.debian.org /etc/apt/sources.list >/tmp/sources.list && \
+    mv /tmp/sources.list /etc/apt/sources.list && \
+    apt-get update && \
     apt-get install -y pkgconf genisoimage && \
     ln -sf /usr/bin/genisoimage /usr/bin/mkisofs
 

@@ -1,4 +1,4 @@
-FROM centos:6
+FROM centos:6.10
 ARG MAKE_OPTS=-j12
 ARG SDL_VERSION
 
