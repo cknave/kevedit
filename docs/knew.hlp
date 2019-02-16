@@ -1,6 +1,10 @@
 @New Features
 $New Features
 
+$ Bugs fixed in version 1.0.5
+*  Fix double input bug on the AppImage
+   version for Ubuntu and Fedora Linux
+
 $ Bugs fixed in version 1.0.4
 *  Fix rendering linewalls next to edge
    tiles inside the board

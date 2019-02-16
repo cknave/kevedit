@@ -1,3 +1,7 @@
+1.0.5
+-----
+Upgrade to SDL 2.0.9 on the AppImage, macOS, and Windows versions
+
 1.0.4
 -----
 Fix rendering linewalls next to edge tiles inside the board
