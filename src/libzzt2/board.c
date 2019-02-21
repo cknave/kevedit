@@ -38,13 +38,14 @@ int _zzt_rle_decode(uint8_t *packed, ZZTblock *block)
 {
 	int ofs = 0, count = 0;
 	int maxcount = block->width * block->height;
-	uint8_t i;
+	int i;
 
 	/* NOTE: we assume that the decompressed rle string is not smaller than the
 	 * size of the block. A larger rle string will safely generate an error */
 
 	do {
-		for(i = 0; i < packed[ofs]; i++) {
+		int run_length = (packed[ofs] > 0) ? packed[ofs] : 256;
+		for(i = 0; i < run_length; i++) {
 			if (count >= maxcount)   /* Do not exceed the block size */
 				return 0;
 			block->tiles[count].type = packed[ofs+1];

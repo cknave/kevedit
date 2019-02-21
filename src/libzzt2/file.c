@@ -287,7 +287,7 @@ ZZTboard *zztBoardRead(FILE *fp)
 			packsize += 1000*3;
 			packed = realloc(packed, packsize);
 		}
-		tiles += number;
+		tiles += (number > 0) ? number : 256;
 	} while(tiles < ZZT_BOARD_MAX_SIZE);
 	/* Create structure w/ exactly right size */
 	board->packed = malloc(packsize);
