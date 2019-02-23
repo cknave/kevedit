@@ -11,10 +11,11 @@ libtexteditor_a_SOURCES = \
 	texteditor.c texteditor.h
 
 if MACOS
+macos_SOURCES = $(top_srcdir)/src/kevedit/macos.m
 macos_frameworks = -framework Cocoa
 endif
 
 noinst_PROGRAMS = test
-test_SOURCES = test.c
+test_SOURCES = test.c $(macos_SOURCES)
 test_LDADD = libtexteditor.a ../display/libdisplay.a ../libzzt2/libzzt2.a
 test_LDFLAGS = $(macos_frameworks)

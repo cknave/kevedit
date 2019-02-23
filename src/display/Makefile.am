@@ -15,11 +15,12 @@ EXTRA_libdisplay_a_SOURCE = $(OPTIONAL_SRC)
 EXTRA_DIST = $(OPTIONAL_SRC)
 
 if MACOS
+macos_SOURCES = $(top_srcdir)/src/kevedit/macos.m
 macos_frameworks = -framework Cocoa
 endif
 
 # Test program
 noinst_PROGRAMS = test
-test_SOURCES = test.c
+test_SOURCES = test.c $(macos_SOURCES)
 test_LDADD = libdisplay.a
 test_LDFLAGS = $(macos_frameworks)

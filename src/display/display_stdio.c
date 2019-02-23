@@ -139,6 +139,10 @@ int display_stdio_getch(void)
 	return 0;
 }
 
+int display_stdio_getch_with_context(enum displaycontext context) {
+	return display_stdio_getch();
+}
+
 int display_stdio_getkey(void)
 {
 	/* There really isn't any way to provide non-blocking input */
@@ -262,6 +266,7 @@ displaymethod display_stdio = {
 	display_stdio_end,
 	display_stdio_putch,
 	display_stdio_getch,
+	display_stdio_getch_with_context,
 	display_stdio_getkey,
 	display_stdio_cursorgo,
 	display_stdio_print,

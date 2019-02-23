@@ -23,6 +23,12 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H 1
 
+enum displaycontext {
+    undefined = 0,
+    board_editor,
+    board_editor_text,
+};
+
 typedef struct displaymethod {
 	/* Next display method, if more than one is available */
 	struct displaymethod *next;
@@ -44,6 +50,9 @@ typedef struct displaymethod {
 
 	/* Wait for an input event and return the key value */
 	int (*getch) (void);
+
+        /* Wait for an input event and return the key value, with this context. */
+        int (*getch_with_context) (enum displaycontext context);
 
 	/* Non-blocking getch()
 	 * Returns DKEY_NONE when there are no pending events */

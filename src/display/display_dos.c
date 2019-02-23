@@ -191,6 +191,10 @@ int display_dos_getch()
 	return key;
 }
 
+int display_dos_getch_with_context(enum displaycontext context) {
+    return display_dos_getch();
+}
+
 int display_dos_getkey()
 {
 	if (kbhit())
@@ -271,6 +275,7 @@ displaymethod display_dos =
 	display_dos_end,
 	display_dos_putch,
 	display_dos_getch,
+	display_dos_getch_with_context,
 	display_dos_getkey,
 	display_dos_gotoxy,
 	display_dos_print,

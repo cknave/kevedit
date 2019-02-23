@@ -30,6 +30,10 @@
 #include "display.h"
 #include "display_sdl.h"
 
+#ifdef MACOS
+#include "../kevedit/macos.h"
+#endif
+
 static SDL_TimerID timer_id = -1;
 
 enum cursor_state {
@@ -593,6 +597,11 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 	vdest->depth  = depth;
 	vdest->is_fullscreen = false;
 	vdest->is_dirty = false;
+        vdest->context = undefined;
+
+#ifdef MACOS
+	installTouchBar(vdest->window);
+#endif
 }
 
 void display_end(video_info *vdest)
@@ -1346,6 +1355,25 @@ int display_sdl_getkey()
 
 int display_sdl_getch()
 {
+	return display_sdl_getch_with_context(undefined);
+}
+
+int display_sdl_getch_with_context(enum displaycontext context) {
+	info.context = context;
+#if MACOS
+	switch(context) {
+		case board_editor:
+			enableTouchBarWithTextMode(false);
+			break;
+		case board_editor_text:
+			enableTouchBarWithTextMode(true);
+			break;
+		default:
+			disableTouchBar();
+			break;
+	}
+#endif
+
 	if(info.is_dirty) {
 		display_present(&info, NULL);
 		if(cursor != CURSOR_HIDDEN) {
@@ -1416,6 +1444,7 @@ displaymethod display_sdl =
 	display_sdl_end,
 	display_sdl_putch,
 	display_sdl_getch,
+	display_sdl_getch_with_context,
 	display_sdl_getkey,
 	display_sdl_gotoxy,
 	display_sdl_print,

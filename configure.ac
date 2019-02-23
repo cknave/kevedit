@@ -14,6 +14,7 @@ AM_MAINTAINER_MODE
 
 dnl Checks for programs.
 AC_PROG_CC
+AC_PROG_OBJC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
@@ -34,6 +35,7 @@ then
 dnl This must be done before most checks because it can affect what headers
 dnl and libraries are available
 CFLAGS="$CFLAGS $SDL_CFLAGS"
+OBJCFLAGS="$OBJCFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $SDL_LIBS"
 
 if test x$sdl = xtrue; then

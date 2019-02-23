@@ -48,6 +48,8 @@ typedef struct
 
         bool is_fullscreen;
         bool is_dirty;
+
+	enum displaycontext context;
 } video_info;
 
 /* Prototypes */

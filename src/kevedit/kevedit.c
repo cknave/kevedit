@@ -173,7 +173,8 @@ void kevedit(keveditor * myeditor)
 		keveditUpdateInterface(myeditor);
 
 		/* Get the key */
-		myeditor->key = myeditor->mydisplay->getch();
+                enum displaycontext cx = myeditor->textentrymode ? board_editor_text : board_editor;
+		myeditor->key = myeditor->mydisplay->getch_with_context(cx);
 
 		/* Undo the cursorspace (draw as a normal tile) */
 		drawspot(myeditor);
