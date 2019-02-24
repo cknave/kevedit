@@ -14,7 +14,12 @@ libdisplay_a_DEPENDENCIES = @display_objects@
 EXTRA_libdisplay_a_SOURCE = $(OPTIONAL_SRC)
 EXTRA_DIST = $(OPTIONAL_SRC)
 
+if MACOS
+macos_frameworks = -framework Cocoa
+endif
+
 # Test program
 noinst_PROGRAMS = test
 test_SOURCES = test.c
 test_LDADD = libdisplay.a
+test_LDFLAGS = $(macos_frameworks)

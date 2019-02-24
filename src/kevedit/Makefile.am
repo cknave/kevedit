@@ -10,12 +10,17 @@ if HAVE_WINDRES
 windres_SOURCES = $(top_srcdir)/inst/platform/windows/kevedit.rc
 endif
 
+if MACOS
+macos_frameworks = -framework Cocoa
+endif
+
 kevedit_SOURCES = \
 	kevedit.c main.c menu.c misc.c patbuffer.c screen.c \
 	kevedit.h menu.h misc.h patbuffer.h screen.h $(windres_SOURCES) \
 	../mkdtemp/mkdtemp.c
 
 kevedit_LDADD = ../zlaunch/libzlaunch.a ../texteditor/libtexteditor.a ../dialogs/libdialogs.a ../help/libhelp.a ../themes/rusty/librusty.a ../synth/libsynth.a ../display/libdisplay.a ../structures/libstructures.a ../libzzt2/libzzt2.a $(GLOBLIB)
+kevedit_LDFLAGS = $(macos_frameworks)
 
 .rc.o:
 	$(WINDRES) -o $@ $<

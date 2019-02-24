@@ -1,0 +1,12 @@
+--- build.sh.orig
++++ build.sh
+@@ -160,4 +160,9 @@
+ patch -p0 < $PATCH_DIR/cctools-ld64-1.patch
+ patch -p0 < $PATCH_DIR/cctools-ld64-2.patch
++patch -p0 < $PATCH_DIR/cctools-ld64-3.patch
++patch -p0 < $PATCH_DIR/cctools-ld64-4.patch
++patch -p0 < $PATCH_DIR/cctools-ar-1.patch
++patch -p0 < $PATCH_DIR/cctools-ar-2.patch
++patch -p0 < $PATCH_DIR/cctools-libstuff-1.patch
+ echo ""
+ CONFFLAGS="--prefix=$TARGET_DIR --target=x86_64-apple-$TARGET "

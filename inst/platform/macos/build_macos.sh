@@ -10,6 +10,8 @@ if [ -z "$SOURCE" ] || [ -z "$VERSION" ]; then
     exit 1
 fi
 
+export MACOSX_DEPLOYMENT_TARGET=10.6
+
 rm -rf /work/KevEdit.app
 mkdir -p /work/KevEdit.app/Contents/MacOS /work/KevEdit.app/Contents/Resources
 cp -a /platform/macos/Info.plist /platform/macos/PkgInfo /work/KevEdit.app/Contents
@@ -20,19 +22,19 @@ cd /work/kevedit
 
 unzip /vendor/$SOURCE
 
-aclocal -I /usr/osxcross/share/aclocal
+aclocal -I /opt/osxcross/share/aclocal
 autoconf
 autoheader
 automake --add-missing
-./configure --host=x86_64-apple-darwin14 CC=x86_64-apple-darwin14-clang CFLAGS="-O3"
-make AR=x86_64-apple-darwin14-ar
+./configure --host=x86_64-apple-darwin16 CC=o64-clang CFLAGS="-O3"
+make AR=llvm-ar
 
 # `make` builds a binary that's dynamically linked to libSDL.
 # That's no good to distribute, so rebuild it with static SDL.
 cd src/kevedit
 rm kevedit
-SDL_LIBS=$(/usr/osxcross/bin/sdl2-config --static-libs | sed -e 's/-lSDL2//')
-make kevedit LIBS="$SDL_LIBS /usr/osxcross/lib/libSDL2.a"
+SDL_LIBS=$(/opt/osxcross/bin/sdl2-config --static-libs | sed -e 's/-lSDL2//')
+make kevedit LIBS="$SDL_LIBS /opt/osxcross/lib/libSDL2.a"
 cp -a kevedit /work/KevEdit.app/Contents/MacOS
 cp -a ../../docs/kevedit.zml \
       ../../soundfx.zzm \

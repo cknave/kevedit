@@ -10,8 +10,11 @@ libtexteditor_a_SOURCES = \
 	display.h editbox.h register.h select.h zoopdraw.h zzl.h zzm.h \
 	texteditor.c texteditor.h
 
+if MACOS
+macos_frameworks = -framework Cocoa
+endif
 
 noinst_PROGRAMS = test
 test_SOURCES = test.c
 test_LDADD = libtexteditor.a ../display/libdisplay.a ../libzzt2/libzzt2.a
-
+test_LDFLAGS = $(macos_frameworks)

@@ -78,12 +78,14 @@ AC_MSG_CHECKING(for macOS)
 case "$host" in
 	*darwin*)
 		AC_DEFINE(MACOS, [1], [Define to 1 if host is macOS])
+		macos=yes
 		AC_MSG_RESULT(yes)
 		;;
 	*)
 		AC_MSG_RESULT(no)
 		;;
 esac
+AM_CONDITIONAL([MACOS], [test "$macos" = "yes"])
 
 AC_ARG_WITH(dosbox, AC_HELP_STRING([--without-dosbox],[include DOSBox emulation support]),dosbox=$withval,dosbox=maybe)
 if test "$dosbox" == "maybe"; then

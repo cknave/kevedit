@@ -1,0 +1,9 @@
+--- ar/archive.h.orig
++++ ar/archive.h
+@@ -62,4 +62,6 @@
+  */
+
++#include <sys/types.h>
++
+ /* Ar(1) options. */
+ #define        AR_A    0x0001
