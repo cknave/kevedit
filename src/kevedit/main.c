@@ -86,11 +86,19 @@ int main(int argc, char **argv)
             chdir(owd);
         }
 
+	/* macOS: drop any -psn_* cruft from finder */
+	int argidx = 1;
+	if(argc > 1) {
+		if(strncmp("-psn_", argv[1], 5) == 0) {
+			argidx = 2;
+		}
+	}
+
 	myworld = NULL;
 
 	/* Did we get a world on the command line? */
-	if (argc > 1)
-		myworld = getWorldFromArg(argv[1], exe_path);
+	if (argc > argidx)
+		myworld = getWorldFromArg(argv[argidx], exe_path);
 
         free(exe_path);
 
