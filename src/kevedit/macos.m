@@ -26,7 +26,7 @@
 static NSString *const BarIdentifier = @"com.kvance.kevedit.bar";
 static NSString *const ItemIdentifier = @"com.kvance.kevedit.bar.item";
 static NSString *const CreatureIdentifier = @"com.kvance.kevedit.bar.creature";
-static NSString *const TerrianIdentifier = @"com.kvance.kevedit.bar.terrain";
+static NSString *const TerrainIdentifier = @"com.kvance.kevedit.bar.terrain";
 static NSString *const TextIdentifier = @"com.kvance.kevedit.bar.text";
 
 @interface TouchBarResponder: NSResponder<NSTouchBarDelegate>
@@ -92,7 +92,7 @@ void disableTouchBar() {
     bar.defaultItemIdentifiers = @[
         ItemIdentifier,
         CreatureIdentifier,
-        TerrianIdentifier,
+        TerrainIdentifier,
         TextIdentifier,
     ];
     return bar;
@@ -108,8 +108,8 @@ void disableTouchBar() {
         item.view = [NSButton buttonWithTitle:@"Creature"
                                        target:self
                                        action:@selector(creatureClicked:)];
-    } else if([identifier isEqualToString:TerrianIdentifier]) {
-        item.view = [NSButton buttonWithTitle:@"Terrian"
+    } else if([identifier isEqualToString:TerrainIdentifier]) {
+        item.view = [NSButton buttonWithTitle:@"Terrain"
                                        target:self
                                        action:@selector(terrainClicked:)];
     } else if([identifier isEqualToString:TextIdentifier]) {
