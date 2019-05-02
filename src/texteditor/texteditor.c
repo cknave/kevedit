@@ -625,8 +625,8 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 
 	/* Create a new view of the editor data. This allows us to move the cursor
 	 * and change display settings for the new view without affecting editor. */
-	const char* playString = "#play ";
-	const int playStringLen = 6;
+	const char* playString = "#play";
+	const int playStringLen = 5;
 
 	texteditor editorCopy = *editor;
 	texteditor* view = &editorCopy;
@@ -652,31 +652,37 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 	while (view->curline != NULL && !done) {
 		char* tune = strstr(view->curline->s, "#");
 		if (tune != NULL && str_equ(tune, playString, STREQU_UNCASE | STREQU_RFRONT)) {
-			/* Current note and settings */
-			musicalNote note = zzmGetDefaultNote();
-			musicSettings settings = zzmGetDefaultSettings();
+			// any #word terminates after [A-Za-z0-9:_]
+			char next = tune[playStringLen];
+			if(!(next >= 'A' && next <= 'Z') && !(next >= 'a' && next <= 'z') &&
+					!(next >= '0' && next <= '9') && next != ':' &&
+                                        next != '_' && next != '\0') {
+				/* Current note and settings */
+				musicalNote note = zzmGetDefaultNote();
+				musicSettings settings = zzmGetDefaultSettings();
 
-			int xoffset = tune - view->curline->s + playStringLen;
-			tune += playStringLen;  /* Advance to notes! */
+				int xoffset = tune - view->curline->s + playStringLen;
+				tune += playStringLen;  /* Advance to notes! */
 
-			/* Change the slur setting */
-			note.slur = slurflag;
+				/* Change the slur setting */
+				note.slur = slurflag;
 
-			while (note.src_pos < strlen(tune) && !done) {
-				if (view->d->getkey() != DKEY_NONE)
-					done = 1;
+				while (note.src_pos < strlen(tune) && !done) {
+					if (view->d->getkey() != DKEY_NONE)
+						done = 1;
 
-				/* Move the cursor and re-display before playing note. */
-				view->pos = note.src_pos + xoffset;
-				texteditUpdateDisplay(view);
+					/* Move the cursor and re-display before playing note. */
+					view->pos = note.src_pos + xoffset;
+					texteditUpdateDisplay(view);
 
-				note = zzmGetNote(tune, note);
+					note = zzmGetNote(tune, note);
 
 #ifdef DOS
-				pcSpeakerPlayNote(note, settings);
+					pcSpeakerPlayNote(note, settings);
 #elif defined SDL
-				SynthPlayNote(spec, note, settings);
+					SynthPlayNote(spec, note, settings);
 #endif
+				}
 			}
 		}
 		view->curline = view->curline->next;
