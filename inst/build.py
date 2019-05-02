@@ -136,6 +136,7 @@ def build_macos(source, args, image_version='2.0'):
         shell('docker pull kevedit/build_macos:{version}', version=image_version)
     else:
         maybe_extract_macos_sdk(args, MACOS_SDK_VERSION, image_version)
+        maybe_tag_latest('kevedit/macos_sdk_extractor', image_version, args)
         maybe_fetch_sdl_source(SDL_VERSION)
         maybe_fetch_xar(XAR_VERSION)
         maybe_fetch(
