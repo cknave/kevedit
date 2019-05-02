@@ -1,3 +1,10 @@
+1.0.6
+-----
+Allow testing #play statements without a space
+Add touchbar support for macOS
+Ignore spurious Finder command line args on macOS
+Fix glob compile on some Linux versions
+
 1.0.5
 -----
 Upgrade to SDL 2.0.9 on the AppImage, macOS, and Windows versions

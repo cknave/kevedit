@@ -1,6 +1,16 @@
 @New Features
 $New Features
 
+$New in Version 1.0.6
+*  Add touchbar support for macOS
+
+$ Bugs fixed in version 1.0.6
+*  Allow testing #play statements without
+   a space
+*  Ignore spurious Finder command line
+   args on macOS
+*  Fix glob compile on some Linux versions
+
 $ Bugs fixed in version 1.0.5
 *  Fix double input bug on the AppImage
    version for Ubuntu and Fedora Linux
