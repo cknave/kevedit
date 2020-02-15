@@ -118,7 +118,7 @@ if test "$dosbox" == "yes"; then
 	AC_SUBST(MKISOFS)
 	AC_DEFINE(DOSBOX, [1], [Define to 1 if DOSBox is enabled])
 fi
-AM_CONDITIONAL(WITH_DOSBOX, [test x$dosbox != x])
+AM_CONDITIONAL(WITH_DOSBOX, [test "$dosbox" == yes])
 
 AC_SUBST([display_objects])
 AC_SUBST([synth_objects])
