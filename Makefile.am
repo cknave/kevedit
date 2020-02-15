@@ -15,8 +15,7 @@ ICON_SIZES = 16 32 128 256 512
 
 install-icons:
 	for size in $(ICON_SIZES); do \
-		mkdir -p $(datadir)/icons/hicolor/$${size}x$${size}/apps; \
-		$(INSTALL_DATA) $(srcdir)/inst/icon$${size}.png $(datadir)/icons/hicolor/$${size}x$${size}/apps/kevedit.png; \
+		$(INSTALL_DATA) -D $(srcdir)/inst/icon$${size}.png $(DESTDIR)$(datadir)/icons/hicolor/$${size}x$${size}/apps/kevedit.png; \
 	done
 
 uninstall-icons:
