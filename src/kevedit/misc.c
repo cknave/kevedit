@@ -397,10 +397,12 @@ int saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 	char* path, * file;
 	char* oldfilenamebase;    /* Old filename without extension */
 	char* dotptr;             /* General pointer */
+	char* ext;                /* Extension of file */
 
 	bool quit = false;
+	ext = strrchr(zztWorldGetFilename(myworld), '.') + 1;
 	filename =
-		filenamedialog(zztWorldGetFilename(myworld), "zzt", "Save World As", 1, mydisplay, &quit);
+		filenamedialog(zztWorldGetFilename(myworld), ext, "Save World As", 1, mydisplay, &quit);
 	if (quit)
 		return DKEY_QUIT;
 
