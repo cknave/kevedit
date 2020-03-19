@@ -397,9 +397,9 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 		ofs += 3;
 	}
 	size += ofs;	/* Size of packed data */
-	size += 88;	/* Board info */
+	size += 0x58;	/* Board info */
 	for(i = 0; i < board->info.paramcount; i++) {
-		size += 33;			/* Object header */
+		size += 0x21;			/* Object header */
 		size += board->params[i].length;/* Object data */
 	}
 
