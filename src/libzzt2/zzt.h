@@ -29,6 +29,8 @@ extern "C" {
 
 
 /***** CONSTANTS *****/
+/* Board filesize constants */
+#define ZZT_BOARD_MAX_FILESIZE	20000
 /* Board size constants */
 #define ZZT_BOARD_X_SIZE 	60
 #define ZZT_BOARD_Y_SIZE 	25

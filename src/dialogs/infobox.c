@@ -268,7 +268,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 
 	label.x = 4; _addlabel("Board Size:");
 	/* Red color for dangerously large board size */
-	label.color = (boardsize < 20000 ? 0x0B : 0x0C);
+	label.color = (boardsize <= ZZT_BOARD_MAX_FILESIZE ? 0x0B : 0x0C);
 	label.y--; label.x = 16;
 
 	sprintf(buffer, "%d bytes, %.3f KB", boardsize, (float)boardsize / 1024);

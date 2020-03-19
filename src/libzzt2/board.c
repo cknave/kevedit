@@ -440,9 +440,8 @@ uint16_t zztBoardGetSize(ZZTboard *board)
 	uint16_t size = 0;
 	int i;
 
-	size += 0x34; /* Header */
-	size += 0x58; /* Info */
-	size += 1;    /* ? */
+	size += 0x33; /* Board name */
+	size += 0x58; /* Board info */
 
 	/* Size the bigboard */
 	if (board->bigboard != NULL) {
