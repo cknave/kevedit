@@ -312,7 +312,7 @@ int saveobjecttonewlibrary(keveditor * myeditor)
 	/* Prompt for file name */
 	bool quit = false;
 	filename =
-		filenamedialog("mylib.zzl", "zzl", "New Object Library", 1, mydisplay, &quit);
+		filenamedialog("mylib.zzl", ".zzl", "New Object Library", 1, mydisplay, &quit);
 	if (quit)
 		return DKEY_QUIT;
 	if (filename == NULL)

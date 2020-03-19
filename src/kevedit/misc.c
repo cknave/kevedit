@@ -397,10 +397,19 @@ int saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 	char* path, * file;
 	char* oldfilenamebase;    /* Old filename without extension */
 	char* dotptr;             /* General pointer */
+	char* suggestext;         /* Suggested extension */
 
+	if (zztWorldGetFilename(myworld) != NULL) {
+		suggestext = strrchr(zztWorldGetFilename(myworld), '.');
+		if (suggestext == NULL)
+			suggestext = "";
+	} else {
+		suggestext = ".zzt";
+	}
+	
 	bool quit = false;
 	filename =
-		filenamedialog(zztWorldGetFilename(myworld), "zzt", "Save World As", 1, mydisplay, &quit);
+		filenamedialog(zztWorldGetFilename(myworld), suggestext, "Save World As", 1, mydisplay, &quit);
 	if (quit)
 		return DKEY_QUIT;
 
@@ -622,7 +631,7 @@ int exporttoboard(displaymethod * mydisplay, ZZTworld * myworld)
 	bool quit = false;
 
 	/* Prompt for a filename */
-	filename = filenamedialog("", "brd", "Export to Board", 1, mydisplay, &quit);
+	filename = filenamedialog("", ".brd", "Export to Board", 1, mydisplay, &quit);
 	if (quit)
 		return DKEY_QUIT;
 
