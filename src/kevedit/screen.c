@@ -790,7 +790,7 @@ char *titledialog(char* prompt, displaymethod * d, bool *quit)
 	return t;
 }
 
-stringvector buildboardlist(ZZTworld * w, int firstnone)
+stringvector buildboardlist(ZZTworld * w, int flags)
 {
 	stringvector boardlist;
 	int boardcount = zztWorldGetBoardcount(w);
@@ -798,7 +798,7 @@ stringvector buildboardlist(ZZTworld * w, int firstnone)
 
 	initstringvector(&boardlist);
 
-	if (firstnone) {
+	if (flags & BOARDDIALOG_FIRST_NONE) {
 		pushstring(&boardlist, str_dup("(none)"));
 		i = 1;
 	} else {
@@ -816,14 +816,14 @@ stringvector buildboardlist(ZZTworld * w, int firstnone)
 	return boardlist;
 }
 
-int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, displaymethod * mydisplay)
+int boarddialog(ZZTworld * w, int curboard, char * title, int flags, displaymethod * mydisplay)
 {
 	stringvector boardlist;
 	int boardcount = zztWorldGetBoardcount(w);
 	int response;
 
 	/* Build the list of boards */
-	boardlist = buildboardlist(w, firstnone);
+	boardlist = buildboardlist(w, flags);
 	svmoveby(&boardlist, curboard);
 
 	/* Draw the side panel */
@@ -853,7 +853,8 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 					!(src == boardcount - 1 && response == EDITBOX_FORWARD)) {
 				if (response == EDITBOX_BACK) {
 					/* Delete selected board */
-					if (zztWorldGetBoardcount(w) > 1) {
+					if (zztWorldGetBoardcount(w) > 1 &&
+							(src != zztBoardGetCurrent(w) || (flags & BOARDDIALOG_CHANGES_CURRENT_BOARD))) {
 						if (zztWorldDeleteBoard(w, src, 1)) {
 							boardcount = zztWorldGetBoardcount(w);
 							curboard = (boardcount == src ? src - 1 : src);
@@ -867,7 +868,7 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 				}
 				/* Rebuild the board list */
 				deletestringvector(&boardlist);
-				boardlist = buildboardlist(w, firstnone);
+				boardlist = buildboardlist(w, flags);
 				svmoveby(&boardlist, curboard);
 			}
 		}
@@ -894,7 +895,7 @@ int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, display
 
 int switchboard(ZZTworld * w, displaymethod * mydisplay)
 {
-	int newboard = boarddialog(w, zztBoardGetCurrent(w), "Switch Boards", 0, mydisplay);
+	int newboard = boarddialog(w, zztBoardGetCurrent(w), "Switch Boards", BOARDDIALOG_CHANGES_CURRENT_BOARD, mydisplay);
     if(newboard == DKEY_QUIT) {
         return DKEY_QUIT;
     }
