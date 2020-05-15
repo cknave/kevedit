@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """KevEdit build script."""
-from __future__ import print_function
-
 import argparse
 import errno
 import logging
