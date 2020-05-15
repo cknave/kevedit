@@ -227,19 +227,20 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 	fileof(filenamebuffer, initname, maxlen + 1);
 	pathof(path, initname, path_size);
 
-	/* if extension is given, remove extension from buffer */
+	/* If extension is given, remove extension from buffer */
 	if (extlen > 0) {
 		for (i = strlen(filenamebuffer) - 1; i >= 0; i--)
 			if (filenamebuffer[i] == '.') {
 				filenamebuffer[i] = '\x0';
 				break;
 			}
-		/* truncate extension for printing if necessary */
+		/* Truncate extension for printing if necessary */
 		if (extlen > (sizeof(extprinted) - 1)) {
-			strncpy(extprinted, extension, sizeof(extprinted) - 1 - 3);
+			strncpy(extprinted, extension, sizeof(extprinted) - 3 - 1);
+			extprinted[sizeof(extprinted) - 3 - 1] = '\x0';
 			strcat(extprinted, "...");
 		} else {
-			strncpy(extprinted, extension, sizeof(extprinted) - 1);
+			strncpy(extprinted, extension, sizeof(extprinted));
 		}
 	}
 
