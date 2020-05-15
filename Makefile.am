@@ -24,7 +24,7 @@ install-icons:
 
 uninstall-icons:
 	for size in $(ICON_SIZES); do \
-		rm -f $(datadir)/icons/hicolor/$${size}x$${size}/apps/kevedit.png; \
+		rm -f $(DESTDIR)$(datadir)/icons/hicolor/$${size}x$${size}/apps/kevedit.png; \
 	done
 
 install-data-local: install-icons

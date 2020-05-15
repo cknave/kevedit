@@ -25,7 +25,7 @@ XCODE_VERSION = '8.3.3'
 
 
 # All build targets
-TARGETS = ['appimage', 'dos', 'macos', 'windows']
+TARGETS = ['appimage', 'dos', 'macos', 'source', 'windows']
 
 
 # Build temp directory
@@ -259,6 +259,40 @@ def build_dos(source, args, image_version='1.1'):
           -u {uid_gid}
           kevedit/build_dos:{image_version}
           /platform/dos/build_dos.sh {source} {version}
+          """,
+          work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
+          image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
+
+
+def build_source(source, args, image_version='1.0'):
+    """Build source tarball in DEST_DIR.
+
+    :param str source: path to KevEdit source zip
+    :param args: command line arguments namespace
+    :param str image_version: docker image version
+    """
+    if args.docker_images == 'pull':
+        log.debug('Pulling source docker image...')
+        shell('docker pull kevedit/build_source:{version}', version=image_version)
+    else:
+        maybe_fetch_sdl_source(SDL_VERSION)
+        log.debug('Building source docker image...')
+        shell("""
+              docker build
+              -f Dockerfile.source -t kevedit/build_source:{image_version}
+              --build-arg SDL_VERSION={sdl_version}
+              .
+              """,
+              image_version=image_version, sdl_version=SDL_VERSION)
+        maybe_tag_latest('kevedit/build_source', image_version, args)
+
+    log.debug('Building source artifact...')
+    shell("""
+          docker run --rm
+          -v {work}:/work -v {dist}:/dist -v {platform}:/platform -v {vendor}:/vendor
+          -u {uid_gid}
+          kevedit/build_source:{image_version}
+          /platform/linux/build_source.sh {source} {version}
           """,
           work=WORK_DIR, dist=DIST_DIR, platform=PLATFORM_DIR, vendor=VENDOR_DIR,
           image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)

@@ -8,9 +8,9 @@ endif
 
 pkgdata_DATA = kevedos.cfg $(isofile)
 
-EXTRA_DIST = README
+EXTRA_DIST = README image kevedos.cfg
 
 MOSTLYCLEANFILES = kevedos.iso
 
-kevedos.iso: image $(wildcard image/*)
-	@MKISOFS@ -o $@ image
+kevedos.iso: $(srcdir)/image $(wildcard $(srcdir)/image/*)
+	@MKISOFS@ -o $@ $(srcdir)/image
