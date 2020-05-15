@@ -206,6 +206,7 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 char* filenamedialog(char* initname, char* extension, char* prompt, int askoverwrite, displaymethod * mydisplay, bool *quit)
 {
 	const int maxlen = 15;   /* 15 chars should be enough for a zzt filename */
+	char extprinted[9]; /* extension as shown in UI */
 	int extlen = strlen(extension);   /* length of given extension */
 	int pos;                 /* editing position */
 	char* filenamebuffer;
@@ -214,9 +215,6 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 	int done = 0;
 	int i;
 	
-	if (extlen > 3)
-		return NULL;
-
 	/* Reserve some space */
         int path_size = strlen(initname) + 1;
         if(path_size < 2) {
@@ -229,13 +227,22 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 	fileof(filenamebuffer, initname, maxlen + 1);
 	pathof(path, initname, path_size);
 
-	/* if extension is given, remove extension from buffer */
-	if (extlen > 0)
+	/* If extension is given, remove extension from buffer */
+	if (extlen > 0) {
 		for (i = strlen(filenamebuffer) - 1; i >= 0; i--)
 			if (filenamebuffer[i] == '.') {
 				filenamebuffer[i] = '\x0';
 				break;
 			}
+		/* Truncate extension for printing if necessary */
+		if (extlen > (sizeof(extprinted) - 1)) {
+			strncpy(extprinted, extension, sizeof(extprinted) - 3 - 1);
+			extprinted[sizeof(extprinted) - 3 - 1] = '\x0';
+			strcat(extprinted, "...");
+		} else {
+			strncpy(extprinted, extension, sizeof(extprinted));
+		}
+	}
 
 	/* Display the panel */
 	drawsidepanel(mydisplay, PANEL_FILENAME);
@@ -246,8 +253,7 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 
 	/* Display the extension if static */
 	if (extlen > 0) {
-		mydisplay->putch(70, 4, '.', 0x1f);
-		mydisplay->print(71, 4, 0x1f, extension);
+		mydisplay->print(70, 4, 0x1f, extprinted);
 	}
 
 	pos = strlen(filenamebuffer);
@@ -274,7 +280,6 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 					break;
 
 				if (extlen > 0) {
-					strcat(filenamebuffer, ".");
 					strcat(filenamebuffer, extension);
 				}
 
@@ -345,8 +350,7 @@ char* filenamedialog(char* initname, char* extension, char* prompt, int askoverw
 						mydisplay->print(61, 3, 0x1f, prompt);
 					/* Display the extension if static */
 					if (extlen > 0) {
-						mydisplay->putch(70, 4, '.', 0x1f);
-						mydisplay->print(71, 4, 0x1f, extension);
+						mydisplay->print(70, 4, 0x1f, extprinted);
 					}
 
 					if (newpath != NULL) {
