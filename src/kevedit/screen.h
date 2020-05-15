@@ -58,6 +58,10 @@
 #define CONFIRM_CANCEL 2
 #define CONFIRM_QUIT   3
 
+/* boarddialog() flags */
+#define BOARDDIALOG_FIRST_NONE 1
+#define BOARDDIALOG_CHANGES_CURRENT_BOARD 2
+
 /* line_editor() - edit a string of characters on a single line
  * 	str:       buffer to be edited
  * 	editwidth: maximum length string in buffer
@@ -105,7 +109,7 @@ char* filenamedialog(char* initname, char* extension, char* prompt,
 
 
 /* board dialogs */
-int boarddialog(ZZTworld * w, int curboard, char * title, int firstnone, displaymethod * mydisplay);
+int boarddialog(ZZTworld * w, int curboard, char * title, int flags, displaymethod * mydisplay);
 int switchboard(ZZTworld * w, displaymethod * mydisplay);
 char *titledialog(char* prompt, displaymethod * d, bool *quit);
 
