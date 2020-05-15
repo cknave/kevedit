@@ -14,6 +14,7 @@ if MACOS
 macos_SOURCES = macos.m
 macos_frameworks = -framework Cocoa
 endif
+EXTRA_DIST = macos.h
 
 kevedit_SOURCES = \
 	kevedit.c main.c menu.c misc.c patbuffer.c screen.c \

@@ -12,7 +12,7 @@ OPTIONAL_SRC = display_sdl.c display_sdl.h display_dos.c display_dos.h
 libdisplay_a_LIBADD = @display_objects@
 libdisplay_a_DEPENDENCIES = @display_objects@
 EXTRA_libdisplay_a_SOURCE = $(OPTIONAL_SRC)
-EXTRA_DIST = $(OPTIONAL_SRC)
+EXTRA_DIST = $(OPTIONAL_SRC) default.chr ega.pal
 
 if MACOS
 macos_SOURCES = $(top_srcdir)/src/kevedit/macos.m
