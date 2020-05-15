@@ -396,6 +396,32 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						done = EDITBOX_HELP;
 						break;
 				}
+
+				if (key > 32 && key < 127 && !selectFlag) {
+					/* printable characters, except space */
+					loopstr = centerstr;
+					do {
+						/* advance */
+						loopstr = loopstr->next;
+						if (loopstr == NULL)
+							loopstr = sv->first;
+						/* check match */
+						if (strlen(loopstr->s) >= 1) {
+							tmpstr = loopstr->s;
+							if (loopstr->s[0] == '$')
+								continue;
+							if (loopstr->s[0] == '!' && strlen(loopstr->s) >= 2)
+								tmpstr = loopstr->s + 1;
+							if (toupper(tmpstr[0]) == toupper(key)) {
+								centerstr = loopstr;
+								if (pos > strlen(centerstr->s))
+									pos = strlen(centerstr->s);
+								updateflags = U_EDITAREA;
+								break;
+							}
+						}
+					} while (loopstr != centerstr);
+				}
 			}
 		}
 
