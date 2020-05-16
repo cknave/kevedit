@@ -60,7 +60,7 @@ def main():
         globals()['build_' + target](source, args)
 
 
-def build_appimage(source, args, image_version='1.1'):
+def build_appimage(source, args, image_version='1.2'):
     """Build Linux x86_64 AppImage to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -122,7 +122,7 @@ def build_appimage(source, args, image_version='1.1'):
           appimage_tool=appimage_tool, uid_gid=UID_GID, version=args.version)
 
 
-def build_macos(source, args, image_version='2.0', extractor_version='2.0'):
+def build_macos(source, args, image_version='2.1', extractor_version='2.0'):
     """Build macOS x86_64 .app in a .dmg archive to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -179,7 +179,7 @@ def build_macos(source, args, image_version='2.0', extractor_version='2.0'):
           image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
-def build_windows(source, args, image_version='1.1'):
+def build_windows(source, args, image_version='1.2'):
     """Build windows x64 .exe in a self-executing installer to DIST_DIR.
 
     :param str source: path to KevEdit source zip
