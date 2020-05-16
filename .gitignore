@@ -4,6 +4,7 @@
 .deps
 .DS_Store
 .dirstamp
+compile_commands.json
 
 /docs/kevedit.zml
 /dosbox/kevedos.iso
@@ -23,6 +24,7 @@ Makefile.in
 /INSTALL
 /aclocal.m4
 /autom4te.cache
+/build
 /buildinfo.h
 /compile
 /config.guess
