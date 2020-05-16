@@ -17,10 +17,7 @@ cd /work/kevedit
 
 unzip /vendor/$SOURCE
 
-aclocal -I /usr/x86_64-w64-mingw32/share/aclocal
-autoconf
-autoheader
-automake --add-missing
+./bootstrap.sh
 ./configure --host=x86_64-w64-mingw32 CFLAGS="-O3"
 make
 

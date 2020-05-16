@@ -22,10 +22,7 @@ cd /work/kevedit
 
 unzip /vendor/$SOURCE
 
-aclocal -I /opt/osxcross/share/aclocal
-autoconf
-autoheader
-automake --add-missing
+./bootstrap.sh
 ./configure --host=x86_64-apple-darwin16 CC=o64-clang CFLAGS="-O3"
 make AR=llvm-ar
 

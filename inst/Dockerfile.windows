@@ -26,6 +26,7 @@ RUN cd /tmp && \
     ./configure --host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 && \
     make ${MAKE_OPTS} && \
     make install && \
+    echo "/usr/x86_64-w64-mingw32/share/aclocal" > /usr/share/aclocal/dirlist && \
     rm -rf /tmp/SDL2-${SDL_VERSION}*
 
 COPY vendor/ispack-${ISPACK_VERSION}-unicode.exe /tmp/

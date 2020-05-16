@@ -15,4 +15,5 @@ RUN cd /tmp && \
     ./configure && \
     make ${MAKE_OPTS} && \
     make install && \
+    echo "/usr/local/share/aclocal" > /usr/share/aclocal/dirlist && \
     rm -rf /tmp/SDL2-${SDL_VERSION}*

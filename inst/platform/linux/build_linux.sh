@@ -19,11 +19,7 @@ cd /work/kevedit
 
 unzip /vendor/$SOURCE
 
-# /usr/local not included for some reason, skip bootstrap and set up manually
-aclocal -I /usr/local/share/aclocal
-autoconf
-autoheader
-automake --add-missing
+./bootstrap.sh
 ./configure --prefix=/work/appdir/KevEdit.AppDir/usr CFLAGS='-O3'
 make
 make install

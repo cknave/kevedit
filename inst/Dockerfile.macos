@@ -89,4 +89,5 @@ RUN cd /tmp \
  && ./configure --host=x86_64-apple-darwin16 --prefix=/opt/osxcross CC=o64-clang AR=llvm-ar RANLIB=llvm-ranlib \
  && make ${MAKE_OPTS} \
  && make install \
+ && echo "/opt/osxcross/share/aclocal" > /usr/share/aclocal/dirlist \
  && rm -rf /tmp/SDL2-${SDL_VERSION}*
