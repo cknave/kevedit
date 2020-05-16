@@ -10,7 +10,6 @@ AppSupportURL=https://github.com/cknave/kevedit/issues
 AppUpdatesURL=https://github.com/cknave/kevedit/releases
 DefaultDirName={pf}\KevEdit
 DefaultGroupName=Games\ZZT
-LicenseFile=Z:\work\COPYING.txt
 InfoBeforeFile=Z:\work\README.txt
 OutputDir=Z:\dist
 ArchitecturesInstallIn64BitMode=x64
