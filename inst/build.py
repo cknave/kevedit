@@ -122,19 +122,20 @@ def build_appimage(source, args, image_version='1.1'):
           appimage_tool=appimage_tool, uid_gid=UID_GID, version=args.version)
 
 
-def build_macos(source, args, image_version='2.0'):
+def build_macos(source, args, image_version='2.0', extractor_version='2.0'):
     """Build macOS x86_64 .app in a .dmg archive to DIST_DIR.
 
     :param str source: path to KevEdit source zip
     :param args: command line arguments namespace
-    :param str image_version: docker image version
+    :param str image_version: build docker image version
+    :param str extractor_version: sdk extractor docker image version
     """
     if args.docker_images == 'pull':
         log.debug('Pulling macOS docker image...')
         shell('docker pull kevedit/build_macos:{version}', version=image_version)
     else:
-        maybe_extract_macos_sdk(args, MACOS_SDK_VERSION, image_version)
-        maybe_tag_latest('kevedit/macos_sdk_extractor', image_version, args)
+        maybe_extract_macos_sdk(args, MACOS_SDK_VERSION, extractor_version)
+        maybe_tag_latest('kevedit/macos_sdk_extractor', extractor_version, args)
         maybe_fetch_sdl_source(SDL_VERSION)
         maybe_fetch_xar(XAR_VERSION)
         maybe_fetch(
