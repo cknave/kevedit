@@ -23,10 +23,17 @@ Press `H` in the editor to access the interactive help.
 
 ## Building from source
 
-    $ ./bootstrap.sh
+    $ ./bootstrap.sh  # only if building from git
     $ ./configure
     $ make
     $ sudo make install
+
+If building from git, the bootstrap script requires that you have [pkg-config]
+and [SDL2] installed.  If you are using a source tarball, you can skip directly
+to running the configure script.
+
+[pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
+[SDL2]: https://www.libsdl.org/download-2.0.php
 
 
 ## Creating binary artifacts
