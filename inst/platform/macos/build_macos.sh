@@ -4,11 +4,12 @@
 set -e -x
 
 SOURCE="$1"
-VERSION="$2"
-if [ -z "$SOURCE" ] || [ -z "$VERSION" ]; then
+KEVEDIT_VERSION="$2"
+if [ -z "$SOURCE" ] || [ -z "$KEVEDIT_VERSION" ]; then
     echo "USAGE: build_macos.sh <source.zip> <kevedit version>"
     exit 1
 fi
+export KEVEDIT_VERSION
 
 export MACOSX_DEPLOYMENT_TARGET=10.6
 
@@ -54,5 +55,5 @@ cp -a /platform/macos/dmg.DS_Store \
       /work/dmg/.DS_Store
 
 genisoimage -V KevEdit -D -R -apple -no-pad \
-    -o "/dist/kevedit-${VERSION}.dmg" \
+    -o "/dist/kevedit-${KEVEDIT_VERSION}.dmg" \
     /work/dmg/

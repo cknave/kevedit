@@ -4,11 +4,12 @@
 set -e -x
 
 SOURCE="$1"
-VERSION="$2"
-if [ -z "$SOURCE" ] || [ -z "$VERSION" ]; then
+KEVEDIT_VERSION="$2"
+if [ -z "$SOURCE" ] || [ -z "$KEVEDIT_VERSION" ]; then
     echo "USAGE: build_dos.sh <source.zip> <kevedit version>"
     exit 1
 fi
+export KEVEDIT_VERSION
 
 rm -rf /work/kevedit
 mkdir /work/kevedit
@@ -35,7 +36,7 @@ for fn in AUTHORS ChangeLog COPYING; do
 done
 sed -e 's/$/\r/' <README.md >/work/kevedit_zip/README.md
 
-dist_zip=/dist/kevedit-${VERSION}-dos.zip
+dist_zip=/dist/kevedit-${KEVEDIT_VERSION}-dos.zip
 rm -f "$dist_zip"
 cd /work/kevedit_zip
 zip -9 "$dist_zip" *

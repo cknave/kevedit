@@ -1,5 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(KevEdit, 1.0.6, kvance@kvance.com, kevedit)
+m4_define(kevedit_version, m4_esyscmd([echo -n ${KEVEDIT_VERSION:-1.0.6}]))
+AC_INIT(KevEdit, kevedit_version, kvance@kvance.com, kevedit, https://github.com/cknave/kevedit)
 AC_CONFIG_SRCDIR([src/kevedit/kevedit.c])
 AM_CONFIG_HEADER([src/config.h])
 
@@ -126,7 +127,7 @@ AC_SUBST([synth_objects])
 dnl Check for windows resource compiler.
 AC_CHECK_PROGS(WINDRES, windres)
 AC_SUBST(WINDRES)
-AC_SUBST(WINDRES_VERSION, $(echo AC_PACKAGE_VERSION | tr . ,))
+AC_SUBST(WINDRES_VERSION, $(echo AC_PACKAGE_VERSION | tr .- , | cut -d, -f1-4))
 AM_CONDITIONAL(HAVE_WINDRES, [test x$WINDRES != x])
 
 dnl Checks for header files.

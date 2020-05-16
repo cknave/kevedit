@@ -4,11 +4,12 @@
 set -e -x
 
 SOURCE="$1"
-VERSION="$2"
-if [ -z "$SOURCE" ] || [ -z "$VERSION" ]; then
+KEVEDIT_VERSION="$2"
+if [ -z "$SOURCE" ] || [ -z "$KEVEDIT_VERSION" ]; then
     echo "USAGE: build_linux.sh <source.zip> <version>"
     exit 1
 fi
+export KEVEDIT_VERSION
 
 rm -rf /work/kevedit
 mkdir /work/kevedit
@@ -18,4 +19,4 @@ unzip /vendor/$SOURCE
 
 ./bootstrap.sh --configure
 make -C build distcheck
-mv build/kevedit-*.tar.gz "/dist/kevedit-$VERSION.tar.gz"
+mv build/kevedit-*.tar.gz /dist
