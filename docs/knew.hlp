@@ -1,6 +1,21 @@
 @New Features
 $New Features
 
+$New in Version 1.0.7
+*  Jump to the first character in
+   selection boxes on keypress
+*  Preserve case in filename extensions
+   when saving
+
+$ Bugs fixed in version 1.0.7
+*  Fix typo in macOS touchbar
+*  Adjust board size calculation to match
+   ZZT 3.2 expectations
+*  Forbid deletion of the current board
+   from board selection dialogs
+*  Fix incrorrect dialog names for non-
+   north board selection dialogs
+
 $New in Version 1.0.6
 *  Add touchbar support for macOS
 
