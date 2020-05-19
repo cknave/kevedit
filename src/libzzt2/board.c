@@ -621,6 +621,7 @@ int zztWorldMoveBoard(ZZTworld *world, int src, int dest)
 	int bcount = zztWorldGetBoardcount(world);
 	int high, low, offset;
 	int i;
+	int new_cur_board, new_startboard; /* is changed by Delete/InsertBoard calls */
 	ZZTboard* copy;
 
 	if(src == dest) {
@@ -644,16 +645,18 @@ int zztWorldMoveBoard(ZZTworld *world, int src, int dest)
 	}
 
 	/* Consider the current board */
-	if (world->cur_board == src)
-		world->cur_board = dest;
-	else if (world->cur_board >= low && world->cur_board <= high)
-		world->cur_board += offset;
+	new_cur_board = world->cur_board;
+	if (new_cur_board == src)
+		new_cur_board = dest;
+	else if (new_cur_board >= low && new_cur_board <= high)
+		new_cur_board += offset;
 
 	/* Consider the starting board */
-	if (world->header->startboard == src)
-		world->header->startboard = dest;
-	else if (world->header->startboard >= low && world->header->startboard <= high)
-		world->header->startboard += offset;
+	new_startboard = world->header->startboard;
+	if (new_startboard == src)
+		new_startboard = dest;
+	else if (new_startboard >= low && new_startboard <= high)
+		new_startboard += offset;
 
 	/* Run thourgh all boards and relink them */
 	for (i = 0; i < bcount; i++) {
@@ -680,6 +683,10 @@ int zztWorldMoveBoard(ZZTworld *world, int src, int dest)
 
 	/* Free the copy! */
 	zztBoardFree(copy);
+
+	/* Restore variables */
+	world->cur_board = new_cur_board;
+	world->header->startboard = new_startboard;
 
 	return 1;
 }
