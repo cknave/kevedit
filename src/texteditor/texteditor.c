@@ -393,6 +393,25 @@ int texteditHandleEditKey(texteditor * editor)
 			texteditDelete(editor);
 			break;
 
+		/***** Wrap width *****/
+		case DKEY_ALT_MINUS:
+			if (editor->wrapwidth > 10) {
+				editor->wrapwidth--;
+			} else {
+				editor->wrapwidth = TEXTED_MAXWIDTH;
+			}
+			editor->updateflags |= TUD_PANEL;
+			break;
+
+		case DKEY_ALT_PLUS:
+			if (editor->wrapwidth < TEXTED_MAXWIDTH) {
+				editor->wrapwidth++;
+			} else {
+				editor->wrapwidth = 10;
+			}
+			editor->updateflags |= TUD_PANEL;
+			break;
+
 		/****** Help dialog ******/
 
 		case DKEY_F1: /* F1: help dialog */
@@ -596,7 +615,7 @@ int texteditHelpZOC(texteditor * editor)
 
 		/* Display the help file with the command as the topic */
 		result = helpsectiontopic("langref", command, editor->d);
-		
+
 		free(command);
 	} else {
 		/* Display the oop help file */
@@ -783,7 +802,7 @@ int texteditFileOpen(texteditor * editor, int insertflag)
 {
 	stringvector filetypelist;
 	char* filename = NULL;
-	
+
 	initstringvector(&filetypelist);
 
 	pushstring(&filetypelist, "*.zoc");
@@ -1102,7 +1121,7 @@ int texteditInsertASCII(texteditor * editor)
 {
 	static int selChar; /* TODO: static isn't the way to go, or is it? */
 	int choice;
- 
+
 	editor->updateflags |= TUD_EDITAREA;
 
 	/* TODO: let #char be anywhere on the line */

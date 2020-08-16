@@ -617,7 +617,7 @@ void display_end(video_info *vdest)
 		free(display.dropped_file);
 		display.dropped_file = NULL;
 	}
-	
+
 	/* SDL should restore everything okay.. just use SDL_quit() when ready */
 }
 
@@ -683,7 +683,7 @@ static void display_present(video_info *vdest, const SDL_Rect *rect)
 	SDL_RenderClear(vdest->renderer);
 	SDL_RenderCopy(vdest->renderer, vdest->texture, NULL, NULL);
 	SDL_RenderPresent(vdest->renderer);
-	
+
 	if(rect == NULL) {
 		vdest->is_dirty = false;
 	}
@@ -844,7 +844,7 @@ void display_update_and_present(video_info *vdest, int x, int y, int width,
 	bool was_dirty = vdest->is_dirty;
 	display_update(vdest, x, y, width, height);
 	vdest->is_dirty = was_dirty;
-	
+
 	SDL_Rect rect;
 	rect.x = x * 8;
 	rect.y = y * 14;
@@ -1077,7 +1077,7 @@ int display_sdl_getkey()
 	/* Preemptive stuff */
 	if(event.type == SDL_KEYDOWN) {
 		/* Hack for windows: alt+tab will never show up */
-		if((event.key.keysym.sym == SDLK_TAB) && 
+		if((event.key.keysym.sym == SDLK_TAB) &&
 				(event.key.keysym.mod & KMOD_ALT)) {
 			return DKEY_NONE;
 		}
@@ -1242,6 +1242,12 @@ int display_sdl_getkey()
 				break;
 			case DKEY_DOWN:
 				event.key.keysym.sym = DKEY_ALT_DOWN;
+				break;
+			case '-':
+				event.key.keysym.sym = DKEY_ALT_MINUS;
+				break;
+			case '=':
+				event.key.keysym.sym = DKEY_ALT_PLUS;
 				break;
 			case 'i':
 				event.key.keysym.sym = DKEY_ALT_I;
