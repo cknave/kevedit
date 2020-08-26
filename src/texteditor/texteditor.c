@@ -180,6 +180,7 @@ void deletetexteditortext(texteditor * editor)
 
 	deletestringvector(editor->text);
 
+	free(editor->text);
 	editor->text = NULL;
 }
 
