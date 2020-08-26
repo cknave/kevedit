@@ -146,7 +146,7 @@ int creaturemenu(keveditor * myeditor)
 	if (choice != -1) {
 		zztPlot(myworld, myeditor->cursorx, myeditor->cursory, tile);
 		push(myeditor->buffers.backbuffer, tile);
-		
+
 		/* Free our copy of the params */
 		if (tile.param != NULL)
 			zztParamFree(tile.param);
@@ -375,14 +375,13 @@ int objectlibrarymenu(keveditor * myeditor)
 	} while (!ishypermessage(menu));
 
 	choice = gethypermessage(menu);
-
-
 	if (str_equ(choice, "load", 0))
 		result = loadobjectlibrary(myeditor);
 	else if (str_equ(choice, "save", 0))
 		result = saveobjecttolibrary(myeditor);
 	else if (str_equ(choice, "new", 0))
 		result = saveobjecttonewlibrary(myeditor);
+	free(choice);
 
 	removestringvector(&menu);
     return result;
