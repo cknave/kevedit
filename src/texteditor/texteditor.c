@@ -713,8 +713,9 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 #ifdef SDL
 	/* TODO: instead of just sitting here, display the progress of playback */
 	/* Wait until the music is done or the user presses a key */
-	while (!IsSynthBufferEmpty() && view->d->getkey() == DKEY_NONE)
-		;
+	while (!IsSynthBufferEmpty() && view->d->getkey() == DKEY_NONE) {
+		SDL_Delay(10);
+	}
 
 	CloseSynth();
 #elif defined DOS

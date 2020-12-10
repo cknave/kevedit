@@ -1092,8 +1092,9 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 #ifdef SDL
 	/* TODO: instead of just sitting here, display the progress of playback */
 	/* Wait until the music is done or the user presses a key */
-	while (!IsSynthBufferEmpty() && d->getkey() == DKEY_NONE)
-		;
+	while (!IsSynthBufferEmpty() && d->getkey() == DKEY_NONE) {
+		SDL_Delay(10);
+	}
 
 	CloseSynth();
 #elif defined DOS
