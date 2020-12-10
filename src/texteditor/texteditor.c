@@ -654,6 +654,7 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 
 #ifdef SDL
 	SDL_AudioSpec spec;
+	SDL_AudioDeviceID audioid;
 #endif
 
 	/* Display everything, in case the editor has not been displayed recently. */
@@ -661,7 +662,7 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 
 #ifdef SDL
 	/* IF opening the audio device fails, return now before we crash something. */
-	if (OpenSynth(&spec))
+	if (OpenSynth(&audioid, &spec))
 		return;
 #endif
 
@@ -717,7 +718,7 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 		SDL_Delay(10);
 	}
 
-	CloseSynth();
+	CloseSynth(&audioid);
 #elif defined DOS
 	pcSpeakerFinish();
 #endif

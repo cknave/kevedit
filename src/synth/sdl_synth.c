@@ -33,7 +33,7 @@
 Uint8 *masterplaybuffer = NULL;
 static size_t playbuffersize = 0, playbufferloc = 0, playbuffermax = 0;
 
-int OpenSynth(SDL_AudioSpec * spec)
+int OpenSynth(SDL_AudioDeviceID * id, SDL_AudioSpec * spec)
 {
 	SDL_AudioSpec desired, obtained;
 
@@ -46,6 +46,7 @@ int OpenSynth(SDL_AudioSpec * spec)
 	}
 
 	/* Set desired sound opts */
+	memset(&desired, 0, sizeof(SDL_AudioSpec));
 	desired.freq = 44100;
 	desired.format = AUDIO_U16SYS;
 	desired.channels = 1;
@@ -54,22 +55,23 @@ int OpenSynth(SDL_AudioSpec * spec)
 	desired.userdata = spec;
 
 	/* Open audio device */
-	if(SDL_OpenAudio(&desired, &obtained) < 0) {
+	*id = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
+	if (*id == 0) {
 		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
 		return 1;
 	}
-	SDL_PauseAudio(0);
+	SDL_PauseAudioDevice(*id, 0);
 
 	(*spec) = obtained;
 
 	return 0;
 }
 
-void CloseSynth(void)
+void CloseSynth(SDL_AudioDeviceID * id)
 {
 	/* Silence, close the audio, and clean up the memory we used. */
-	SDL_PauseAudio(1);
-	SDL_CloseAudio();
+	SDL_PauseAudioDevice(*id, 1);
+	SDL_CloseAudioDevice(*id);
 
 	AudioCleanUp();
 }

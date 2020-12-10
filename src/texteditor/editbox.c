@@ -1030,10 +1030,11 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 {
 	int done;
 #ifdef SDL
+	SDL_AudioDeviceID audioid;
 	SDL_AudioSpec spec;
 
 	/* IF opening the audio device fails, return now before we crash something. */
-	if (OpenSynth(&spec))
+	if (OpenSynth(&audioid, &spec))
 		return;
 #endif
 
@@ -1096,7 +1097,7 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 		SDL_Delay(10);
 	}
 
-	CloseSynth();
+	CloseSynth(&audioid);
 #elif defined DOS
 	pcSpeakerFinish();
 #endif

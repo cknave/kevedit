@@ -37,10 +37,10 @@
 /* TODO: rename these functions */
 
 /* Open the synthesizer and store audio spec in "spec" (true on error) */
-int OpenSynth(SDL_AudioSpec * spec);
+int OpenSynth(SDL_AudioDeviceID *id, SDL_AudioSpec * spec);
 
 /* Close the synthesizer */
-void CloseSynth(void);
+void CloseSynth(SDL_AudioDeviceID *id);
 
 /* Returns true if the buffer is empty */
 int IsSynthBufferEmpty();
