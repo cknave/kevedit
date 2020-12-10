@@ -325,7 +325,7 @@ int zztBoardCompress(ZZTboard *board);
 /* zztBoardGetSize(board)
  * Determine the size of a board in bytes
  */
-uint16_t zztBoardGetSize(ZZTboard *board);
+uint32_t zztBoardGetSize(ZZTboard *board);
 /* zztWorldAddBoard(world, title)
  * Create a blank board at the end of the world with the given title
  */

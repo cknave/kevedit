@@ -54,6 +54,53 @@
 #include "zlaunch/dosbox.h"
 #endif
 
+static char * save_backup_begin(char * filename) {
+	char * bkp_filename;
+	int pos;
+
+	if (filename[0] == '\0') {
+		return str_dup(filename);
+	}
+
+#ifdef DOS
+	/* Do not assume LFN on DOS. */
+	bkp_filename = str_dup(filename);
+	bkp_filename[0] = '~';
+#else
+	bkp_filename = str_dupadd(filename, 4);
+	strcat(bkp_filename, ".BAK");
+	if (fileexists(bkp_filename)) {
+		pos = strlen(bkp_filename) - 1;
+		bkp_filename[pos] = '1';
+		while (fileexists(bkp_filename) && bkp_filename[pos] < '9') {
+			bkp_filename[pos]++;
+		}
+	}
+#endif
+
+	if (!fileexists(bkp_filename))
+		if (!fileexists(filename) || (rename(filename, bkp_filename) == 0))
+			return bkp_filename;
+
+	free(bkp_filename);
+	return NULL;
+}
+
+static void save_backup_end(char * filename, char * bkp_filename, bool success) {
+	if (bkp_filename == NULL) {
+		return;
+	}
+
+	if (success) {
+		remove(bkp_filename);
+	} else {
+		remove(filename);
+		rename(bkp_filename, filename);
+	}
+
+	free(bkp_filename);
+}
+
 void copy(keveditor * myeditor)
 {
 	/* Only copy if a block is selected */
@@ -394,10 +441,12 @@ int saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 {
 	/* Save World after prompting user for filename */
 	char* filename;
+	char* bkp_filename;
 	char* path, * file;
 	char* oldfilenamebase;    /* Old filename without extension */
 	char* dotptr;             /* General pointer */
 	char* suggestext;         /* Suggested extension */
+	int result;
 
 	if (zztWorldGetFilename(myworld) != NULL) {
 		suggestext = strrchr(zztWorldGetFilename(myworld), '.');
@@ -452,7 +501,12 @@ int saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 	/* Set the current board as the starting board */
 	zztWorldSetStartboard(myworld, zztBoardGetCurrent(myworld));
 
-	zztWorldSave(myworld);
+	result = 0;
+	bkp_filename = save_backup_begin(filename);
+	if (bkp_filename != NULL) {
+		result = zztWorldSave(myworld);
+		save_backup_end(filename, bkp_filename, result > 0);
+	}
 
 	free(oldfilenamebase);
 	oldfilenamebase = NULL;
@@ -461,8 +515,8 @@ int saveworld(displaymethod * mydisplay, ZZTworld * myworld)
 	free(path);
 	free(file);
 
-	mydisplay->print(61, 5, 0x1f, "Written.");
-	mydisplay->cursorgo(69, 5);
+	mydisplay->print(61, 5, result > 0 ? 0x1f : 0x1c, result > 0 ? "Written." : "Write error!");
+	mydisplay->cursorgo(result > 0 ? 69 : 73, 5);
 	return mydisplay->getch();
 }
 
@@ -627,8 +681,10 @@ int importfromboard(displaymethod * mydisplay, ZZTworld * myworld)
 int exporttoboard(displaymethod * mydisplay, ZZTworld * myworld)
 {
 	char* filename;
+	char* bkp_filename;
 	ZZTboard* brd;
 	bool quit = false;
+	int result;
 
 	/* Prompt for a filename */
 	filename = filenamedialog("", ".brd", "Export to Board", 1, mydisplay, &quit);
@@ -642,7 +698,18 @@ int exporttoboard(displaymethod * mydisplay, ZZTworld * myworld)
 	brd = zztBoardGetCurPtr(myworld);
 
 	/* Export */
-	zztBoardSave(brd, filename);
+	result = 0;
+	bkp_filename = save_backup_begin(filename);
+	if (bkp_filename != NULL) {
+		result = zztBoardSave(brd, filename);
+		save_backup_end(filename, bkp_filename, result > 0);
+	}
+
+	if (result <= 0) {
+		mydisplay->print(61, 5, 0x1c, "Write error!");
+		mydisplay->cursorgo(73, 5);
+		mydisplay->getch();
+	}
 
 	/* Decompress; it is the current board, after all */
 	zztBoardDecompress(brd);

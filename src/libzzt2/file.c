@@ -383,7 +383,7 @@ boardReadDone:
 
 int zztBoardWrite(ZZTboard *board, FILE *fp)
 {
-	uint16_t size;
+	uint32_t size;
 	uint16_t w;
 	uint8_t b;
 	int i, ofs;
@@ -403,8 +403,14 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 		size += board->params[i].length;/* Object data */
 	}
 
+	/* Completely forbid saving boards which go over the 16-bit length */
+	if (size > 65535) {
+		return 0;
+	}
+
 	/* Write board header */
-	_zzt_outw_ordie(&size, fp);
+	w = size;
+	_zzt_outw_ordie(&w, fp);
 	b = strlen((char *)board->title);
 	if (b > ZZT_BOARD_TITLE_SIZE)
 		b = ZZT_BOARD_TITLE_SIZE;

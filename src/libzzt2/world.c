@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "strtools.h"
 #include "zzt.h"
 
 ZZTworld *zztWorldCreate(char *filename, char *title)
@@ -55,13 +56,7 @@ ZZTworld *zztWorldCreate(char *filename, char *title)
 	world->boards = zztBoardCreate("Title screen");
 	world->header->boardcount = 1;
 	/* Filename = given or untitled.zzt */
-	if(filename != NULL) {
-		world->filename = malloc(strlen(filename)+1);
-		strcpy(world->filename, filename);
-	} else {
-		world->filename = malloc(strlen("untitled.zzt")+1);
-		strcpy(world->filename, "untitled.zzt");
-	}
+	world->filename = str_dup(filename != NULL ? filename : "untitled.zzt");
 	/* Decompress the current/first board */
 	world->cur_board = 0;
 	zztBoardDecompress(&(world->boards[0]));
