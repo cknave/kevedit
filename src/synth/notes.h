@@ -1,4 +1,4 @@
-/* notes.h	-- Generate musical notes in chromatic scale
+/* notes.h	-- Generate musical notes
  * $Id: notes.h,v 1.2 2005/06/29 03:20:34 kvance Exp $
  * Copyright (C) 2002 Kev Vance <kvance@kvance.com>
  *
@@ -20,6 +20,9 @@
 #ifndef _NOTES_H
 #define _NOTES_H 1
 
+#include <stdbool.h>
+#include <stdint.h>
+
 /* Note types */
 #define NOTETYPE_NONE 0   /* Usually end-of-input */
 #define NOTETYPE_NOTE 1   /* Just a note */
@@ -27,13 +30,12 @@
 #define NOTETYPE_DRUM 3   /* Tick-tock */
 
 /* Note lengths */
-#define NOTELEN_WHOLE        0x01
-#define NOTELEN_HALF         0x02
-#define NOTELEN_QUARTER      0x04
-#define NOTELEN_EIGHTH       0x08
-#define NOTELEN_SIXTEENTH    0x10
-#define NOTELEN_THIRTYSECOND 0x20
-#define NOTELEN_TRIPLET      0x100  /* Flag: divide duration by 3 */
+#define NOTELEN_WHOLE        0x20
+#define NOTELEN_HALF         0x10
+#define NOTELEN_QUARTER      0x08
+#define NOTELEN_EIGHTH       0x04
+#define NOTELEN_SIXTEENTH    0x02
+#define NOTELEN_THIRTYSECOND 0x01
 
 /* Note indexes */
 #define NOTE_C   0
@@ -49,19 +51,15 @@
 #define NOTE_As 10
 #define NOTE_B  11
 
-/* Pitch of A in octave 0 (where middle C is) */
-#define BASE_PITCH  440
-
 /* Drum information */
-#define DRUMBREAK  2  /* 2 millisecond delay between drum changes */ 
+#define DRUMBREAK  1  /* 1 millisecond delay between drum changes */
 #define DRUMCOUNT  10 /* 10 drums in all */
-#define DRUMCYCLES 10 /* 10 cycles per drum */
+#define DRUMCYCLES 14 /* 14 cycles per drum */
 extern short drums[DRUMCOUNT][DRUMCYCLES];
 
 typedef struct musicalNote {
 	int type;       /* Type of note */
-	int length;     /* Note length */
-	int dots;       /* Number of times a note length is dotted */
+	uint8_t length;     /* Note length */
 	int index;      /* Frequency index or drum index */
 	int octave;     /* Octave of note (0 is middle octave) */
 	int slur;       /* TRUE if note is to slur/tie with the next */
@@ -71,8 +69,8 @@ typedef struct musicalNote {
 } musicalNote;
 
 typedef struct musicSettings {
-	/* Frequency of A in octave 0 (where middle C is) */
-	float basePitch;
+	/* If true, apply PIT-style rounding. */
+	bool pitRounding;
 
 	/* Duration of a whole note, in milliseconds */
 	float wholeDuration;
@@ -83,6 +81,9 @@ typedef struct musicSettings {
 
 /* Delete a chain of notes */
 void deleteNoteChain(musicalNote* chain);
+
+/* Apply filters to a given frequency. */
+float noteFilter(float freq, musicSettings settings);
 
 /* Return the frequency of a given musical note. */
 float noteFrequency(musicalNote mnote, musicSettings settings);

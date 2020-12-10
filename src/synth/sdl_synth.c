@@ -82,18 +82,19 @@ int IsSynthBufferEmpty()
 void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings settings)
 {
 	/* Find the frequency and duration (wait) in seconds */
-	float frequency = noteFrequency(note, settings);
+	float frequency = noteFilter(noteFrequency(note, settings), settings);
 	float wait    = noteDuration(note, settings) / 1000;
 	float spacing = noteSpacing(note, settings) / 1000;
+	size_t j = 0;
 
 	if (note.type == NOTETYPE_NOTE) {
 		/* Add the sound to the buffer */
-		AddToBuffer(audiospec, frequency, wait);
+		AddToBuffer(audiospec, frequency, wait, &j);
 	}
 
 	/* Rests are simple */
 	if (note.type == NOTETYPE_REST) {
-		AddToBuffer(audiospec, 0, wait);
+		AddToBuffer(audiospec, 0, wait, &j);
 	}
 
 	/* Drums */
@@ -104,26 +105,26 @@ void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings sett
 
 		/* Loop through each drum cycle */
 		for (i = 0; i < DRUMCYCLES; i++) {
-			AddToBuffer(audiospec, drums[note.index][i], ((float)DRUMBREAK) / 1000);
+			AddToBuffer(audiospec, noteFilter(drums[note.index][i], settings), ((float)DRUMBREAK) / 1000, &j);
 		}
 
 		/* Add a break based on the current duration */
 		if( breaktime > 0 ) {
-			AddToBuffer(audiospec, 0, breaktime);
+			AddToBuffer(audiospec, 0, breaktime, &j);
 		}
 	}
 
 	if (spacing != 0.0)
-		AddToBuffer(audiospec, 0, spacing);
+		AddToBuffer(audiospec, 0, spacing, &j);
 }
 
-void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
+void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds, size_t *j_global)
 {
 	size_t notesize = seconds * spec.freq; /* Bytes of sound */
 	size_t wordsize;
 	size_t i, j;
 
-	int osc = 1;
+	int osc;
 
 	Uint16 uon = U16_1, uoff = U16_0;
 	Sint16 son = S16_1, soff = S16_0;
@@ -165,12 +166,13 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 		playbuffermax += notesize*wordsize;
 	} else {
 		/* Tone */
-		float hfreq = (spec.freq/freq/2.0);
-		for(i = 0, j = 0; i < notesize; i++, j++) {
-			if(j >= hfreq) {
-				osc ^= 1;
-				j = 0;
+		float ffreq = (spec.freq/freq);
+		float hfreq = (ffreq/2.0);
+		for(i = 0, j = (j_global == NULL ? 0 : *j_global); i < notesize; i++, j++) {
+			while (j >= ffreq) {
+				j -= ffreq;
 			}
+			osc = j >= hfreq;
 			if(spec.format == AUDIO_U8) {
 				if(osc)
 					masterplaybuffer[playbuffermax] = U8_1;
@@ -194,6 +196,8 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds)
 			}
 			playbuffermax += wordsize;
 		}
+		if (j_global != NULL)
+			*j_global = j;
 	}
 
 	/* Now let AudioCallback do its work */

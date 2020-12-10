@@ -50,7 +50,7 @@ void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings sett
 
 /* Add a frequency and duration to the SDL audio
  * buffer */
-void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds);
+void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds, size_t *counter);
 
 /* Internal audio callback function (don't call manually!) */
 void AudioCallback(void *userdata, Uint8 *stream, int len);
