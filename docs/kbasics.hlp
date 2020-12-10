@@ -79,10 +79,16 @@ you how many PARAMETER RECORDS are stored
 on this board.  Parameter records store
 information for configurable things:
 objects, scrolls, and enemies all have
-parameter records.  ZZT has a limit of 150
-records per board.  Keep an eye on how
-many you have used so that you don't run
-out!
+parameter records.
+
+ZZT has a limit of 150 records per board.
+Keep an eye on how many you have used so
+that you don't run out! (Technically, the
+engine will allow you to have 151 records
+on a board - but the limit for things like
+spawning bullets  or stars is still 150.
+KevEdit will mark this with a yellow '!'
+next to the record count.)
 
 The next line displays the title of the
 world, which can be modified in the

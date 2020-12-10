@@ -38,7 +38,7 @@ extern "C" {
 /* Board title size */
 #define ZZT_BOARD_TITLE_SIZE	50
 /* Maximum params for a board */
-#define ZZT_BOARD_MAX_PARAMS 150
+#define ZZT_BOARD_MAX_PARAMS 151
 /* World title size */
 #define ZZT_WORLD_TITLE_SIZE	20
 /* Flag size */

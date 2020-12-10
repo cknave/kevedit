@@ -423,7 +423,7 @@ void updatepanel(keveditor * e)
 {
 	displaymethod * d = e->mydisplay;
 	ZZTworld * w = e->myworld;
-	int i, x;
+	int i, x, xtmp;
 	char s[255];
 	char * title = (char *)zztWorldGetTitle(w);
 	int uf = e->updateflags;
@@ -440,10 +440,15 @@ void updatepanel(keveditor * e)
 		d->putch_discrete(63, 0, ' ', 0x1f);
 		d->putch_discrete(76, 0, ' ', 0x1f);
 		d->putch_discrete(77, 0, ' ', 0x1f);
-		sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, zztBoardGetParamcount(w) - 1);
+		d->putch_discrete(78, 0, ' ', 0x1f);
+		xtmp = zztBoardGetParamcount(w) - 1;
+		sprintf(s, "(%d, %d) %d/150", e->cursorx + 1, e->cursory + 1, xtmp);
 		i = 70 - strlen(s) / 2;
-		for (x = 0; x < strlen(s); x++) {
-			d->putch_discrete(i + x, 0, s[x], 0x1c);
+		for (x = 0; x < strlen(s); i++, x++) {
+			d->putch_discrete(i, 0, s[x], 0x1c);
+		}
+		if (xtmp > 150) {
+			d->putch_discrete(i, 0, '!', 0x1e);
 		}
 
 		if (uf & (UD_WORLDTITLE & ~UD_PANEL_TOP)) {
