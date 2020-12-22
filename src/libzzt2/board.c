@@ -684,9 +684,15 @@ int zztWorldMoveBoard(ZZTworld *world, int src, int dest)
 	/* Free the copy! */
 	zztBoardFree(copy);
 
+	/* Make sure old curboard is compressed */
+	zztBoardCompress(&world->boards[world->cur_board]);
+
 	/* Restore variables */
 	world->cur_board = new_cur_board;
 	world->header->startboard = new_startboard;
+
+	/* Make sure curboard is decompressed */
+	zztBoardDecompress(&world->boards[world->cur_board]);
 
 	return 1;
 }
