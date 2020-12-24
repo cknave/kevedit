@@ -39,7 +39,7 @@
 
 #define BUFFERSIZE 42     /* Expanding buffer for text files */
 #define CWDMAXLEN 4096    /* Max to allow getcwd() to reserve */
-#define CPBUFFERSIZE 1024 /* Binary file transfer buffer */ 
+#define CPBUFFERSIZE 1024 /* Binary file transfer buffer */
 
 /***************************************************************************/
 /**** File I/O *************************************************************/
@@ -133,7 +133,7 @@ stringvector filetosvector(char* filename, int wrapwidth, int editwidth)
 	/* remove trailing blank line, if present */
 	v.cur = v.last;
 	if (strlen(v.cur->s) == 0)
-		removestring(&v);
+		deletestring(&v);
 
 	return v;
 }
@@ -347,7 +347,7 @@ copyfile(char* srcname, char* destname, int flags)
 		fprintf(stderr, "Cannot open %s for reading.", srcname);
 		return COPY_BADSOURCE;
 	}
-	
+
 	/* Open the destination file for writing */
 	dest = fopen(destname, "wb");
 	if (dest == NULL) {

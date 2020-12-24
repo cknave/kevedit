@@ -237,11 +237,12 @@ ZZTparam svectortoprogram(stringvector sv)
 int editprogram(displaymethod * d, ZZTparam * p)
 {
 	texteditor * editor;
-	stringvector sv;
+	stringvector * sv;
 	ZZTparam newparam;
 
-	sv = programtosvector(p, EDITBOX_ZZTWIDTH);
-	editor = createtexteditor("Program Editor", &sv, d);
+	sv = (stringvector *) malloc(sizeof(stringvector));
+	*sv = programtosvector(p, EDITBOX_ZZTWIDTH);
+	editor = createtexteditor("Program Editor", sv, d);
 
 	/* Now that the node is full, we can edit it. */
 	int result = textedit(editor);

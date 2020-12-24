@@ -70,7 +70,7 @@ int zzlpickobject(stringvector * zzlv, displaymethod * d)
 	} while (finder != NULL);
 
 	result = scrolldialog("Select An Object", &namelist, d);
-	
+
 	if (result == EDITBOX_OK) {
 		finder = zzlv->first->next;
 		while (finder != NULL && finder->s != namelist.cur->s)
@@ -124,6 +124,7 @@ ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 	}
 
 	objcodeparam = svectortoprogram(objectcode);
+	deletestringvector(&objectcode);
 
 	/* Create the new pattern definition */
 	result.type = ZZT_OBJECT;
@@ -182,7 +183,7 @@ int zzlappendobject(stringvector * zzlv, ZZTtile obj, char* title, int editwidth
 
 	pushstring(zzlv, str_dupmin(title, editwidth));
 	pushstring(zzlv, str_dupmin(buffer, editwidth));
-	
+
 	stringvectorcat(zzlv, &objcode);
 
 	return 0;

@@ -159,7 +159,8 @@ int zzmpicksong(stringvector * zzmv, displaymethod * d)
 	/* determine the number chosen */
 	sscanf(songtitles.cur->s, "%*c%d", &i);
 
-	deletestringvector(&songtitles);
+	deletestringvector(&songtitles); // free nodes and their strings
+	removestringvector(&rawtitles); // free nodes only (string memory belongs to zzmv)
 
 	return i;
 }
