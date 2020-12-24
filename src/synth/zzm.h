@@ -25,10 +25,6 @@
 #define ZZM_MAXOCTAVE  3
 #define ZZM_MINOCTAVE -2
 
-/* In real music, this is 440. */
-/* In ZZT, it seems to be 432. */
-#define ZZM_BASE_PITCH  432
-
 /* Generate default ZZM note settings */
 musicalNote zzmGetDefaultNote(void);
 

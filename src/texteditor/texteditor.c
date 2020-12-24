@@ -654,6 +654,7 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 
 #ifdef SDL
 	SDL_AudioSpec spec;
+	SDL_AudioDeviceID audioid;
 #endif
 
 	/* Display everything, in case the editor has not been displayed recently. */
@@ -661,7 +662,7 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 
 #ifdef SDL
 	/* IF opening the audio device fails, return now before we crash something. */
-	if (OpenSynth(&spec))
+	if (OpenSynth(&audioid, &spec))
 		return;
 #endif
 
@@ -713,10 +714,11 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 #ifdef SDL
 	/* TODO: instead of just sitting here, display the progress of playback */
 	/* Wait until the music is done or the user presses a key */
-	while (!IsSynthBufferEmpty() && view->d->getkey() == DKEY_NONE)
-		;
+	while (!IsSynthBufferEmpty() && view->d->getkey() == DKEY_NONE) {
+		SDL_Delay(10);
+	}
 
-	CloseSynth();
+	CloseSynth(&audioid);
 #elif defined DOS
 	pcSpeakerFinish();
 #endif

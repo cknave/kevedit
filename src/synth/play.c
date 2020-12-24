@@ -40,6 +40,7 @@ void printNoteData(musicalNote note, musicSettings settings)
 
 #ifdef SDL
 SDL_AudioSpec spec;
+SDL_AudioDeviceID audioid;
 #endif
 
 void start() {
@@ -48,7 +49,7 @@ void start() {
 
 	atexit(SDL_Quit);
 
-	OpenSynth(&spec);
+	OpenSynth(&audioid, &spec);
 #endif
 }
 
@@ -56,7 +57,7 @@ void end() {
 #ifdef SDL
 	while (!IsSynthBufferEmpty())
 		;
-	CloseSynth();
+	CloseSynth(&audioid);
 	SDL_Quit();
 #elif defined DOS
 	pcSpeakerFinish();

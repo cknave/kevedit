@@ -27,17 +27,20 @@
 
 #include "notes.h"
 
+/* PIT frequency (used for rounding) */
+#define PIT_FREQUENCY 1193182.0
+
 short drums[DRUMCOUNT][DRUMCYCLES] = {
-		{   0,   0, 175, 175, 100,  90,  80,  70,  60,  50},  /* 0 */
-		{ 500, 300, 520, 320, 540, 340, 550, 350, 540, 340},  /* 1 */
-		{1000,1200,1250,1400,1100,1150,1300,1000,1200, 500},  /* 2 */
-		{   0,   0,   0,   0,   0,   0,   0,   0,   0,   0},  /* 3 (not a sound) */
-		{ 950,1950, 750,1750, 550,1550, 350,1350, 150,1150},  /* 4 */
-		{ 200, 210, 220, 230, 240, 250, 260, 270, 280, 600},  /* 5 */
-		{ 900, 800, 700, 600, 500, 400, 300, 200, 100,   0},  /* 6 */
-		{ 300, 200, 290, 190, 280, 180, 270, 170, 260, 160},  /* 7 */
-		{ 400, 380, 360, 340, 320, 300, 280, 260, 250, 240},  /* 8 */
-		{ 150, 100, 140,  90, 130,  80, 120,  70, 110,  60}   /* 9 */
+	{3200,     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0},
+    {1100,     1200,   1300,   1400,   1500,   1600,   1700,   1800,   1900,   2000,   2100,   2200,   2300,   2400},
+    {4800,     4800,   8000,   1600,   4800,   4800,   8000,   1600,   4800,   4800,   8000,   1600,   4800,   4800},
+    {0,        0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0},
+    {500,      2556,   1929,   3776,   3386,   4517,   1385,   1103,   4895,   3396,   874,    1616,   5124,   606},
+    {1600,     1514,   1600,   821,    1600,   1715,   1600,   911,    1600,   1968,   1600,   1490,   1600,   1722},
+    {2200,     1760,   1760,   1320,   2640,   880,    2200,   1760,   1760,   1320,   2640,   880,    2200,   1760},
+    {688,      676,    664,    652,    640,    628,    616,    604,    592,    580,    568,    556,    544,    5320},
+    {1207,     1224,   1163,   1127,   1159,   1236,   1269,   1314,   1127,   1224,   1320,   1332,   1257,   1327},
+    {378,      331,    316,    230,    224,    384,    480,    320,    358,    412,    376,    621,    554,    426}
 };
 
 /* Delete a chain of notes */
@@ -52,70 +55,27 @@ void deleteNoteChain(musicalNote* chain)
 	free(chain);
 }
 
-/* Frequency notation (makes it easier to compute frequency):
-	C   -3
-	C#  -4
-	D   -5
-	D#  -6
-	E   -7
-	F   -8
-	F#  -9
-	G  -10
-	G# -11
-	A    0
-	A#   1
-	B    2
-*/
-
-/* Translate a note index to frequency notation (above) */
-int frequencyNotation(int index)
-{
-	/* If the note is A or above */
-	if (index >= 9)
-		return index - 9;
-	else
-		return -(index + 3);
+float noteFilter(float freq, musicSettings settings) {
+	if (freq <= 1.0) {
+		return freq;
+	}
+	if (settings.pitRounding) {
+		freq = (PIT_FREQUENCY / ((int)PIT_FREQUENCY / (int)(freq)));
+	}
+	return freq;
 }
 
 float noteFrequency(musicalNote mnote, musicSettings settings)
 {
 	double freq;
 	float fraction;
-	float basePitch = settings.basePitch;
-
-	int note = frequencyNotation(mnote.index);
-	int octave = mnote.octave;
+	int i;
 
 	if (mnote.type != NOTETYPE_NOTE)
 		return 0.0;
 
-	/* Multiply or divide the base frequency to get to the correct octave
-	   relative to A */
-	if(octave > 0)
-		freq = basePitch*pow(2, octave);
-	else if (octave < 0)
-		freq = basePitch/pow(2, octave*(-1));
-	else
-		freq = basePitch;
-
-	if(note < 0)
-		freq /= 2.0;
-
-	/* Find the size of a half step */
-	fraction = (log(freq * 2.0) - log(freq)) / 12.0;
-
-	/* Move base freq to log */
-	freq = log(freq);
-
-	/* Add half-steps to reach the desired note)
-	   desired note */
-	if(note < 0)
-		freq += (note*(-1))*fraction;
-	else if(note > 0)
-		freq += note*fraction;
-
-	/* Get out of log */
-	freq = exp(freq);
+	/* Note frequency calculation - matching ZZT */
+	freq = 32 * (1 << (mnote.octave + 3)) * exp(log(2.0) * mnote.index / 12.0);
 
 	/* Return the frequency */
 	return freq;
@@ -125,21 +85,11 @@ float noteDuration(musicalNote note, musicSettings settings)
 {
 	float wholeDuration = settings.wholeDuration;
 	float duration;
+	int i;
 
-	/* Omit the triplet flag from the note length */
-	int length = note.length & ~NOTELEN_TRIPLET;
-
-	if (length <= 0) return 0;
- 
-	/* Divide the whole duration by the length */
-	duration = wholeDuration / (float)length;
-
-	/* Adjust duration for dotted notes */
-	duration = duration * (2 - (1 / (float)(1 << note.dots)));
-
-	/* Note is a triplet: divide by 3 */
-	if (note.length & NOTELEN_TRIPLET)
-		duration /= 3;
+	/* Transfer length to duration */
+	if (note.length <= 0) return 0;
+	duration = (wholeDuration / NOTELEN_WHOLE) * (note.length == 0 ? 256 : note.length);
 
 	/* Leave room for note spacing (except rests) */
 	if (!note.slur && note.type != NOTETYPE_REST)

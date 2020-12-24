@@ -46,7 +46,6 @@ musicalNote zzmGetDefaultNote(void)
 
 	note.type   = NOTETYPE_NONE;
 	note.length = NOTELEN_THIRTYSECOND;
-	note.dots   = 0;
 	note.index  = 0;
 	note.octave = 0;
 	note.slur   = 1;
@@ -59,7 +58,7 @@ musicalNote zzmGetDefaultNote(void)
 musicSettings zzmGetDefaultSettings(void)
 {
 	musicSettings settings;
-	settings.basePitch = ZZM_BASE_PITCH;
+	settings.pitRounding = true;
 	settings.wholeDuration = 1760;
 	settings.noteSpacing = 8;
 
@@ -76,10 +75,6 @@ musicalNote zzmGetNote(char* tune, musicalNote previousNote)
 		/* Uppercase any characters */
 		curCh = toupper(curCh);
 
-		/* If curCh is a duration character, reset the dots counter */
-		if (strchr("TSIQHW", curCh))
-			note.dots = 0;
-
 		switch (curCh) {
 			/* alter the current duration if we encounter one of these */
 			case 'T': note.length  = NOTELEN_THIRTYSECOND; break; /* (default duration) */
@@ -88,8 +83,8 @@ musicalNote zzmGetNote(char* tune, musicalNote previousNote)
 			case 'Q': note.length  = NOTELEN_QUARTER; break;
 			case 'H': note.length  = NOTELEN_HALF; break;
 			case 'W': note.length  = NOTELEN_WHOLE; break;
-			case '3': note.length |= NOTELEN_TRIPLET; break;
-			case '.': note.dots++; break;   /* Note is dotted */
+			case '3': note.length /= 3; break;
+			case '.': note.length = note.length * 3 / 2; break;   /* Note is dotted */
 			/* octave modifiers */
 			case '+': if (note.octave < ZZM_MAXOCTAVE) note.octave++; break;
 			case '-': if (note.octave > ZZM_MINOCTAVE) note.octave--; break;

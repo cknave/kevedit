@@ -37,10 +37,10 @@
 /* TODO: rename these functions */
 
 /* Open the synthesizer and store audio spec in "spec" (true on error) */
-int OpenSynth(SDL_AudioSpec * spec);
+int OpenSynth(SDL_AudioDeviceID *id, SDL_AudioSpec * spec);
 
 /* Close the synthesizer */
-void CloseSynth(void);
+void CloseSynth(SDL_AudioDeviceID *id);
 
 /* Returns true if the buffer is empty */
 int IsSynthBufferEmpty();
@@ -50,7 +50,7 @@ void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings sett
 
 /* Add a frequency and duration to the SDL audio
  * buffer */
-void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds);
+void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds, size_t *counter);
 
 /* Internal audio callback function (don't call manually!) */
 void AudioCallback(void *userdata, Uint8 *stream, int len);
