@@ -1010,6 +1010,7 @@ int display_sdl_init()
 		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
 		return 0;
 	}
+	SDL_StartTextInput();
 
 	/* Fire up the textmode emulator */
 	display_init(&info, 640, 350, 32);
@@ -1028,6 +1029,7 @@ void display_sdl_end()
 {
 	/* Terminate SDL stuff */
 	display_end(&info);
+	SDL_StopTextInput();
 	SDL_Quit();
 }
 
@@ -1075,7 +1077,14 @@ int display_sdl_getkey()
 	}
 
 	/* Preemptive stuff */
-	if(event.type == SDL_KEYDOWN) {
+	if(event.type == SDL_TEXTINPUT) {
+		/* TODO: Support Unicode (-> CP437) characters? */
+		if (event.text.text[0] >= 32 && event.text.text[0] < 127) {
+			return event.text.text[0];
+		} else {
+			return DKEY_NONE;
+		}
+	} else if(event.type == SDL_KEYDOWN) {
 		/* Hack for windows: alt+tab will never show up */
 		if((event.key.keysym.sym == SDLK_TAB) &&
 				(event.key.keysym.mod & KMOD_ALT)) {
@@ -1272,96 +1281,18 @@ int display_sdl_getkey()
 				break;
 		}
 	}
+
 	/* Shift is down */
-	if(event.key.keysym.mod & KMOD_SHIFT) {
-		/* If alpha key, shift means make capital */
-		if(event.key.keysym.sym >= SDLK_a && event.key.keysym.sym <= SDLK_z) {
-			event.key.keysym.sym ^= ' ';
-		} else {
-			/* Other shift conversions */
-			switch(event.key.keysym.sym) {
-				case SDLK_TAB:
-					event.key.keysym.sym = DKEY_SHIFT_TAB;
-					break;
-				case '`':
-					event.key.keysym.sym = '~';
-					break;
-				case '1':
-					event.key.keysym.sym = '!';
-					break;
-				case '2':
-					event.key.keysym.sym = '@';
-					break;
-				case '3':
-					event.key.keysym.sym = '#';
-					break;
-				case '4':
-					event.key.keysym.sym = '$';
-					break;
-				case '5':
-					event.key.keysym.sym = '%';
-					break;
-				case '6':
-					event.key.keysym.sym = '^';
-					break;
-				case '7':
-					event.key.keysym.sym = '&';
-					break;
-				case '8':
-					event.key.keysym.sym = '*';
-					break;
-				case '9':
-					event.key.keysym.sym = '(';
-					break;
-				case '0':
-					event.key.keysym.sym = ')';
-					break;
-				case '-':
-					event.key.keysym.sym = '_';
-					break;
-				case '=':
-					event.key.keysym.sym = '+';
-					break;
-				case '[':
-					event.key.keysym.sym = '{';
-					break;
-				case ']':
-					event.key.keysym.sym = '}';
-					break;
-				case '\\':
-					event.key.keysym.sym = '|';
-					break;
-				case ',':
-					event.key.keysym.sym = '<';
-					break;
-				case '.':
-					event.key.keysym.sym = '>';
-					break;
-				case '/':
-					event.key.keysym.sym = '?';
-					break;
-				case ';':
-					event.key.keysym.sym = ':';
-					break;
-				case '\'':
-					event.key.keysym.sym = '"';
-					break;
-				default:
-					break;
-			}
+	shift = (event.key.keysym.mod & KMOD_SHIFT) ? 1 : 0;
+	if(shift) {
+		switch(event.key.keysym.sym) {
+			case SDLK_TAB:
+				event.key.keysym.sym = DKEY_SHIFT_TAB;
+				break;
 		}
-		shift = 1;
-	} else {
-		shift = 0;
 	}
 
-	/* Return the key */
-	return event.key.keysym.sym;
-}
-
-int display_sdl_getch()
-{
-	return display_sdl_getch_with_context(undefined);
+	return event.key.keysym.sym < 32 || event.key.keysym.sym >= 127 ? event.key.keysym.sym : DKEY_NONE;
 }
 
 int display_sdl_getch_with_context(enum displaycontext context) {
@@ -1397,6 +1328,11 @@ int display_sdl_getch_with_context(enum displaycontext context) {
 	} while (key == DKEY_NONE);
 
 	return key;
+}
+
+int display_sdl_getch()
+{
+	return display_sdl_getch_with_context(undefined);
 }
 
 void display_sdl_gotoxy(int x, int y)
