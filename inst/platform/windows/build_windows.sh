@@ -27,7 +27,10 @@ for fn in AUTHORS ChangeLog COPYING; do
     cp /work/kevedit/$fn /work/$fn.txt
     sed -e 's/$/\r/' </work/kevedit/$fn >/work/$fn.txt
 done
-sed -e 's/$/\r/' </work/kevedit/README.md >/work/README.txt
+# Fix markdown newlines
+for fn in README.md legal.md; do
+    sed -i -e 's/$/\r/' /work/kevedit/$fn
+done
 
 # Extract SDL runtime
 rm -rf /work/sdl

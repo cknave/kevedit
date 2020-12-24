@@ -65,3 +65,11 @@ from Docker Hub:
 ![Loading a world from any directory](https://cloud.githubusercontent.com/assets/4196901/22183132/b5142208-e084-11e6-8ab1-568d217391ec.gif)
 ![Sophisticated stats editing](https://cloud.githubusercontent.com/assets/4196901/22183133/b51426b8-e084-11e6-8ce7-e01b7d6a06ed.gif)
 ![The very colorful program editor](https://cloud.githubusercontent.com/assets/4196901/22183136/b516dd4a-e084-11e6-8e9b-30201734480a.gif)
+
+
+## Legal
+
+KevEdit is distributed under the GNU general public license v2.
+
+Additional copyright notices are included in
+[legal.md](https://github.com/cknave/kevedit/blob/master/legal.md).

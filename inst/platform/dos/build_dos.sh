@@ -34,7 +34,10 @@ cp src/kevedit/kevedit.exe \
 for fn in AUTHORS ChangeLog COPYING; do
     sed -e 's/$/\r/' <$fn >/work/kevedit_zip/$fn.txt
 done
-sed -e 's/$/\r/' <README.md >/work/kevedit_zip/README.md
+# Fix markdown newlines
+for fn in README.md legal.md; do
+    sed -e 's/$/\r/' <$fn >/work/kevedit_zip/$fn
+done
 
 dist_zip=/dist/kevedit-${KEVEDIT_VERSION}-dos.zip
 rm -f "$dist_zip"
