@@ -4,6 +4,7 @@ import argparse
 import errno
 import logging
 import os
+import pathlib
 import pwd
 import subprocess
 import sys
@@ -29,16 +30,17 @@ TARGETS = ['appimage', 'dos', 'macos', 'source', 'windows']
 
 
 # Build temp directory
-WORK_DIR = os.path.abspath(os.environ.get('WORK_DIR', 'work'))
+INST_DIR = pathlib.Path(__file__).parent
+WORK_DIR = os.path.abspath(os.environ.get('WORK_DIR', INST_DIR / 'work'))
 
 # Distribution target path
-DIST_DIR = os.path.abspath(os.environ.get('DIST_DIR', 'dist'))
+DIST_DIR = os.path.abspath(os.environ.get('DIST_DIR', INST_DIR / 'dist'))
 
 # Platform-specific files
-PLATFORM_DIR = os.path.abspath(os.environ.get('PLATFORM_DIR', 'platform'))
+PLATFORM_DIR = os.path.abspath(os.environ.get('PLATFORM_DIR', INST_DIR / 'platform'))
 
 # 3rd party download path
-VENDOR_DIR = os.path.abspath(os.environ.get('VENDOR_DIR', 'vendor'))
+VENDOR_DIR = os.path.abspath(os.environ.get('VENDOR_DIR', INST_DIR / 'vendor'))
 
 # 'uid:gid' user and group IDs in a string
 # TODO: what's this do on windows?
