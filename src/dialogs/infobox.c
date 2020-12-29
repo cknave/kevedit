@@ -154,7 +154,7 @@ dialog buildboardinfodialog(ZZTworld * myworld)
 {
 	char buffer[24];   /* Number to string buffer */
 	int curboard = zztBoardGetCurrent(myworld);
-	int boardsize = zztBoardGetSize(zztBoardGetCurPtr(myworld));
+	uint32_t boardsize = zztBoardGetSize(zztBoardGetCurPtr(myworld));
 	dialog dia;
 
 	dialogComponent label  = dialogComponentMake(DIALOG_COMP_LABEL,   3, 2, LABEL_COLOR,  NULL, ID_NONE);

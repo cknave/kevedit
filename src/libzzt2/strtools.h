@@ -33,9 +33,10 @@ extern "C" {
 
 /* String duplication using malloc
  * str_dup()    - reserves just enough space for the string
- * str_dupmax() - reserves at  most max+1 space
  * str_dupmin() - reserves at least min+1 space
- * str_dupat()  - reserves  exactly len+1 space
+ * str_dupmax() - reserves at  most max+1 space
+ * str_duplen() - reserves  exactly len+1 space
+ * str_dupadd() - reserves just enough space for the string + add chars
  */
 char * str_dup   (char * s);
 char * str_dupmin(char * s, unsigned int min);

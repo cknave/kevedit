@@ -435,9 +435,9 @@ int zztBoardCompress(ZZTboard *board)
 	return 1;
 }
 
-uint16_t zztBoardGetSize(ZZTboard *board)
+uint32_t zztBoardGetSize(ZZTboard *board)
 {
-	uint16_t size = 0;
+	uint32_t size = 0;
 	int i;
 
 	size += 0x33; /* Board name */
