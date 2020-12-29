@@ -56,6 +56,9 @@
 
 static char * save_backup_begin(char * filename) {
 	char * bkp_filename;
+#ifdef DOS
+	char * bkp_filename_start;
+#endif
 	int pos;
 
 	if (filename[0] == '\0') {
@@ -65,7 +68,12 @@ static char * save_backup_begin(char * filename) {
 #ifdef DOS
 	/* Do not assume LFN on DOS. */
 	bkp_filename = str_dup(filename);
-	bkp_filename[0] = '~';
+	bkp_filename_start = strrchr(bkp_filename, '/');
+	if (bkp_filename_start != NULL)
+		bkp_filename_start++;
+	else
+		bkp_filename_start = bkp_filename;
+	bkp_filename_start[0] = '~';
 #else
 	bkp_filename = str_dupadd(filename, 4);
 	strcat(bkp_filename, ".BAK");
