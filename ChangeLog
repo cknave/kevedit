@@ -1,3 +1,14 @@
+1.1.0
+-----
+Fix a crash moving boards
+Fix several memory leaks
+Support newer system-provided glob library
+Keep a backup file in case of a crash during saving
+Adjust audio playback to better match ZZT
+Fix audio playback on Windows
+Fix the shift key on non-US keyboards
+Support 151 stats per board
+
 1.0.7
 -----
 Fix spelling error on macOS touch bar

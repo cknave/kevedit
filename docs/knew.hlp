@@ -1,6 +1,19 @@
 @New Features
 $New Features
 
+$New in Version 1.1.0
+*  Keep a backup file in case of a crash
+   during saving
+*  Adjust audio playback to better match
+   ZZT
+*  Support 151 stats per board
+
+$ Bugs fixed in version 1.1.0
+*  Fix a crash moving boards
+*  Fix several memory leaks
+*  Fix audio playback on Windows
+*  Fix the shift key on non-US keyboards
+
 $New in Version 1.0.7
 *  Jump to the first character in
    selection boxes on keypress
