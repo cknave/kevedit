@@ -112,8 +112,8 @@ typedef struct ZZTparam {
 	uint8_t index;   /* Position of param in list */
 	uint8_t x;		/* X position */
 	uint8_t y;		/* Y position */
-	uint16_t xstep;	/* X step */
-	uint16_t ystep;	/* Y step */
+	int16_t xstep;	/* X step */
+	int16_t ystep;	/* Y step */
 	uint16_t cycle;	/* Cycle (speed) */
 	uint8_t data[3];	/* Generic data */
 	uint16_t leaderindex;	/* Index of leader (usually for centipedes, -1 if none) */
@@ -346,7 +346,7 @@ int zztWorldInsertBoard(ZZTworld *world, ZZTboard *board, int number, int relink
 int zztWorldMoveBoard(ZZTworld *world, int src, int dest);
 /* zztBoardSetXXXXX()
  * Set a board info variable
- */ 
+ */
 void zztBoardSetTitle(ZZTworld *world, char *title);
 void zztBoardSetMaxshots(ZZTworld *world, uint8_t maxshots);
 void zztBoardSetDarkness(ZZTworld *world, uint8_t darkness);
@@ -362,7 +362,7 @@ void zztBoardSetTimelimit(ZZTworld *world, uint16_t timelimit);
 void zztBoardSetParamcount(ZZTworld *world, uint16_t paramcount);	/* Don't ever use */
 /* zztBoardGetXXXXX()
  * Get a board info variable
- */ 
+ */
 uint8_t *zztBoardGetTitle(ZZTworld *world);
 uint8_t zztBoardGetMaxshots(ZZTworld *world);
 uint8_t zztBoardGetDarkness(ZZTworld *world);

@@ -264,7 +264,7 @@ int editprogram(displaymethod * d, ZZTparam * p)
 }
 
 
-int getdirection(char xstep, char ystep)
+int getdirection(int16_t xstep, int16_t ystep)
 {
 	int dir = 0;
 
@@ -276,7 +276,7 @@ int getdirection(char xstep, char ystep)
 	return dir;
 }
 
-void getxystep(char * xstep, char * ystep, int dir)
+void getxystep(int16_t * xstep, int16_t * ystep, int dir)
 {
 	/* Start with a clear slate */
 	*xstep = 0; *ystep = 0;
@@ -486,8 +486,8 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 	_addlabel("Data 2");
 	_addlabel("Data 3");
 
-	sprintf(buffer, "%d", (char) tile.param->xstep); _addoption(buffer, ID_XSTEP);
-	sprintf(buffer, "%d", (char) tile.param->ystep); _addoption(buffer, ID_YSTEP);
+	sprintf(buffer, "%d", tile.param->xstep); _addoption(buffer, ID_XSTEP);
+	sprintf(buffer, "%d", tile.param->ystep); _addoption(buffer, ID_YSTEP);
 	sprintf(buffer, "%d", tile.param->data[0]); _addoption(buffer, ID_DATA0);
 	sprintf(buffer, "%d", tile.param->data[1]); _addoption(buffer, ID_DATA1);
 	sprintf(buffer, "%d", tile.param->data[2]); _addoption(buffer, ID_DATA2);
@@ -520,7 +520,7 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 			name = buildparamdescription(zztBoardGetBlock(w), tile.param->leaderindex);
 		else
 			name = str_dup("(none)");
-		
+
 		_addlabel("Leader");
 		_addoption(name, ID_LEADER);
 
@@ -531,7 +531,7 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 			name = buildparamdescription(zztBoardGetBlock(w), tile.param->followerindex);
 		else
 			name = str_dup("(none)");
-		
+
 		_addlabel("Follower");
 		_addoption(name, ID_FOLLOWER);
 
@@ -590,6 +590,18 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			if (tile.param->data[zztParamDatauseLocate(opt->id)] < 9)
 				return 0;
 		case ID_CYCLE:
+			// unsigned 16-bit
+			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
+			int result = dialogComponentEdit(d, opt, 5, LINED_NUMBER);
+			if (result == LINED_OK) {
+				sscanf(opt->text, "%d", &num);
+				if (num > 65535) num = 65535;
+				if (opt->text[0] == '\x0') num = 0;
+				tile.param->cycle = num;
+			} else if (result == LINED_QUIT) {
+				return DKEY_QUIT;
+			}
+			return 1;
 		case ID_DATA0:
 		case ID_DATA1:
 		case ID_DATA2: {
@@ -607,8 +619,6 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 				/* We could put the above in a function and use
 				 * the top level switch only, but why bother? */
 				switch (opt->id) {
-					case ID_CYCLE:
-						tile.param->cycle = num; break;
 					case ID_DATA0:
 						tile.param->data[0] = num; break;
 					case ID_DATA1:
@@ -624,18 +634,18 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			}
 			return 1;
 		}
-		/* signed 8-bit values -- ack! */
+		/* signed 16-bit values -- ack! */
 		case ID_XSTEP:
 		case ID_YSTEP: {
-			/* almost like regular 8-bits... */
+			/* almost like regular 16-bits... */
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
-			int result = dialogComponentEdit(d, opt, 4, LINED_SNUMBER);
+			int result = dialogComponentEdit(d, opt, 6, LINED_SNUMBER);
 			if (result == LINED_OK) {
 				sscanf(opt->text, "%d", &num);
-				/* No exceeding the bounds of a signed 8-bit number */
-				if (num > 127) num = 127;
-				if (num < -128) num = -128;
+				/* No exceeding the bounds of a signed 16-bit number */
+				if (num > 32767) num = 32767;
+				if (num < -32768) num = -32768;
 				/* zero's are special */
 				if (opt->text[0] == '\x0') num = 0;
 				if (opt->id == ID_XSTEP) tile.param->xstep = num;
@@ -723,7 +733,7 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			return 1;
 		case ID_DIRECTION:
 			{
-				char xstep, ystep;
+				int16_t xstep, ystep;
 				num = getdirection(tile.param->xstep, tile.param->ystep);
 				num = nextdirection(num);
 				getxystep(&xstep, &ystep, num);
@@ -776,11 +786,11 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 			return 1;
 
 		case ID_CYCLE:
-			/* Cycle stays within [0, 255] */
+			/* Cycle stays within [0, 65535] */
 			if (tile.param->cycle < -delta)
 				tile.param->cycle = 0;
-			else if (tile.param->cycle > 255 - delta)
-				tile.param->cycle = 255;
+			else if (tile.param->cycle > 65535 - delta)
+				tile.param->cycle = 65535;
 			else
 				tile.param->cycle += delta;
 			return 1;
@@ -1214,7 +1224,7 @@ int paramlistdialog(displaymethod * d, ZZTblock * block, int curparam, char * ti
 	paramlist = buildparamlist(block);
 	svmovetofirst(&paramlist);
 	preinsertstring(&paramlist, str_dup("(none)"));
-	
+
 	/* Move to the current param */
 	svmoveby(&paramlist, curparam);
 
