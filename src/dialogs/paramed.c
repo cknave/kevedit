@@ -115,9 +115,11 @@ int modifyparam(displaymethod * d, ZZTworld * w, int x, int y)
 				rebuild = parameditoption(d, w, x, y, dialogGetCurOption(dia));
 				break;
 			case DKEY_LEFT:
+			case '-':
 				rebuild = paramdeltaoption(d, w, x, y, dialogGetCurOption(dia), -1);
 				break;
 			case DKEY_RIGHT:
+			case '+':
 				rebuild = paramdeltaoption(d, w, x, y, dialogGetCurOption(dia), 1);
 				break;
 			case DKEY_F1:
@@ -440,15 +442,20 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 		if (datause == ZZT_DATAUSE_FIRERATEMODE) {
 			/* Confounded special case */
 
-			int rate = tile.param->data[i];
 			/* Remove the projectile-type component for printing */
-			if (rate > 128) rate -= 128;
+			int rate = tile.param->data[i] & 0x7F;
 			_addlabel("Firing Rate");
-			sprintf(buffer, "%d", rate);
+			if (rate > 8)
+				sprintf(buffer, "%d", rate);
+			else {
+				strcpy(buffer, "1 ");
+				scalestring(buffer + strlen(buffer), rate);
+				strcat(buffer, " 9");
+			}
 			_addoption(buffer, ID_FIRERATE);
 
 			_addlabel("Projectile");
-			_addoption(tile.param->data[i] < 128 ? "Bullets" : "Throwstars", ID_PROJECTILE);
+			_addoption((tile.param->data[i] & 0x80) ? "Bullets" : "Throwstars", ID_PROJECTILE);
 		} else if (datause != ZZT_DATAUSE_NONE) {
 			char * usename = (char *) zztParamDatauseGetName(tile, i);
 			_addlabel(usename);
@@ -791,7 +798,31 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 		case ID_DATA1: tile.param->data[1] += delta; return 1;
 		case ID_DATA2: tile.param->data[2] += delta; return 1;
 
-		case ID_FIRERATE:
+		case ZZT_DATAUSE_PASSAGEDEST:
+			if (tile.param->data[2] + delta >= zztWorldGetBoardcount(w) )
+				tile.param->data[2] = zztWorldGetBoardcount(w) - 1;
+			else if(tile.param->data[2] + delta < 0)
+				tile.param->data[2] = 0;
+			else
+				tile.param->data[2] += delta;
+			return 1;
+
+		case ID_PROJECTILE:
+			if (delta != 0)
+				tile.param->data[1] ^= 0x80;
+			return 1;
+
+		case ID_FIRERATE: {
+			int rate = tile.param->data[1] & 0x7F;
+			if (rate < -delta)
+				rate = 0;
+			else if (rate < 9 && rate > 8 - delta)
+				rate = 8;
+			else
+				rate += delta;
+			tile.param->data[1] = (tile.param->data[1] & 0x80) | (rate & 0x7F);
+		} return 1;
+
 		case ID_INSTRUCTION:
 		case ID_BIND:
 			/* TODO: implement */
