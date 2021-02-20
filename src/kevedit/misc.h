@@ -75,7 +75,6 @@ patbuffer* createstandardpatterns(void);
 void floodselect(ZZTblock* block, selection fillsel, int x, int y);
 void tileselect (ZZTblock* block, selection fillsel, ZZTtile tile);
 
-void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag);
 void fillbyselection(ZZTworld* world, selection fillsel, patbuffer pbuf, int randomflag);
 
 void dofloodfill(keveditor * myeditor, int randomflag);

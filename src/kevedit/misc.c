@@ -846,23 +846,6 @@ void tileselect(ZZTblock* block, selection fillsel, ZZTtile tile)
 		}
 }
 
-void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag)
-{
-	int x = -1, y = 0;
-	ZZTtile pattern = pbuf.patterns[pbuf.pos];
-
-	if (randomflag)
-		srand(time(0));
-
-	/* Plot the patterns */
-	while (!nextselected(fillsel, &x, &y)) {
-		if (randomflag)
-			pattern = pbuf.patterns[rand() % pbuf.size];
-
-		zztTilePlot(block, x, y, pattern);
-	}
-}
-
 void fillbyselection(ZZTworld* world, selection fillsel, patbuffer pbuf, int randomflag)
 {
 	int x = -1, y = 0;
