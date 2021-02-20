@@ -846,18 +846,26 @@ void tileselect(ZZTblock* block, selection fillsel, ZZTtile tile)
 		}
 }
 
-void fillbyselection(ZZTworld* world, selection fillsel, patbuffer pbuf, int randomflag)
+void fillbyselection(keveditor *myeditor, ZZTworld* world, selection fillsel, patbuffer pbuf,
+                     int randomflag)
 {
 	int x = -1, y = 0;
 	ZZTtile pattern = pbuf.patterns[pbuf.pos];
+	if (myeditor->defcmode == 0) {
+		pattern.color = encodecolor(myeditor->color);
+	}
 
 	if (randomflag)
 		srand(time(0));
 
 	/* Plot the patterns */
 	while (!nextselected(fillsel, &x, &y)) {
-		if (randomflag)
+		if (randomflag) {
 			pattern = pbuf.patterns[rand() % pbuf.size];
+			if (myeditor->defcmode == 0) {
+				pattern.color = encodecolor(myeditor->color);
+			}
+		}
 
 		zztPlot(world, x, y, pattern);
 	}
@@ -891,7 +899,7 @@ void dofloodfill(keveditor * myeditor, int randomflag)
 							myworld->boards[zztBoardGetCurrent(myworld)].ply);
 
 	/* Fill using the selected area */
-	fillbyselection(myworld, fillsel, *fillbuffer, randomflag);
+	fillbyselection(myeditor, myworld, fillsel, *fillbuffer, randomflag);
 
 	/* Delete the fill buffer if we created it above */
 	if (randomflag && myeditor->buffers.pbuf == myeditor->buffers.standard_patterns) {
