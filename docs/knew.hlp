@@ -1,6 +1,20 @@
 @New Features
 $New Features
 
+$New in Version 1.1.1
+*  Make firing rate show up as a slider in
+   param editor
+
+$ Bugs fixed in version 1.1.1
+*  Fix bounds checking with left/right/
+   plus/minus board link selector
+*  Fix -/+ keys not doing anything in
+   param editor
+*  Don't show unused owner param for stars
+   in editor
+*  Fix fill not honoring default colour
+   mode
+
 $New in Version 1.1.0
 *  Keep a backup file in case of a crash
    during saving
