@@ -455,7 +455,7 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 			_addoption(buffer, ID_FIRERATE);
 
 			_addlabel("Projectile");
-			_addoption((tile.param->data[i] & 0x80) ? "Bullets" : "Throwstars", ID_PROJECTILE);
+			_addoption((tile.param->data[i] & 0x80) ? "Throwstars" : "Bullets", ID_PROJECTILE);
 		} else if (datause != ZZT_DATAUSE_NONE) {
 			char * usename = (char *) zztParamDatauseGetName(tile, i);
 			_addlabel(usename);
