@@ -150,8 +150,8 @@ ZZTparam *zztParamCreateBlank(void)
 	param->ystep = 0;
 	param->cycle = 0;
 	memset(param->data, 0, sizeof(param->data));
-	param->leaderindex = 0xFFFF;
-	param->followerindex = 0xFFFF;
+	param->leaderindex = -1;
+	param->followerindex = -1;
 	param->utype = ZZT_EMPTY;
 	param->ucolor = 0x0F;
 	memset(param->magic, 0, sizeof(param->magic));

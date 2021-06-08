@@ -174,11 +174,19 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 int line_editnumber(int x, int y, int color, int * number, int maxval,
                     displaymethod* d)
 {
+	return line_editsnumber(x, y, color, number, 0, maxval, d);
+}
+
+int line_editsnumber(int x, int y, int color, int * number, int minval, int maxval,
+                    displaymethod* d)
+{
 	char* buffer;
 	int editwidth = 0;
 	int factor;
 
-	for (factor = 1; factor < maxval; factor *= 10)
+	for (factor = 1; factor < maxval && factor < -minval; factor *= 10)
+		editwidth++;
+	if (minval < 0)
 		editwidth++;
 
 	if (editwidth == 0)
@@ -188,10 +196,12 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 
 	sprintf(buffer, "%d", *number);
 	int result = line_editor(x, y, color, buffer, editwidth,
-			LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d);
+			minval >= 0 ? LINED_NUMBER : LINED_SNUMBER, d);
 	if(result == LINED_OK) {
 		sscanf(buffer, "%d", number);
-		if (*number > maxval)
+		if (*number < minval)
+			*number = minval;
+		else if (*number > maxval)
 			*number = maxval;
 		free(buffer);
 		return LINED_OK;

@@ -356,7 +356,7 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 		case BRDINFO_MAXSHOTS:
 			if (opt->text[0] == '0') /* If the number is zero */
 				opt->text[0] = '\x0';  /* Clear the text */
-            edit_result = dialogComponentEdit(d, opt, 3, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES);
+            edit_result = dialogComponentEdit(d, opt, 3, LINED_NUMBER);
 			if (edit_result == LINED_OK) {
 				int number;
 				sscanf(opt->text, "%d", &number);
@@ -381,7 +381,7 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 				d->print(opt->x + 9, opt->y + 6, 0x00, "          ");
 			}
 
-			edit_result = dialogComponentEdit(d, opt, 5, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES);
+			edit_result = dialogComponentEdit(d, opt, 5, LINED_NUMBER);
             if (edit_result == LINED_OK) {
 				long int timelimit;
 				sscanf(opt->text, "%ld", &timelimit);
@@ -738,49 +738,49 @@ int worldinfoeditoption(int curoption, ZZTworld* myworld,
 
 		case WLDINFO_AMMO:
 			tempnum = header->ammo;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->ammo = tempnum;
 			break;
 
 		case WLDINFO_GEMS:
 			tempnum = header->gems;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->gems = tempnum;
 			break;
 
 		case WLDINFO_HEALTH:
 			tempnum = header->health;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->health = tempnum;
 			break;
 
 		case WLDINFO_TORCHES:
 			tempnum = header->torches;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->torches = tempnum;
 			break;
 
 		case WLDINFO_SCORE:
 			tempnum = header->score;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->score = tempnum;
 			break;
 
 		case WLDINFO_TCYCLES:
 			tempnum = header->torchcycles;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->torchcycles = tempnum;
 			break;
 
 		case WLDINFO_ECYCLES:
 			tempnum = header->energizercycles;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->energizercycles = tempnum;
 			break;
 
 		case WLDINFO_TIMEPASSED:
 			tempnum = header->timepassed;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->timepassed = tempnum;
 			break;
 	}
