@@ -116,9 +116,8 @@ int zztWorldWrite(ZZTworld *world, FILE *fp)
 	_zzt_outw_ordie(&world->header->torches, fp);
 	_zzt_outw_ordie(&world->header->torchcycles, fp);
 	_zzt_outw_ordie(&world->header->energizercycles, fp);
-	/* Unknown: next 2 */
-	_zzt_outb_ordie(&world->header->magic1[0], fp);	/* TODO */
-	_zzt_outb_ordie(&world->header->magic1[1], fp);	/* XXX */
+	w = 0; /* Unused */
+	_zzt_outw_ordie(&w, fp);
 	_zzt_outw_ordie(&world->header->score, fp);
 	b = strlen((char *)world->header->title);
 	_zzt_outb_ordie(&b, fp);
@@ -135,9 +134,7 @@ int zztWorldWrite(ZZTworld *world, FILE *fp)
 	}
 	/* More header */
 	_zzt_outw_ordie(&world->header->timepassed, fp);
-	/* Unknown: next 2 */
-	_zzt_outb_ordie(&world->header->magic2[0], fp);	/* TODO */
-	_zzt_outb_ordie(&world->header->magic2[1], fp);	/* XXX */
+	_zzt_outw_ordie(&world->header->timepassedhsec, fp);
 	_zzt_outb_ordie(&world->header->savegame, fp);
 	_zzt_outspad_ordie(NULL, 0, 247, fp);
 	/* Write boards */
@@ -157,7 +154,7 @@ ZZTworld *zztWorldRead(FILE *fp)
 	int i;
 
 	uint8_t len;
-	uint16_t bcount;
+	uint16_t bcount, unusedw;
 
 	/* Read & check header */
 	_zzt_inb_or(&magicnumber[0], fp) return NULL;
@@ -184,9 +181,8 @@ ZZTworld *zztWorldRead(FILE *fp)
 	_zzt_inw_or(&world->header->torches, fp) freeworld;
 	_zzt_inw_or(&world->header->torchcycles, fp) freeworld;
 	_zzt_inw_or(&world->header->energizercycles, fp) freeworld;
-	/* Unknown: next 2 */
-	_zzt_inb_or(&world->header->magic1[0], fp) freeworld; /* TODO */
-	_zzt_inb_or(&world->header->magic1[1], fp) freeworld; /* XXX */
+	/* Unused */
+	_zzt_inb_or(&unusedw, fp) freeworld;
 	_zzt_inw_or(&world->header->score, fp) freeworld;
 	_zzt_inb_or(&len, fp) freeworld;
 	if(len > ZZT_WORLD_TITLE_SIZE)
@@ -202,9 +198,7 @@ ZZTworld *zztWorldRead(FILE *fp)
 	}
 	/* More header */
 	_zzt_inw_or(&world->header->timepassed, fp) freeworld;
-	/* Unknown: next 2 */
-	_zzt_inb_or(&world->header->magic2[0], fp) freeworld; /* TODO */
-	_zzt_inb_or(&world->header->magic2[1], fp) freeworld; /* XXX */
+	_zzt_inw_or(&world->header->timepassedhsec, fp) freeworld;
 	_zzt_inb_or(&world->header->savegame, fp) freeworld;
 	_zzt_inspad_or(NULL, 0, 247, fp) freeworld;
 	/* Read boards */

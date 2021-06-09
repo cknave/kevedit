@@ -266,7 +266,7 @@ int editprogram(displaymethod * d, ZZTparam * p)
 }
 
 
-int getdirection(char xstep, char ystep)
+int getdirection(short xstep, short ystep)
 {
 	int dir = 0;
 
@@ -278,7 +278,7 @@ int getdirection(char xstep, char ystep)
 	return dir;
 }
 
-void getxystep(char * xstep, char * ystep, int dir)
+void getxystep(short * xstep, short * ystep, int dir)
 {
 	/* Start with a clear slate */
 	*xstep = 0; *ystep = 0;
@@ -493,8 +493,8 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 	_addlabel("Data 2");
 	_addlabel("Data 3");
 
-	sprintf(buffer, "%d", (char) tile.param->xstep); _addoption(buffer, ID_XSTEP);
-	sprintf(buffer, "%d", (char) tile.param->ystep); _addoption(buffer, ID_YSTEP);
+	sprintf(buffer, "%d", (short) tile.param->xstep); _addoption(buffer, ID_XSTEP);
+	sprintf(buffer, "%d", (short) tile.param->ystep); _addoption(buffer, ID_YSTEP);
 	sprintf(buffer, "%d", tile.param->data[0]); _addoption(buffer, ID_DATA0);
 	sprintf(buffer, "%d", tile.param->data[1]); _addoption(buffer, ID_DATA1);
 	sprintf(buffer, "%d", tile.param->data[2]); _addoption(buffer, ID_DATA2);
@@ -523,26 +523,32 @@ dialog buildparamdialog(ZZTworld * w, int x, int y)
 		option.x++;
 
 		/* Add the leader */
-		if (tile.param->leaderindex != 0xFFFF)
-			name = buildparamdescription(zztBoardGetBlock(w), tile.param->leaderindex);
-		else
-			name = str_dup("(none)");
-		
 		_addlabel("Leader");
-		_addoption(name, ID_LEADER);
-
-		free(name);
+		if (tile.param->leaderindex < -1) {
+			sprintf(buffer, "%d", tile.param->leaderindex);
+			_addoption(buffer, ID_LEADER);
+		} else {
+			if (tile.param->leaderindex != -1)
+				name = buildparamdescription(zztBoardGetBlock(w), tile.param->leaderindex);
+			else
+				name = str_dup("(none)");
+			_addoption(name, ID_LEADER);
+			free(name);
+		}
 
 		/* Add the follower */
-		if (tile.param->followerindex != 0xFFFF)
-			name = buildparamdescription(zztBoardGetBlock(w), tile.param->followerindex);
-		else
-			name = str_dup("(none)");
-		
 		_addlabel("Follower");
-		_addoption(name, ID_FOLLOWER);
-
-		free(name);
+		if (tile.param->followerindex < -1) {
+			sprintf(buffer, "%d", tile.param->followerindex);
+			_addoption(buffer, ID_FOLLOWER);
+		} else {
+			if (tile.param->followerindex != -1)
+				name = buildparamdescription(zztBoardGetBlock(w), tile.param->followerindex);
+			else
+				name = str_dup("(none)");
+			_addoption(name, ID_FOLLOWER);
+			free(name);
+		}
 	}
 
 	return dia;
@@ -596,7 +602,23 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			/* Require user to inc/dec for values under 9 */
 			if (tile.param->data[zztParamDatauseLocate(opt->id)] < 9)
 				return 0;
-		case ID_CYCLE:
+		case ID_CYCLE: {
+			/* zero's are special */
+			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
+			int result = dialogComponentEdit(d, opt, 6, LINED_SNUMBER);
+			if (result == LINED_OK) {
+				sscanf(opt->text, "%d", &num);
+				/* No exceeding the bounds of a signed 16-bit number */
+				if (num > 32767) num = 32767;
+				else if (num < -32768) num = -32768;
+				/* zero's are special */
+				if (opt->text[0] == '\x0') num = 0;
+				tile.param->cycle = num;
+			} else if (result == LINED_QUIT) {
+				return DKEY_QUIT;
+			}
+			return 1;
+		}
 		case ID_DATA0:
 		case ID_DATA1:
 		case ID_DATA2: {
@@ -614,8 +636,6 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 				/* We could put the above in a function and use
 				 * the top level switch only, but why bother? */
 				switch (opt->id) {
-					case ID_CYCLE:
-						tile.param->cycle = num; break;
 					case ID_DATA0:
 						tile.param->data[0] = num; break;
 					case ID_DATA1:
@@ -631,18 +651,18 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			}
 			return 1;
 		}
-		/* signed 8-bit values -- ack! */
+		/* signed 16-bit values -- ack! */
 		case ID_XSTEP:
 		case ID_YSTEP: {
-			/* almost like regular 8-bits... */
+			/* almost like regular 16-bits... */
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
-			int result = dialogComponentEdit(d, opt, 4, LINED_SNUMBER);
+			int result = dialogComponentEdit(d, opt, 6, LINED_SNUMBER);
 			if (result == LINED_OK) {
 				sscanf(opt->text, "%d", &num);
-				/* No exceeding the bounds of a signed 8-bit number */
-				if (num > 127) num = 127;
-				if (num < -128) num = -128;
+				/* No exceeding the bounds of a signed 16-bit number */
+				if (num > 32767) num = 32767;
+				else if (num < -32768) num = -32768;
 				/* zero's are special */
 				if (opt->text[0] == '\x0') num = 0;
 				if (opt->id == ID_XSTEP) tile.param->xstep = num;
@@ -705,8 +725,6 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 				num = tile.param->leaderindex;
 			else
 				num = tile.param->followerindex;
-			if (num == 0xFFFF)
-				num = -1;  /* For #bind, 0 means none */
 
 			int result = paramlistdialog(d, zztBoardGetBlock(w), num, "Select object to bind with");
 			if (result == DKEY_QUIT) {
@@ -714,8 +732,6 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			}
 
 			num = result;
-			if (num == -1)
-				num = 0xFFFF;
 			if (opt->id == ID_LEADER)
 				tile.param->leaderindex = num;
 			else
@@ -730,7 +746,7 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			return 1;
 		case ID_DIRECTION:
 			{
-				char xstep, ystep;
+				short xstep, ystep;
 				num = getdirection(tile.param->xstep, tile.param->ystep);
 				num = nextdirection(num);
 				getxystep(&xstep, &ystep, num);
@@ -1184,9 +1200,17 @@ char * getobjectname(ZZTtile object)
 
 char * buildparamdescription(ZZTblock * block, int index)
 {
-	ZZTparam * param = block->params[index];
+	ZZTparam * param = NULL;
 	char * tileName    = NULL;
 	char * description = NULL;
+
+	if (index < 0 || index >= block->paramcount) {
+		description = str_create(30);
+		sprintf(description, "(missing stat %d)", index);
+		return description;
+	}
+
+	param = block->params[index];
 
 	if (param->x < block->width && param->y < block->height) {
 		ZZTtile tile = zztTileAt(block, param->x, param->y);
