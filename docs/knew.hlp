@@ -1,6 +1,22 @@
 @New Features
 $New Features
 
+$New in Version 1.1.2
+*  Support signed values in stats editor
+*  Upgrade to SDL 2.0.14 for binary
+   packages
+
+$ Bugs fixed in version 1.1.2
+*  Fix incorrect labels for bullets/stars
+   in stats editor
+*  Fix plotting the player when moving
+   stat 0
+*  Fix clicking when testing sounds on
+   Windows when non-U16 audio formats are
+   used
+   
+
+
 $New in Version 1.1.1
 *  Make firing rate show up as a slider in
    param editor

@@ -1,3 +1,11 @@
+1.1.2
+-----
+Support signed values in stats editor
+Fix incorrect labels for bullets/stars in stats editor
+Fix plotting the player when moving stat 0
+Fix clicking when testing sounds on Windows when non-U16 audio formats are used
+Upgrade to SDL 2.0.14 for binary packages
+
 1.1.1
 -----
 Fix bounds checking with left/right/plus/minus board link selector
