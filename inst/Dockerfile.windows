@@ -1,15 +1,13 @@
-FROM multiarch/crossbuild:latest
+FROM debian:10.9-slim
 ARG MAKE_OPTS=-j12
 ARG SDL_VERSION
 ARG ISPACK_VERSION
 ARG INNOEXTRACT_VERSION
 
-# multiarch is getting quite out of date at this point, and no longer has
-# security updates
-RUN grep -v http://security.debian.org /etc/apt/sources.list >/tmp/sources.list && \
-    mv /tmp/sources.list /etc/apt/sources.list && \
+RUN dpkg --add-architecture i386 && \
     apt-get update && \
-    apt-get install -y genisoimage pkgconf wine && \
+    apt-get install -y automake autotools-dev build-essential genisoimage mingw-w64 pkgconf \
+            unzip wine32 && \
     ln -sf /usr/bin/genisoimage /usr/bin/mkisofs
 
 COPY vendor/innoextract-${INNOEXTRACT_VERSION}-linux.tar.xz /tmp/

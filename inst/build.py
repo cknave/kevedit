@@ -14,13 +14,13 @@ APPIMAGE_VERSION = '11'
 APPLE_LIBTAPI_VERSION = 'e56673694db395e25b31808b4fbb9a7005e6875f'
 CCTOOLS_PORT_VERSION = '1e3f614aff4eaae01b6cc4d29c3237c93f3322f8'
 BUILD_DJGPP_VERSION = '2.9'
-INNOEXTRACT_VERSION = '1.7'
+INNOEXTRACT_VERSION = '1.9'
 ISPACK_VERSION = '5.5.8'
 MACOS_SDK_VERSION = '10.12'
 MACOS_DARWIN_VERSION = '16'
 OSXCROSS_VERSION = '6525b2b7d33abc371ad889f205377dc5cf81f23e'
 PBZX_VERSION = '1.0.2'
-SDL_VERSION = '2.0.9'
+SDL_VERSION = '2.0.14'
 XAR_VERSION = '1.6.1'
 XCODE_VERSION = '8.3.3'
 
@@ -62,7 +62,7 @@ def main():
         globals()['build_' + target](source, args)
 
 
-def build_appimage(source, args, image_version='1.2'):
+def build_appimage(source, args, image_version='1.3'):
     """Build Linux x86_64 AppImage to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -124,7 +124,7 @@ def build_appimage(source, args, image_version='1.2'):
           appimage_tool=appimage_tool, uid_gid=UID_GID, version=args.version)
 
 
-def build_macos(source, args, image_version='2.1', extractor_version='2.0'):
+def build_macos(source, args, image_version='2.2', extractor_version='2.0'):
     """Build macOS x86_64 .app in a .dmg archive to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -181,7 +181,7 @@ def build_macos(source, args, image_version='2.1', extractor_version='2.0'):
           image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
-def build_windows(source, args, image_version='1.2'):
+def build_windows(source, args, image_version='1.3'):
     """Build windows x64 .exe in a self-executing installer to DIST_DIR.
 
     :param str source: path to KevEdit source zip
