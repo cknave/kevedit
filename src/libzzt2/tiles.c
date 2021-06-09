@@ -559,18 +559,16 @@ int zztPlotPlayer(ZZTworld * world, int x, int y)
 {
 	ZZTboard* brd = zztBoardGetCurPtr(world);
 
-	/* Simple case */
-	if (x == brd->plx && y == brd->ply)
-		return 1;
-
 	/* Error if board cannot be decompressed */
 	if (!zztBoardDecompress(brd))
 		return 0;
 
-	zztTileMove(brd->bigboard, brd->plx, brd->ply, x, y);
+	if (x != brd->plx || y != brd->ply)
+		zztTileMove(brd->bigboard, brd->plx, brd->ply, x, y);
 
 	/* Record the change */
 	brd->plx = x; brd->ply = y;
+	zztTileAt(brd->bigboard, x, y).type = ZZT_PLAYER;
 
 	return 1;
 }
