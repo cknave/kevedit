@@ -182,7 +182,7 @@ ZZTworld *zztWorldRead(FILE *fp)
 	_zzt_inw_or(&world->header->torchcycles, fp) freeworld;
 	_zzt_inw_or(&world->header->energizercycles, fp) freeworld;
 	/* Unused */
-	_zzt_inb_or(&unusedw, fp) freeworld;
+	_zzt_inw_or(&unusedw, fp) freeworld;
 	_zzt_inw_or(&world->header->score, fp) freeworld;
 	_zzt_inb_or(&len, fp) freeworld;
 	if(len > ZZT_WORLD_TITLE_SIZE)
