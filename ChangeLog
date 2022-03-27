@@ -1,3 +1,7 @@
+1.1.3
+-----
+Fix flood fill over objects with no stats
+
 1.1.2
 -----
 Support signed values in stats editor
