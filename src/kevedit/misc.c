@@ -792,14 +792,22 @@ patbuffer* createstandardpatterns(void)
 
 /* Determine whether two tiles are equivalent
  * (for the purposes of selecting) */
-#define tileEquivalent(t1, t2) \
-	(t1).type  == (t2).type && \
-	((t1).color == (t2).color || \
-	 (t1).type == ZZT_EMPTY) && \
-	/* If type is Object, chars must be the same */ \
-	((t1).type != ZZT_OBJECT || \
-	 (zztParamGetProperty((t1).param, ZZT_DATAUSE_CHAR) == \
-		zztParamGetProperty((t2).param, ZZT_DATAUSE_CHAR)))
+static bool tileEquivalent(ZZTtile t1, ZZTtile t2)
+{
+	if (t1.type != t2.type)
+		return false;
+	if ((t1.type != ZZT_EMPTY) && (t1.color != t2.color))
+		return false;
+	if (t1.type == ZZT_OBJECT)
+	{
+		uint8_t t1_chr = t1.param == NULL ? 0 : zztParamGetProperty(t1.param, ZZT_DATAUSE_CHAR);
+		uint8_t t2_chr = t2.param == NULL ? 0 : zztParamGetProperty(t2.param, ZZT_DATAUSE_CHAR);
+		if (t1_chr != t2_chr)
+			return false;
+	}
+
+	return true;
+}
 
 void floodselect(ZZTblock* block, selection fillsel, int x, int y)
 {
