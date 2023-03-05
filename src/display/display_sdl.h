@@ -52,19 +52,6 @@ typedef struct
 	enum displaycontext context;
 } video_info;
 
-/* Prototypes */
-void display_load_charset(Uint8 *dest, char *name);
-void display_load_palette(Uint32 *dest, char *name);
-void display_init(video_info *vdest, Uint32 width, Uint32 height,
-		Uint32 depth);
-void display_end(video_info *vdest);
-void display_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co);
-void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y);
-void display_redraw(video_info *vdest);
-void display_update(video_info *vdest, int x, int y, int width, int height);
-void display_update_and_present(video_info *vdest, int x, int y, int width,
-		int height);
-
 /* For RegisterDisplays() */
 extern displaymethod display_sdl;
 

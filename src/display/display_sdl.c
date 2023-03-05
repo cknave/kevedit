@@ -44,9 +44,12 @@ enum cursor_state {
 static enum cursor_state cursor = CURSOR_HIDDEN;
 
 /* Forward defines :( */
-static Uint32 display_tick(Uint32 interval, void *blank);
-void display_curse(int x, int y);
-void display_curse_inactive(int x, int y);
+static Uint32 sdl_tick(Uint32 interval, void *blank);
+static void sdl_curse(int x, int y);
+static void sdl_curse_inactive(int x, int y);
+static void sdl_update(video_info *vdest, int x, int y, int width, int height);
+static void sdl_update_and_present(video_info *vdest, int x, int y, int width, int height);
+
 
 #define CURSOR_RATE 200
 #define ZOOM_STEP 1.0f
@@ -527,15 +530,7 @@ const Uint8 ega_palette[] = {
 	'\x15', '\x3F', '\x3F', '\x3F', '\x15', '\x3F', '\x3F', '\x3F'
 };
 
-void display_load_charset(Uint8 *dest, char *name)
-{
-	FILE *fp;
-	fp = fopen(name, "rb");
-	fread(dest, 256 * 14, 1, fp);
-	fclose(fp);
-}
-
-void expand_palette(Uint32 *dest, Uint8 *src)
+static void sdl_expand_palette(Uint32 *dest, Uint8 *src)
 {
 	Uint8 *dest_palette = (Uint8 *)dest;
 	Uint32 i2, i3, i4;
@@ -553,7 +548,7 @@ void expand_palette(Uint32 *dest, Uint8 *src)
 	}
 }
 
-void display_load_palette(Uint32 *dest, char *name)
+static void sdl_load_palette(Uint32 *dest, char *name)
 {
 	FILE *fp;
 	Uint8 palette[3 * 16];
@@ -561,21 +556,21 @@ void display_load_palette(Uint32 *dest, char *name)
 	fp = fopen(name, "rb");
 	fread(palette, 3 * 16, 1, fp);
 
-	expand_palette(dest, palette);
+	sdl_expand_palette(dest, palette);
 	fclose(fp);
 }
 
-void display_load_default_charset(Uint8 *dest)
+static void sdl_load_default_charset(Uint8 *dest)
 {
 	memcpy(dest, default_charset, DEFAULT_CHARSET_SIZE);
 }
 
-void display_load_default_palette(Uint32 *dest)
+static void sdl_load_default_palette(Uint32 *dest)
 {
-	expand_palette(dest, (Uint8 *) ega_palette);
+	sdl_expand_palette(dest, (Uint8 *) ega_palette);
 }
 
-void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
+static void sdl_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 {
 	Uint32 window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 	SDL_CreateWindowAndRenderer(width, height, window_flags,
@@ -604,7 +599,7 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 #endif
 }
 
-void display_end(video_info *vdest)
+static void sdl_end(video_info *vdest)
 {
 	SDL_DestroyTexture(vdest->texture);
 
@@ -621,23 +616,22 @@ void display_end(video_info *vdest)
 	/* SDL should restore everything okay.. just use SDL_quit() when ready */
 }
 
-void display_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
+static void sdl_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
 {
 	textBlockPutch(vdest->buffer, x, y, ch, co);
 }
 
-static void update_cursor(video_info *vdest) {
+static void sdl_update_cursor(video_info *vdest) {
 	switch(cursor) {
 		case CURSOR_HIDDEN:
-			display_update_and_present(vdest, vdest->write_x,
-					vdest->write_y, 1, 1);
+			sdl_update_and_present(vdest, vdest->write_x, vdest->write_y, 1, 1);
 			break;
 		case CURSOR_VISIBLE:
-			display_curse(vdest->write_x, vdest->write_y);
+			sdl_curse(vdest->write_x, vdest->write_y);
 			break;
 		case CURSOR_INACTIVE:
-			display_update(vdest, vdest->write_x, vdest->write_y, 1, 1);
-			display_curse_inactive(vdest->write_x, vdest->write_y);
+			sdl_update(vdest, vdest->write_x, vdest->write_y, 1, 1);
+			sdl_curse_inactive(vdest->write_x, vdest->write_y);
 			break;
 	}
 }
@@ -653,13 +647,13 @@ static void start_cursor_timer() {
 	if(timer_id != -1) {
 		return;  /* Already started. */
 	}
-	timer_id = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
+	timer_id = SDL_AddTimer(CURSOR_RATE, sdl_tick, NULL);
 }
 
-void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
+static void sdl_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 {
 	/* Redraw old position. */
-	display_update_and_present(vdest, vdest->write_x, vdest->write_y, 1, 1);
+	sdl_update_and_present(vdest, vdest->write_x, vdest->write_y, 1, 1);
 
 	vdest->write_x = x;
 	vdest->write_y = y;
@@ -668,11 +662,11 @@ void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 	 * it visible and reset the timer. */
 	stop_cursor_timer();
 	cursor = CURSOR_VISIBLE;
-	update_cursor(vdest);
+	sdl_update_cursor(vdest);
 	start_cursor_timer();
 }
 
-static void display_present(video_info *vdest, const SDL_Rect *rect)
+static void sdl_present(video_info *vdest, const SDL_Rect *rect)
 {
 	Uint32 *pixels = vdest->pixels;
 	if(rect) {
@@ -759,10 +753,10 @@ void display_redraw(video_info *vdest)
 	}
 
 	/* Update the buffer surface to the real thing.. */
-	display_present(vdest, NULL);
+	sdl_present(vdest, NULL);
 }
 
-void display_update(video_info *vdest, int x, int y, int width, int height)
+static void sdl_update(video_info *vdest, int x, int y, int width, int height)
 {
 	/* Updates a block */
 
@@ -838,11 +832,11 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
 	vdest->is_dirty = true;
 }
 
-void display_update_and_present(video_info *vdest, int x, int y, int width,
+static void sdl_update_and_present(video_info *vdest, int x, int y, int width,
 		int height)
 {
 	bool was_dirty = vdest->is_dirty;
-	display_update(vdest, x, y, width, height);
+	sdl_update(vdest, x, y, width, height);
 	vdest->is_dirty = was_dirty;
 
 	SDL_Rect rect;
@@ -850,7 +844,7 @@ void display_update_and_present(video_info *vdest, int x, int y, int width,
 	rect.y = y * 14;
 	rect.w = width * 8;
 	rect.h = height * 14;
-	display_present(vdest, &rect);
+	sdl_present(vdest, &rect);
 }
 
 static float get_window_zoom_level(SDL_Window *window) {
@@ -924,7 +918,7 @@ static video_info info;	/* Display info */
 static int shift;	/* Shift state */
 
 /* Nice timer update callback thing */
-static Uint32 display_tick(Uint32 interval, void *blank)
+static Uint32 sdl_tick(Uint32 interval, void *blank)
 {
 	SDL_Event e;
 	e.type = SDL_USEREVENT;
@@ -932,7 +926,7 @@ static Uint32 display_tick(Uint32 interval, void *blank)
 	return interval;
 }
 
-void display_curse(int x, int y)
+static void sdl_curse(int x, int y)
 {
 	SDL_Rect rect;
 	Uint8 color;
@@ -959,10 +953,10 @@ void display_curse(int x, int y)
 	rect.y = y * 14;
 	rect.w = 8;
 	rect.h = 14;
-	display_present(&info, &rect);
+	sdl_present(&info, &rect);
 }
 
-void display_curse_inactive(int x, int y)
+static void sdl_curse_inactive(int x, int y)
 {
 	SDL_Rect rect;
 	Uint8 color;
@@ -1000,10 +994,11 @@ void display_curse_inactive(int x, int y)
 	rect.y = y * 14;
 	rect.w = 8;
 	rect.h = 14;
-	display_present(&info, &rect);
+	sdl_present(&info, &rect);
 }
 
-int display_sdl_init()
+// Display method wrapper for sdl_init
+static int display_sdl_init()
 {
 	/* Start up SDL */
 	if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER) < 0) {
@@ -1013,9 +1008,9 @@ int display_sdl_init()
 	SDL_StartTextInput();
 
 	/* Fire up the textmode emulator */
-	display_init(&info, 640, 350, 32);
-	display_load_default_charset(info.char_set);
-	display_load_default_palette(info.palette);
+	sdl_init(&info, 640, 350, 32);
+	sdl_load_default_charset(info.char_set);
+	sdl_load_default_palette(info.palette);
 
 	shift = 0;
 	cursor = CURSOR_VISIBLE;
@@ -1025,22 +1020,24 @@ int display_sdl_init()
 	return 1;
 }
 
-void display_sdl_end()
+// Display method wrapper for sdl_end
+static void display_sdl_end()
 {
 	/* Terminate SDL stuff */
-	display_end(&info);
+	sdl_end(&info);
 	SDL_StopTextInput();
 	SDL_Quit();
 }
 
-void display_sdl_putch(int x, int y, int ch, int co)
+// Display method wrapper for sdl_putch
+static void display_sdl_putch(int x, int y, int ch, int co)
 {
 	/* Call textmode emulator putch */
-	display_putch(&info, x, y, ch, co);
-	display_update(&info, x, y, 1, 1);
+	sdl_putch(&info, x, y, ch, co);
+	sdl_update(&info, x, y, 1, 1);
 }
 
-void display_sdl_fullscreen()
+static void display_sdl_fullscreen()
 {
 	/* Toggle fullscreen */
 	info.is_fullscreen = !info.is_fullscreen;
@@ -1057,12 +1054,12 @@ void display_sdl_fullscreen()
 		SDL_ShowCursor(SDL_ENABLE);
 }
 
-int display_sdl_getkey()
+static int display_sdl_getkey()
 {
 	SDL_Event event;
 
 	/* Draw the cursor if necessary */
-	update_cursor(&info);
+	sdl_update_cursor(&info);
 
 	/* Check for a KEYDOWN event */
 	if (SDL_PollEvent(&event) == 0)
@@ -1136,7 +1133,7 @@ int display_sdl_getkey()
 		} else if(cursor == CURSOR_VISIBLE) {
 			cursor = CURSOR_HIDDEN;
 		}
-		update_cursor(&info);
+		sdl_update_cursor(&info);
 	/* Focus change? */
 	} else if(event.type == SDL_WINDOWEVENT) {
 		if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
@@ -1144,12 +1141,12 @@ int display_sdl_getkey()
 			/* Make cursor normal */
 			start_cursor_timer();
 			cursor = CURSOR_VISIBLE;
-			update_cursor(&info);
+			sdl_update_cursor(&info);
 		} else if(event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
 			/* Inactive cursor */
 			stop_cursor_timer();
 			cursor = CURSOR_INACTIVE;
-			update_cursor(&info);
+			sdl_update_cursor(&info);
 		}
 	} else if(event.type == SDL_QUIT) {
 		return DKEY_QUIT;
@@ -1295,7 +1292,7 @@ int display_sdl_getkey()
 	return event.key.keysym.sym < 32 || event.key.keysym.sym >= 127 ? event.key.keysym.sym : DKEY_NONE;
 }
 
-int display_sdl_getch_with_context(enum displaycontext context) {
+static int display_sdl_getch_with_context(enum displaycontext context) {
 	info.context = context;
 #if MACOS
 	switch(context) {
@@ -1312,9 +1309,9 @@ int display_sdl_getch_with_context(enum displaycontext context) {
 #endif
 
 	if(info.is_dirty) {
-		display_present(&info, NULL);
+		sdl_present(&info, NULL);
 		if(cursor != CURSOR_HIDDEN) {
-			update_cursor(&info);
+			sdl_update_cursor(&info);
 		}
 	}
 
@@ -1330,41 +1327,41 @@ int display_sdl_getch_with_context(enum displaycontext context) {
 	return key;
 }
 
-int display_sdl_getch()
+static int display_sdl_getch()
 {
 	return display_sdl_getch_with_context(undefined);
 }
 
-void display_sdl_gotoxy(int x, int y)
+static void display_sdl_gotoxy(int x, int y)
 {
-	display_gotoxy(&info, x, y);
+	sdl_gotoxy(&info, x, y);
 }
 
-void display_sdl_print(int x, int y, int c, char *s)
+static void display_sdl_print(int x, int y, int c, char *s)
 {
 	int i, len = strlen(s);
 
 	for(i = 0; i < len; i++)
 		display_sdl_putch(x+i, y, s[i], c);
-	display_update(&info, x, y, len, 1);
+	sdl_update(&info, x, y, len, 1);
 }
 
-void display_sdl_titlebar(char *title)
+static void display_sdl_titlebar(char *title)
 {
 	SDL_SetWindowTitle(info.window, title);
 }
 
-int display_sdl_shift()
+static int display_sdl_shift()
 {
 	return shift;
 }
 
-void display_sdl_putch_discrete(int x, int y, int ch, int co)
+static void display_sdl_putch_discrete(int x, int y, int ch, int co)
 {
-	display_putch(&info, x, y, ch, co);
+	sdl_putch(&info, x, y, ch, co);
 }
 
-void display_sdl_print_discrete(int x, int y, int c, char *s)
+static void display_sdl_print_discrete(int x, int y, int c, char *s)
 {
 	int i, len = strlen(s);
 
@@ -1372,9 +1369,9 @@ void display_sdl_print_discrete(int x, int y, int c, char *s)
 		display_sdl_putch_discrete(x+i, y, s[i], c);
 }
 
-void display_sdl_update(int x, int y, int w, int h)
+static void display_sdl_update(int x, int y, int w, int h)
 {
-	display_update(&info, x, y, w, h);
+	sdl_update(&info, x, y, w, h);
 }
 
 displaymethod display_sdl =
