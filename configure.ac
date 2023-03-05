@@ -1,8 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define(kevedit_version, m4_esyscmd([echo -n ${KEVEDIT_VERSION:-1.1.3}]))
-AC_INIT(KevEdit, kevedit_version, kvance@kvance.com, kevedit, https://github.com/cknave/kevedit)
+AC_INIT([KevEdit],[kevedit_version],[kvance@kvance.com],[kevedit],[https://github.com/cknave/kevedit])
 AC_CONFIG_SRCDIR([src/kevedit/kevedit.c])
-AM_CONFIG_HEADER([src/config.h])
+AC_CONFIG_HEADERS([src/config.h])
 
 
 dnl Detect host and target environments (target is needed by AM_PATH_SDL)
@@ -53,15 +53,18 @@ case "$host" in
 	*-*-*cygwin*)
 		AC_DEFINE(WINDOWS32, [1], [Define to 1 if host is Windows])
 		AC_MSG_RESULT(yes: cygwin)
+		windows=yes
 		;;
 	*-*-*mingw32*)
 		AC_DEFINE(WINDOWS32, [1], [Define to 1 if host is Windows])
 		AC_MSG_RESULT(yes: MingW)
+		windows=yes
 		;;
 	*)
 		AC_MSG_RESULT(no)
 		;;
 esac
+AM_CONDITIONAL([WINDOWS], [test "$windows" = "yes"])
 
 AC_MSG_CHECKING(for DOS)
 case "$host" in
@@ -90,7 +93,7 @@ case "$host" in
 esac
 AM_CONDITIONAL([MACOS], [test "$macos" = "yes"])
 
-AC_ARG_WITH(dosbox, AC_HELP_STRING([--without-dosbox],[include DOSBox emulation support]),dosbox=$withval,dosbox=maybe)
+AC_ARG_WITH(dosbox, AS_HELP_STRING([--without-dosbox],[include DOSBox emulation support]),dosbox=$withval,dosbox=maybe)
 if test "$dosbox" == "maybe"; then
 	if test -n "$DOS"; then
 		AC_MSG_NOTICE(DOS: Not enabling DOSBox support)
@@ -101,7 +104,7 @@ if test "$dosbox" == "maybe"; then
 fi
 AM_CONDITIONAL([FREEDESKTOP], [test "$freedesktop" = "yes"])
 
-AC_ARG_WITH(freedesktop, AC_HELP_STRING([--with-freedesktop],[install desktop file and icons for GNOME/KDE]),freedesktop=$withval,freedesktop=maybe)
+AC_ARG_WITH(freedesktop, AS_HELP_STRING([--with-freedesktop],[install desktop file and icons for GNOME/KDE]),freedesktop=$withval,freedesktop=maybe)
 if test "$freedesktop" == "maybe"; then
     if test -n "$WINDOWS32" || test -n "$DOS" || test -n "$MACOS"; then
                 AC_MSG_NOTICE(DOS/Windows/Mac: Not installing desktop file and icons)
@@ -128,14 +131,11 @@ dnl Check for windows resource compiler.
 AC_CHECK_PROGS(WINDRES, windres)
 AC_SUBST(WINDRES)
 AC_SUBST(WINDRES_VERSION, $(echo AC_PACKAGE_VERSION | tr .- , | cut -d, -f1-4))
-AM_CONDITIONAL(HAVE_WINDRES, [test x$WINDRES != x])
 
 dnl Checks for header files.
-AC_HEADER_STDC
 AC_HEADER_DIRENT
 
 dnl Checks for library functions.
-AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(getcwd strdup strstr mkdtemp)
 
 dnl Check for math library

@@ -6,7 +6,7 @@ AM_CPPFLAGS = -DDATAPATH=\"$(pkgdatadir)\"
 
 bin_PROGRAMS = kevedit
 
-if HAVE_WINDRES
+if WINDOWS
 windres_SOURCES = $(top_builddir)/inst/platform/windows/kevedit.rc
 endif
 
