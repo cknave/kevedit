@@ -106,8 +106,10 @@ void drawblockcursorspace(displaymethod * d, ZZTblock * b, int x, int y, int off
 void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y, int offx, int offy);
 
 /* file dialogs */
-char * filedialog(char * dir, char * extension, char * title, int filetypes,
-		displaymethod * mydisplay, bool *quit);
+char *filedialog(char *dir, char *extension, char *title, int filetypes,
+		displaymethod *mydisplay, bool *quit);
+char *filedialog_multiext(char *dir, stringvector *extensions, char *title, int filetypes,
+                  displaymethod *mydisplay, bool *quit);
 char* filenamedialog(char* initname, char* extension, char* prompt,
 		int askoverwrite, displaymethod * mydisplay, bool *quit);
 

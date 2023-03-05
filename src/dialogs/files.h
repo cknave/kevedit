@@ -59,8 +59,7 @@ stringvector filetosvector(char* filename, int wrapwidth, int editwidth);
 void svectortofile(stringvector * sv, char *filename);
 
 /* readdirectorytosvector() - reads a directory listing into an svector */
-stringvector readdirectorytosvector(char * dir, char * extension,
-																		int filetypes);
+stringvector readdirectorytosvector(char *dir, stringvector *extensions, int filetypes);
 
 /* globtosvector() - put raw glob information in an svector */
 stringvector globtosvector(char * pattern, int filetypes);

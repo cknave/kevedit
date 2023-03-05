@@ -687,8 +687,16 @@ void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y,
 }
 
 
-char * filedialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay, bool *quit)
-{
+char *filedialog(char * dir, char *extension, char *title, int filetypes, displaymethod *mydisplay, bool *quit) {
+        stringvector extensions;
+        initstringvector(&extensions);
+        pushstring(&extensions, extension);
+        char *result = filedialog_multiext(dir, &extensions, title, filetypes, mydisplay, quit);
+        removestringvector(&extensions);
+        return result;
+}
+
+char *filedialog_multiext(char *dir, stringvector *extensions, char *title, int filetypes, displaymethod *mydisplay, bool *quit) {
 	int done = 0;
 	char* result = NULL;
 	stringvector files;
@@ -699,7 +707,7 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 	else if (filetypes | FTYPE_FILE)
 		drawsidepanel(mydisplay, PANEL_FILEDIALOG);
 
-	files = readdirectorytosvector(curdir, extension, filetypes);
+	files = readdirectorytosvector(curdir, extensions, filetypes);
 
     if (quit)
         *quit = false;
@@ -730,7 +738,7 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 
 					/* Update the files list */
 					deletestringvector(&files);
-					files = readdirectorytosvector(curdir, extension, filetypes);
+					files = readdirectorytosvector(curdir, extensions, filetypes);
 
 					free(subdir);
 				} else {
@@ -754,7 +762,7 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 
 					/* Update the files list */
 					deletestringvector(&files);
-					files = readdirectorytosvector(curdir, extension, filetypes);
+					files = readdirectorytosvector(curdir, extensions, filetypes);
 				}
 				break;
 

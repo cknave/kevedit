@@ -179,7 +179,7 @@ int filecomp(const char* s1, const char* s2)
 }
 
 /* readdirectorytosvector() - reads a directory listing into an svector */
-stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
+stringvector readdirectorytosvector(char *dir, stringvector *extensions, int filetypes)
 {
 	stringvector files;
 	DIR *dp;
@@ -203,27 +203,32 @@ stringvector readdirectorytosvector(char* dir, char* extension, int filetypes)
 
 		if (!fileisdir(fulld_name)) {
 			if (filetypes & FTYPE_FILE) {
-				/* The current file is not a directory, check the extension */
-				if (extension[0] == '*' ||
-						(dirent->d_name[strlen(dirent->d_name) - strlen(extension) - 1]
-							 == '.' &&
-						str_equ(dirent->d_name + strlen(dirent->d_name) - strlen(extension),
-										extension, STREQU_UNCASE))) {
-					/* Advance past special character '!' if necessary */
-					/* TODO: less quick & dirty fix? */
-					if (dirent->d_name[0] == '!') {
-						char* dest = str_duplen(" ", strlen(dirent->d_name) + 1);
-						strcat(dest, dirent->d_name);
-						pushstring(&files, dest);
-					} else
-						pushstring(&files, str_dup(dirent->d_name));
-				}
+                                for (extensions->cur = extensions->first; extensions->cur != NULL; extensions->cur = extensions->cur->next) {
+                                        char *extension = extensions->cur->s;
+                                        /* The current file is not a directory, check the extension */
+                                        if (extension[0] == '*' ||
+                                            (dirent->d_name[strlen(dirent->d_name) - strlen(extension) - 1]
+                                             == '.' &&
+                                             str_equ(dirent->d_name + strlen(dirent->d_name) - strlen(extension),
+                                                     extension, STREQU_UNCASE))) {
+                                                /* Advance past special character '!' if necessary */
+                                                /* TODO: less quick & dirty fix? */
+                                                if (dirent->d_name[0] == '!') {
+                                                        char* dest = str_duplen(" ", strlen(dirent->d_name) + 1);
+                                                        strcat(dest, dirent->d_name);
+                                                        pushstring(&files, dest);
+                                                } else {
+                                                        pushstring(&files, str_dup(dirent->d_name));
+                                                }
+                                                break;
+                                        }
+
+                                }
 			}
 		} else if (!str_equ(dirent->d_name, ".", 0) && fileisdir(fulld_name)) {
 			if (filetypes & FTYPE_DIR) {
 				/* Current file is a directory */
-				char* dirline = (char*) malloc(sizeof(char) *
-																			 (strlen(dirent->d_name)*2 + 5));
+				char* dirline = (char*) malloc(sizeof(char) * (strlen(dirent->d_name)*2 + 5));
 				strcpy(dirline, "!");
 				strcat(dirline, dirent->d_name);
 				strcat(dirline, ";[");
