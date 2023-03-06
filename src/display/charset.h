@@ -22,7 +22,10 @@
 #include <stdint.h>
 
 /* Character set buffer size, in bytes. */
-#define CHARSET_SIZE 3584
+#define CHARSET_SIZE (3584)
+
+/* Character height, in pixels. */
+#define CHARACTER_HEIGHT (14)
 
 typedef struct {
     char *path;
