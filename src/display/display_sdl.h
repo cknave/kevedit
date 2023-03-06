@@ -27,9 +27,6 @@
 #ifndef DISPLAY_SDL
 #define DISPLAY_SDL 1
 
-/* These are in bytes. */
-#define TEXT_MODE_VRAM (80 * 25 * 2)
-
 /* This structure has pointers to all important video information */
 typedef struct
 {

@@ -1,6 +1,5 @@
-/* infobox.h - board/world information dialogs
- * $Id: infobox.h,v 1.1 2003/11/01 23:45:56 bitman Exp $
- * Copyright (C) 2001 Ryan Phillips <bitman@users.sourceforge.net>
+/* charset.h    -- Defines for character set
+ * Copyright (C) 2023 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,17 +16,25 @@
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
-#ifndef __INFOBOX_H
-#define __INFOBOX_H
+#ifndef CHARSET_H
+#define CHARSET_H 1
 
-#include "libzzt2/zzt.h"
-#include "display/display.h"
-#include "kevedit/kevedit.h"
+#include <stdint.h>
 
-/* editboardinfo() - brings up dialog box for editing board info */
-int editboardinfo(ZZTworld* myworld, displaymethod* d);
+/* Character set buffer size, in bytes. */
+#define CHARSET_SIZE 3584
 
-/* editworldinfo() - brings up dialog box for editing world info */
-int editworldinfo(keveditor *myeditor);
+typedef struct {
+    char *path;
+    uint8_t data[CHARSET_SIZE];
+} charset;
+
+extern const charset default_charset;
+
+/* Return a new charset from the file at this path, or NULL if it could not be loaded. */
+charset *charset_load(char *path);
+
+/* Free a charset returned from load_charset */
+void charset_free(charset *char_set);
 
 #endif

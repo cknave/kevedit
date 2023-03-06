@@ -131,6 +131,7 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 
 	pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 
+        myeditor->char_set = NULL;
 	return myeditor;
 }
 
@@ -156,6 +157,9 @@ void deletekeveditor(keveditor * myeditor)
 	deleteselection(&myeditor->copySelection);
 
 	/* Free everything! Free! Free! Free! Let freedom ring! */
+        if(myeditor->char_set != NULL) {
+                charset_free(myeditor->char_set);
+        }
 	free(myeditor);
 }
 
@@ -514,7 +518,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case 'w':
 		case 'W':
 			/* World Info */
-			next_key = editworldinfo(myeditor->myworld, myeditor->mydisplay);
+			next_key = editworldinfo(myeditor);
 
 			myeditor->updateflags |= UD_ALL | UD_WORLDTITLE;
 			break;

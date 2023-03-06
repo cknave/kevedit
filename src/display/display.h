@@ -17,11 +17,14 @@
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
-#include "keys.h"
-
-
 #ifndef DISPLAY_H
 #define DISPLAY_H 1
+
+#include <stdint.h>
+
+#include "charset.h"
+#include "keys.h"
+
 
 enum displaycontext {
     undefined = 0,
@@ -79,6 +82,9 @@ typedef struct displaymethod {
 
 	/* Update a region of the screen after a discrete write */
 	void (*update) (int x, int y, int w, int h);
+
+        /* Copy this character set to the display's character set. */
+        void (*set_charset)(const charset *charset);
 
 	/** Path of the last file drop event. */
 	char *dropped_file;

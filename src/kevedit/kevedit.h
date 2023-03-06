@@ -112,6 +112,9 @@ typedef struct keveditor {
 	/* Options */
 	kevoptions options;
 
+        /* Character set (font), or NULL if not set */
+        charset *char_set;
+
 } keveditor;
 
 /* Create a KevEdit editor */
