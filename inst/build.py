@@ -58,7 +58,7 @@ def main():
         globals()['build_' + target](source, args)
 
 
-def build_appimage(source, args, image_version='1.3'):
+def build_appimage(source, args, image_version='1.4'):
     """Build Linux x86_64 AppImage to DIST_DIR.
 
     :param str source: path to KevEdit source zip
