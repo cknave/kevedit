@@ -1,0 +1,25 @@
+--- build/djcross-gcc-12.1.0/gnu/gcc-1210/gcc/cp/mapper-client.cc.orig
++++ build/djcross-gcc-12.1.0/gnu/gcc-1210/gcc/cp/mapper-client.cc
+@@ -19,4 +19,5 @@
+ <http://www.gnu.org/licenses/>.  */
+ 
++#include <pthread.h>
+ #include "config.h"
+ #if defined (__unix__) && !defined(__DJGPP__)
+--- build/djcross-gcc-12.1.0/gnu/gcc-1210/gcc/cp/module.cc.orig
++++ build/djcross-gcc-12.1.0/gnu/gcc-1210/gcc/cp/module.cc
+@@ -19,4 +19,6 @@
+ <http://www.gnu.org/licenses/>.  */
+ 
++#include <pthread.h>
++
+ /* Comments in this file have a non-negligible chance of being wrong
+    or at least inaccurate.  Due to (a) my misunderstanding, (b)
+--- build/djcross-gcc-12.1.0/gnu/gcc-1210/gcc/cp/mapper-resolver.cc.orig
++++ build/djcross-gcc-12.1.0/gnu/gcc-1210/gcc/cp/mapper-resolver.cc
+@@ -21,4 +21,5 @@
+ /* Forward to the resolver in c++tools.  */
+ 
++#include <pthread.h>
+ #include "config.h"
+ #define INCLUDE_STRING
