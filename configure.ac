@@ -20,6 +20,28 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
+AC_ARG_WITH([sdl-framework],
+    [AS_HELP_STRING([--with-sdl-framework],
+        [use SDL2 framework on macOS instead pkg-config])],
+    [macos_sdl_framework=yes])
+
+AC_MSG_CHECKING(for macOS)
+case "$host" in
+	*darwin*)
+		AC_DEFINE(MACOS, [1], [Define to 1 if host is macOS])
+		macos=yes
+		AC_MSG_RESULT(yes)
+		;;
+	*)
+		AC_MSG_RESULT(no)
+		if test "$macos_sdl_framework" = "yes"; then
+		    AC_MSG_WARN([Ignoring --with-macos-sdl-framework since macOS was not detected!])
+		    macos_sdl_framework=no
+		fi
+		;;
+esac
+AM_CONDITIONAL([MACOS], [test "$macos" = "yes"])
+
 dnl Determine available displays
 AC_MSG_NOTICE(Searching for available displays)
 
@@ -37,11 +59,16 @@ then
         AC_DEFINE(SDL, [1], [Define to 1 if SDL is available])
     fi
 
-    dnl This must be done before most checks because it can affect what headers
-    dnl and libraries are available
-    CFLAGS="$CFLAGS $SDL_CFLAGS"
-    OBJCFLAGS="$OBJCFLAGS $SDL_CFLAGS"
-    LIBS="$LIBS $SDL_LIBS"
+    if test "$macos_sdl_framework" = "yes"; then
+        AC_MSG_NOTICE([Using SDL2 framework instead of pkg-config library])
+        LIBS="$LIBS -framework SDL2 -rpath @executable_path/../Frameworks"
+    else
+        dnl This must be done before most checks because it can affect what headers
+        dnl and libraries are available
+        CFLAGS="$CFLAGS $SDL_CFLAGS"
+        OBJCFLAGS="$OBJCFLAGS $SDL_CFLAGS"
+        LIBS="$LIBS $SDL_LIBS"
+    fi
 fi
 AM_CONDITIONAL([SDL], [test "$sdl" == "yes"])
 
@@ -76,19 +103,6 @@ case "$host" in
 		;;
 esac
 AM_CONDITIONAL([DOS], [test "$dos" = "yes"])
-
-AC_MSG_CHECKING(for macOS)
-case "$host" in
-	*darwin*)
-		AC_DEFINE(MACOS, [1], [Define to 1 if host is macOS])
-		macos=yes
-		AC_MSG_RESULT(yes)
-		;;
-	*)
-		AC_MSG_RESULT(no)
-		;;
-esac
-AM_CONDITIONAL([MACOS], [test "$macos" = "yes"])
 
 AC_ARG_WITH(dosbox, AS_HELP_STRING([--without-dosbox],[include DOSBox emulation support]),dosbox=$withval,dosbox=maybe)
 if test "$dosbox" == "maybe"; then

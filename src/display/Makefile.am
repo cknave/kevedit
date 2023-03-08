@@ -23,7 +23,6 @@ endif
 if MACOS
 libdisplay_a_SOURCES += $(top_srcdir)/src/kevedit/macos.m
 test_SOURCES += $(top_srcdir)/src/kevedit/macos.m
-libdisplay_a_CFLAGS = $(CFLAGS) -framework Cocoa
 test_LDFLAGS = -framework Cocoa
 endif
 

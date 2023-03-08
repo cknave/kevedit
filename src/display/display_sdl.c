@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "charset.h"
 #include "display.h"

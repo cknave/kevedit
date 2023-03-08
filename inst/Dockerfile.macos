@@ -35,15 +35,17 @@ RUN cd /tmp \
 ENV PATH=$PATH:/opt/osxcross/bin
 ENV LD_LIBRARY_PATH=/opt/osxcross/lib
 
-# Now that we have a toolchain, we can build SDL
+# Now that we have a toolchain, we can install SDL
 ARG SDL_VERSION
-COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp
+COPY vendor/SDL2-${SDL_VERSION}.dmg /tmp
 RUN cd /tmp \
- && tar xvzf SDL2-${SDL_VERSION}.tar.gz \
- && cd SDL2-${SDL_VERSION} \
- && export MACOSX_DEPLOYMENT_TARGET=10.7 \
- && ./configure --host=x86_64-apple-darwin16 --prefix=/opt/osxcross CC=o64-clang AR=llvm-ar RANLIB=llvm-ranlib || cat config.log \
- && make ${MAKE_OPTS} \
- && make install \
- && echo "/opt/osxcross/share/aclocal" > /usr/share/aclocal/dirlist \
- && rm -rf /tmp/SDL2-${SDL_VERSION}*
+ && apk add 7zip sdl2-dev \
+# We installed the distro's sdl2-dev for autoconf's sake, but we want to use SDL2.framework,
+# not the build environment's copy of SDL so delete it from pkgconfig.
+ && 7zz x SDL2-${SDL_VERSION}.dmg \
+ && rm /usr/lib/pkgconfig/sdl2.pc \
+ && cd /opt/osxcross/SDK/MacOSX${MACOS_SDK_VERSION}.sdk \
+ && mkdir -p ./Library/Frameworks \
+ && cp -a /tmp/SDL2/SDL2.framework ./Library/Frameworks/ \
+ && rm -rf SDL2-${SDL_VERSION}.dmg SDL2 \
+ && apk del 7zip

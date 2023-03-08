@@ -135,7 +135,10 @@ def build_macos(source, args, image_version='2.3', extractor_version='2.1'):
         maybe_fetch_osxcross(OSXCROSS_VERSION)
         maybe_extract_macos_sdk(args, MACOS_SDK_VERSION, extractor_version)
         maybe_tag_latest('kevedit/macos_sdk_extractor', extractor_version, args)
-        maybe_fetch_sdl_source(SDL_VERSION)
+        maybe_fetch(
+            description='SDL2 {} macOS binaries'.format(SDL_VERSION),
+            url=('https://github.com/libsdl-org/SDL/releases/download/release-{sdl_version}/'
+                 'SDL2-{sdl_version}.dmg'.format(sdl_version=SDL_VERSION)))
         log.debug('Building macOS docker image...')
         shell("""
               docker build
