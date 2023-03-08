@@ -11,7 +11,7 @@ if [ -z "$SOURCE" ] || [ -z "$KEVEDIT_VERSION" ]; then
 fi
 export KEVEDIT_VERSION
 
-export MACOSX_DEPLOYMENT_TARGET=10.6
+export MACOSX_DEPLOYMENT_TARGET=10.7
 
 rm -rf /work/KevEdit.app
 mkdir -p /work/KevEdit.app/Contents/MacOS /work/KevEdit.app/Contents/Resources
@@ -24,7 +24,7 @@ cd /work/kevedit
 unzip /vendor/$SOURCE
 
 ./bootstrap.sh
-./configure --host=x86_64-apple-darwin16 CC=o64-clang CFLAGS="-O3"
+./configure --host=x86_64-apple-darwin20.4 --target=x86_64-apple-darwin20.4 CFLAGS="-O3"
 make AR=llvm-ar
 
 # `make` builds a binary that's dynamically linked to libSDL.
