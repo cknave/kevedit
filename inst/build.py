@@ -249,7 +249,7 @@ def build_dos(source, args, image_version='1.2'):
           image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
-def build_source(source, args, image_version='1.0'):
+def build_source(source, args, image_version='1.1'):
     """Build source tarball in DEST_DIR.
 
     :param str source: path to KevEdit source zip
