@@ -19,7 +19,7 @@
 #ifndef _MACOS_H
 #define _MACOS_H
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 void installTouchBar(SDL_Window *window);
 

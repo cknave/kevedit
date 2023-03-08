@@ -20,7 +20,7 @@
 #ifndef _SYNTH_H
 #define _SYNTH_H 1
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "notes.h"
 
