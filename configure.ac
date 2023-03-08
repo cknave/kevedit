@@ -125,7 +125,7 @@ AC_SUBST([display_objects])
 AC_SUBST([synth_objects])
 
 dnl Check for windows resource compiler.
-AC_CHECK_PROGS(WINDRES, windres)
+AC_CHECK_TARGET_TOOL([WINDRES], [windres])
 AC_SUBST(WINDRES)
 AC_SUBST(WINDRES_VERSION, $(echo AC_PACKAGE_VERSION | tr .- , | cut -d, -f1-4))
 
@@ -133,7 +133,8 @@ dnl Checks for header files.
 AC_HEADER_DIRENT
 
 dnl Checks for library functions.
-AC_CHECK_FUNCS(getcwd strdup strstr mkdtemp)
+AC_HEADER_STDC
+AC_CHECK_FUNCS(bcopy getcwd strdup strstr mkdtemp)
 
 dnl Check for math library
 AC_CHECK_LIB(m, floor)

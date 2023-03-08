@@ -19,7 +19,7 @@ cd /work/kevedit
 unzip /vendor/$SOURCE
 
 ./bootstrap.sh
-./configure --host=x86_64-w64-mingw32 CFLAGS="-O3"
+./configure --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32 CFLAGS="-O3"
 make
 
 # Add .txt and fix newlines

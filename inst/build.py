@@ -20,7 +20,7 @@ MACOS_SDK_VERSION = '10.12'
 MACOS_DARWIN_VERSION = '16'
 OSXCROSS_VERSION = '6525b2b7d33abc371ad889f205377dc5cf81f23e'
 PBZX_VERSION = '1.0.2'
-SDL_VERSION = '2.0.14'
+SDL_VERSION = '2.26.3'
 XAR_VERSION = '1.6.1'
 XCODE_VERSION = '8.3.3'
 
@@ -181,7 +181,7 @@ def build_macos(source, args, image_version='2.2', extractor_version='2.0'):
           image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
-def build_windows(source, args, image_version='1.3'):
+def build_windows(source, args, image_version='1.4'):
     """Build windows x64 .exe in a self-executing installer to DIST_DIR.
 
     :param str source: path to KevEdit source zip
