@@ -1,30 +1,27 @@
-FROM alpine:3.9
-ARG BUILD_DJGPP_VERSION=2.9
-ARG GCC_VERSION=7.2.0
-ARG DJGPP_MIRROR=http://na.mirror.garr.it/mirrors
-ENV ENABLE_LANGUAGES=c
+FROM alpine:3.17.2
+ARG MAKE_OPTS=-j12
+ARG GCC_VERSION=12.1.0
 
 RUN apk add --no-cache autoconf automake bash bison build-base curl flex \
     libc6-compat make patch sdl2-dev tar texinfo xz zip zlib-dev
 
+ARG BUILD_DJGPP_VERSION=3.3
+ENV ENABLE_LANGUAGES=c,c++
+COPY platform/dos/gcc12.10-poisoned-calloc-musl.patch /tmp
 COPY vendor/build-djgpp-${BUILD_DJGPP_VERSION}.tar.gz /tmp/
 
-# Okay, this sed command:
-# 1) Replace the mirror with a fast one.
-# 2) Update binutils version to 2.31.1
-# 3) Update gcc version to 7.4.0
-#
-# These versions are not supported by the build script yet, but the old
-# versions are gone from the fast mirror.
-RUN cd /tmp && \
-    tar xzf build-djgpp-${BUILD_DJGPP_VERSION}.tar.gz && \
-    cd build-djgpp-${BUILD_DJGPP_VERSION} && \
-    sed -i -e 's/\(DJGPP_DOWNLOAD_BASE\)=.*/\1="${DJGPP_MIRROR}"/; \
-               s/\(GCC_VERSION_SHORT\)=.*/\1=740/; \
-               s/\(GCC_VERSION\)=.*/\1=7.4.0/; \
-               s/\(BINUTILS_VERSION\)=.*/\1=230/' \
-              script/${GCC_VERSION} && \
-    ./build-djgpp.sh ${GCC_VERSION} && \
-    rm -rf /tmp/build-djgpp-${BUILD_DJGPP_VERSION} \
+RUN cd /tmp \
+ && tar xzf build-djgpp-${BUILD_DJGPP_VERSION}.tar.gz \
+ && cd /tmp/build-djgpp-${BUILD_DJGPP_VERSION} \
+# Fix incorrect gcc short version
+ && sed -i -e 's/\(GCC_VERSION_SHORT\)=12\.10/\1=1210/' script/${GCC_VERSION} \
+# Patch the build script to pass through our make options
+ && sed -i -e "s/^\s*\${MAKE}/\0 ${MAKE_OPTS}/" script/${GCC_VERSION} \
+# Patch the build script to patch gcc to fix poisoned calloc on musl after it's been extracted
+ && sed -i -e \
+    's@echo "Building gcc".*@\0; cd $BUILDDIR; patch -p2 </tmp/gcc12.10-poisoned-calloc-musl.patch@' \
+    script/${GCC_VERSION} \
+ && ./build-djgpp.sh ${GCC_VERSION} \
+ && rm -rf /tmp/build-djgpp-${BUILD_DJGPP_VERSION} \
            /tmp/build-djgpp-${BUILD_DJGPP_VERSION}.tar.gz
 ENV PATH="/usr/local/djgpp/bin:${PATH}"

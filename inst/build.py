@@ -11,7 +11,7 @@ import sys
 
 # Versions of 3rd party software to fetch
 APPIMAGE_VERSION = '11'
-BUILD_DJGPP_VERSION = '2.9'
+BUILD_DJGPP_VERSION = '3.3'
 INNOEXTRACT_VERSION = '1.9'
 ISPACK_VERSION = '5.5.8'
 MACOS_SDK_VERSION = '11.3'
@@ -212,7 +212,7 @@ def build_windows(source, args, image_version='1.4'):
           sdl_version=SDL_VERSION)
 
 
-def build_dos(source, args, image_version='1.1'):
+def build_dos(source, args, image_version='1.2'):
     """Build DOS 32-bit .exe in a .zip file to DIST_DIR.
 
     :param str source: path to KevEdit source zip
