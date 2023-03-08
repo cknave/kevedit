@@ -30,22 +30,20 @@ AC_ARG_WITH(sdl,
 if test "x$with_sdl" != "xno"
 then
 	AM_PATH_SDL2(2.0.0, [AC_MSG_NOTICE(Using SDL display and sound)
-			     sdl=true],
+			     sdl=yes],
 			    [AC_MSG_NOTICE(SDL not available for display)])
 
-dnl This must be done before most checks because it can affect what headers
-dnl and libraries are available
-CFLAGS="$CFLAGS $SDL_CFLAGS"
-OBJCFLAGS="$OBJCFLAGS $SDL_CFLAGS"
-LIBS="$LIBS $SDL_LIBS"
+    if test "$sdl" = "yes"; then
+        AC_DEFINE(SDL, [1], [Define to 1 if SDL is available])
+    fi
 
-if test x$sdl = xtrue; then
-	AC_DEFINE(SDL, [1], [Define to 1 if SDL is available])
-	display_objects="$display_objects display_sdl.o"
-	synth_objects="$synth_objects sdl_synth.o"
+    dnl This must be done before most checks because it can affect what headers
+    dnl and libraries are available
+    CFLAGS="$CFLAGS $SDL_CFLAGS"
+    OBJCFLAGS="$OBJCFLAGS $SDL_CFLAGS"
+    LIBS="$LIBS $SDL_LIBS"
 fi
-#AM_CONDITIONAL(SDL, [test x$sdl = xtrue])
-fi
+AM_CONDITIONAL([SDL], [test "$sdl" == "yes"])
 
 dnl Check for windows (for glob's sake)
 AC_MSG_CHECKING(for Windows)
@@ -70,15 +68,14 @@ AC_MSG_CHECKING(for DOS)
 case "$host" in
 	*msdos*)
 		AC_DEFINE(DOS, [1], [Define to 1 if host is DOS])
-		display_objects="$display_objects display_dos.o"
-		synth_objects="$synth_objects pcspeaker.o"
+		dos=yes
 		AC_MSG_RESULT(yes)
 		;;
 	*)
 		AC_MSG_RESULT(no)
 		;;
 esac
-
+AM_CONDITIONAL([DOS], [test "$dos" = "yes"])
 
 AC_MSG_CHECKING(for macOS)
 case "$host" in
