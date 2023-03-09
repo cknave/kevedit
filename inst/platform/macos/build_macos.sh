@@ -27,14 +27,23 @@ cd /work/kevedit
 unzip /vendor/$SOURCE
 
 ./bootstrap.sh
-./configure \
-    --host=x86_64-apple-darwin20.4 \
-    --target=x86_64-apple-darwin20.4 \
-    --with-sdl-framework \
-    CFLAGS="-O3"
-make AR=llvm-ar
+# Build binaries for both x86_64 and arm64
+for arch in x86_64 arm64; do
+    test -f Makefile && make clean
+    ./configure \
+        --host=$arch-apple-darwin20.4 \
+        --target=$arch-apple-darwin20.4 \
+        --with-sdl-framework \
+        CFLAGS="-O3"
+    make AR=llvm-ar
+    mv src/kevedit/kevedit /work/kevedit.bin.$arch
+done
 
-cp -a src/kevedit/kevedit /work/KevEdit.app/Contents/MacOS
+# Combine them into a universal binary
+lipo -create \
+    -output /work/KevEdit.app/Contents/MacOS/kevedit \
+    /work/kevedit.bin.*
+
 cp -a docs/kevedit.zml \
       soundfx.zzm \
       dosbox/kevedos.cfg \
