@@ -10,8 +10,9 @@ DOS.
 
 ## Download
 
-Binary releases are available for 32-bit DOS and 64-bit macOS, Linux, and
-Windows from [github releases](https://github.com/cknave/kevedit/releases/).
+Binary releases are available for 32-bit DOS and 64-bit Linux, Windows, and
+macOS (x86_64 and arm64) from
+[github releases](https://github.com/cknave/kevedit/releases/).
 
 
 ## Usage
