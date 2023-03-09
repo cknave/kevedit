@@ -508,12 +508,6 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
 			break;
-		case DKEY_PAGEUP:
-			/* Switch to previous board (bounds checking is automatic) */
-			zztBoardSelect(myeditor->myworld, zztBoardGetCurrent(myeditor->myworld) - 1);
-
-			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
-			break;
 		case DKEY_CTRL_PAGEDOWN:
 			/* Switch to next page of boards (bounds checking is automatic) */
 			zztBoardSelect(myeditor->myworld, zztBoardGetCurrent(myeditor->myworld) + 7);
