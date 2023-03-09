@@ -508,7 +508,48 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
 			break;
+		case DKEY_PAGEUP:
+			/* Switch to previous board (bounds checking is automatic) */
+			zztBoardSelect(myeditor->myworld, zztBoardGetCurrent(myeditor->myworld) - 1);
 
+			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			break;
+		case DKEY_CTRL_PAGEDOWN:
+			/* Switch to next page of boards (bounds checking is automatic) */
+			zztBoardSelect(myeditor->myworld, zztBoardGetCurrent(myeditor->myworld) + 7);
+
+			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			break;
+		case DKEY_CTRL_PAGEUP:
+			/* Switch to previous page of boards (bounds checking is automatic) */
+			zztBoardSelect(myeditor->myworld, zztBoardGetCurrent(myeditor->myworld) - 7);
+
+			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			break;
+		case DKEY_CTRL_UP:
+			if (zztBoardGetBoard_n(myeditor->myworld) > 0) {
+				zztBoardSelect(myeditor->myworld, zztBoardGetBoard_n(myeditor->myworld));
+	                        myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			}
+			break;
+		case DKEY_CTRL_DOWN:
+			if (zztBoardGetBoard_s(myeditor->myworld) > 0) {
+				zztBoardSelect(myeditor->myworld, zztBoardGetBoard_s(myeditor->myworld));
+				myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			}
+			break;
+		case DKEY_CTRL_LEFT:
+			if (zztBoardGetBoard_w(myeditor->myworld) > 0) {
+				zztBoardSelect(myeditor->myworld, zztBoardGetBoard_w(myeditor->myworld));
+				myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			}
+			break;
+		case DKEY_CTRL_RIGHT:
+			if (zztBoardGetBoard_e(myeditor->myworld) > 0) {
+				zztBoardSelect(myeditor->myworld, zztBoardGetBoard_e(myeditor->myworld));
+				myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			}
+			break;
 		case 'i':
 		case 'I':
 			/* Board Info */
