@@ -13,7 +13,7 @@ import sys
 APPIMAGE_VERSION = '11'
 BUILD_DJGPP_VERSION = '3.3'
 INNOEXTRACT_VERSION = '1.9'
-ISPACK_VERSION = '5.5.8'
+INNOSETUP_VERSION = '6.2.2'
 MACOS_SDK_VERSION = '11.3'
 MACOS_DARWIN_VERSION = '20'
 OSXCROSS_VERSION = '50e86ebca7d14372febd0af8cd098705049161b9'
@@ -181,25 +181,25 @@ def build_windows(source, args, image_version='1.4'):
         shell('docker pull kevedit/build_windows:{version}', version=image_version)
     else:
         maybe_fetch_sdl_source(SDL_VERSION)
-        maybe_fetch(
-            description='ispack {}'.format(ISPACK_VERSION),
-            url='http://files.jrsoftware.org/ispack/ispack-{}-unicode.exe'.format(ISPACK_VERSION))
         inex_url = ('https://github.com/dscharrer/innoextract/releases/download/{0}/'
                     'innoextract-{0}-linux.tar.xz'.format(INNOEXTRACT_VERSION))
         maybe_fetch(description='innoextract {}'.format(INNOEXTRACT_VERSION),
                     url=inex_url,
                     signature_url=inex_url+'.sig')
+        maybe_fetch(description='Inno Setup {}'.format(INNOSETUP_VERSION),
+                    url='https://files.jrsoftware.org/is/6/innosetup-{}.exe'.format(
+                        INNOSETUP_VERSION))
         log.debug('Building Windows docker image...')
         shell("""
               docker build
               -f Dockerfile.windows -t kevedit/build_windows:{image_version}
               --build-arg SDL_VERSION={sdl_version}
-              --build-arg ISPACK_VERSION={ispack_version}
               --build-arg INNOEXTRACT_VERSION={innoextract_version}
+              --build-arg INNOSETUP_VERSION={innosetup_version}
               .
               """,
-              image_version=image_version, sdl_version=SDL_VERSION, ispack_version=ISPACK_VERSION,
-              innoextract_version=INNOEXTRACT_VERSION)
+              image_version=image_version, sdl_version=SDL_VERSION,
+              innoextract_version=INNOEXTRACT_VERSION, innosetup_version=INNOSETUP_VERSION)
         maybe_tag_latest('kevedit/build_windows', image_version, args)
 
     log.debug('Bulding Windows setup.exe artifact...')

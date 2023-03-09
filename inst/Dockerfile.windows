@@ -1,8 +1,5 @@
 FROM debian:11.6-slim
 ARG MAKE_OPTS=-j12
-ARG SDL_VERSION
-ARG ISPACK_VERSION
-ARG INNOEXTRACT_VERSION
 
 RUN dpkg --add-architecture i386 && \
     apt-get update && \
@@ -10,6 +7,7 @@ RUN dpkg --add-architecture i386 && \
             unzip wine32 && \
     ln -sf /usr/bin/genisoimage /usr/bin/mkisofs
 
+ARG INNOEXTRACT_VERSION
 COPY vendor/innoextract-${INNOEXTRACT_VERSION}-linux.tar.xz /tmp/
 RUN cd /tmp && \
     tar xf innoextract-${INNOEXTRACT_VERSION}-linux.tar.xz && \
@@ -17,6 +15,7 @@ RUN cd /tmp && \
     rm -rf /tmp/innoextract-${INNOEXTRACT_VERSION}*
 
 ENV PATH="/usr/x86_64-w64-mingw32/bin:${PATH}"
+ARG SDL_VERSION
 COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp/
 RUN cd /tmp && \
     tar xzf SDL2-${SDL_VERSION}.tar.gz && \
@@ -27,8 +26,9 @@ RUN cd /tmp && \
     echo "/usr/x86_64-w64-mingw32/share/aclocal" > /usr/share/aclocal/dirlist && \
     rm -rf /tmp/SDL2-${SDL_VERSION}*
 
-COPY vendor/ispack-${ISPACK_VERSION}-unicode.exe /tmp/
+ARG INNOSETUP_VERSION
+COPY vendor/innosetup-${INNOSETUP_VERSION}.exe /tmp/
 RUN mkdir /innosetup && \
-    innoextract -d /innosetup /tmp/ispack-${ISPACK_VERSION}-unicode.exe && \
-    rm -f /tmp/ispack-${ISPACK_VERSION}-unicode.exe
+    innoextract -d /innosetup /tmp/innosetup-${INNOSETUP_VERSION}.exe && \
+    rm -f /tmp/innosetup-${INNOSETUP_VERSION}.exe
     

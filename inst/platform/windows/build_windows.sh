@@ -39,4 +39,4 @@ cd /work/sdl
 unzip -j /vendor/SDL2-${SDL_VERSION}-win32-x64.zip
 
 HOME=/work wine /innosetup/app/ISCC.exe - </work/kevedit/inst/platform/windows/kevedit.iss
-mv /dist/setup.exe /dist/kevedit-${KEVEDIT_VERSION}-setup.exe
+mv /dist/mysetup.exe /dist/kevedit-${KEVEDIT_VERSION}-setup.exe
