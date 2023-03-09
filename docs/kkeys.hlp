@@ -53,6 +53,10 @@ PAGEUP
   Previous Board
 PAGEDOWN
   Next Board
+CTRL+CURSOR KEYS
+  Switch to linked boards.
+CTRL+PAGEUP/PAGEDOWN
+  Skip 7 boards at once.
 b - Switch/edit boards
 
 :file;File Operations
