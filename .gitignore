@@ -9,6 +9,7 @@ compile_commands.json
 /docs/kevedit.zml
 /dosbox/kevedos.iso
 /inst/dist
+/inst/platform/macos/Info.plist
 /inst/platform/windows/kevedit.iss
 /inst/platform/windows/kevedit.rc
 /inst/vendor

@@ -41,6 +41,8 @@ case "$host" in
 		;;
 esac
 AM_CONDITIONAL([MACOS], [test "$macos" = "yes"])
+AC_SUBST([MACOS_PLIST_VERSION],
+    [$(echo AC_PACKAGE_VERSION | grep -o '\([[0-9]]\+\.\)\?\([[0-9]]\+\.\)\?[[0-9]]\+')])
 
 dnl Determine available displays
 AC_MSG_NOTICE(Searching for available displays)
@@ -187,8 +189,9 @@ AC_SUBST(INCLUDE_PATHS) INCLUDE_PATHS='-I$(top_srcdir)/src -I$(top_builddir) $(G
 CPPFLAGS="$CPPFLAGS $INCLUDE_PATHS"
 
 AC_CONFIG_FILES([docs/Makefile
-		 dosbox/Makefile
+                 dosbox/Makefile
                  glob/Makefile
+                 inst/platform/macos/Info.plist
                  inst/platform/windows/kevedit.iss
                  inst/platform/windows/kevedit.rc
                  src/libzzt2/Makefile
