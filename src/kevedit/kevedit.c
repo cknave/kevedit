@@ -587,6 +587,23 @@ void keveditHandleKeypress(keveditor * myeditor)
 			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 			myeditor->updateflags |= UD_COLOR;
 			break;
+                case 'r':
+                case 'R':
+                        /* Reverse Colors */
+                        myeditor->color.fg = myeditor->color.fg + myeditor->color.bg;
+                        myeditor->color.bg = myeditor->color.fg - myeditor->color.bg;
+                        myeditor->color.fg = myeditor->color.fg - myeditor->color.bg;
+                        if (myeditor->color.blink == 1) {
+                                myeditor->color.fg = myeditor->color.fg + 8;
+                        }
+                        myeditor->color.blink = 0;
+                        if (myeditor->color.bg > 7) {
+                                myeditor->color.blink = 1;
+                                myeditor->color.bg = myeditor->color.bg - 8;
+                        }
+                        pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
+                        myeditor->updateflags |= UD_COLOR;
+                        break;
 		case 'k':
 		case 'K':
 		case DKEY_CTRL_K:
@@ -620,8 +637,6 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 			myeditor->updateflags |= UD_ALL;
 			break;
-		case 'r':
-		case 'R':
 		case DKEY_ALT_T:  /* Alt-t (by popular demand) */
 			/* run zzt */
 			/* Load current world into zzt */
