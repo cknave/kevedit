@@ -68,6 +68,14 @@
 #define DKEY_ALT_UP     (152 | DDOSKEY_EXT)
 #define DKEY_ALT_DOWN   (160 | DDOSKEY_EXT)
 
+/* Ctrl-arrow and PgUp/PgDn keys */
+#define DKEY_CTRL_PAGEUP (132 | DDOSKEY_EXT)
+#define DKEY_CTRL_PAGEDOWN (118 | DDOSKEY_EXT)
+#define DKEY_CTRL_LEFT   (115 | DDOSKEY_EXT)
+#define DKEY_CTRL_RIGHT  (116 | DDOSKEY_EXT)
+#define DKEY_CTRL_UP     (141 | DDOSKEY_EXT)
+#define DKEY_CTRL_DOWN   (145 | DDOSKEY_EXT)
+
 /* Ctrl-letter keys */
 #define DKEY_CTRL_A     ('a' - 0x60)
 #define DKEY_CTRL_B     ('b' - 0x60)

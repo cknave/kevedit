@@ -781,8 +781,32 @@ static int display_sdl_getkey()
 		/* If alpha key, return special ctrl+alpha */
 		if(event.key.keysym.sym >= SDLK_a && event.key.keysym.sym <= SDLK_z) {
 			event.key.keysym.sym -= 0x60;
+		} else {
+			switch(event.key.keysym.sym) {
+				case DKEY_PAGEUP:
+					event.key.keysym.sym = DKEY_CTRL_PAGEUP;
+					break;
+				case DKEY_PAGEDOWN:
+					event.key.keysym.sym = DKEY_CTRL_PAGEDOWN;
+					break;
+				case DKEY_LEFT:
+					event.key.keysym.sym = DKEY_CTRL_LEFT;
+					break;
+				case DKEY_RIGHT:
+					event.key.keysym.sym = DKEY_CTRL_RIGHT;
+					break;
+				case DKEY_UP:
+					event.key.keysym.sym = DKEY_CTRL_UP;
+					break;
+				case DKEY_DOWN:
+					event.key.keysym.sym = DKEY_CTRL_DOWN;
+					break;
+				default:
+					break;
+			}
 		}
 	}
+
 	/* Alt is down */
 	else if(event.key.keysym.mod & KMOD_ALT) {
 		switch(event.key.keysym.sym) {
