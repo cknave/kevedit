@@ -517,7 +517,8 @@ int boardinfostaroption(ZZTworld* myworld, dialogComponent* opt)
 #define WLDINFO_TIMEPASSED 9
 #define WLDINFO_ISSAVED    10
 #define WLDINFO_CHARSET    11
-#define WLDINFO_FLAGS      12
+#define WLDINFO_PALETTE    12
+#define WLDINFO_FLAGS      13
 
 void drawstaticworldinfo(displaymethod* d);
 void drawworldinfo(ZZTworld* myworld, keveditor *myeditor);
@@ -527,6 +528,9 @@ int worldinfodirectionoption(int curoption, ZZTworld* myworld,
 		int cursorx, int cursory, int dir, keveditor *myeditor);
 void worldinfotogglekey(ZZTworld* myworld, int whichkey);
 int editworldflags(ZZTworld* myworld, displaymethod* d);
+static int worldinfodeleteoption(int curoption, keveditor *myeditor);
+static void worldinfopickfile(int curoption, ZZTworld *myworld, int cursorx, int cursory,
+                              keveditor *myeditor, bool *quit);
 
 /* editworldinfo() - brings up dialog box for editing world info */
 int editworldinfo(keveditor *myeditor)
@@ -548,8 +552,6 @@ int editworldinfo(keveditor *myeditor)
 		/* Position the cursors */
 		cursory = curoption + 6;
 		if (curoption > WLDINFO_SCORE)
-			cursory++;
-		if (curoption > WLDINFO_ISSAVED)
 			cursory++;
 
 		if (curoption == WLDINFO_FLAGS)
@@ -618,15 +620,7 @@ int editworldinfo(keveditor *myeditor)
 
                                 case DKEY_BACKSPACE:
                                 case DKEY_DELETE:
-                                        if(curoption == WLDINFO_CHARSET) {
-                                                // Restore the default character set
-                                                if(myeditor->char_set != NULL) {
-                                                        charset_free(myeditor->char_set);
-                                                }
-                                                myeditor->char_set = NULL;
-                                                d->set_charset(&default_charset);
-                                                result = 1;
-                                        }
+                                        result = worldinfodeleteoption(curoption, myeditor);
                                         break;
                         }
 			if(result != 0) {
@@ -684,7 +678,8 @@ void drawstaticworldinfo(displaymethod* d)
 	d->print_discrete(13, 15, 0x0A, "Energizer Cycles:");
 	d->print_discrete(13, 16, 0x0A, "    Time Elapsed:");
 	d->print_discrete(13, 17, 0x0A, "   Is Saved Game:");
-        d->print_discrete(13, 19, 0x0A, "   Character Set:");
+        d->print_discrete(13, 18, 0x0A, "   Character Set:");
+        d->print_discrete(13, 19, 0x0A, "         Palette:");
 	d->print_discrete(23, 20, 0x0F, "Set/Clear Flags");
 }
 
@@ -721,15 +716,23 @@ void drawworldinfo(ZZTworld* myworld, keveditor *myeditor)
 	/* Saved Game boolean */
 	d->print_discrete(31, 17, 0x0B, zztWorldGetSavegame(myworld) ? "Yes" : "No");
 
-        /* Charset file */
-        if(!myeditor->char_set) {
-                d->print_discrete(31, 19, 0x07, "(default)           ");
-        } else {
-                /* Clear out old file if we just changed it */
-                d->print_discrete(31, 19, 0x07, "                    ");
-                char charset_file[20];
-                fileof(charset_file, myeditor->char_set->path, sizeof(charset_file) - 1);
-                d->print_discrete(31, 19, 0x0b, charset_file);
+        /* Charset and palette paths */
+        struct { int y; char *path; } path_lines[] = {
+                {.y = 18, .path = myeditor->char_set ? myeditor->char_set->path : NULL },
+                {.y = 19, .path = myeditor->palette ? myeditor->palette->path : NULL },
+        };
+        for(i = 0; i < sizeof(path_lines) / sizeof(*path_lines); i++) {
+                int y = path_lines[i].y;
+                char *path = path_lines[i].path;
+                if(!path) {
+                        d->print_discrete(31, y, 0x07, "(default)           ");
+                } else {
+                        /* Clear out old file if we just changed it */
+                        d->print_discrete(31, y, 0x07, "                    ");
+                        char short_path[20];
+                        fileof(short_path, path, sizeof(short_path) - 1);
+                        d->print_discrete(31, y, 0x0b, short_path);
+                }
         }
 
 	/* Update the display */
@@ -813,48 +816,10 @@ int worldinfoeditoption(int curoption, ZZTworld* myworld,
 			header->timepassed = tempnum;
 			break;
 
-                case WLDINFO_CHARSET: {
-                        // Show the file picker for *.chr and *.com files
-                        stringvector extensions;
-                        initstringvector(&extensions);
-                        pushstring(&extensions, "chr");
-                        pushstring(&extensions, "com");
+                case WLDINFO_CHARSET:
+                case WLDINFO_PALETTE: {
                         bool quit = false;
-                        char *path = filedialog_multiext(".", &extensions, "Choose a Character Set File", FTYPE_ALL, myeditor->mydisplay, &quit);
-                        removestringvector(&extensions);
-                        if(quit) {
-                                lined_result = LINED_QUIT;
-                                break;
-                        }
-                        // Redraw the world info screen (was overwritten by file picker)
-                        drawstaticworldinfo(d);
-                        drawworldinfo(myworld, myeditor);
-                        d->update(3, 4, 51, 19);
-                        if(path == NULL) {
-                                break;
-                        }
-                        // Try to load the selected file
-                        charset *result = charset_load(path);
-                        if(result != NULL) {
-                                if(myeditor->char_set) {
-                                        charset_free(myeditor->char_set);
-                                }
-                                myeditor->char_set = result;
-                                d->set_charset(result);
-                        } else {
-                                // Show an error message on the current field
-                                d->print_discrete(31, 19, 0x0c, "Unable to load file!");
-                                d->update(31, 19, 20, 1);
-                                d->cursorgo(cursorx, cursory);
-                                int key = myeditor->mydisplay->getch();
-                                if(key == DKEY_QUIT) {
-                                        lined_result = LINED_QUIT;
-                                        break;
-                                }
-                        }
-                        // In either case, we need to redraw the content
-                        drawworldinfo(myworld, myeditor);
-                        d->update(3, 4, 51, 19);
+                        worldinfopickfile(curoption, myworld, cursorx, cursory, myeditor, &quit);
                         break;
                 }
         }
@@ -981,6 +946,111 @@ int editworldflags(ZZTworld* myworld, displaymethod* d)
 		}
 	} while (!done);
 	return key;
+}
+
+int worldinfodeleteoption(int curoption, keveditor *myeditor) {
+        switch(curoption) {
+                case WLDINFO_CHARSET:
+                        // Restore the default character set
+                        if(myeditor->char_set != NULL) {
+                                charset_free(myeditor->char_set);
+                        }
+                        myeditor->char_set = NULL;
+                        myeditor->mydisplay->set_charset(&default_charset);
+                        return 1;
+
+                case WLDINFO_PALETTE:
+                        // Restore the default palette
+                        if(myeditor->palette != NULL) {
+                                palette_free(myeditor->palette);
+                        }
+                        myeditor->palette = NULL;
+                        myeditor->mydisplay->set_palette(&default_palette);
+                        return 1;
+
+                default:
+                        return 0;
+        }
+}
+
+void worldinfopickfile(int curoption, ZZTworld *myworld, int cursorx, int cursory,
+                       keveditor *myeditor, bool *quit) {
+        displaymethod *d = myeditor->mydisplay;
+
+        // Show the file picker for *.pal files (palette) or *.chr and *.com files (charset)
+        char *title;
+        stringvector extensions;
+        initstringvector(&extensions);
+        if(curoption == WLDINFO_CHARSET) {
+                pushstring(&extensions, "chr");
+                pushstring(&extensions, "com");
+                title = "Choose a Character Set File";
+        } else {
+                pushstring(&extensions, "pal");
+                title = "Choose a Palette File";
+        }
+        char *path = filedialog_multiext(".", &extensions, title, FTYPE_ALL, myeditor->mydisplay, quit);
+        removestringvector(&extensions);
+        if(*quit) {
+                return;
+        }
+
+        // Redraw the world info screen (was overwritten by file picker)
+        drawstaticworldinfo(d);
+        drawworldinfo(myworld, myeditor);
+        d->update(3, 4, 51, 19);
+
+        // If the user backed out, we're done
+        if(path == NULL) {
+                return;
+        }
+
+        // If they picked a file, try to load it
+        bool failed = false;
+        switch(curoption) {
+                case WLDINFO_CHARSET: {
+                        charset *result = charset_load(path);
+                        if(!result) {
+                                failed = true;
+                                break;
+                        }
+                        if(myeditor->char_set) {
+                                charset_free(myeditor->char_set);
+                        }
+                        myeditor->char_set = result;
+                        d->set_charset(result);
+                        break;
+                }
+                case WLDINFO_PALETTE: {
+                        palette *result = palette_load(path);
+                        if(!result) {
+                                failed = true;
+                                break;
+                        }
+                        if(myeditor->palette) {
+                                palette_free(myeditor->palette);
+                        }
+                        myeditor->palette = result;
+                        d->set_palette(result);
+                        break;
+                }
+        }
+
+        if(failed) {
+                // Show an error message on the current field
+                d->print_discrete(31, cursory, 0x0c, "Unable to load file!");
+                d->update(31, cursory, 20, 1);
+                d->cursorgo(cursorx, cursory);
+                int key = myeditor->mydisplay->getch();
+                if(key == DKEY_QUIT) {
+                        *quit = true;
+                        return;
+                }
+        }
+
+        // In either case, we need to redraw the content
+        drawworldinfo(myworld, myeditor);
+        d->update(3, 4, 51, 19);
 }
 
 void drawstaticflags(displaymethod * d)

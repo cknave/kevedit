@@ -36,7 +36,7 @@ typedef struct
         Uint32 *pixels;                /* Screen pixels, each element an ARGB */
 	textBlock *buffer;             /* Emualted VRAM                       */
 	Uint8 *char_set;               /* Pointer to character set            */
-	Uint32 *palette;               /* Pointer to palette                  */
+	Uint32 *palette;               /* Pointer to expanded palette                  */
 	Uint32 write_x;                /* Current x write position in VRAM    */
 	Uint32 write_y;                /* Current y write position in VRAM    */
 

@@ -112,8 +112,11 @@ typedef struct keveditor {
 	/* Options */
 	kevoptions options;
 
-        /* Character set (font), or NULL if not set */
+        /* Custom character set (font), or NULL if the default should be used */
         charset *char_set;
+
+        /* Custom palette, or NULL if the default should be used */
+        palette *palette;
 
 } keveditor;
 

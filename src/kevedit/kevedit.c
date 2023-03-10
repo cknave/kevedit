@@ -132,6 +132,7 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 	pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 
         myeditor->char_set = NULL;
+        myeditor->palette = NULL;
 	return myeditor;
 }
 

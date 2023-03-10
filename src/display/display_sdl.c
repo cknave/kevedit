@@ -27,7 +27,6 @@
 #include <sys/param.h>
 #include "SDL2/SDL.h"
 
-#include "charset.h"
 #include "display.h"
 #include "display_sdl.h"
 
@@ -68,18 +67,7 @@ static void sdl_update_and_present(video_info *vdest, int x, int y, int width, i
  *************************************/
 
 
-/* EGA palette (6 bits per component) */
-#define EGA_PALETTE_SIZE 48
-const Uint8 ega_palette[] = {
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x2A', '\x00', '\x2A', 
-	'\x00', '\x00', '\x2A', '\x2A', '\x2A', '\x00', '\x00', '\x2A', 
-	'\x00', '\x2A', '\x2A', '\x15', '\x00', '\x2A', '\x2A', '\x2A', 
-	'\x15', '\x15', '\x15', '\x15', '\x15', '\x3F', '\x15', '\x3F', 
-	'\x15', '\x15', '\x3F', '\x3F', '\x3F', '\x15', '\x15', '\x3F', 
-	'\x15', '\x3F', '\x3F', '\x3F', '\x15', '\x3F', '\x3F', '\x3F'
-};
-
-static void sdl_expand_palette(Uint32 *dest, Uint8 *src)
+static void sdl_expand_palette(Uint32 *dest, const Uint8 *src)
 {
 	Uint8 *dest_palette = (Uint8 *)dest;
 	Uint32 i2, i3, i4;
@@ -97,26 +85,9 @@ static void sdl_expand_palette(Uint32 *dest, Uint8 *src)
 	}
 }
 
-static void sdl_load_palette(Uint32 *dest, char *name)
-{
-	FILE *fp;
-	Uint8 palette[3 * 16];
-
-	fp = fopen(name, "rb");
-	fread(palette, 3 * 16, 1, fp);
-
-	sdl_expand_palette(dest, palette);
-	fclose(fp);
-}
-
 static void sdl_set_charset(video_info *vdest, const uint8_t *data)
 {
         memcpy(vdest->char_set, data, CHARSET_SIZE);
-}
-
-static void sdl_load_default_palette(Uint32 *dest)
-{
-	sdl_expand_palette(dest, (Uint8 *) ega_palette);
 }
 
 static void sdl_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
@@ -559,7 +530,7 @@ static int display_sdl_init()
 	/* Fire up the textmode emulator */
 	sdl_init(&info, 640, 350, 32);
         sdl_set_charset(&info, default_charset.data);
-	sdl_load_default_palette(info.palette);
+        sdl_expand_palette(info.palette, default_palette.data);
 
 	shift = 0;
 	cursor = CURSOR_VISIBLE;
@@ -952,6 +923,11 @@ static void display_sdl_set_charset(const charset *cs) {
         sdl_update_and_present(&info, 0, 0, 80, 25);
 }
 
+static void display_sdl_set_palette(const palette *pal) {
+        sdl_expand_palette(info.palette, pal->data);
+        sdl_update_and_present(&info, 0, 0, 80, 25);
+}
+
 displaymethod display_sdl =
 {
 	NULL,
@@ -971,5 +947,6 @@ displaymethod display_sdl =
 	display_sdl_print_discrete,
 	display_sdl_update,
         display_sdl_set_charset,
+        display_sdl_set_palette,
 	NULL,
 };

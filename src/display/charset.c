@@ -28,7 +28,6 @@
 #define FONT_MANIA_FILE_SIZE (FONT_MANIA_HEADER_SIZE + CHARSET_SIZE + FONT_MANIA_FOOTER_SIZE)
 
 
-
 charset *charset_load(char *path) {
         FILE *fp = fopen(path, "rb");
         if(!fp) {

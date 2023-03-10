@@ -24,6 +24,7 @@
 
 #include "charset.h"
 #include "keys.h"
+#include "palette.h"
 
 
 enum displaycontext {
@@ -86,7 +87,10 @@ typedef struct displaymethod {
         /* Copy this character set to the display's character set. */
         void (*set_charset)(const charset *charset);
 
-	/** Path of the last file drop event. */
+        /* Copy this palette to the display's palette. */
+        void (*set_palette)(const palette *palette);
+
+        /** Path of the last file drop event. */
 	char *dropped_file;
 
 } displaymethod;
