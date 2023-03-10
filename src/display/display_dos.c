@@ -61,11 +61,22 @@ static int vshift; /* virtual shift (toggled by DKEY_SHIFT_TOGGLE) */
 /* Stash the original charset to be restored on exit */
 static charset *original_charset;
 
+/* Stash the original palette to be restored on exit */
+static palette *original_palette;
+
+/* EGA textmode color -> VGA palette index (Kliewer 1990, p. 202)
+ * http://vtda.org/books/Computing/Programming/EGA-VGA-ProgrammersReferenceGuide2ndEd_BradleyDyckKliewer.pdf
+ */
+static const int vga_palette_map[16] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07,
+        0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+};
 
 int display_dos_getch();
 static charset *read_current_charset();
 static void write_charset(const charset *char_set);
-
+static palette *read_current_palette();
+static void write_palette(const palette *pal);
 
 void release_time_slice()
 {
@@ -123,7 +134,8 @@ int kb_isr()
 
 int display_dos_init()
 {
-        /* make a copy of the current charset to be restored on display_dos_end */
+        /* make a copy of the current charset and palette to be restored on display_dos_end */
+        original_palette = read_current_palette();
         original_charset = read_current_charset();
 
         __dpmi_regs r;
@@ -174,8 +186,9 @@ void display_dos_end()
 	__dpmi_int(0x10, &r);
 	r.x.ax = 0x0003;
 	__dpmi_int(0x10, &r);
-        /* Restore original charset */
+        /* Restore original charset and palette */
         write_charset(original_charset);
+        write_palette(original_palette);
 	/* Restore cursor */
 	_setcursortype(_NORMALCURSOR);
 	/* Restore keyboard handler */
@@ -332,6 +345,42 @@ static void write_charset(const charset *char_set) {
         unmap_charset_mem();
 }
 
+static void get_vga_color(int index, uint8_t *rgb) {
+        // http://www.osdever.net/FreeVGA/vga/colorreg.htm
+        outportb(0x3c7, index);  // DAC read address
+        *(rgb + 0) = inportb(0x3c9);  // DAC data
+        *(rgb + 1) = inportb(0x3c9);
+        *(rgb + 2) = inportb(0x3c9);
+}
+
+static void set_vga_color(int index, const uint8_t *rgb) {
+        // http://www.osdever.net/FreeVGA/vga/colorreg.htm
+        outportb(0x3c8, index); // DAC write address
+        outportb(0x3c9, *(rgb + 0));  // DAC data
+        outportb(0x3c9, *(rgb + 1));
+        outportb(0x3c9, *(rgb + 2));
+}
+
+static palette *read_current_palette() {
+        palette *pal = malloc(sizeof(palette));
+        pal->path = strdup("(dac)");
+        uint8_t *rgb = pal->data;
+        for(int i = 0; i < 16; i++) {
+                get_vga_color(vga_palette_map[i], rgb);
+                rgb += 3;
+        }
+        return pal;
+}
+
+static void write_palette(const palette *pal) {
+        const uint8_t *rgb = pal->data;
+        for(int i = 0; i < 16; i++) {
+                set_vga_color(vga_palette_map[i], rgb);
+                rgb += 3;
+        }
+}
+
+
 displaymethod display_dos =
 {
 	NULL,
@@ -352,5 +401,6 @@ displaymethod display_dos =
 	display_dos_print,
 	display_dos_update,
         write_charset,
+        write_palette,
 	NULL,
 };
