@@ -1,4 +1,4 @@
-/* charset.h    -- Defines for character set
+/* charset.h    -- Custom character character set
  * Copyright (C) 2023 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@
 
 
 charset *charset_load(char *path) {
-        FILE *fp = fopen(path, "r");
+        FILE *fp = fopen(path, "rb");
         if(!fp) {
                 return NULL;
         }
