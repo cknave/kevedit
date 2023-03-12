@@ -18,7 +18,7 @@ mkdir -p \
     /work/KevEdit.app/Contents/MacOS \
     /work/KevEdit.app/Contents/Resources \
     /work/KevEdit.app/Contents/Frameworks
-cp -a /platform/macos/Info.plist /platform/macos/PkgInfo /work/KevEdit.app/Contents
+cp -a /platform/macos/PkgInfo /work/KevEdit.app/Contents
 
 rm -rf /work/kevedit
 mkdir /work/kevedit
@@ -50,6 +50,7 @@ cp -a docs/kevedit.zml \
       dosbox/kevedos.iso \
       /platform/macos/kevedit.icns \
       /work/KevEdit.app/Contents/Resources/
+cp -a platform/macos/Info.plist work/KevEdit.app/Contents/
 
 `osxcross-conf`
 cp -a $OSXCROSS_SDK/Library/Frameworks/SDL2.framework /work/KevEdit.app/Contents/Frameworks
