@@ -32,3 +32,13 @@ jobs:
           # build script for ${{ matrix.target }}
           cd inst
           ./build.py ${{ matrix.target }}
+      - name: per-target artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: kevedit-${{ matrix.target }}
+          path: inst/dist/*
+      - name: combined artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: all
+          path: inst/dist/*
