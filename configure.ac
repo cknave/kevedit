@@ -42,7 +42,7 @@ case "$host" in
 esac
 AM_CONDITIONAL([MACOS], [test "$macos" = "yes"])
 AC_SUBST([MACOS_PLIST_VERSION],
-    [$(echo AC_PACKAGE_VERSION | grep -o '\([[0-9]]\+\.\)\?\([[0-9]]\+\.\)\?[[0-9]]\+')])
+    [$(echo AC_PACKAGE_VERSION | grep -o '\([[0-9]]\+\.\)\([[0-9]]\+\.\)[[0-9]]\+')])
 
 dnl Determine available displays
 AC_MSG_NOTICE(Searching for available displays)
