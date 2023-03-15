@@ -1,8 +1,15 @@
 @New Features
 $New Features
 
-$New in next release
+$New in version 1.2.0
 *  Support loading custom character sets
+   and palettes in World Info
+*  Change R key to reverse colors instead
+   of run the game
+*  Use ctrl-arrows to switch to linked
+   boards
+*  Use ctrl-pgup/pgdn to switch to the
+   board 1 page up or down
 
 $Bugs fixed in version 1.1.3
 *  Fix flood fill over objects with no

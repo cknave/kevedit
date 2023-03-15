@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-m4_define(kevedit_version, m4_esyscmd([echo -n ${KEVEDIT_VERSION:-1.1.3}]))
+m4_define(kevedit_version, m4_esyscmd([echo -n ${KEVEDIT_VERSION:-1.2.0}]))
 AC_INIT([KevEdit],[kevedit_version],[kvance@kvance.com],[kevedit],[https://github.com/cknave/kevedit])
 AC_CONFIG_SRCDIR([src/kevedit/kevedit.c])
 AC_CONFIG_HEADERS([src/config.h])

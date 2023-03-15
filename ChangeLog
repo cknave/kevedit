@@ -1,6 +1,16 @@
 Next Release
 ------------
-Support loading custom character sets
+
+1.2.0
+-----
+Support loading custom character sets and palettes
+Upgrade to SDL 2.26.4 in binary releases
+Add arm64 support to macOS binaries
+Windows installer supports non-administrative installs
+Change R key to reverse colors instead of run the game
+Use ctrl-arrows to switch to linked boards
+Use ctrl-pgup/pgdn to switch to the board 1 page up or down
+
 
 1.1.3
 -----

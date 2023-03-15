@@ -3,14 +3,14 @@
 KevEdit is a ZZT editor that was under development from 2000-2005 by Kevin
 Vance and Ryan Phillips.  It runs under DOS, Windows, macOS, and Linux.
 
-As of 2021 it is maintained by Kevin Vance on github.  Maintenance is focused
+As of 2023 it is maintained by Kevin Vance on github.  Maintenance is focused
 on improvements for running KevEdit on modern computers while still supporting
 DOS.
 
 
 ## Download
 
-Binary releases are available for 32-bit DOS and 64-bit Linux, Windows, and
+Binary releases are available for 32-bit DOS, 64-bit Linux and Windows, and
 macOS (x86_64 and arm64) from
 [github releases](https://github.com/cknave/kevedit/releases/).
 
