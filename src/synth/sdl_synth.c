@@ -28,7 +28,7 @@
 #include "SDL2/SDL.h"
 
 #include "notes.h"
-#include "sdl_synth.h"
+#include "pcspeaker.h"
 
 Uint8 *masterplaybuffer = NULL;
 static size_t playbuffersize = 0, playbufferloc = 0, playbuffermax = 0;

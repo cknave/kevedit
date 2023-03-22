@@ -16,14 +16,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
-
+/*
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include "notes.h"
 #include "zzm.h"
-#include "synth.h"
+#include "pcspeaker.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,23 +87,26 @@ void play(char* tune)
 
 	deleteNoteChain(song);
 }
+*/
 
-int main(int argc, char* argv[])
-{
-	int i;
+//int main(int argc, char* argv[])
+//{
+//	int i;
+//
+//	start();
+//
+//	/* Default tune */
+//	if (argc <= 1)
+//		play("icdefgab+c");
+//
+//	/* Play all the arguments as seperate lines */
+//	for (i = 1; i < argc; i++)
+//		play(argv[i]);
+//
+//	end();
+//
+//	return 0;
+//}
 
-	start();
 
-	/* Default tune */
-	if (argc <= 1)
-		play("icdefgab+c");
-
-	/* Play all the arguments as seperate lines */
-	for (i = 1; i < argc; i++)
-		play(argv[i]);
-
-	end();
-
-	return 0;
-}
-
+int main(int argc, char **argv) {}

@@ -37,20 +37,6 @@
 #define NOTELEN_SIXTEENTH    0x02
 #define NOTELEN_THIRTYSECOND 0x01
 
-/* Note indexes */
-#define NOTE_C   0
-#define NOTE_Cs  1
-#define NOTE_D   2
-#define NOTE_Ds  3
-#define NOTE_E   4
-#define NOTE_F   5
-#define NOTE_Fs  6
-#define NOTE_G   7
-#define NOTE_Gs  8
-#define NOTE_A   9
-#define NOTE_As 10
-#define NOTE_B  11
-
 /* Drum information */
 #define DRUMBREAK  1  /* 1 millisecond delay between drum changes */
 #define DRUMCOUNT  10 /* 10 drums in all */

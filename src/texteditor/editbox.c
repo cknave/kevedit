@@ -34,7 +34,7 @@
 
 #include "themes/theme.h"
 
-#include "synth/synth.h"
+#include "synth/pcspeaker.h"
 #include "synth/zzm.h"
 
 #include "libzzt2/zztoop.h"
@@ -1029,14 +1029,11 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymethod* d)
 {
 	int done;
-#ifdef SDL
-	SDL_AudioDeviceID audioid;
-	SDL_AudioSpec spec;
 
 	/* IF opening the audio device fails, return now before we crash something. */
-	if (OpenSynth(&audioid, &spec))
+	if(!d->open_audio()) {
 		return;
-#endif
+        }
 
 	done = 0;
 
@@ -1048,9 +1045,7 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 			musicalNote note = zzmGetDefaultNote();
 			musicSettings settings = zzmGetDefaultSettings();
 
-#ifdef DOS
 			int xoff = tune - sv->cur->s;
-#endif
 			tune += 6;  /* Advance to notes! */
 
 			/* Change the slur setting */
@@ -1060,18 +1055,15 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 			updateditbox(d, sv, U_EDITAREA, editwidth, flags, "", 1);
 
 			while (note.src_pos < strlen(tune) && !done) {
-#ifdef DOS
 				int oldpos = note.src_pos;
 				char* strpart;
-#endif
 
 				if (d->getkey() != DKEY_NONE)
 					done = 1;
 
 				note = zzmGetNote(tune, note);
 
-#ifdef DOS
-				/* In DOS, display everything as we go along */
+				/* Display everything as we go along */
 				/* Display the whole line */
 				updateditbox(d, sv, U_CENTER, editwidth, flags, "", 1);
 
@@ -1081,26 +1073,13 @@ void testMusic(stringvector* sv, int slur, int editwidth, int flags, displaymeth
 				free(strpart);
 				d->cursorgo(oldpos + 15 + xoff, 13);
 
-				pcSpeakerPlayNote(note, settings);
-#elif defined SDL
-				SynthPlayNote(spec, note, settings);
-#endif
+				pcSpeakerPlayNote(d, note, settings);
 			}
 		}
 		sv->cur = sv->cur->next;
 	}
 
-#ifdef SDL
-	/* TODO: instead of just sitting here, display the progress of playback */
-	/* Wait until the music is done or the user presses a key */
-	while (!IsSynthBufferEmpty() && d->getkey() == DKEY_NONE) {
-		SDL_Delay(10);
-	}
-
-	CloseSynth(&audioid);
-#elif defined DOS
-	pcSpeakerFinish();
-#endif
+	d->close_audio();
 }
 
 /***************************************************************************/
