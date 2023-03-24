@@ -21,8 +21,6 @@
 #include <config.h>
 #endif
 
-#include <math.h>
-
 #include "pcspeaker.h"
 
 void pcSpeakerPlayNote(displaymethod *mydisplay, musicalNote note, musicSettings settings)
