@@ -700,6 +700,12 @@ void texteditZZMPlay(texteditor * editor, int slurflag, displaymethod *d)
 
 		/* Re-display edit area since the current line has changed. */
 		view->updateflags |= TUD_EDITAREA;
+                // Since we're inside a loop that's not calling getch(), the display buffer won't
+                // automatically be presented after we redraw the text editor.
+                if(view->curline != NULL) {
+                        texteditUpdateDisplay(view);
+                        d->present();
+                }
 	}
 
 	d->close_audio();

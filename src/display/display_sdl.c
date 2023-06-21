@@ -935,6 +935,11 @@ static void display_sdl_set_palette(const palette *pal) {
         sdl_update_and_present(&info, 0, 0, 80, 25);
 }
 
+static void display_sdl_present() {
+        sdl_present(&info, NULL);
+}
+
+
 //
 // Audio
 //
@@ -1210,6 +1215,7 @@ displaymethod display_sdl =
 	display_sdl_update,
         display_sdl_set_charset,
         display_sdl_set_palette,
+        display_sdl_present,
 
 	display_sdl_open_audio,
         display_sdl_close_audio,

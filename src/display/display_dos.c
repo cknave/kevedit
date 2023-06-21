@@ -381,6 +381,10 @@ static void write_palette(const palette *pal) {
         }
 }
 
+static void present() {
+        // Nothing to do: DOS display buffer is always presented
+}
+
 static bool open_audio() {
         return true;  // On DOS there's nothing to open
 }
@@ -422,6 +426,7 @@ displaymethod display_dos =
 	display_dos_update,
         write_charset,
         write_palette,
+        present,
 
         open_audio,
         close_audio,

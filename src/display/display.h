@@ -91,6 +91,12 @@ typedef struct displaymethod {
         /* Copy this palette to the display's palette. */
         void (*set_palette)(const palette *palette);
 
+        /* Present the current display buffer to screen.
+         *
+         * This is not normally needed unless inside a loop where getch() is not called.
+         */
+        void (*present)();
+
         /* Open the audio device */
         bool (*open_audio)();
 
