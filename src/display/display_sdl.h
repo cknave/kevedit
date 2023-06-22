@@ -19,6 +19,7 @@
 
 #include "SDL2/SDL.h"
 
+#include "notebuf.h"
 #include "textblock.h"
 
 #include <stdio.h>
@@ -26,6 +27,15 @@
 
 #ifndef DISPLAY_SDL
 #define DISPLAY_SDL 1
+
+#define MAX_AUDIO_CHANNELS (8)
+
+typedef union {
+    uint8_t u8;
+    int8_t s8;
+    int16_t s16;
+    float f32;
+} audio_sample_t;
 
 /* This structure has pointers to all important video information */
 typedef struct
@@ -36,12 +46,24 @@ typedef struct
         Uint32 *pixels;                /* Screen pixels, each element an ARGB */
 	textBlock *buffer;             /* Emualted VRAM                       */
 	Uint8 *char_set;               /* Pointer to character set            */
-	Uint32 *palette;               /* Pointer to expanded palette                  */
+	Uint32 *palette;               /* Pointer to expanded palette         */
 	Uint32 write_x;                /* Current x write position in VRAM    */
 	Uint32 write_y;                /* Current y write position in VRAM    */
 
+        /* Custom event ids */
+        Uint32 cursor_update_event;
+        Uint32 note_buffer_empty_event;
+
 	/* Info for reinitializing the screen  */
 	Uint32 width, height, depth, vflags;
+
+        /* Audio support */
+        SDL_AudioDeviceID audio_device_id;
+        SDL_AudioSpec audio_spec;
+        audio_sample_t low_and_high_frames[2][MAX_AUDIO_CHANNELS];
+        size_t audio_frame_size;
+        notebuf_t audio_notebuf;
+        double audio_curr_note_time;
 
         bool is_fullscreen;
         bool is_dirty;

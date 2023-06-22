@@ -23,25 +23,21 @@
 
 #include "pcspeaker.h"
 
-#include <dos.h>
-
-void pcSpeakerPlayNote(musicalNote note, musicSettings settings)
+void pcSpeakerPlayNote(displaymethod *mydisplay, musicalNote note, musicSettings settings)
 {
-	int frequency = noteFrequency(note, settings);
-	int wait = noteDuration(note, settings);
+	float frequency = noteFrequency(note, settings);
+	int wait = (int)noteDuration(note, settings);
 	int spacing = noteSpacing(note, settings);
 	int drumbreaktime = wait - DRUMBREAK * DRUMCYCLES;
 
 	if (note.type == NOTETYPE_NOTE) {
 		/* Play the sound at the frequency for a duration */
-		sound(frequency);
-		delay(wait);
+		mydisplay->audio_square(frequency, wait);
 	}
 
 	/* Rests are simple */
 	if (note.type == NOTETYPE_REST) {
-		nosound();
-		delay(wait);
+		mydisplay->audio_silence(wait);
 	}
 
 	/* Drums */
@@ -50,24 +46,14 @@ void pcSpeakerPlayNote(musicalNote note, musicSettings settings)
 
 		/* Loop through each drum cycle */
 		for (i = 0; i < DRUMCYCLES; i++) {
-			sound(drums[note.index][i]);
-			delay(DRUMBREAK);
+                        mydisplay->audio_square(drums[note.index][i], DRUMBREAK);
 		}
-		nosound();
 
 		/* Add a break based on the current duration */
-		if( drumbreaktime > 0 ) {
-			delay(drumbreaktime);
-		}
+                mydisplay->audio_silence(drumbreaktime);
 	}
 
 	if (spacing != 0.0) {
-		nosound();
-		delay(spacing);
+                mydisplay->audio_silence(spacing);
 	}
-}
-
-void pcSpeakerFinish(void)
-{
-	nosound();
 }

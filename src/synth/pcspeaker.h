@@ -21,11 +21,9 @@
 #define PC_SPEAKER_H 1
 
 #include "notes.h"
+#include "../display/display.h"
 
 /* Play a single note. Program will halt until playback has finished. */
-void pcSpeakerPlayNote(musicalNote note, musicSettings settings);
-
-/* Call immediately after note playback to silence the speaker */
-void pcSpeakerFinish(void);
+void pcSpeakerPlayNote(displaymethod *mydisplay, musicalNote note, musicSettings settings);
 
 #endif

@@ -28,6 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <conio.h>
+#include <math.h>
 
 #include <sys/nearptr.h>
 #include <sys/farptr.h>
@@ -380,6 +381,29 @@ static void write_palette(const palette *pal) {
         }
 }
 
+static void present() {
+        // Nothing to do: DOS display buffer is always presented
+}
+
+static bool open_audio() {
+        return true;  // On DOS there's nothing to open
+}
+
+static void close_audio() {
+        nosound();
+}
+
+static void audio_square(float frequency, int duration) {
+        int rounded_freq = (int)roundf(frequency);
+        sound(frequency);
+        delay(duration);
+}
+
+static void audio_silence(int duration) {
+        nosound();
+        delay(duration);
+}
+
 
 displaymethod display_dos =
 {
@@ -402,5 +426,12 @@ displaymethod display_dos =
 	display_dos_update,
         write_charset,
         write_palette,
+        present,
+
+        open_audio,
+        close_audio,
+        audio_square,
+        audio_silence,
+
 	NULL,
 };

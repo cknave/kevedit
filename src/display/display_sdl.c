@@ -107,12 +107,19 @@ static void sdl_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 dept
 	vdest->write_x = 0;
 	vdest->write_y = 0;
 
+        // Get custom event ids
+        Uint32 event_base = SDL_RegisterEvents(2);
+        vdest->cursor_update_event = event_base;
+        vdest->note_buffer_empty_event = event_base + 1;
+
 	vdest->width  = width;
 	vdest->height = height;
 	vdest->depth  = depth;
 	vdest->is_fullscreen = false;
 	vdest->is_dirty = false;
         vdest->context = undefined;
+
+        notebuf_init(&vdest->audio_notebuf, 10);
 
 #ifdef MACOS
 	installTouchBar(vdest->window);
@@ -132,6 +139,8 @@ static void sdl_end(video_info *vdest)
 		free(display.dropped_file);
 		display.dropped_file = NULL;
 	}
+
+        notebuf_deinit(&vdest->audio_notebuf);
 
 	/* SDL should restore everything okay.. just use SDL_quit() when ready */
 }
@@ -441,7 +450,7 @@ static int shift;	/* Shift state */
 static Uint32 sdl_tick(Uint32 interval, void *blank)
 {
 	SDL_Event e;
-	e.type = SDL_USEREVENT;
+	e.type = info.cursor_update_event;
 	SDL_PushEvent(&e);
 	return interval;
 }
@@ -536,6 +545,9 @@ static int display_sdl_init()
 	cursor = CURSOR_VISIBLE;
 
 	start_cursor_timer();
+
+        // Initialize audio fields
+        info.audio_device_id = 0;
 
 	return 1;
 }
@@ -647,7 +659,7 @@ static int display_sdl_getkey()
 				break;
 		}
 	/* UserEvent means it's time to update the cursor */
-	} else if(event.type == SDL_USEREVENT) {
+	} else if(event.type == info.cursor_update_event) {
 		if(cursor == CURSOR_HIDDEN) {
 			cursor = CURSOR_VISIBLE;
 		} else if(cursor == CURSOR_VISIBLE) {
@@ -928,6 +940,278 @@ static void display_sdl_set_palette(const palette *pal) {
         sdl_update_and_present(&info, 0, 0, 80, 25);
 }
 
+static void display_sdl_present() {
+        sdl_present(&info, NULL);
+}
+
+
+//
+// Audio
+//
+
+static void sdl_audio_callback(void *userdata, Uint8 *stream, int len)
+{
+        video_info *vi = (video_info *)userdata;
+        notebuf_t *nb = &vi->audio_notebuf;
+        double sample_duration = 1.0f / (double)vi->audio_spec.freq;
+        int samples = len / (int)vi->audio_frame_size;
+        double buffer_duration = (double)samples * sample_duration;
+
+        while(samples > 0) {
+                double time_remaining = (double)samples * sample_duration;
+
+                // Out of notes: fill with silence
+                if(nb->length == 0) {
+                        memset(stream, vi->audio_spec.silence,
+                               samples * vi->audio_frame_size);
+                        // Return without signaling for more notes to prevent spamming the event
+                        // buffer for every callback with an empty note buffer
+                        return;
+                }
+
+                // 0 Hz: silence
+                if(nb->notes[0].frequency == 0) {
+                        double duration = MIN(time_remaining, nb->notes[0].duration);
+                        double time_advanced;
+                        notebuf_subtract_result_t res = notebuf_subtract_from_first(
+                                nb, duration, &time_advanced);
+                        int samples_advanced = MIN((int)ceil(time_advanced / sample_duration),
+                                                   samples);
+                        size_t bytes_advanced = samples_advanced * vi->audio_frame_size;
+                        memset(stream, vi->audio_spec.silence,
+                               bytes_advanced);
+                        if(res == NOTEBUF_DELETED) {
+                                // Prev function advanced to the next note
+                                samples -= samples_advanced;
+                                stream += bytes_advanced;
+                                vi->audio_curr_note_time = 0.0f;
+                                continue;
+                        } else {
+                                // We filled the rest of the buffer with silence
+                                vi->audio_curr_note_time += time_remaining;
+                                // Break out of the sample writing loop
+                                break;
+                        }
+                }
+
+                // Calculate what part of the cycle we're in
+                double full_cycle = 1.0 / (double)nb->notes[0].frequency;
+                double half_cycle = full_cycle / 2.0f;
+                double next_half_cycle = floor(vi->audio_curr_note_time /
+                        half_cycle) * half_cycle + half_cycle;
+                if(next_half_cycle == vi->audio_curr_note_time) {
+                        // Break glass in case of infinite loop
+                        next_half_cycle = vi->audio_curr_note_time + sample_duration;
+                }
+
+                // Calculate how many samples to copy: either the end of the half-cycle, the end
+                // of the note, or the end of the buffer.
+                double half_cycle_remaining = MIN(
+                        next_half_cycle - vi->audio_curr_note_time, time_remaining);
+                double time_advanced;
+                notebuf_subtract_result_t res = notebuf_subtract_from_first(
+                        nb, half_cycle_remaining, &time_advanced);
+
+                // Copy the high or low audio frame for this half-cycle
+                audio_sample_t *src;
+                if(fmod(vi->audio_curr_note_time, full_cycle) < half_cycle) {
+                        src = vi->low_and_high_frames[0];
+                } else {
+                        src = vi->low_and_high_frames[1];
+                }
+                int samples_advanced = (int)ceil(time_advanced / sample_duration);
+                for(int i = 0; i < samples_advanced; i++) {
+                        memcpy(stream, src, vi->audio_frame_size);
+                        stream += vi->audio_frame_size;
+                }
+                samples -= samples_advanced;
+                vi->audio_curr_note_time += samples_advanced * sample_duration;
+
+                // If we advanced to the next note, reset the note time
+                if(res == NOTEBUF_DELETED) {
+                        vi->audio_curr_note_time = 0;
+                }
+        }
+
+        // If there aren't enough notes to fill the next buffer, signal for more
+        if(nb->total_duration < buffer_duration) {
+                SDL_Event e;
+                e.type = info.note_buffer_empty_event;
+                SDL_PushEvent(&e);
+        }
+}
+
+static void sdl_init_low_and_high_frames(video_info *info, SDL_AudioSpec *spec) {
+        size_t sample_size = SDL_AUDIO_BITSIZE(info->audio_spec.format) / 8;
+        info->audio_frame_size = sample_size * info->audio_spec.channels;
+        memset(info->low_and_high_frames, info->audio_spec.silence,
+               sizeof(info->low_and_high_frames));
+
+        // Convert low and high amplitude to requested sample format
+        const float amplitude = 0.2f;
+        audio_sample_t low, high;
+        switch(spec->format) {
+                case AUDIO_U8:
+                        low.u8 =  (uint8_t)(128.0f - amplitude*128);
+                        high.u8 = (uint8_t)(128.0f + amplitude*127);
+                        break;
+                case AUDIO_S8:
+                        low.s8 = (int8_t)(-amplitude*128);
+                        high.s8 = (int8_t)(amplitude*127);
+                        break;
+                case AUDIO_S16SYS:
+                        low.s16 = (int16_t)(-amplitude*32768);
+                        high.s16 = (int16_t)(amplitude*32767);
+                        break;
+                case AUDIO_F32SYS:
+                        low.f32 = -amplitude;
+                        high.f32 = amplitude;
+                        break;
+        }
+
+        // Channel indexes defined by SDL.
+        int channel1_idx, channel2_idx;
+        if(spec->channels == 1) {
+                channel1_idx = 0;
+                channel2_idx = -1;
+        } else if(spec->channels < 5) {
+                // For stereo, 2.1, and quadraphonic, use the front left/right channels
+                channel1_idx = 0;
+                channel2_idx = 1;
+        } else {
+                // For systems with a center channel, use that only
+                channel1_idx = 2;
+                channel2_idx = -1;
+        }
+        memcpy((uint8_t *)info->low_and_high_frames[0] + channel1_idx * sample_size, &low.u8, sample_size);
+        memcpy((uint8_t *)info->low_and_high_frames[1] + channel1_idx * sample_size, &high.u8, sample_size);
+        if(channel2_idx != -1) {
+                memcpy((uint8_t *)info->low_and_high_frames[0] + channel2_idx * sample_size, &low.u8, sample_size);
+                memcpy((uint8_t *)info->low_and_high_frames[1] + channel2_idx * sample_size, &high.u8, sample_size);
+        }
+}
+
+
+static bool display_sdl_open_audio() {
+        SDL_AudioSpec desired, obtained;
+
+        if (!SDL_WasInit(SDL_INIT_AUDIO)) {
+                /* If the audio subsystem isn't ready, initialize it */
+                if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+                        fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+                        return false;
+                }
+        }
+
+        /* Set desired sound opts */
+        memset(&desired, 0, sizeof(SDL_AudioSpec));
+        desired.freq = 48000;
+        desired.format = AUDIO_S16SYS;
+        desired.channels = 1;
+        desired.samples = 2400;
+        desired.callback = sdl_audio_callback;
+        desired.userdata = &info;
+
+        /* Open audio device, optimistically accepting all format changes */
+        info.audio_device_id = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE);
+        if (info.audio_device_id == 0) {
+                fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+                return false;
+        }
+        /* Make sure we can actually support whatever we got */
+        bool spec_ok = true;
+        switch(obtained.format) {
+                case AUDIO_U8:
+                case AUDIO_S8:
+                case AUDIO_S16SYS:
+                case AUDIO_F32SYS:
+                        break;
+                default:
+                        spec_ok = false;
+        }
+        if(obtained.channels > MAX_AUDIO_CHANNELS) {
+                spec_ok = false;
+        }
+        if(!spec_ok) {
+                /* Nope, close the device and let SDL do the conversion for us. */
+                SDL_CloseAudioDevice(info.audio_device_id);
+                info.audio_device_id = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
+                if (info.audio_device_id == 0) {
+                        fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+                        return false;
+                }
+        }
+        info.audio_spec = obtained;
+        sdl_init_low_and_high_frames(&info, &obtained);
+        notebuf_clear(&info.audio_notebuf);
+        info.audio_curr_note_time = 0.0f;
+        return true;
+}
+
+static void display_sdl_close_audio() {
+        // If there are still notes in the buffer, wait until it's drained
+        while(info.audio_notebuf.total_duration > 0) {
+                SDL_Delay(1);
+        }
+        SDL_Delay(
+                (int)(1000.0f * (float)info.audio_spec.samples / (float)info.audio_spec.freq));
+
+        /* Silence, close the audio, and clean up the memory we used. */
+        SDL_PauseAudioDevice(info.audio_device_id, 1);
+        SDL_CloseAudioDevice(info.audio_device_id);
+        info.audio_device_id = 0;
+}
+
+static void wait_until_keypress(int duration) {
+        const Uint32 poll_interval = 1;  // milliseconds
+
+        // Wait for an event for the duration
+        Uint32 start = SDL_GetTicks();
+        do {
+                // We have to store events somewhere, even if we don't care about their contents
+                SDL_Event event;
+                // Stop waiting if the note buffer is empty: the caller needs to load more notes!
+                Uint32 event_id = info.note_buffer_empty_event;
+                if(SDL_PeepEvents(&event, 1, SDL_GETEVENT, event_id, event_id) > 0) {
+                        break;
+                }
+                // Check if there are keyboard/quit events without removing them from the queue
+                if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_KEYDOWN, SDL_KEYDOWN)) {
+                        break;
+                }
+                if(SDL_PeepEvents(&event, 1, SDL_PEEKEVENT, SDL_QUIT, SDL_QUIT)) {
+                        break;
+                }
+                // Poll often so we have time to refill the audio buffer before the next callback
+                SDL_Delay(poll_interval);
+                // PeepEvents doesn't put more events on the queue by itself
+                SDL_PumpEvents();
+        } while(SDL_GetTicks() - start < duration);
+}
+
+static void display_sdl_audio_square(float frequency, int duration) {
+        SDL_LockAudioDevice(info.audio_device_id);
+        notebuf_push_back(&info.audio_notebuf, (notebuf_note_t) {
+                .frequency = frequency,
+                .duration = (float)duration / 1000.0f,
+        });
+        SDL_UnlockAudioDevice(info.audio_device_id);
+        // If there aren't enough notes to fill a buffer yet, return immediately so that more
+        // notes can be added
+        float time_needed = (float)info.audio_spec.samples * 1.0f/((float)info.audio_spec.freq);
+        if(info.audio_notebuf.total_duration < time_needed) {
+                return;
+        }
+        SDL_PauseAudioDevice(info.audio_device_id, 0);
+        wait_until_keypress(duration);
+}
+
+static void display_sdl_audio_silence(int duration) {
+        // Using 0 Hz as silence
+        display_sdl_audio_square(0, duration);
+}
+
+
 displaymethod display_sdl =
 {
 	NULL,
@@ -948,5 +1232,12 @@ displaymethod display_sdl =
 	display_sdl_update,
         display_sdl_set_charset,
         display_sdl_set_palette,
-	NULL,
+        display_sdl_present,
+
+	display_sdl_open_audio,
+        display_sdl_close_audio,
+        display_sdl_audio_square,
+        display_sdl_audio_silence,
+
+        NULL
 };

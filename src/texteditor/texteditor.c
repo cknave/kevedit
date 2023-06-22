@@ -40,7 +40,7 @@
 
 #include "themes/theme.h"
 
-#include "synth/synth.h"
+#include "synth/pcspeaker.h"
 #include "synth/zzm.h"
 
 #include "display/display.h"
@@ -65,7 +65,7 @@ void texteditCursorLeft(texteditor * editor);
 void texteditCursorRight(texteditor * editor);
 int texteditHelpZOC(texteditor * editor);
 
-void texteditZZMPlay(texteditor * editor, int slurflag);
+void texteditZZMPlay(texteditor * editor, int slurflag, displaymethod *d);
 int texteditZZMLoad(texteditor * editor);
 int texteditZZMRip(texteditor * editor);
 
@@ -422,12 +422,12 @@ int texteditHandleEditKey(texteditor * editor)
 		/********* ZZM Testing ********************/
 		case DKEY_CTRL_T:
 			/* Play slurred music */
-			texteditZZMPlay(editor, 1);
+			texteditZZMPlay(editor, 1, editor->d);
 			break;
 
 		case DKEY_ALT_T:
 			/* Play music with slight break between notes */
-			texteditZZMPlay(editor, 0);
+			texteditZZMPlay(editor, 0, editor->d);
 			break;
 
 		/********* File access operations *********/
@@ -633,7 +633,7 @@ int texteditHelpZOC(texteditor * editor)
  *
  * @param slurflag  Slur notes together when true (ZZT-style).
  */
-void texteditZZMPlay(texteditor * editor, int slurflag)
+void texteditZZMPlay(texteditor * editor, int slurflag, displaymethod *d)
 {
 	/** @TODO: do a damn good job of testing music */
 	/* Idea: create a copy of *editor so that we can mess around with curline and
@@ -653,19 +653,13 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 
 	int done;
 
-#ifdef SDL
-	SDL_AudioSpec spec;
-	SDL_AudioDeviceID audioid;
-#endif
-
 	/* Display everything, in case the editor has not been displayed recently. */
 	view->updateflags |= TUD_ALL;
 
-#ifdef SDL
 	/* IF opening the audio device fails, return now before we crash something. */
-	if (OpenSynth(&audioid, &spec))
+	if(!d->open_audio()) {
 		return;
-#endif
+        }
 
 	done = 0;
 
@@ -698,11 +692,7 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 
 					note = zzmGetNote(tune, note);
 
-#ifdef DOS
-					pcSpeakerPlayNote(note, settings);
-#elif defined SDL
-					SynthPlayNote(spec, note, settings);
-#endif
+					pcSpeakerPlayNote(d, note, settings);
 				}
 			}
 		}
@@ -710,19 +700,15 @@ void texteditZZMPlay(texteditor * editor, int slurflag)
 
 		/* Re-display edit area since the current line has changed. */
 		view->updateflags |= TUD_EDITAREA;
+                // Since we're inside a loop that's not calling getch(), the display buffer won't
+                // automatically be presented after we redraw the text editor.
+                if(view->curline != NULL) {
+                        texteditUpdateDisplay(view);
+                        d->present();
+                }
 	}
 
-#ifdef SDL
-	/* TODO: instead of just sitting here, display the progress of playback */
-	/* Wait until the music is done or the user presses a key */
-	while (!IsSynthBufferEmpty() && view->d->getkey() == DKEY_NONE) {
-		SDL_Delay(10);
-	}
-
-	CloseSynth(&audioid);
-#elif defined DOS
-	pcSpeakerFinish();
-#endif
+	d->close_audio();
 
 	/* No need to free the view, it only exists on the stack. */
 

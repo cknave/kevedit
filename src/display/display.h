@@ -21,6 +21,7 @@
 #define DISPLAY_H 1
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "charset.h"
 #include "keys.h"
@@ -89,6 +90,25 @@ typedef struct displaymethod {
 
         /* Copy this palette to the display's palette. */
         void (*set_palette)(const palette *palette);
+
+        /* Present the current display buffer to screen.
+         *
+         * This is not normally needed unless inside a loop where getch() is not called.
+         */
+        void (*present)();
+
+        /* Open the audio device */
+        bool (*open_audio)();
+
+        /* Close the audio device */
+        void (*close_audio)();
+
+        /* Audio: play a square wave at this frequency (Hz) and wait for a duration (milliseconds).
+         * Note: audio will continue playing after this function returns. */
+        void (*audio_square)(float frequency, int duration);
+
+        /* Audio: play silence and wait for a duration (milliseconds). */
+        void (*audio_silence)(int duration);
 
         /** Path of the last file drop event. */
 	char *dropped_file;
