@@ -50,6 +50,10 @@ typedef struct
 	Uint32 write_x;                /* Current x write position in VRAM    */
 	Uint32 write_y;                /* Current y write position in VRAM    */
 
+        /* Custom event ids */
+        Uint32 cursor_update_event;
+        Uint32 note_buffer_empty_event;
+
 	/* Info for reinitializing the screen  */
 	Uint32 width, height, depth, vflags;
 
