@@ -136,7 +136,11 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 			default:
 				/* Keys outside the standard ASCII range are returned for
 				 * consideration by the calling function */
-				if (key < 0x20 || key > 0x7E) {
+				/* NOTE: Turning this into is_literal_key wouldn't work because
+				   toupper etc have no idea of what cp437-specific letters are,
+				   e.g. that the cp437 equivalent of æ, when uppercased, is Æ.
+				   This is a known limitation -KM */
+				if (!is_ascii_key(key)) {
 					*position = pos;
 					return key;
 				}

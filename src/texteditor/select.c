@@ -127,7 +127,7 @@ void texteditHandleSelection(texteditor * editor)
 	editor->selectflag = editor->d->shift();
 
 	/* Except that shift + ASCII key does not start selection mode */
-	if (editor->key < 0x7F)
+	if (is_literal_key(editor->key))
 		editor->selectflag = 0;
 
 	/* If we just started selecting, remember current position */

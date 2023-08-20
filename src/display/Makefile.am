@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = 1.6.3
 noinst_LIBRARIES = libdisplay.a
 
 libdisplay_a_SOURCES = display.c display.h display_stdio.c display_stdio.h \
-	textblock.c textblock.h \
+	textblock.c textblock.h unicode.c unicode.h\
 	keys.h colours.h
 
 OPTIONAL_SRC = display_sdl.c display_sdl.h display_dos.c display_dos.h

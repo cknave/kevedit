@@ -29,6 +29,7 @@
 
 #include "display.h"
 #include "display_sdl.h"
+#include "unicode.h"
 
 #ifdef MACOS
 #include "../kevedit/macos.h"
@@ -599,6 +600,9 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 	vdest->is_dirty = false;
         vdest->context = undefined;
 
+    /* Initialize Unicode conversion and table */
+    init_unicode_conversion();
+
 #ifdef MACOS
 	installTouchBar(vdest->window);
 #endif
@@ -1078,10 +1082,15 @@ int display_sdl_getkey()
 
 	/* Preemptive stuff */
 	if(event.type == SDL_TEXTINPUT) {
-		/* TODO: Support Unicode (-> CP437) characters? */
 		if (event.text.text[0] >= 32 && event.text.text[0] < 127) {
 			return event.text.text[0];
 		} else {
+			/* Try to convert Unicode to CP437 */
+			unsigned char CP437_char = get_CP437_from_UTF8(event.text.text);
+
+			if (CP437_char != 0) {
+				return CP437_char;
+			}
 			return DKEY_NONE;
 		}
 	} else if(event.type == SDL_KEYDOWN) {
@@ -1292,7 +1301,7 @@ int display_sdl_getkey()
 		}
 	}
 
-	return event.key.keysym.sym < 32 || event.key.keysym.sym >= 127 ? event.key.keysym.sym : DKEY_NONE;
+	return is_literal_key(event.key.keysym.sym) ? DKEY_NONE : event.key.keysym.sym;
 }
 
 int display_sdl_getch_with_context(enum displaycontext context) {

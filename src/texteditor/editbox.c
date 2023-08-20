@@ -397,7 +397,7 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 						break;
 				}
 
-				if (key > 32 && key < 127 && !selectFlag) {
+				if (is_literal_key(key) && !selectFlag) {
 					/* printable characters, except space */
 					loopstr = centerstr;
 					do {
@@ -412,7 +412,9 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 								continue;
 							if (loopstr->s[0] == '!' && strlen(loopstr->s) >= 2)
 								tmpstr = loopstr->s + 1;
-							if (toupper(tmpstr[0]) == toupper(key)) {
+							// toupper doesn't know about CP437-specific keys.
+							if (is_ascii_key(key) &&
+								(toupper(tmpstr[0]) == toupper(key))) {
 								centerstr = loopstr;
 								if (pos > strlen(centerstr->s))
 									pos = strlen(centerstr->s);
@@ -1013,8 +1015,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 
 		/* if the shift key is not still held down and we are selecting,
 		 * then stop select mode */
-		/* also stop if true ASCII key was pressed and selection is active */
-		if ((!selectFlag && selPos != -1) || (key < 0x7F && selPos != -1)) {
+		/* also stop if true literal key was pressed and selection is active */
+		if ((!selectFlag && selPos != -1) || (is_literal_key(key) && selPos != -1)) {
 			selPos = -1;
 			selLineOffset = 0;
 			updateflags |= U_EDITAREA;
