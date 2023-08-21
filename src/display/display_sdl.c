@@ -1248,6 +1248,13 @@ int display_sdl_getkey()
 	}
 	/* Alt is down */
 	else if(event.key.keysym.mod & KMOD_ALT) {
+		/* Check for AltGr on international keyboards. AltGr
+		   combos should not be considered as hotkeys; instead
+		   they should give modified characters. */
+		if (SDL_GetModState() && KMOD_MODE) {
+			return DKEY_NONE;
+		}
+
 		switch(event.key.keysym.sym) {
 			case DKEY_LEFT:
 				event.key.keysym.sym = DKEY_ALT_LEFT;
