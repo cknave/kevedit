@@ -1,5 +1,5 @@
 /* unicode.h    -- Unicode to CP437 lookup table
- * $Id: display.h,v 1.0 2023/08/30 18:58:49 kristomu Exp $
+ * $Id: unicode.h,v 1.0 2023/08/30 18:58:49 kristomu Exp $
  * Copyright (C) 2023 Kristofer Munsterhjelm <kristofer@munsterhjelm.no>
  *
  * This program is free software; you can redistribute it and/or modify
