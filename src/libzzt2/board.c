@@ -815,7 +815,7 @@ void zztBoardSetMessage(ZZTworld *world, char *message)
 	strncpy((char *)world->boards[world->cur_board].info.message, message, ZZT_MESSAGE_SIZE);
 	world->boards[world->cur_board].info.message[ZZT_MESSAGE_SIZE] = '\0';
 }
-void zztBoardSetTimelimit(ZZTworld *world, uint16_t timelimit)
+void zztBoardSetTimelimit(ZZTworld *world, int16_t timelimit)
 {
 	world->boards[world->cur_board].info.timelimit = timelimit;
 }
@@ -869,7 +869,7 @@ uint8_t *zztBoardGetMessage(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.message;
 }
-uint16_t zztBoardGetTimelimit(ZZTworld *world)
+int16_t zztBoardGetTimelimit(ZZTworld *world)
 {
 	return world->boards[world->cur_board].info.timelimit;
 }

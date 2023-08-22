@@ -28,7 +28,7 @@
 #include "libzzt2/zzt.h"
 #include "help/help.h"
 #include "dialog.h"
-
+#include "texteditor/editbox.h"
 #include "themes/theme.h"
 
 #include "display/display.h"
@@ -356,7 +356,7 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 		case BRDINFO_MAXSHOTS:
 			if (opt->text[0] == '0') /* If the number is zero */
 				opt->text[0] = '\x0';  /* Clear the text */
-            edit_result = dialogComponentEdit(d, opt, 3, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES);
+            edit_result = dialogComponentEdit(d, opt, 3, LINED_NUMBER);
 			if (edit_result == LINED_OK) {
 				int number;
 				sscanf(opt->text, "%d", &number);
@@ -381,7 +381,7 @@ int boardinfoeditoption(displaymethod * d, ZZTworld* myworld, dialogComponent* o
 				d->print(opt->x + 9, opt->y + 6, 0x00, "          ");
 			}
 
-			edit_result = dialogComponentEdit(d, opt, 5, LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES);
+			edit_result = dialogComponentEdit(d, opt, 5, LINED_NUMBER);
             if (edit_result == LINED_OK) {
 				long int timelimit;
 				sscanf(opt->text, "%ld", &timelimit);
@@ -417,27 +417,51 @@ int boardinfodeltaoption(displaymethod * d, ZZTworld* myworld, dialogComponent* 
 			return 1;
 
 		case BRDINFO_BRDNORTH:
-			if (info->board_n + delta <= zztWorldGetBoardcount(myworld) &&
-					info->board_n + delta >= 0)
+			if (info->board_n + delta >= zztWorldGetBoardcount(myworld) ) {
+				info->board_n = zztWorldGetBoardcount(myworld) - 1;
+			}
+			else if( info->board_n + delta < 0) {
+				info->board_n = 0;
+			}
+			else {
 				info->board_n += delta;
+			}
 			return 1;
 
 		case BRDINFO_BRDSOUTH:
-			if (info->board_s + delta <= zztWorldGetBoardcount(myworld) &&
-					info->board_s + delta >= 0)
+			if (info->board_s + delta >= zztWorldGetBoardcount(myworld) ) {
+				info->board_s = zztWorldGetBoardcount(myworld) - 1;
+			}
+			else if( info->board_s + delta < 0) {
+				info->board_s = 0;
+			}
+			else {
 				info->board_s += delta;
+			}
 			return 1;
 
 		case BRDINFO_BRDEAST:
-			if (info->board_e + delta <= zztWorldGetBoardcount(myworld) &&
-					info->board_e + delta >= 0)
+			if (info->board_e + delta >= zztWorldGetBoardcount(myworld) ) {
+				info->board_e = zztWorldGetBoardcount(myworld) - 1;
+			}
+			else if( info->board_e + delta < 0) {
+				info->board_e = 0;
+			}
+			else {
 				info->board_e += delta;
+			}
 			return 1;
 
 		case BRDINFO_BRDWEST:
-			if (info->board_w + delta <= zztWorldGetBoardcount(myworld) &&
-					info->board_w + delta >= 0)
+			if (info->board_w + delta >= zztWorldGetBoardcount(myworld) ) {
+				info->board_w = zztWorldGetBoardcount(myworld) - 1;
+			}
+			else if( info->board_w + delta < 0) {
+				info->board_w = 0;
+			}
+			else {
 				info->board_w += delta;
+			}
 			return 1;
 
 		default:
@@ -492,26 +516,34 @@ int boardinfostaroption(ZZTworld* myworld, dialogComponent* opt)
 #define WLDINFO_ECYCLES    8
 #define WLDINFO_TIMEPASSED 9
 #define WLDINFO_ISSAVED    10
-#define WLDINFO_FLAGS      11
+#define WLDINFO_CHARSET    11
+#define WLDINFO_PALETTE    12
+#define WLDINFO_FLAGS      13
 
 void drawstaticworldinfo(displaymethod* d);
-void drawworldinfo(ZZTworld* myworld, displaymethod* d);
+void drawworldinfo(ZZTworld* myworld, keveditor *myeditor);
 int worldinfoeditoption(int curoption, ZZTworld* myworld,
-		int cursorx, int cursory, displaymethod* d);
+		int cursorx, int cursory, keveditor *myeditor);
 int worldinfodirectionoption(int curoption, ZZTworld* myworld,
-		int cursorx, int cursory, int dir, displaymethod* d);
+		int cursorx, int cursory, int dir, keveditor *myeditor);
 void worldinfotogglekey(ZZTworld* myworld, int whichkey);
 int editworldflags(ZZTworld* myworld, displaymethod* d);
+static int worldinfodeleteoption(int curoption, keveditor *myeditor);
+static void worldinfopickfile(int curoption, ZZTworld *myworld, int cursorx, int cursory,
+                              keveditor *myeditor, bool *quit);
 
 /* editworldinfo() - brings up dialog box for editing world info */
-int editworldinfo(ZZTworld* myworld, displaymethod* d)
+int editworldinfo(keveditor *myeditor)
 {
+        ZZTworld *myworld = myeditor->myworld;
+        displaymethod *d = myeditor->mydisplay;
+
 	int curoption = WLDINFO_NAME;
 	int cursorx, cursory;
 	int done = 0;
 
 	drawstaticworldinfo(d);
-	drawworldinfo(myworld, d);
+	drawworldinfo(myworld, myeditor);
 
 	cursorx = 31;
 
@@ -519,11 +551,7 @@ int editworldinfo(ZZTworld* myworld, displaymethod* d)
 	do {
 		/* Position the cursors */
 		cursory = curoption + 6;
-		if (curoption > WLDINFO_NAME)
-			cursory++;
 		if (curoption > WLDINFO_SCORE)
-			cursory++;
-		if (curoption > WLDINFO_ISSAVED)
 			cursory++;
 
 		if (curoption == WLDINFO_FLAGS)
@@ -566,33 +594,38 @@ int editworldinfo(ZZTworld* myworld, displaymethod* d)
 			int result = 0;
 			switch (key) {
 				case DKEY_ENTER:
-					result = worldinfoeditoption(curoption, myworld, cursorx, cursory, d);
+					result = worldinfoeditoption(curoption, myworld, cursorx, cursory, myeditor);
 					break;
 
 				case DKEY_LEFT:
-					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, -10, d);
+					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, -10, myeditor);
 					break;
 
 				case '-':
-					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, -1, d);
+					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, -1, myeditor);
 					break;
 
 				case DKEY_RIGHT:
-					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, 10, d);
+					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, 10, myeditor);
 					break;
 
 				case '+':
-					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, 1, d);
+					result = worldinfodirectionoption(curoption, myworld, cursorx, cursory, 1, myeditor);
 					break;
 
 				case DKEY_F1:
 					helpsectiontopic("kwldinfo", NULL, d);
 					result = 1;
 					break;
-			}
+
+                                case DKEY_BACKSPACE:
+                                case DKEY_DELETE:
+                                        result = worldinfodeleteoption(curoption, myeditor);
+                                        break;
+                        }
 			if(result != 0) {
 				drawstaticworldinfo(d);
-				drawworldinfo(myworld, d);
+				drawworldinfo(myworld, myeditor);
 			}
 			if(result == DKEY_QUIT) {
 				done = 1;
@@ -611,7 +644,7 @@ int editworldinfo(ZZTworld* myworld, displaymethod* d)
 				case ' ':
 					worldinfotogglekey(myworld, cursorx - 31);
 					drawstaticworldinfo(d);
-					drawworldinfo(myworld, d);
+					drawworldinfo(myworld, myeditor);
 					break;
 			}
 		}
@@ -634,22 +667,25 @@ void drawstaticworldinfo(displaymethod* d)
 
 	d->print_discrete(13,  6, 0x0F, "      World Name:");
 
-	d->print_discrete(13,  8, 0x0A, "            Keys:");
-	d->print_discrete(13,  9, 0x0A, "            Ammo:");
-	d->print_discrete(13, 10, 0x0A, "            Gems:");
-	d->print_discrete(13, 11, 0x0A, "          Health:");
-	d->print_discrete(13, 12, 0x0A, "         Torches:");
-	d->print_discrete(13, 13, 0x0A, "           Score:");
+	d->print_discrete(13,  7, 0x0A, "            Keys:");
+	d->print_discrete(13,  8, 0x0A, "            Ammo:");
+	d->print_discrete(13,  9, 0x0A, "            Gems:");
+	d->print_discrete(13, 10, 0x0A, "          Health:");
+	d->print_discrete(13, 11, 0x0A, "         Torches:");
+	d->print_discrete(13, 12, 0x0A, "           Score:");
 
-	d->print_discrete(13, 15, 0x0A, "    Torch Cycles:");
-	d->print_discrete(13, 16, 0x0A, "Energizer Cycles:");
-	d->print_discrete(13, 17, 0x0A, "    Time Elapsed:");
-	d->print_discrete(13, 18, 0x0A, "   Is Saved Game:");
+	d->print_discrete(13, 14, 0x0A, "    Torch Cycles:");
+	d->print_discrete(13, 15, 0x0A, "Energizer Cycles:");
+	d->print_discrete(13, 16, 0x0A, "    Time Elapsed:");
+	d->print_discrete(13, 17, 0x0A, "   Is Saved Game:");
+        d->print_discrete(13, 18, 0x0A, "   Character Set:");
+        d->print_discrete(13, 19, 0x0A, "         Palette:");
 	d->print_discrete(23, 20, 0x0F, "Set/Clear Flags");
 }
 
-void drawworldinfo(ZZTworld* myworld, displaymethod* d)
+void drawworldinfo(ZZTworld* myworld, keveditor *myeditor)
 {
+        displaymethod *d = myeditor->mydisplay;
 	char buffer[10];    /* Buffer for translating numbers to strings */
 	int i;
 
@@ -659,34 +695,54 @@ void drawworldinfo(ZZTworld* myworld, displaymethod* d)
 	/* List the keys */
 	for (i = ZZT_KEY_BLUE; i <= ZZT_KEY_WHITE; i++) {
 		if (zztWorldGetKey(myworld, i) != 0) {
-			d->putch_discrete(31 + i, 8, '\x0C', 0x08 +  i + 1);
+			d->putch_discrete(31 + i, 7, '\x0C', 0x08 +  i + 1);
 		} else {
-			d->putch_discrete(31 + i, 8, '\x0A', 0x0F + ((i + 1) << 4));
+			d->putch_discrete(31 + i, 7, '\x0A', 0x0F + ((i + 1) << 4));
 		}
 	}
 
 	/* Inventory */
-	sprintf(buffer, "%d", zztWorldGetAmmo(myworld));     d->print_discrete(31,  9, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetGems(myworld));     d->print_discrete(31, 10, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetHealth(myworld));   d->print_discrete(31, 11, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetTorches(myworld));  d->print_discrete(31, 12, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetScore(myworld));    d->print_discrete(31, 13, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetAmmo(myworld));     d->print_discrete(31,  8, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetGems(myworld));     d->print_discrete(31,  9, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetHealth(myworld));   d->print_discrete(31, 10, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTorches(myworld));  d->print_discrete(31, 11, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetScore(myworld));    d->print_discrete(31, 12, 0x0B, buffer);
 
 	/* Misc */
-	sprintf(buffer, "%d", zztWorldGetTorchcycles(myworld));    d->print_discrete(31, 15, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetEnergizercycles(myworld));d->print_discrete(31, 16, 0x0B, buffer);
-	sprintf(buffer, "%d", zztWorldGetTimepassed(myworld));     d->print_discrete(31, 17, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTorchcycles(myworld));    d->print_discrete(31, 14, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetEnergizercycles(myworld));d->print_discrete(31, 15, 0x0B, buffer);
+	sprintf(buffer, "%d", zztWorldGetTimepassed(myworld));     d->print_discrete(31, 16, 0x0B, buffer);
 
 	/* Saved Game boolean */
-	d->print_discrete(31, 18, 0x0B, zztWorldGetSavegame(myworld) ? "Yes" : "No");
+	d->print_discrete(31, 17, 0x0B, zztWorldGetSavegame(myworld) ? "Yes" : "No");
+
+        /* Charset and palette paths */
+        struct { int y; char *path; } path_lines[] = {
+                {.y = 18, .path = myeditor->char_set ? myeditor->char_set->path : NULL },
+                {.y = 19, .path = myeditor->palette ? myeditor->palette->path : NULL },
+        };
+        for(i = 0; i < sizeof(path_lines) / sizeof(*path_lines); i++) {
+                int y = path_lines[i].y;
+                char *path = path_lines[i].path;
+                if(!path) {
+                        d->print_discrete(31, y, 0x07, "(default)           ");
+                } else {
+                        /* Clear out old file if we just changed it */
+                        d->print_discrete(31, y, 0x07, "                    ");
+                        char short_path[20];
+                        fileof(short_path, path, sizeof(short_path) - 1);
+                        d->print_discrete(31, y, 0x0b, short_path);
+                }
+        }
 
 	/* Update the display */
 	d->update(3, 3, 52, 19);
 }
 
 int worldinfoeditoption(int curoption, ZZTworld* myworld,
-		int cursorx, int cursory, displaymethod* d)
+		int cursorx, int cursory, keveditor *myeditor)
 {
+        displaymethod *d = myeditor->mydisplay;
 	int tempnum;
 	char buffer[35];
 	ZZTworldinfo * header = myworld->header;
@@ -714,52 +770,59 @@ int worldinfoeditoption(int curoption, ZZTworld* myworld,
 
 		case WLDINFO_AMMO:
 			tempnum = header->ammo;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->ammo = tempnum;
 			break;
 
 		case WLDINFO_GEMS:
 			tempnum = header->gems;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->gems = tempnum;
 			break;
 
 		case WLDINFO_HEALTH:
 			tempnum = header->health;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->health = tempnum;
 			break;
 
 		case WLDINFO_TORCHES:
 			tempnum = header->torches;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->torches = tempnum;
 			break;
 
 		case WLDINFO_SCORE:
 			tempnum = header->score;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->score = tempnum;
 			break;
 
 		case WLDINFO_TCYCLES:
 			tempnum = header->torchcycles;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->torchcycles = tempnum;
 			break;
 
 		case WLDINFO_ECYCLES:
 			tempnum = header->energizercycles;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->energizercycles = tempnum;
 			break;
 
 		case WLDINFO_TIMEPASSED:
 			tempnum = header->timepassed;
-			lined_result = line_editnumber(cursorx, cursory, 0x0f, &tempnum, 32767, d);
+			lined_result = line_editsnumber(cursorx, cursory, 0x0f, &tempnum, -32768, 32767, d);
 			header->timepassed = tempnum;
 			break;
-	}
+
+                case WLDINFO_CHARSET:
+                case WLDINFO_PALETTE: {
+                        bool quit = false;
+                        worldinfopickfile(curoption, myworld, cursorx, cursory, myeditor, &quit);
+                        break;
+                }
+        }
 
 	if(lined_result == LINED_OK)
 		return 1;
@@ -768,8 +831,7 @@ int worldinfoeditoption(int curoption, ZZTworld* myworld,
 	return 0;
 }
 
-int worldinfodirectionoption(int curoption, ZZTworld* myworld, int cursorx,
-														 int cursory, int dir, displaymethod* d)
+int worldinfodirectionoption(int curoption, ZZTworld* myworld, int cursorx, int cursory, int dir, keveditor *myeditor)
 {
 	ZZTworldinfo * header = myworld->header;
 
@@ -807,7 +869,7 @@ int worldinfodirectionoption(int curoption, ZZTworld* myworld, int cursorx,
 			return 1;
 
 		default:
-			return worldinfoeditoption(curoption, myworld, cursorx, cursory, d);
+			return worldinfoeditoption(curoption, myworld, cursorx, cursory, myeditor);
 	}
 }
 
@@ -884,6 +946,111 @@ int editworldflags(ZZTworld* myworld, displaymethod* d)
 		}
 	} while (!done);
 	return key;
+}
+
+int worldinfodeleteoption(int curoption, keveditor *myeditor) {
+        switch(curoption) {
+                case WLDINFO_CHARSET:
+                        // Restore the default character set
+                        if(myeditor->char_set != NULL) {
+                                charset_free(myeditor->char_set);
+                        }
+                        myeditor->char_set = NULL;
+                        myeditor->mydisplay->set_charset(&default_charset);
+                        return 1;
+
+                case WLDINFO_PALETTE:
+                        // Restore the default palette
+                        if(myeditor->palette != NULL) {
+                                palette_free(myeditor->palette);
+                        }
+                        myeditor->palette = NULL;
+                        myeditor->mydisplay->set_palette(&default_palette);
+                        return 1;
+
+                default:
+                        return 0;
+        }
+}
+
+void worldinfopickfile(int curoption, ZZTworld *myworld, int cursorx, int cursory,
+                       keveditor *myeditor, bool *quit) {
+        displaymethod *d = myeditor->mydisplay;
+
+        // Show the file picker for *.pal files (palette) or *.chr and *.com files (charset)
+        char *title;
+        stringvector extensions;
+        initstringvector(&extensions);
+        if(curoption == WLDINFO_CHARSET) {
+                pushstring(&extensions, "chr");
+                pushstring(&extensions, "com");
+                title = "Choose a Character Set File";
+        } else {
+                pushstring(&extensions, "pal");
+                title = "Choose a Palette File";
+        }
+        char *path = filedialog_multiext(".", &extensions, title, FTYPE_ALL, myeditor->mydisplay, quit);
+        removestringvector(&extensions);
+        if(*quit) {
+                return;
+        }
+
+        // Redraw the world info screen (was overwritten by file picker)
+        drawstaticworldinfo(d);
+        drawworldinfo(myworld, myeditor);
+        d->update(3, 4, 51, 19);
+
+        // If the user backed out, we're done
+        if(path == NULL) {
+                return;
+        }
+
+        // If they picked a file, try to load it
+        bool failed = false;
+        switch(curoption) {
+                case WLDINFO_CHARSET: {
+                        charset *result = charset_load(path);
+                        if(!result) {
+                                failed = true;
+                                break;
+                        }
+                        if(myeditor->char_set) {
+                                charset_free(myeditor->char_set);
+                        }
+                        myeditor->char_set = result;
+                        d->set_charset(result);
+                        break;
+                }
+                case WLDINFO_PALETTE: {
+                        palette *result = palette_load(path);
+                        if(!result) {
+                                failed = true;
+                                break;
+                        }
+                        if(myeditor->palette) {
+                                palette_free(myeditor->palette);
+                        }
+                        myeditor->palette = result;
+                        d->set_palette(result);
+                        break;
+                }
+        }
+
+        if(failed) {
+                // Show an error message on the current field
+                d->print_discrete(31, cursory, 0x0c, "Unable to load file!");
+                d->update(31, cursory, 20, 1);
+                d->cursorgo(cursorx, cursory);
+                int key = myeditor->mydisplay->getch();
+                if(key == DKEY_QUIT) {
+                        *quit = true;
+                        return;
+                }
+        }
+
+        // In either case, we need to redraw the content
+        drawworldinfo(myworld, myeditor);
+        d->update(3, 4, 51, 19);
 }
 
 void drawstaticflags(displaymethod * d)

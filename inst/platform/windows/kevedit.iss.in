@@ -3,21 +3,26 @@
 
 [Setup]
 AppName=KevEdit
-AppVerName=KevEdit @VERSION@
 AppPublisher=Kev Vance and Ryan Phillips
 AppPublisherURL=http://github.com/cknave/kevedit
 AppSupportURL=https://github.com/cknave/kevedit/issues
 AppUpdatesURL=https://github.com/cknave/kevedit/releases
-DefaultDirName={pf}\KevEdit
+AppVerName=KevEdit @VERSION@
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
+ChangesAssociations=yes
+DefaultDirName={autopf}\KevEdit
 DefaultGroupName=Games\ZZT
 InfoBeforeFile=Z:\work\kevedit\README.md
 OutputDir=Z:\dist
-ArchitecturesInstallIn64BitMode=x64
-ArchitecturesAllowed=x64
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=dialog
+
 ; Cosmetics
 WindowVisible=no
 WizardImageFile=Z:\platform\windows\install-big.bmp
 WizardSmallImageFile=Z:\platform\windows\install-small.bmp
+WizardStyle=modern
 
 [Files]
 Source: "Z:\work\AUTHORS.txt";  DestDir: "{app}"; Flags: ignoreversion
@@ -40,13 +45,17 @@ Filename: "{app}\kevedit.exe"; Description: "Launch kevedit"; WorkingDir: "{user
 
 [Registry]
 ; Associate KevEdit with ZZT worlds
-Root: HKCR; Subkey: ".zzt"; ValueType: string; ValueData: "zztfile"
-Root: HKCR; Subkey: ".sav"; ValueType: string; ValueData: "zztsave"; Flags: createvalueifdoesntexist
+Root: HKA; Subkey: "Software\Classes\.zzt\OpenWithProgids"; ValueType: string; ValueName: "KevEdit.zzt"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Classes\.sav\OpenWithProgids"; ValueType: string; ValueName: "KevEdit.sav"; ValueData: ""; Flags: uninsdeletevalue
 
-Root: HKCR; Subkey: "zztfile\Shell\KevEdit"; ValueType: string; ValueData: "KevEdit"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "zztfile\Shell\KevEdit\Command"; ValueType: string; ValueData: "{app}\kevedit.exe ""%1"""; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\KevEdit.zzt"; ValueType: string; ValueName: ""; ValueData: "ZZT World"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\KevEdit.sav"; ValueType: string; ValueName: ""; ValueData: "ZZT Save"; Flags: uninsdeletekey
 
-Root: HKCR; Subkey: "zztsave\Shell"; ValueType: string; ValueData: "KevEdit"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "zztsave\Shell\KevEdit"; ValueType: string; ValueData: "KevEdit"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "zztsave\Shell\KevEdit\Command"; ValueType: string; ValueData: "{app}\kevedit.exe ""%1"""; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\KevEdit.zzt\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\kevedit.exe,0"
+Root: HKA; Subkey: "Software\Classes\KevEdit.sav\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\kevedit.exe,0"
 
+Root: HKA; Subkey: "Software\Classes\KevEdit.zzt\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\kevedit.exe"" ""%1"""
+Root: HKA; Subkey: "Software\Classes\KevEdit.sav\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\kevedit.exe"" ""%1"""
+
+Root: HKA; Subkey: "Software\Classes\Applications\kevedit.exe\SupportedTypes"; ValueType: string; ValueName: ".zzt"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\kevedit.exe\SupportedTypes"; ValueType: string; ValueName: ".sav"; ValueData: ""

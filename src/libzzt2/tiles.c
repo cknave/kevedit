@@ -224,15 +224,15 @@ const uint8_t _zzt_display_char_line_table[] = {
  * references equal to start will be reset to their default value. */
 void _zzt_relink_param(ZZTparam * param, int start)
 {
-	if (param->leaderindex > start && param->leaderindex != 0xFFFF)
+	if (param->leaderindex > start && param->leaderindex != -1)
 		param->leaderindex--;
 	else if (param->leaderindex == start)
-		param->leaderindex = 0xFFFF;
+		param->leaderindex = -1;
 
-	if (param->followerindex > start && param->followerindex != 0xFFFF)
+	if (param->followerindex > start && param->followerindex != -1)
 		param->followerindex--;
 	else if (param->followerindex == start)
-		param->followerindex = 0xFFFF;
+		param->followerindex = -1;
 
 	if (param->bindindex > start)
 		param->bindindex--;
@@ -559,18 +559,16 @@ int zztPlotPlayer(ZZTworld * world, int x, int y)
 {
 	ZZTboard* brd = zztBoardGetCurPtr(world);
 
-	/* Simple case */
-	if (x == brd->plx && y == brd->ply)
-		return 1;
-
 	/* Error if board cannot be decompressed */
 	if (!zztBoardDecompress(brd))
 		return 0;
 
-	zztTileMove(brd->bigboard, brd->plx, brd->ply, x, y);
+	if (x != brd->plx || y != brd->ply)
+		zztTileMove(brd->bigboard, brd->plx, brd->ply, x, y);
 
 	/* Record the change */
 	brd->plx = x; brd->ply = y;
+	zztTileAt(brd->bigboard, x, y).type = ZZT_PLAYER;
 
 	return 1;
 }
@@ -716,18 +714,18 @@ uint8_t zztLoneTileGetDisplayChar(ZZTtile tile)
 	switch (tile.type) {
 		case ZZT_TRANSPORTER:
 			if (tile.param == NULL) break;
-			if (tile.param->xstep == 0xFFFF) return '<';
-			if (tile.param->xstep == 0x0001) return '>';
-			if (tile.param->ystep == 0xFFFF) return '^';
+			if (tile.param->xstep == -1) return '<';
+			if (tile.param->xstep == 1) return '>';
+			if (tile.param->ystep == -1) return '^';
 			return 'v';
 		case ZZT_OBJECT:
 			if (tile.param == NULL) break;
 			return tile.param->data[0];
 		case ZZT_PUSHER:
 			if (tile.param == NULL) break;
-			if (tile.param->xstep == 0xFFFF) return 17;
-			if (tile.param->xstep == 0x0001) return 16;
-			if (tile.param->ystep == 0xFFFF) return 30;
+			if (tile.param->xstep == -1) return 17;
+			if (tile.param->xstep == 1) return 16;
+			if (tile.param->ystep == -1) return 30;
 			return 31;
 	}
 

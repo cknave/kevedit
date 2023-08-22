@@ -1,9 +1,9 @@
-FROM alpine:3.11
+FROM alpine:3.17.2
 ARG MAKE_OPTS=-j12
-ARG SDL_VERSION
 
 RUN apk add --no-cache autoconf automake build-base cdrkit gzip libtool linux-headers pkgconf zip
 
+ARG SDL_VERSION
 COPY vendor/SDL2-${SDL_VERSION}.tar.gz /tmp/
 RUN cd /tmp \
  && tar xzf SDL2-${SDL_VERSION}.tar.gz \

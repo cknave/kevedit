@@ -1,3 +1,37 @@
+Next Release
+------------
+
+1.2.0
+-----
+Support loading custom character sets and palettes
+Upgrade to SDL 2.26.4 in binary releases
+Add arm64 support to macOS binaries
+Windows installer supports non-administrative installs
+Change R key to reverse colors instead of run the game
+Use ctrl-arrows to switch to linked boards
+Use ctrl-pgup/pgdn to switch to the board 1 page up or down
+
+
+1.1.3
+-----
+Fix flood fill over objects with no stats
+
+1.1.2
+-----
+Support signed values in stats editor
+Fix incorrect labels for bullets/stars in stats editor
+Fix plotting the player when moving stat 0
+Fix clicking when testing sounds on Windows when non-U16 audio formats are used
+Upgrade to SDL 2.0.14 for binary packages
+
+1.1.1
+-----
+Fix bounds checking with left/right/plus/minus board link selector
+Fix -/+ keys not doing anything in param editor
+Make firing rate show up as a slider in param editor
+Don't show unused owner param for stars in param editor
+Fix fill not honoring default colour mode
+
 1.1.0
 -----
 Fix a crash moving boards

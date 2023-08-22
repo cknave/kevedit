@@ -28,6 +28,6 @@
 int editboardinfo(ZZTworld* myworld, displaymethod* d);
 
 /* editworldinfo() - brings up dialog box for editing world info */
-int editworldinfo(ZZTworld* myworld, displaymethod* d);
+int editworldinfo(keveditor *myeditor);
 
 #endif

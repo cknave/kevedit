@@ -52,8 +52,31 @@ static int vshift; /* virtual shift (toggled by DKEY_SHIFT_TOGGLE) */
 /* Virtual shift toggle key */
 #define DKEY_SHIFT_TOGGLE DKEY_F12
 
-/* Prototype needed by display_dos_init */
+/* Address character set is mapped to after calling map_charset_mem() */
+#define CHARGEN_RAM (0xa0000)
+
+/* Size of each character in CHARSET_ADDR */
+#define CHARGEN_CHARACTER_SIZE (32)
+
+/* Stash the original charset to be restored on exit */
+static charset *original_charset;
+
+/* Stash the original palette to be restored on exit */
+static palette *original_palette;
+
+/* EGA textmode color -> VGA palette index (Kliewer 1990, p. 202)
+ * http://vtda.org/books/Computing/Programming/EGA-VGA-ProgrammersReferenceGuide2ndEd_BradleyDyckKliewer.pdf
+ */
+static const int vga_palette_map[16] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07,
+        0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+};
+
 int display_dos_getch();
+static charset *read_current_charset();
+static void write_charset(const charset *char_set);
+static palette *read_current_palette();
+static void write_palette(const palette *pal);
 
 void release_time_slice()
 {
@@ -111,7 +134,11 @@ int kb_isr()
 
 int display_dos_init()
 {
-	__dpmi_regs r;
+        /* make a copy of the current charset and palette to be restored on display_dos_end */
+        original_palette = read_current_palette();
+        original_charset = read_current_charset();
+
+        __dpmi_regs r;
 	/* Set char-smashed-together mode */
 	r.x.ax = 0x1201;
 	r.h.bl = 0x30;
@@ -146,7 +173,7 @@ int display_dos_init()
 
 	/* flush the keystroke buffer just in case */
 	while (kbhit()) display_dos_getch();
-	
+
 	return -1;
 }
 
@@ -159,6 +186,9 @@ void display_dos_end()
 	__dpmi_int(0x10, &r);
 	r.x.ax = 0x0003;
 	__dpmi_int(0x10, &r);
+        /* Restore original charset and palette */
+        write_charset(original_charset);
+        write_palette(original_palette);
 	/* Restore cursor */
 	_setcursortype(_NORMALCURSOR);
 	/* Restore keyboard handler */
@@ -266,11 +296,96 @@ void display_dos_update(int x, int y, int w, int h)
 	/* The screen is always updated in DOS */
 }
 
+/* Map character generator RAM to CHARGEN_RAM */
+static void map_charset_mem() {
+        // https://web.archive.org/web/20180213220450/http://webpages.charter.net/danrollins/techhelp/0091.HTM
+        outportw(0x3c4, 0x0402);  // Mask reg; enable write to map 2
+        outportw(0x3c4, 0x0704);  // Memory Mode reg ; alpha, ext mem, non-interleaved
+        outportw(0x3ce, 0x0005);  // Graphics Mode reg; non-interleaved access
+        outportw(0x3ce, 0x0406);  // Graphics Misc reg; map char gen RAM to a000:0
+        outportw(0x3ce, 0x0204);  // Graphics ReadMapSelect reg; enable read chargen RAM
+}
+
+/* Unmap the character generator RAM from CHARGEN_RAM */
+static void unmap_charset_mem() {
+        // https://web.archive.org/web/20180213220450/http://webpages.charter.net/danrollins/techhelp/0091.HTM
+        outportw(0x3c4, 0x0302);  // Mask reg; disable write to map 2
+        outportw(0x3c4, 0x0304);  // Memory Mode reg; alpha, ext mem, interleaved
+        outportw(0x3ce, 0x1005);  // Graphics Mode reg; interleaved access
+        outportw(0x3ce, 0x0e06);  // Graphics Misc reg; regen buffer to b800:0
+        outportw(0x3ce, 0x0004);  // Graphics ReadMapSelect reg; disable read chargen RAM
+}
+
+static charset *read_current_charset() {
+        charset *result = malloc(sizeof(charset));
+        result->path = strdup("(chargen)");
+
+        int src = CHARGEN_RAM;
+        uint8_t *dest = result->data;
+        map_charset_mem();
+        for(int character = 0; character < 256; character++) {
+                int line = 0;
+                dosmemget(src, CHARACTER_HEIGHT, dest);
+                src += CHARGEN_CHARACTER_SIZE;
+                dest += CHARACTER_HEIGHT;
+        }
+        unmap_charset_mem();
+        return result;
+}
+
+static void write_charset(const charset *char_set) {
+        int dest = CHARGEN_RAM;
+        const uint8_t *src = char_set->data;
+        map_charset_mem();
+        for(int character = 0; character < 256; character++) {
+                dosmemput(src, CHARACTER_HEIGHT, dest);
+                src += CHARACTER_HEIGHT;
+                dest += CHARGEN_CHARACTER_SIZE;
+        }
+        unmap_charset_mem();
+}
+
+static void get_vga_color(int index, uint8_t *rgb) {
+        // http://www.osdever.net/FreeVGA/vga/colorreg.htm
+        outportb(0x3c7, index);  // DAC read address
+        *(rgb + 0) = inportb(0x3c9);  // DAC data
+        *(rgb + 1) = inportb(0x3c9);
+        *(rgb + 2) = inportb(0x3c9);
+}
+
+static void set_vga_color(int index, const uint8_t *rgb) {
+        // http://www.osdever.net/FreeVGA/vga/colorreg.htm
+        outportb(0x3c8, index); // DAC write address
+        outportb(0x3c9, *(rgb + 0));  // DAC data
+        outportb(0x3c9, *(rgb + 1));
+        outportb(0x3c9, *(rgb + 2));
+}
+
+static palette *read_current_palette() {
+        palette *pal = malloc(sizeof(palette));
+        pal->path = strdup("(dac)");
+        uint8_t *rgb = pal->data;
+        for(int i = 0; i < 16; i++) {
+                get_vga_color(vga_palette_map[i], rgb);
+                rgb += 3;
+        }
+        return pal;
+}
+
+static void write_palette(const palette *pal) {
+        const uint8_t *rgb = pal->data;
+        for(int i = 0; i < 16; i++) {
+                set_vga_color(vga_palette_map[i], rgb);
+                rgb += 3;
+        }
+}
+
+
 displaymethod display_dos =
 {
 	NULL,
 	"DOS Display Method",
-	"1.2",
+	"2.0",
 	display_dos_init,
 	display_dos_end,
 	display_dos_putch,
@@ -285,6 +400,7 @@ displaymethod display_dos =
 	display_dos_putch,
 	display_dos_print,
 	display_dos_update,
-
+        write_charset,
+        write_palette,
 	NULL,
 };

@@ -139,11 +139,11 @@ void zztWorldSetBoardcount(ZZTworld *world, uint16_t count)
 	// XXX Don't ever use this, it's just here for completeness
 	world->header->boardcount = count;
 }
-void zztWorldSetAmmo(ZZTworld *world, uint16_t ammo)
+void zztWorldSetAmmo(ZZTworld *world, int16_t ammo)
 {
 	world->header->ammo = ammo;
 }
-void zztWorldSetGems(ZZTworld *world, uint16_t gems)
+void zztWorldSetGems(ZZTworld *world, int16_t gems)
 {
 	world->header->gems = gems;
 }
@@ -152,27 +152,27 @@ void zztWorldSetKey(ZZTworld *world, int number, uint8_t state)
 	if(number >= 0 && number < 7)
 		world->header->keys[number] = state;
 }
-void zztWorldSetHealth(ZZTworld *world, uint16_t health)
+void zztWorldSetHealth(ZZTworld *world, int16_t health)
 {
 	world->header->health = health;
 }
-void zztWorldSetStartboard(ZZTworld *world, uint16_t startboard)
+void zztWorldSetStartboard(ZZTworld *world, int16_t startboard)
 {
 	world->header->startboard = startboard;
 }
-void zztWorldSetTorches(ZZTworld *world, uint16_t torches)
+void zztWorldSetTorches(ZZTworld *world, int16_t torches)
 {
 	world->header->torches = torches;
 }
-void zztWorldSetTorchcycles(ZZTworld *world, uint16_t torchcycles)
+void zztWorldSetTorchcycles(ZZTworld *world, int16_t torchcycles)
 {
 	world->header->torchcycles = torchcycles;
 }
-void zztWorldSetEnergizercycles(ZZTworld *world, uint16_t energizercycles)
+void zztWorldSetEnergizercycles(ZZTworld *world, int16_t energizercycles)
 {
 	world->header->energizercycles = energizercycles;
 }
-void zztWorldSetScore(ZZTworld *world, uint16_t score)
+void zztWorldSetScore(ZZTworld *world, int16_t score)
 {
 	world->header->score = score;
 }
@@ -188,7 +188,7 @@ void zztWorldSetFlag(ZZTworld *world, int number, char *word)
 		world->header->flags[number][ZZT_FLAG_SIZE] = '\0';
 	}
 }
-void zztWorldSetTimepassed(ZZTworld *world, uint16_t time)
+void zztWorldSetTimepassed(ZZTworld *world, int16_t time)
 {
 	world->header->timepassed = time;
 }
@@ -207,11 +207,11 @@ uint16_t zztWorldGetBoardcount(ZZTworld *world)
 {
 	return world->header->boardcount;
 }
-uint16_t zztWorldGetAmmo(ZZTworld *world)
+int16_t zztWorldGetAmmo(ZZTworld *world)
 {
 	return world->header->ammo;
 }
-uint16_t zztWorldGetGems(ZZTworld *world)
+int16_t zztWorldGetGems(ZZTworld *world)
 {
 	return world->header->gems;
 }
@@ -221,27 +221,27 @@ uint8_t zztWorldGetKey(ZZTworld *world, int number)
 		return world->header->keys[number];
 	return -1;
 }
-uint16_t zztWorldGetHealth(ZZTworld *world)
+int16_t zztWorldGetHealth(ZZTworld *world)
 {
 	return world->header->health;
 }
-uint16_t zztWorldGetStartboard(ZZTworld *world)
+int16_t zztWorldGetStartboard(ZZTworld *world)
 {
 	return world->header->startboard;
 }
-uint16_t zztWorldGetTorches(ZZTworld *world)
+int16_t zztWorldGetTorches(ZZTworld *world)
 {
 	return world->header->torches;
 }
-uint16_t zztWorldGetTorchcycles(ZZTworld *world)
+int16_t zztWorldGetTorchcycles(ZZTworld *world)
 {
 	return world->header->torchcycles;
 }
-uint16_t zztWorldGetEnergizercycles(ZZTworld *world)
+int16_t zztWorldGetEnergizercycles(ZZTworld *world)
 {
 	return world->header->energizercycles;
 }
-uint16_t zztWorldGetScore(ZZTworld *world)
+int16_t zztWorldGetScore(ZZTworld *world)
 {
 	return world->header->score;
 }
@@ -255,7 +255,7 @@ uint8_t *zztWorldGetFlag(ZZTworld *world, int number)
 		return world->header->flags[number];
 	return NULL;
 }
-uint16_t zztWorldGetTimepassed(ZZTworld *world)
+int16_t zztWorldGetTimepassed(ZZTworld *world)
 {
 	return world->header->timepassed;
 }

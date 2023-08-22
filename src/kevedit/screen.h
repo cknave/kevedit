@@ -74,6 +74,10 @@ int line_editor(int x, int y, int color,
 int line_editnumber(int x, int y, int color, int * number, int maxval,
                     displaymethod* d);
 
+/* line_editsnumber() - uses line_editor to edit the given signed number */
+int line_editsnumber(int x, int y, int color, int * number, int minval, int maxval,
+                    displaymethod* d);
+
 /* line_editor_raw() - even more powerful line editor, requires careful
  *                     handling
  * 	position: position in the string of the cursor
@@ -102,8 +106,10 @@ void drawblockcursorspace(displaymethod * d, ZZTblock * b, int x, int y, int off
 void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y, int offx, int offy);
 
 /* file dialogs */
-char * filedialog(char * dir, char * extension, char * title, int filetypes,
-		displaymethod * mydisplay, bool *quit);
+char *filedialog(char *dir, char *extension, char *title, int filetypes,
+		displaymethod *mydisplay, bool *quit);
+char *filedialog_multiext(char *dir, stringvector *extensions, char *title, int filetypes,
+                  displaymethod *mydisplay, bool *quit);
 char* filenamedialog(char* initname, char* extension, char* prompt,
 		int askoverwrite, displaymethod * mydisplay, bool *quit);
 

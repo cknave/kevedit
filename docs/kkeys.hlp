@@ -22,7 +22,7 @@ INSERT
  q - Quits KevEdit
  n - Creates a new world
  z - Clears the current board
- r or ALT-T - Runs zzt
+ ALT-T - Runs zzt
  h - Help
  ! - Loads text editor
 CTRL-O
@@ -53,6 +53,10 @@ PAGEUP
   Previous Board
 PAGEDOWN
   Next Board
+CTRL+CURSOR KEYS
+  Switch to linked boards.
+CTRL+PAGEUP/PAGEDOWN
+  Skip 7 boards at once.
 b - Switch/edit boards
 
 :file;File Operations
@@ -66,6 +70,7 @@ b - Switch/edit boards
 
  c - Cycles through foreground colors
  C - Cycles through background colors
+ r - Reverses foreground and background
  k - Kolor dialog
  v - Toggles blinking colors
  d - Toggles default color mode
