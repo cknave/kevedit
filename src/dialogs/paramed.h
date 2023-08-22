@@ -57,12 +57,12 @@ ZZTparam svectortoprogram(stringvector sv);
 /* getdirection(xstep, ystep)
  * Get a direction based on x and y step values
  */
-int getdirection(int16_t xstep, int16_t ystep);
+int getdirection(char xstep, char ystep);
 
 /* getxystep(xstep, ystep, dir)
  * Determines xstep and ystep from given direction
  */
-void getxystep(int16_t * xstep, int16_t * ystep, int dir);
+void getxystep(char * xstep, char * ystep, int dir);
 
 /* nextdirection(dir)
  * Returns the next direction after that given
