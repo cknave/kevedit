@@ -123,4 +123,12 @@
 #define DKEY_QUIT       0x700DA100
 #define DKEY_DROPFILE	0x44524f50
 
+/* Use macros instead of hard coding the condition that
+   distinguishes special keys from literals.
+   These macros aren't perfect: they cover some characters that
+   can be produced on international keyboards. For instance,
+   AltGr + Y is ← on a Nordic keyboard. */
+#define is_literal_key(key) (key >= 32 && key < 256)
+#define is_ascii_key(key) (key >= 32 && key < 127)
+
 #endif

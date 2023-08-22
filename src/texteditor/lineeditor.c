@@ -228,8 +228,8 @@ void lineeditorHandleKey(lineeditor * editor, int key)
 			break;
 
 		default:
-			/* Keys outside the standard ASCII range are ignored. */
-			if (key < 0x20 || key > 0x7E)
+			/* Non-literal keys are ignored. */
+			if (!is_literal_key(key))
 				break;
 
 			lineeditorinsertcharacter(editor, key);

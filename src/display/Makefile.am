@@ -18,7 +18,7 @@ libdisplay_a_SOURCES += display_dos.c display_dos.h
 endif
 
 if SDL
-libdisplay_a_SOURCES += display_sdl.c display_sdl.h
+libdisplay_a_SOURCES += display_sdl.c display_sdl.h unicode.c unicode.h
 endif
 
 if MACOS

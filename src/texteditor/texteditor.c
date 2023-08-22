@@ -483,7 +483,7 @@ int texteditHandleEditKey(texteditor * editor)
 
 		default:
 			/* Insert keyboard character */
-			if (editor->key < 0x7F && editor->key > 0x1F)
+			if (is_literal_key(editor->key))
 				texteditInsertCharacter(editor, editor->key);
 			break;
 	}

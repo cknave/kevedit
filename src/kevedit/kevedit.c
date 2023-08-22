@@ -246,7 +246,7 @@ void keveditHandleSelection(keveditor * myeditor)
 	int selectblockflag = myeditor->mydisplay->shift();
 
 	/* Except for shift + ASCII key */
-	if (myeditor->key < 0x7F || myeditor->key == DKEY_SHIFT_TAB)
+	if (is_literal_key(myeditor->key) || myeditor->key == DKEY_SHIFT_TAB)
 		selectblockflag = 0;
 
 	if (selectblockflag && myeditor->selectmode != SELECT_BLOCK) {
@@ -341,7 +341,7 @@ void keveditHandleTextEntry(keveditor * myeditor)
 			}
 		}
 		myeditor->updateflags |= UD_CURSOR;
-	} else if ((key < 0x80 && key >= 0x20) || key == DKEY_CTRL_A) {
+	} else if (is_literal_key(key) || key == DKEY_CTRL_A) {
 		/* Insert the current keystroke as text */
 		ZZTtile textTile = { ZZT_BLUETEXT, 0x00, NULL };
 

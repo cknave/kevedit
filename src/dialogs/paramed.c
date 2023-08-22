@@ -636,6 +636,8 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 				/* We could put the above in a function and use
 				 * the top level switch only, but why bother? */
 				switch (opt->id) {
+					case ID_CYCLE:
+						tile.param->cycle = num; break;
 					case ID_DATA0:
 						tile.param->data[0] = num; break;
 					case ID_DATA1:
@@ -651,13 +653,13 @@ int parameditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompone
 			}
 			return 1;
 		}
-		/* signed 16-bit values -- ack! */
+		/* signed 8-bit values -- ack! */
 		case ID_XSTEP:
 		case ID_YSTEP: {
-			/* almost like regular 16-bits... */
+			/* almost like regular 8-bits... */
 			/* zero's are special */
 			if (str_equ(opt->text, "0", 0)) opt->text[0] = '\x0';
-			int result = dialogComponentEdit(d, opt, 6, LINED_SNUMBER);
+			int result = dialogComponentEdit(d, opt, 4, LINED_SNUMBER);
 			if (result == LINED_OK) {
 				sscanf(opt->text, "%d", &num);
 				/* No exceeding the bounds of a signed 16-bit number */
@@ -798,15 +800,7 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 			tile.param->data[1] = !tile.param->data[1];
 			return 1;
 
-		case ID_CYCLE:
-			/* Cycle stays within [0, 255] */
-			if (tile.param->cycle < -delta)
-				tile.param->cycle = 0;
-			else if (tile.param->cycle > 255 - delta)
-				tile.param->cycle = 255;
-			else
-				tile.param->cycle += delta;
-			return 1;
+		case ID_CYCLE: tile.param->cycle += delta; return 1;
 		case ID_XSTEP: tile.param->xstep += delta; return 1;
 		case ID_YSTEP: tile.param->ystep += delta; return 1;
 
