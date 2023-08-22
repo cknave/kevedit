@@ -1,5 +1,3 @@
-#define UNICODE_C
-
 #include "unicode.h"
 
 #include <assert.h>
@@ -20,6 +18,9 @@
    Unicode table.
    Note, 0xED now redirects to U+03D5 as identified by IBM;
    see Wikipedia note. https://bit.ly/39t1732 */
+
+char unicode_to_CP437[65536];
+int unicode_table_inited = 0;
 
 wchar_t CP437_to_unicode[256] = {
     0x20, 0x263a, 0x263b, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022,
@@ -93,7 +94,7 @@ char get_CP437_from_UTF8(char * utf8_str) {
 		return 0;
 	}
 
-	if (codepoint >= 65536 || unicode_to_CP437[codepoint] == 0) {
+	if (codepoint >= 65536) {
 		return 0;
 	}
 

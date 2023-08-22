@@ -41,7 +41,7 @@ LIBS="$LIBS $SDL_LIBS"
 
 if test x$sdl = xtrue; then
 	AC_DEFINE(SDL, [1], [Define to 1 if SDL is available])
-	display_objects="$display_objects display_sdl.o"
+	display_objects="$display_objects display_sdl.o unicode.o"
 	synth_objects="$synth_objects sdl_synth.o"
 fi
 #AM_CONDITIONAL(SDL, [test x$sdl = xtrue])

@@ -22,14 +22,8 @@
 
 #include "stddef.h"
 
-#ifdef UNICODE_C
-char unicode_to_CP437[65536];
-int unicode_table_inited = 0;
-#else
 extern char unicode_to_CP437[65536];
 extern int unicode_conversion_inited;
-#endif
-
 
 void init_unicode_conversion();
 
