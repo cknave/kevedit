@@ -800,15 +800,7 @@ int paramdeltaoption(displaymethod * d, ZZTworld * w, int x, int y, dialogCompon
 			tile.param->data[1] = !tile.param->data[1];
 			return 1;
 
-		case ID_CYCLE:
-			/* Cycle stays within [0, 255] */
-			if (tile.param->cycle < -delta)
-				tile.param->cycle = 0;
-			else if (tile.param->cycle > 255 - delta)
-				tile.param->cycle = 255;
-			else
-				tile.param->cycle += delta;
-			return 1;
+		case ID_CYCLE: tile.param->cycle += delta; return 1;
 		case ID_XSTEP: tile.param->xstep += delta; return 1;
 		case ID_YSTEP: tile.param->ystep += delta; return 1;
 
