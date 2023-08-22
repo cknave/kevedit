@@ -792,14 +792,22 @@ patbuffer* createstandardpatterns(void)
 
 /* Determine whether two tiles are equivalent
  * (for the purposes of selecting) */
-#define tileEquivalent(t1, t2) \
-	(t1).type  == (t2).type && \
-	((t1).color == (t2).color || \
-	 (t1).type == ZZT_EMPTY) && \
-	/* If type is Object, chars must be the same */ \
-	((t1).type != ZZT_OBJECT || \
-	 (zztParamGetProperty((t1).param, ZZT_DATAUSE_CHAR) == \
-		zztParamGetProperty((t2).param, ZZT_DATAUSE_CHAR)))
+static bool tileEquivalent(ZZTtile t1, ZZTtile t2)
+{
+	if (t1.type != t2.type)
+		return false;
+	if ((t1.type != ZZT_EMPTY) && (t1.color != t2.color))
+		return false;
+	if (t1.type == ZZT_OBJECT)
+	{
+		uint8_t t1_chr = t1.param == NULL ? 0 : zztParamGetProperty(t1.param, ZZT_DATAUSE_CHAR);
+		uint8_t t2_chr = t2.param == NULL ? 0 : zztParamGetProperty(t2.param, ZZT_DATAUSE_CHAR);
+		if (t1_chr != t2_chr)
+			return false;
+	}
+
+	return true;
+}
 
 void floodselect(ZZTblock* block, selection fillsel, int x, int y)
 {
@@ -846,35 +854,26 @@ void tileselect(ZZTblock* block, selection fillsel, ZZTtile tile)
 		}
 }
 
-void fillblockbyselection(ZZTblock* block, selection fillsel, patbuffer pbuf, int randomflag)
+void fillbyselection(keveditor *myeditor, ZZTworld* world, selection fillsel, patbuffer pbuf,
+                     int randomflag)
 {
 	int x = -1, y = 0;
 	ZZTtile pattern = pbuf.patterns[pbuf.pos];
-
-	if (randomflag)
-		srand(time(0));
-
-	/* Plot the patterns */
-	while (!nextselected(fillsel, &x, &y)) {
-		if (randomflag)
-			pattern = pbuf.patterns[rand() % pbuf.size];
-
-		zztTilePlot(block, x, y, pattern);
+	if (myeditor->defcmode == 0) {
+		pattern.color = encodecolor(myeditor->color);
 	}
-}
-
-void fillbyselection(ZZTworld* world, selection fillsel, patbuffer pbuf, int randomflag)
-{
-	int x = -1, y = 0;
-	ZZTtile pattern = pbuf.patterns[pbuf.pos];
 
 	if (randomflag)
 		srand(time(0));
 
 	/* Plot the patterns */
 	while (!nextselected(fillsel, &x, &y)) {
-		if (randomflag)
+		if (randomflag) {
 			pattern = pbuf.patterns[rand() % pbuf.size];
+			if (myeditor->defcmode == 0) {
+				pattern.color = encodecolor(myeditor->color);
+			}
+		}
 
 		zztPlot(world, x, y, pattern);
 	}
@@ -908,7 +907,7 @@ void dofloodfill(keveditor * myeditor, int randomflag)
 							myworld->boards[zztBoardGetCurrent(myworld)].ply);
 
 	/* Fill using the selected area */
-	fillbyselection(myworld, fillsel, *fillbuffer, randomflag);
+	fillbyselection(myeditor, myworld, fillsel, *fillbuffer, randomflag);
 
 	/* Delete the fill buffer if we created it above */
 	if (randomflag && myeditor->buffers.pbuf == myeditor->buffers.standard_patterns) {

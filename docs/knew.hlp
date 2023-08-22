@@ -1,6 +1,48 @@
 @New Features
 $New Features
 
+$New in version 1.2.0
+*  Support loading custom character sets
+   and palettes in World Info
+*  Change R key to reverse colors instead
+   of run the game
+*  Use ctrl-arrows to switch to linked
+   boards
+*  Use ctrl-pgup/pgdn to switch to the
+   board 1 page up or down
+
+$Bugs fixed in version 1.1.3
+*  Fix flood fill over objects with no
+   stats
+
+$New in Version 1.1.2
+*  Support signed values in stats editor
+*  Upgrade to SDL 2.0.14 for binary
+   packages
+
+$ Bugs fixed in version 1.1.2
+*  Fix incorrect labels for bullets/stars
+   in stats editor
+*  Fix plotting the player when moving
+   stat 0
+*  Fix clicking when testing sounds on
+   Windows when non-U16 audio formats are
+   used
+
+$New in Version 1.1.1
+*  Make firing rate show up as a slider in
+   param editor
+
+$ Bugs fixed in version 1.1.1
+*  Fix bounds checking with left/right/
+   plus/minus board link selector
+*  Fix -/+ keys not doing anything in
+   param editor
+*  Don't show unused owner param for stars
+   in editor
+*  Fix fill not honoring default colour
+   mode
+
 $New in Version 1.1.0
 *  Keep a backup file in case of a crash
    during saving

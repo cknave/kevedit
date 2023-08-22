@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "display.h"
 #include "display_sdl.h"
@@ -45,9 +45,12 @@ enum cursor_state {
 static enum cursor_state cursor = CURSOR_HIDDEN;
 
 /* Forward defines :( */
-static Uint32 display_tick(Uint32 interval, void *blank);
-void display_curse(int x, int y);
-void display_curse_inactive(int x, int y);
+static Uint32 sdl_tick(Uint32 interval, void *blank);
+static void sdl_curse(int x, int y);
+static void sdl_curse_inactive(int x, int y);
+static void sdl_update(video_info *vdest, int x, int y, int width, int height);
+static void sdl_update_and_present(video_info *vdest, int x, int y, int width, int height);
+
 
 #define CURSOR_RATE 200
 #define ZOOM_STEP 1.0f
@@ -64,479 +67,8 @@ void display_curse_inactive(int x, int y);
  *** BEGIN TEXTMODE EMULATION CODE ***
  *************************************/
 
-/* Default charset (embedded for convenience) */
-#define DEFAULT_CHARSET_SIZE 3584
-const Uint8 default_charset[] = {
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x7E', '\x81', '\xA5', '\x81', '\x81', '\xBD', '\x99', '\x81', 
-	'\x7E', '\x00', '\x00', '\x00', '\x00', '\x00', '\x7E', '\xFF', 
-	'\xDB', '\xFF', '\xFF', '\xC3', '\xE7', '\xFF', '\x7E', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x6C', '\xFE', '\xFE', 
-	'\xFE', '\xFE', '\x7C', '\x38', '\x10', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x10', '\x38', '\x7C', '\xFE', '\x7C', 
-	'\x38', '\x10', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x18', '\x3C', '\x3C', '\xE7', '\xE7', '\xE7', '\x18', '\x18', 
-	'\x3C', '\x00', '\x00', '\x00', '\x00', '\x00', '\x18', '\x3C', 
-	'\x7E', '\xFF', '\xFF', '\x7E', '\x18', '\x18', '\x3C', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x18', 
-	'\x3C', '\x3C', '\x18', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\xE7', '\xC3', '\xC3', 
-	'\xE7', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\x00', '\x00', 
-	'\x00', '\x00', '\x3C', '\x66', '\x42', '\x42', '\x66', '\x3C', 
-	'\x00', '\x00', '\x00', '\x00', '\xFF', '\xFF', '\xFF', '\xFF', 
-	'\xC3', '\x99', '\xBD', '\xBD', '\x99', '\xC3', '\xFF', '\xFF', 
-	'\xFF', '\xFF', '\x00', '\x00', '\x1E', '\x0E', '\x1A', '\x32', 
-	'\x78', '\xCC', '\xCC', '\xCC', '\x78', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x3C', '\x66', '\x66', '\x66', '\x3C', '\x18', 
-	'\x7E', '\x18', '\x18', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x3F', '\x33', '\x3F', '\x30', '\x30', '\x30', '\x70', '\xF0', 
-	'\xE0', '\x00', '\x00', '\x00', '\x00', '\x00', '\x7F', '\x63', 
-	'\x7F', '\x63', '\x63', '\x63', '\x67', '\xE7', '\xE6', '\xC0', 
-	'\x00', '\x00', '\x00', '\x00', '\x18', '\x18', '\xDB', '\x3C', 
-	'\xE7', '\x3C', '\xDB', '\x18', '\x18', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x80', '\xC0', '\xE0', '\xF8', '\xFE', '\xF8', 
-	'\xE0', '\xC0', '\x80', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x02', '\x06', '\x0E', '\x3E', '\xFE', '\x3E', '\x0E', '\x06', 
-	'\x02', '\x00', '\x00', '\x00', '\x00', '\x00', '\x18', '\x3C', 
-	'\x7E', '\x18', '\x18', '\x18', '\x7E', '\x3C', '\x18', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x66', '\x66', '\x66', '\x66', 
-	'\x66', '\x66', '\x00', '\x66', '\x66', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x7F', '\xDB', '\xDB', '\xDB', '\x7B', '\x1B', 
-	'\x1B', '\x1B', '\x1B', '\x00', '\x00', '\x00', '\x00', '\x7C', 
-	'\xC6', '\x60', '\x38', '\x6C', '\xC6', '\xC6', '\x6C', '\x38', 
-	'\x0C', '\xC6', '\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\xFE', '\xFE', '\xFE', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x18', '\x3C', '\x7E', '\x18', 
-	'\x18', '\x18', '\x7E', '\x3C', '\x18', '\x7E', '\x00', '\x00', 
-	'\x00', '\x00', '\x18', '\x3C', '\x7E', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x7E', '\x3C', 
-	'\x18', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x18', '\x0C', '\xFE', '\x0C', '\x18', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x30', '\x60', 
-	'\xFE', '\x60', '\x30', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\xC0', '\xC0', '\xC0', 
-	'\xFE', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x28', '\x6C', '\xFE', '\x6C', '\x28', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x10', 
-	'\x38', '\x38', '\x7C', '\x7C', '\xFE', '\xFE', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\xFE', '\xFE', '\x7C', 
-	'\x7C', '\x38', '\x38', '\x10', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x18', '\x3C', '\x3C', '\x3C', '\x18', '\x18', '\x00', '\x18', 
-	'\x18', '\x00', '\x00', '\x00', '\x00', '\x66', '\x66', '\x66', 
-	'\x24', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x6C', '\x6C', '\xFE', '\x6C', 
-	'\x6C', '\x6C', '\xFE', '\x6C', '\x6C', '\x00', '\x00', '\x00', 
-	'\x18', '\x18', '\x7C', '\xC6', '\xC2', '\xC0', '\x7C', '\x06', 
-	'\x86', '\xC6', '\x7C', '\x18', '\x18', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xC2', '\xC6', '\x0C', '\x18', '\x30', '\x66', 
-	'\xC6', '\x00', '\x00', '\x00', '\x00', '\x00', '\x38', '\x6C', 
-	'\x6C', '\x38', '\x76', '\xDC', '\xCC', '\xCC', '\x76', '\x00', 
-	'\x00', '\x00', '\x00', '\x30', '\x30', '\x30', '\x60', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x0C', '\x18', '\x30', '\x30', '\x30', '\x30', 
-	'\x30', '\x18', '\x0C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x30', '\x18', '\x0C', '\x0C', '\x0C', '\x0C', '\x0C', '\x18', 
-	'\x30', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x66', '\x3C', '\xFF', '\x3C', '\x66', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x18', '\x18', 
-	'\x7E', '\x18', '\x18', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x18', '\x18', '\x18', '\x30', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\xFE', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x18', '\x18', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x02', '\x06', '\x0C', '\x18', 
-	'\x30', '\x60', '\xC0', '\x80', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x7C', '\xC6', '\xCE', '\xDE', '\xF6', '\xE6', 
-	'\xC6', '\xC6', '\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x18', '\x38', '\x78', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x7E', '\x00', '\x00', '\x00', '\x00', '\x00', '\x7C', '\xC6', 
-	'\x06', '\x0C', '\x18', '\x30', '\x60', '\xC6', '\xFE', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x7C', '\xC6', '\x06', '\x06', 
-	'\x3C', '\x06', '\x06', '\xC6', '\x7C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x0C', '\x1C', '\x3C', '\x6C', '\xCC', '\xFE', 
-	'\x0C', '\x0C', '\x1E', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\xFE', '\xC0', '\xC0', '\xC0', '\xFC', '\x06', '\x06', '\xC6', 
-	'\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', '\x38', '\x60', 
-	'\xC0', '\xC0', '\xFC', '\xC6', '\xC6', '\xC6', '\x7C', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\xFE', '\xC6', '\x06', '\x0C', 
-	'\x18', '\x30', '\x30', '\x30', '\x30', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x7C', '\xC6', '\xC6', '\xC6', '\x7C', '\xC6', 
-	'\xC6', '\xC6', '\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x7C', '\xC6', '\xC6', '\xC6', '\x7E', '\x06', '\x06', '\x0C', 
-	'\x78', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x18', 
-	'\x18', '\x00', '\x00', '\x00', '\x18', '\x18', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x18', '\x18', '\x00', 
-	'\x00', '\x00', '\x18', '\x18', '\x30', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x06', '\x0C', '\x18', '\x30', '\x60', '\x30', 
-	'\x18', '\x0C', '\x06', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x7E', '\x00', '\x00', '\x7E', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x60', '\x30', 
-	'\x18', '\x0C', '\x06', '\x0C', '\x18', '\x30', '\x60', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x7C', '\xC6', '\xC6', '\x0C', 
-	'\x18', '\x18', '\x00', '\x18', '\x18', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x7C', '\xC6', '\xC6', '\xDE', '\xDE', '\xDE', 
-	'\xDC', '\xC0', '\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x10', '\x38', '\x6C', '\xC6', '\xC6', '\xFE', '\xC6', '\xC6', 
-	'\xC6', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFC', '\x66', 
-	'\x66', '\x66', '\x7C', '\x66', '\x66', '\x66', '\xFC', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x3C', '\x66', '\xC2', '\xC0', 
-	'\xC0', '\xC0', '\xC2', '\x66', '\x3C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xF8', '\x6C', '\x66', '\x66', '\x66', '\x66', 
-	'\x66', '\x6C', '\xF8', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\xFE', '\x66', '\x62', '\x68', '\x78', '\x68', '\x62', '\x66', 
-	'\xFE', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFE', '\x66', 
-	'\x62', '\x68', '\x78', '\x68', '\x60', '\x60', '\xF0', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x3C', '\x66', '\xC2', '\xC0', 
-	'\xC0', '\xDE', '\xC6', '\x66', '\x3A', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xC6', '\xC6', '\xC6', '\xC6', '\xFE', '\xC6', 
-	'\xC6', '\xC6', '\xC6', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x3C', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x3C', '\x00', '\x00', '\x00', '\x00', '\x00', '\x1E', '\x0C', 
-	'\x0C', '\x0C', '\x0C', '\x0C', '\xCC', '\xCC', '\x78', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\xE6', '\x66', '\x6C', '\x6C', 
-	'\x78', '\x6C', '\x6C', '\x66', '\xE6', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xF0', '\x60', '\x60', '\x60', '\x60', '\x60', 
-	'\x62', '\x66', '\xFE', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\xC6', '\xEE', '\xFE', '\xFE', '\xD6', '\xC6', '\xC6', '\xC6', 
-	'\xC6', '\x00', '\x00', '\x00', '\x00', '\x00', '\xC6', '\xE6', 
-	'\xF6', '\xFE', '\xDE', '\xCE', '\xC6', '\xC6', '\xC6', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x38', '\x6C', '\xC6', '\xC6', 
-	'\xC6', '\xC6', '\xC6', '\x6C', '\x38', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xFC', '\x66', '\x66', '\x66', '\x7C', '\x60', 
-	'\x60', '\x60', '\xF0', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x7C', '\xC6', '\xC6', '\xC6', '\xC6', '\xD6', '\xDE', '\x7C', 
-	'\x0C', '\x0E', '\x00', '\x00', '\x00', '\x00', '\xFC', '\x66', 
-	'\x66', '\x66', '\x7C', '\x6C', '\x66', '\x66', '\xE6', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x7C', '\xC6', '\xC6', '\x60', 
-	'\x38', '\x0C', '\xC6', '\xC6', '\x7C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x7E', '\x7E', '\x5A', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x3C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\xC6', '\xC6', '\xC6', '\xC6', '\xC6', '\xC6', '\xC6', '\xC6', 
-	'\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', '\xC6', '\xC6', 
-	'\xC6', '\xC6', '\xC6', '\xC6', '\x6C', '\x38', '\x10', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\xC6', '\xC6', '\xC6', '\xC6', 
-	'\xD6', '\xD6', '\xFE', '\x7C', '\x6C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xC6', '\xC6', '\x6C', '\x38', '\x38', '\x38', 
-	'\x6C', '\xC6', '\xC6', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x66', '\x66', '\x66', '\x66', '\x3C', '\x18', '\x18', '\x18', 
-	'\x3C', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFE', '\xC6', 
-	'\x8C', '\x18', '\x30', '\x60', '\xC2', '\xC6', '\xFE', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x3C', '\x30', '\x30', '\x30', 
-	'\x30', '\x30', '\x30', '\x30', '\x3C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x80', '\xC0', '\xE0', '\x70', '\x38', '\x1C', 
-	'\x0E', '\x06', '\x02', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x3C', '\x0C', '\x0C', '\x0C', '\x0C', '\x0C', '\x0C', '\x0C', 
-	'\x3C', '\x00', '\x00', '\x00', '\x10', '\x38', '\x6C', '\xC6', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFF', '\x00', 
-	'\x30', '\x30', '\x18', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x78', '\x0C', '\x7C', '\xCC', '\xCC', 
-	'\x76', '\x00', '\x00', '\x00', '\x00', '\x00', '\xE0', '\x60', 
-	'\x60', '\x78', '\x6C', '\x66', '\x66', '\x66', '\x7C', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x7C', 
-	'\xC6', '\xC0', '\xC0', '\xC6', '\x7C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x1C', '\x0C', '\x0C', '\x3C', '\x6C', '\xCC', 
-	'\xCC', '\xCC', '\x76', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x7C', '\xC6', '\xFE', '\xC0', '\xC6', 
-	'\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', '\x38', '\x6C', 
-	'\x64', '\x60', '\xF0', '\x60', '\x60', '\x60', '\xF0', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x76', 
-	'\xCC', '\xCC', '\xCC', '\x7C', '\x0C', '\xCC', '\x78', '\x00', 
-	'\x00', '\x00', '\xE0', '\x60', '\x60', '\x6C', '\x76', '\x66', 
-	'\x66', '\x66', '\xE6', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x18', '\x18', '\x00', '\x38', '\x18', '\x18', '\x18', '\x18', 
-	'\x3C', '\x00', '\x00', '\x00', '\x00', '\x00', '\x06', '\x06', 
-	'\x00', '\x0E', '\x06', '\x06', '\x06', '\x06', '\x66', '\x66', 
-	'\x3C', '\x00', '\x00', '\x00', '\xE0', '\x60', '\x60', '\x66', 
-	'\x6C', '\x78', '\x6C', '\x66', '\xE6', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x38', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x3C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xEC', '\xFE', '\xD6', '\xD6', '\xD6', 
-	'\xC6', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\xDC', '\x66', '\x66', '\x66', '\x66', '\x66', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x7C', 
-	'\xC6', '\xC6', '\xC6', '\xC6', '\x7C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\xDC', '\x66', '\x66', 
-	'\x66', '\x7C', '\x60', '\x60', '\xF0', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x76', '\xCC', '\xCC', '\xCC', '\x7C', 
-	'\x0C', '\x0C', '\x1E', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\xDC', '\x76', '\x66', '\x60', '\x60', '\xF0', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x7C', 
-	'\xC6', '\x70', '\x1C', '\xC6', '\x7C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x10', '\x30', '\x30', '\xFC', '\x30', '\x30', 
-	'\x30', '\x36', '\x1C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xCC', '\xCC', '\xCC', '\xCC', '\xCC', 
-	'\x76', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x66', '\x66', '\x66', '\x66', '\x3C', '\x18', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xC6', 
-	'\xC6', '\xD6', '\xD6', '\xFE', '\x6C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\xC6', '\x6C', '\x38', 
-	'\x38', '\x6C', '\xC6', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xC6', '\xC6', '\xC6', '\xC6', '\x7E', 
-	'\x06', '\x0C', '\xF8', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\xFE', '\xCC', '\x18', '\x30', '\x66', '\xFE', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x0E', '\x18', '\x18', '\x18', 
-	'\x70', '\x18', '\x18', '\x18', '\x0E', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x18', '\x18', '\x18', '\x18', '\x00', '\x18', 
-	'\x18', '\x18', '\x18', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x70', '\x18', '\x18', '\x18', '\x0E', '\x18', '\x18', '\x18', 
-	'\x70', '\x00', '\x00', '\x00', '\x00', '\x00', '\x76', '\xDC', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x10', '\x38', 
-	'\x6C', '\xC6', '\xC6', '\xFE', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x3C', '\x66', '\xC2', '\xC0', '\xC0', '\xC2', 
-	'\x66', '\x3C', '\x0C', '\x06', '\x7C', '\x00', '\x00', '\x00', 
-	'\xCC', '\xCC', '\x00', '\xCC', '\xCC', '\xCC', '\xCC', '\xCC', 
-	'\x76', '\x00', '\x00', '\x00', '\x00', '\x0C', '\x18', '\x30', 
-	'\x00', '\x7C', '\xC6', '\xFE', '\xC0', '\xC6', '\x7C', '\x00', 
-	'\x00', '\x00', '\x00', '\x10', '\x38', '\x6C', '\x00', '\x78', 
-	'\x0C', '\x7C', '\xCC', '\xCC', '\x76', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xCC', '\xCC', '\x00', '\x78', '\x0C', '\x7C', 
-	'\xCC', '\xCC', '\x76', '\x00', '\x00', '\x00', '\x00', '\x60', 
-	'\x30', '\x18', '\x00', '\x78', '\x0C', '\x7C', '\xCC', '\xCC', 
-	'\x76', '\x00', '\x00', '\x00', '\x00', '\x38', '\x6C', '\x38', 
-	'\x00', '\x78', '\x0C', '\x7C', '\xCC', '\xCC', '\x76', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x3C', '\x66', 
-	'\x60', '\x66', '\x3C', '\x0C', '\x06', '\x3C', '\x00', '\x00', 
-	'\x00', '\x10', '\x38', '\x6C', '\x00', '\x7C', '\xC6', '\xFE', 
-	'\xC0', '\xC6', '\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\xCC', '\xCC', '\x00', '\x7C', '\xC6', '\xFE', '\xC0', '\xC6', 
-	'\x7C', '\x00', '\x00', '\x00', '\x00', '\x60', '\x30', '\x18', 
-	'\x00', '\x7C', '\xC6', '\xFE', '\xC0', '\xC6', '\x7C', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x66', '\x66', '\x00', '\x38', 
-	'\x18', '\x18', '\x18', '\x18', '\x3C', '\x00', '\x00', '\x00', 
-	'\x00', '\x18', '\x3C', '\x66', '\x00', '\x38', '\x18', '\x18', 
-	'\x18', '\x18', '\x3C', '\x00', '\x00', '\x00', '\x00', '\x60', 
-	'\x30', '\x18', '\x00', '\x38', '\x18', '\x18', '\x18', '\x18', 
-	'\x3C', '\x00', '\x00', '\x00', '\x00', '\xC6', '\xC6', '\x10', 
-	'\x38', '\x6C', '\xC6', '\xC6', '\xFE', '\xC6', '\xC6', '\x00', 
-	'\x00', '\x00', '\x38', '\x6C', '\x38', '\x00', '\x38', '\x6C', 
-	'\xC6', '\xC6', '\xFE', '\xC6', '\xC6', '\x00', '\x00', '\x00', 
-	'\x18', '\x30', '\x60', '\x00', '\xFE', '\x66', '\x60', '\x7C', 
-	'\x60', '\x66', '\xFE', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xCC', '\x76', '\x36', '\x7E', '\xD8', '\xD8', 
-	'\x6E', '\x00', '\x00', '\x00', '\x00', '\x00', '\x3E', '\x6C', 
-	'\xCC', '\xCC', '\xFE', '\xCC', '\xCC', '\xCC', '\xCE', '\x00', 
-	'\x00', '\x00', '\x00', '\x10', '\x38', '\x6C', '\x00', '\x7C', 
-	'\xC6', '\xC6', '\xC6', '\xC6', '\x7C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xC6', '\xC6', '\x00', '\x7C', '\xC6', '\xC6', 
-	'\xC6', '\xC6', '\x7C', '\x00', '\x00', '\x00', '\x00', '\x60', 
-	'\x30', '\x18', '\x00', '\x7C', '\xC6', '\xC6', '\xC6', '\xC6', 
-	'\x7C', '\x00', '\x00', '\x00', '\x00', '\x30', '\x78', '\xCC', 
-	'\x00', '\xCC', '\xCC', '\xCC', '\xCC', '\xCC', '\x76', '\x00', 
-	'\x00', '\x00', '\x00', '\x60', '\x30', '\x18', '\x00', '\xCC', 
-	'\xCC', '\xCC', '\xCC', '\xCC', '\x76', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xC6', '\xC6', '\x00', '\xC6', '\xC6', '\xC6', 
-	'\xC6', '\x7E', '\x06', '\x0C', '\x78', '\x00', '\x00', '\xC6', 
-	'\xC6', '\x38', '\x6C', '\xC6', '\xC6', '\xC6', '\xC6', '\x6C', 
-	'\x38', '\x00', '\x00', '\x00', '\x00', '\xC6', '\xC6', '\x00', 
-	'\xC6', '\xC6', '\xC6', '\xC6', '\xC6', '\xC6', '\x7C', '\x00', 
-	'\x00', '\x00', '\x00', '\x18', '\x18', '\x3C', '\x66', '\x60', 
-	'\x60', '\x66', '\x3C', '\x18', '\x18', '\x00', '\x00', '\x00', 
-	'\x00', '\x38', '\x6C', '\x64', '\x60', '\xF0', '\x60', '\x60', 
-	'\x60', '\xE6', '\xFC', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x66', '\x66', '\x3C', '\x18', '\x7E', '\x18', '\x7E', '\x18', 
-	'\x18', '\x00', '\x00', '\x00', '\x00', '\xF8', '\xCC', '\xCC', 
-	'\xF8', '\xC4', '\xCC', '\xDE', '\xCC', '\xCC', '\xC6', '\x00', 
-	'\x00', '\x00', '\x00', '\x0E', '\x1B', '\x18', '\x18', '\x18', 
-	'\x7E', '\x18', '\x18', '\x18', '\x18', '\xD8', '\x70', '\x00', 
-	'\x00', '\x18', '\x30', '\x60', '\x00', '\x78', '\x0C', '\x7C', 
-	'\xCC', '\xCC', '\x76', '\x00', '\x00', '\x00', '\x00', '\x0C', 
-	'\x18', '\x30', '\x00', '\x38', '\x18', '\x18', '\x18', '\x18', 
-	'\x3C', '\x00', '\x00', '\x00', '\x00', '\x18', '\x30', '\x60', 
-	'\x00', '\x7C', '\xC6', '\xC6', '\xC6', '\xC6', '\x7C', '\x00', 
-	'\x00', '\x00', '\x00', '\x18', '\x30', '\x60', '\x00', '\xCC', 
-	'\xCC', '\xCC', '\xCC', '\xCC', '\x76', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x76', '\xDC', '\x00', '\xDC', '\x66', '\x66', 
-	'\x66', '\x66', '\x66', '\x00', '\x00', '\x00', '\x76', '\xDC', 
-	'\x00', '\xC6', '\xE6', '\xF6', '\xFE', '\xDE', '\xCE', '\xC6', 
-	'\xC6', '\x00', '\x00', '\x00', '\x00', '\x3C', '\x6C', '\x6C', 
-	'\x3E', '\x00', '\x7E', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x38', '\x6C', '\x6C', '\x38', '\x00', 
-	'\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x30', '\x30', '\x00', '\x30', '\x30', '\x60', 
-	'\xC6', '\xC6', '\x7C', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\xFE', '\xC0', '\xC0', '\xC0', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xFE', '\x06', '\x06', '\x06', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xC0', '\xC0', '\xC6', '\xCC', '\xD8', 
-	'\x30', '\x60', '\xDC', '\x86', '\x0C', '\x18', '\x3E', '\x00', 
-	'\x00', '\xC0', '\xC0', '\xC6', '\xCC', '\xD8', '\x30', '\x66', 
-	'\xCE', '\x9E', '\x3E', '\x06', '\x06', '\x00', '\x00', '\x00', 
-	'\x18', '\x18', '\x00', '\x18', '\x18', '\x3C', '\x3C', '\x3C', 
-	'\x18', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x36', '\x6C', '\xD8', '\x6C', '\x36', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xD8', '\x6C', 
-	'\x36', '\x6C', '\xD8', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x11', '\x44', '\x11', '\x44', '\x11', '\x44', '\x11', '\x44', 
-	'\x11', '\x44', '\x11', '\x44', '\x11', '\x44', '\x55', '\xAA', 
-	'\x55', '\xAA', '\x55', '\xAA', '\x55', '\xAA', '\x55', '\xAA', 
-	'\x55', '\xAA', '\x55', '\xAA', '\xDD', '\x77', '\xDD', '\x77', 
-	'\xDD', '\x77', '\xDD', '\x77', '\xDD', '\x77', '\xDD', '\x77', 
-	'\xDD', '\x77', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\xF8', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\xF8', '\x18', '\xF8', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\xF6', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\xFE', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\xF8', '\x18', '\xF8', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\xF6', '\x06', '\xF6', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFE', 
-	'\x06', '\xF6', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\xF6', '\x06', '\xFE', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\xFE', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\xF8', '\x18', '\xF8', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\xF8', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x1F', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\xFF', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xFF', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x1F', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFF', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\xFF', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x1F', '\x18', '\x1F', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x37', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x37', '\x30', '\x3F', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x3F', '\x30', '\x37', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\xF7', '\x00', '\xFF', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFF', 
-	'\x00', '\xF7', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x37', '\x30', '\x37', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xFF', '\x00', '\xFF', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\xF7', '\x00', '\xF7', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x18', '\x18', '\x18', '\x18', '\x18', '\xFF', 
-	'\x00', '\xFF', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\xFF', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xFF', '\x00', '\xFF', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xFF', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x3F', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x1F', '\x18', '\x1F', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x1F', '\x18', '\x1F', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x3F', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x36', '\xFF', '\x36', '\x36', '\x36', '\x36', '\x36', '\x36', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\xFF', '\x18', '\xFF', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\xF8', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x1F', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', 
-	'\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFF', 
-	'\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\xF0', '\xF0', 
-	'\xF0', '\xF0', '\xF0', '\xF0', '\xF0', '\xF0', '\xF0', '\xF0', 
-	'\xF0', '\xF0', '\xF0', '\xF0', '\x0F', '\x0F', '\x0F', '\x0F', 
-	'\x0F', '\x0F', '\x0F', '\x0F', '\x0F', '\x0F', '\x0F', '\x0F', 
-	'\x0F', '\x0F', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', '\xFF', 
-	'\xFF', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x76', '\xDC', '\xD8', 
-	'\xD8', '\xDC', '\x76', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x7C', '\xC6', '\xFC', '\xC6', '\xC6', '\xFC', 
-	'\xC0', '\xC0', '\x40', '\x00', '\x00', '\x00', '\xFE', '\xC6', 
-	'\xC6', '\xC0', '\xC0', '\xC0', '\xC0', '\xC0', '\xC0', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\xFE', '\x6C', 
-	'\x6C', '\x6C', '\x6C', '\x6C', '\x6C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\xFE', '\xC6', '\x60', '\x30', '\x18', '\x30', 
-	'\x60', '\xC6', '\xFE', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x7E', '\xD8', '\xD8', '\xD8', '\xD8', 
-	'\x70', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x66', '\x66', '\x66', '\x66', '\x7C', '\x60', '\x60', '\xC0', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x76', '\xDC', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x7E', '\x18', '\x3C', '\x66', '\x66', '\x66', 
-	'\x3C', '\x18', '\x7E', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x38', '\x6C', '\xC6', '\xC6', '\xFE', '\xC6', '\xC6', '\x6C', 
-	'\x38', '\x00', '\x00', '\x00', '\x00', '\x00', '\x38', '\x6C', 
-	'\xC6', '\xC6', '\xC6', '\x6C', '\x6C', '\x6C', '\xEE', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x1E', '\x30', '\x18', '\x0C', 
-	'\x3E', '\x66', '\x66', '\x66', '\x3C', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x7E', '\xDB', '\xDB', 
-	'\x7E', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x03', '\x06', '\x7E', '\xDB', '\xDB', '\xF3', '\x7E', '\x60', 
-	'\xC0', '\x00', '\x00', '\x00', '\x00', '\x00', '\x1C', '\x30', 
-	'\x60', '\x60', '\x7C', '\x60', '\x60', '\x30', '\x1C', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x7C', '\xC6', '\xC6', 
-	'\xC6', '\xC6', '\xC6', '\xC6', '\xC6', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\xFE', '\x00', '\x00', '\xFE', '\x00', 
-	'\x00', '\xFE', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x18', '\x18', '\x7E', '\x18', '\x18', '\x00', '\x00', 
-	'\xFF', '\x00', '\x00', '\x00', '\x00', '\x00', '\x30', '\x18', 
-	'\x0C', '\x06', '\x0C', '\x18', '\x30', '\x00', '\x7E', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x0C', '\x18', '\x30', '\x60', 
-	'\x30', '\x18', '\x0C', '\x00', '\x7E', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x0E', '\x1B', '\x1B', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\x18', 
-	'\x18', '\x18', '\x18', '\x18', '\x18', '\x18', '\xD8', '\xD8', 
-	'\x70', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x18', 
-	'\x18', '\x00', '\x7E', '\x00', '\x18', '\x18', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x76', '\xDC', 
-	'\x00', '\x76', '\xDC', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x38', '\x6C', '\x6C', '\x38', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x18', '\x18', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x18', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x0F', '\x0C', '\x0C', '\x0C', '\x0C', 
-	'\x0C', '\xEC', '\x6C', '\x3C', '\x1C', '\x00', '\x00', '\x00', 
-	'\x00', '\xD8', '\x6C', '\x6C', '\x6C', '\x6C', '\x6C', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x70', 
-	'\xD8', '\x30', '\x60', '\xC8', '\xF8', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x7C', '\x7C', '\x7C', '\x7C', '\x7C', '\x7C', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', 
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00'
-};
 
-/* EGA palette (6 bits per component) */
-#define EGA_PALETTE_SIZE 48
-const Uint8 ega_palette[] = {
-	'\x00', '\x00', '\x00', '\x00', '\x00', '\x2A', '\x00', '\x2A', 
-	'\x00', '\x00', '\x2A', '\x2A', '\x2A', '\x00', '\x00', '\x2A', 
-	'\x00', '\x2A', '\x2A', '\x15', '\x00', '\x2A', '\x2A', '\x2A', 
-	'\x15', '\x15', '\x15', '\x15', '\x15', '\x3F', '\x15', '\x3F', 
-	'\x15', '\x15', '\x3F', '\x3F', '\x3F', '\x15', '\x15', '\x3F', 
-	'\x15', '\x3F', '\x3F', '\x3F', '\x15', '\x3F', '\x3F', '\x3F'
-};
-
-void display_load_charset(Uint8 *dest, char *name)
-{
-	FILE *fp;
-	fp = fopen(name, "rb");
-	fread(dest, 256 * 14, 1, fp);
-	fclose(fp);
-}
-
-void expand_palette(Uint32 *dest, Uint8 *src)
+static void sdl_expand_palette(Uint32 *dest, const Uint8 *src)
 {
 	Uint8 *dest_palette = (Uint8 *)dest;
 	Uint32 i2, i3, i4;
@@ -554,29 +86,12 @@ void expand_palette(Uint32 *dest, Uint8 *src)
 	}
 }
 
-void display_load_palette(Uint32 *dest, char *name)
+static void sdl_set_charset(video_info *vdest, const uint8_t *data)
 {
-	FILE *fp;
-	Uint8 palette[3 * 16];
-
-	fp = fopen(name, "rb");
-	fread(palette, 3 * 16, 1, fp);
-
-	expand_palette(dest, palette);
-	fclose(fp);
+        memcpy(vdest->char_set, data, CHARSET_SIZE);
 }
 
-void display_load_default_charset(Uint8 *dest)
-{
-	memcpy(dest, default_charset, DEFAULT_CHARSET_SIZE);
-}
-
-void display_load_default_palette(Uint32 *dest)
-{
-	expand_palette(dest, (Uint8 *) ega_palette);
-}
-
-void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
+static void sdl_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 {
 	Uint32 window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 	SDL_CreateWindowAndRenderer(width, height, window_flags,
@@ -588,7 +103,7 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 		height);
 	vdest->pixels = calloc(width * height, sizeof(Uint32));
 	vdest->buffer = createTextBlock(80, 25);
-	vdest->char_set = (Uint8 *)malloc(256 * 14);
+	vdest->char_set = (Uint8 *)malloc(CHARSET_SIZE);
 	vdest->palette = (Uint32 *)malloc(4 * 16);
 	vdest->write_x = 0;
 	vdest->write_y = 0;
@@ -608,7 +123,7 @@ void display_init(video_info *vdest, Uint32 width, Uint32 height, Uint32 depth)
 #endif
 }
 
-void display_end(video_info *vdest)
+static void sdl_end(video_info *vdest)
 {
 	SDL_DestroyTexture(vdest->texture);
 
@@ -625,23 +140,22 @@ void display_end(video_info *vdest)
 	/* SDL should restore everything okay.. just use SDL_quit() when ready */
 }
 
-void display_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
+static void sdl_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
 {
 	textBlockPutch(vdest->buffer, x, y, ch, co);
 }
 
-static void update_cursor(video_info *vdest) {
+static void sdl_update_cursor(video_info *vdest) {
 	switch(cursor) {
 		case CURSOR_HIDDEN:
-			display_update_and_present(vdest, vdest->write_x,
-					vdest->write_y, 1, 1);
+			sdl_update_and_present(vdest, vdest->write_x, vdest->write_y, 1, 1);
 			break;
 		case CURSOR_VISIBLE:
-			display_curse(vdest->write_x, vdest->write_y);
+			sdl_curse(vdest->write_x, vdest->write_y);
 			break;
 		case CURSOR_INACTIVE:
-			display_update(vdest, vdest->write_x, vdest->write_y, 1, 1);
-			display_curse_inactive(vdest->write_x, vdest->write_y);
+			sdl_update(vdest, vdest->write_x, vdest->write_y, 1, 1);
+			sdl_curse_inactive(vdest->write_x, vdest->write_y);
 			break;
 	}
 }
@@ -657,13 +171,13 @@ static void start_cursor_timer() {
 	if(timer_id != -1) {
 		return;  /* Already started. */
 	}
-	timer_id = SDL_AddTimer(CURSOR_RATE, display_tick, NULL);
+	timer_id = SDL_AddTimer(CURSOR_RATE, sdl_tick, NULL);
 }
 
-void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
+static void sdl_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 {
 	/* Redraw old position. */
-	display_update_and_present(vdest, vdest->write_x, vdest->write_y, 1, 1);
+	sdl_update_and_present(vdest, vdest->write_x, vdest->write_y, 1, 1);
 
 	vdest->write_x = x;
 	vdest->write_y = y;
@@ -672,11 +186,11 @@ void display_gotoxy(video_info *vdest, Uint32 x, Uint32 y)
 	 * it visible and reset the timer. */
 	stop_cursor_timer();
 	cursor = CURSOR_VISIBLE;
-	update_cursor(vdest);
+	sdl_update_cursor(vdest);
 	start_cursor_timer();
 }
 
-static void display_present(video_info *vdest, const SDL_Rect *rect)
+static void sdl_present(video_info *vdest, const SDL_Rect *rect)
 {
 	Uint32 *pixels = vdest->pixels;
 	if(rect) {
@@ -763,10 +277,10 @@ void display_redraw(video_info *vdest)
 	}
 
 	/* Update the buffer surface to the real thing.. */
-	display_present(vdest, NULL);
+	sdl_present(vdest, NULL);
 }
 
-void display_update(video_info *vdest, int x, int y, int width, int height)
+static void sdl_update(video_info *vdest, int x, int y, int width, int height)
 {
 	/* Updates a block */
 
@@ -842,11 +356,11 @@ void display_update(video_info *vdest, int x, int y, int width, int height)
 	vdest->is_dirty = true;
 }
 
-void display_update_and_present(video_info *vdest, int x, int y, int width,
+static void sdl_update_and_present(video_info *vdest, int x, int y, int width,
 		int height)
 {
 	bool was_dirty = vdest->is_dirty;
-	display_update(vdest, x, y, width, height);
+	sdl_update(vdest, x, y, width, height);
 	vdest->is_dirty = was_dirty;
 
 	SDL_Rect rect;
@@ -854,7 +368,7 @@ void display_update_and_present(video_info *vdest, int x, int y, int width,
 	rect.y = y * 14;
 	rect.w = width * 8;
 	rect.h = height * 14;
-	display_present(vdest, &rect);
+	sdl_present(vdest, &rect);
 }
 
 static float get_window_zoom_level(SDL_Window *window) {
@@ -928,7 +442,7 @@ static video_info info;	/* Display info */
 static int shift;	/* Shift state */
 
 /* Nice timer update callback thing */
-static Uint32 display_tick(Uint32 interval, void *blank)
+static Uint32 sdl_tick(Uint32 interval, void *blank)
 {
 	SDL_Event e;
 	e.type = SDL_USEREVENT;
@@ -936,7 +450,7 @@ static Uint32 display_tick(Uint32 interval, void *blank)
 	return interval;
 }
 
-void display_curse(int x, int y)
+static void sdl_curse(int x, int y)
 {
 	SDL_Rect rect;
 	Uint8 color;
@@ -963,10 +477,10 @@ void display_curse(int x, int y)
 	rect.y = y * 14;
 	rect.w = 8;
 	rect.h = 14;
-	display_present(&info, &rect);
+	sdl_present(&info, &rect);
 }
 
-void display_curse_inactive(int x, int y)
+static void sdl_curse_inactive(int x, int y)
 {
 	SDL_Rect rect;
 	Uint8 color;
@@ -1004,10 +518,11 @@ void display_curse_inactive(int x, int y)
 	rect.y = y * 14;
 	rect.w = 8;
 	rect.h = 14;
-	display_present(&info, &rect);
+	sdl_present(&info, &rect);
 }
 
-int display_sdl_init()
+// Display method wrapper for sdl_init
+static int display_sdl_init()
 {
 	/* Start up SDL */
 	if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER) < 0) {
@@ -1017,9 +532,9 @@ int display_sdl_init()
 	SDL_StartTextInput();
 
 	/* Fire up the textmode emulator */
-	display_init(&info, 640, 350, 32);
-	display_load_default_charset(info.char_set);
-	display_load_default_palette(info.palette);
+	sdl_init(&info, 640, 350, 32);
+        sdl_set_charset(&info, default_charset.data);
+        sdl_expand_palette(info.palette, default_palette.data);
 
 	shift = 0;
 	cursor = CURSOR_VISIBLE;
@@ -1029,22 +544,24 @@ int display_sdl_init()
 	return 1;
 }
 
-void display_sdl_end()
+// Display method wrapper for sdl_end
+static void display_sdl_end()
 {
 	/* Terminate SDL stuff */
-	display_end(&info);
+	sdl_end(&info);
 	SDL_StopTextInput();
 	SDL_Quit();
 }
 
-void display_sdl_putch(int x, int y, int ch, int co)
+// Display method wrapper for sdl_putch
+static void display_sdl_putch(int x, int y, int ch, int co)
 {
 	/* Call textmode emulator putch */
-	display_putch(&info, x, y, ch, co);
-	display_update(&info, x, y, 1, 1);
+	sdl_putch(&info, x, y, ch, co);
+	sdl_update(&info, x, y, 1, 1);
 }
 
-void display_sdl_fullscreen()
+static void display_sdl_fullscreen()
 {
 	/* Toggle fullscreen */
 	info.is_fullscreen = !info.is_fullscreen;
@@ -1061,12 +578,12 @@ void display_sdl_fullscreen()
 		SDL_ShowCursor(SDL_ENABLE);
 }
 
-int display_sdl_getkey()
+static int display_sdl_getkey()
 {
 	SDL_Event event;
 
 	/* Draw the cursor if necessary */
-	update_cursor(&info);
+	sdl_update_cursor(&info);
 
 	/* Check for a KEYDOWN event */
 	if (SDL_PollEvent(&event) == 0)
@@ -1145,7 +662,7 @@ int display_sdl_getkey()
 		} else if(cursor == CURSOR_VISIBLE) {
 			cursor = CURSOR_HIDDEN;
 		}
-		update_cursor(&info);
+		sdl_update_cursor(&info);
 	/* Focus change? */
 	} else if(event.type == SDL_WINDOWEVENT) {
 		if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
@@ -1153,12 +670,12 @@ int display_sdl_getkey()
 			/* Make cursor normal */
 			start_cursor_timer();
 			cursor = CURSOR_VISIBLE;
-			update_cursor(&info);
+			sdl_update_cursor(&info);
 		} else if(event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
 			/* Inactive cursor */
 			stop_cursor_timer();
 			cursor = CURSOR_INACTIVE;
-			update_cursor(&info);
+			sdl_update_cursor(&info);
 		}
 	} else if(event.type == SDL_QUIT) {
 		return DKEY_QUIT;
@@ -1244,8 +761,32 @@ int display_sdl_getkey()
 		/* If alpha key, return special ctrl+alpha */
 		if(event.key.keysym.sym >= SDLK_a && event.key.keysym.sym <= SDLK_z) {
 			event.key.keysym.sym -= 0x60;
+		} else {
+			switch(event.key.keysym.sym) {
+				case DKEY_PAGEUP:
+					event.key.keysym.sym = DKEY_CTRL_PAGEUP;
+					break;
+				case DKEY_PAGEDOWN:
+					event.key.keysym.sym = DKEY_CTRL_PAGEDOWN;
+					break;
+				case DKEY_LEFT:
+					event.key.keysym.sym = DKEY_CTRL_LEFT;
+					break;
+				case DKEY_RIGHT:
+					event.key.keysym.sym = DKEY_CTRL_RIGHT;
+					break;
+				case DKEY_UP:
+					event.key.keysym.sym = DKEY_CTRL_UP;
+					break;
+				case DKEY_DOWN:
+					event.key.keysym.sym = DKEY_CTRL_DOWN;
+					break;
+				default:
+					break;
+			}
 		}
 	}
+
 	/* Alt is down */
 	else if(event.key.keysym.mod & KMOD_ALT) {
 		/* Check for AltGr on international keyboards. AltGr
@@ -1310,7 +851,7 @@ int display_sdl_getkey()
 	return is_literal_key(event.key.keysym.sym) ? DKEY_NONE : event.key.keysym.sym;
 }
 
-int display_sdl_getch_with_context(enum displaycontext context) {
+static int display_sdl_getch_with_context(enum displaycontext context) {
 	info.context = context;
 #if MACOS
 	switch(context) {
@@ -1327,9 +868,9 @@ int display_sdl_getch_with_context(enum displaycontext context) {
 #endif
 
 	if(info.is_dirty) {
-		display_present(&info, NULL);
+		sdl_present(&info, NULL);
 		if(cursor != CURSOR_HIDDEN) {
-			update_cursor(&info);
+			sdl_update_cursor(&info);
 		}
 	}
 
@@ -1345,41 +886,41 @@ int display_sdl_getch_with_context(enum displaycontext context) {
 	return key;
 }
 
-int display_sdl_getch()
+static int display_sdl_getch()
 {
 	return display_sdl_getch_with_context(undefined);
 }
 
-void display_sdl_gotoxy(int x, int y)
+static void display_sdl_gotoxy(int x, int y)
 {
-	display_gotoxy(&info, x, y);
+	sdl_gotoxy(&info, x, y);
 }
 
-void display_sdl_print(int x, int y, int c, char *s)
+static void display_sdl_print(int x, int y, int c, char *s)
 {
 	int i, len = strlen(s);
 
 	for(i = 0; i < len; i++)
 		display_sdl_putch(x+i, y, s[i], c);
-	display_update(&info, x, y, len, 1);
+	sdl_update(&info, x, y, len, 1);
 }
 
-void display_sdl_titlebar(char *title)
+static void display_sdl_titlebar(char *title)
 {
 	SDL_SetWindowTitle(info.window, title);
 }
 
-int display_sdl_shift()
+static int display_sdl_shift()
 {
 	return shift;
 }
 
-void display_sdl_putch_discrete(int x, int y, int ch, int co)
+static void display_sdl_putch_discrete(int x, int y, int ch, int co)
 {
-	display_putch(&info, x, y, ch, co);
+	sdl_putch(&info, x, y, ch, co);
 }
 
-void display_sdl_print_discrete(int x, int y, int c, char *s)
+static void display_sdl_print_discrete(int x, int y, int c, char *s)
 {
 	int i, len = strlen(s);
 
@@ -1387,16 +928,26 @@ void display_sdl_print_discrete(int x, int y, int c, char *s)
 		display_sdl_putch_discrete(x+i, y, s[i], c);
 }
 
-void display_sdl_update(int x, int y, int w, int h)
+static void display_sdl_update(int x, int y, int w, int h)
 {
-	display_update(&info, x, y, w, h);
+	sdl_update(&info, x, y, w, h);
+}
+
+static void display_sdl_set_charset(const charset *cs) {
+        sdl_set_charset(&info, cs->data);
+        sdl_update_and_present(&info, 0, 0, 80, 25);
+}
+
+static void display_sdl_set_palette(const palette *pal) {
+        sdl_expand_palette(info.palette, pal->data);
+        sdl_update_and_present(&info, 0, 0, 80, 25);
 }
 
 displaymethod display_sdl =
 {
 	NULL,
 	"SDL Textmode Emulator",
-	"1.0",
+	"2.0",
 	display_sdl_init,
 	display_sdl_end,
 	display_sdl_putch,
@@ -1410,5 +961,7 @@ displaymethod display_sdl =
 	display_sdl_putch_discrete,
 	display_sdl_print_discrete,
 	display_sdl_update,
+        display_sdl_set_charset,
+        display_sdl_set_palette,
 	NULL,
 };

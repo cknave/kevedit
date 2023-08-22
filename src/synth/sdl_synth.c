@@ -25,13 +25,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "notes.h"
 #include "sdl_synth.h"
 
 Uint8 *masterplaybuffer = NULL;
 static size_t playbuffersize = 0, playbufferloc = 0, playbuffermax = 0;
+
+#define MAX_CHANNELS 8
+typedef union {
+	uint8_t u8;
+	int8_t s8;
+	uint16_t u16;
+	int16_t s16;
+	float f32;
+} Sample;
+static Sample low_and_high_frames[2][MAX_CHANNELS];
+static size_t frame_size;
+static void init_low_and_high_frames(SDL_AudioSpec *spec);
+
 
 int OpenSynth(SDL_AudioDeviceID * id, SDL_AudioSpec * spec)
 {
@@ -54,12 +67,38 @@ int OpenSynth(SDL_AudioDeviceID * id, SDL_AudioSpec * spec)
 	desired.callback = AudioCallback;
 	desired.userdata = spec;
 
-	/* Open audio device */
-	*id = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
+	/* Open audio device, optimistically accepting all format changes */
+	*id = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE);
 	if (*id == 0) {
 		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
 		return 1;
 	}
+	/* Make sure we can actually support whatever we got */
+	bool spec_ok = true;
+	switch(obtained.format) {
+		case AUDIO_U8:
+		case AUDIO_S8:
+		case AUDIO_U16SYS:
+		case AUDIO_S16SYS:
+		case AUDIO_F32SYS:
+			break;
+		default:
+			spec_ok = false;
+	}
+	if(obtained.channels > MAX_CHANNELS) {
+		spec_ok = false;
+	}
+	if(!spec_ok) {
+		/* Nope, close the device and let SDL do the conversion for us. */
+		SDL_CloseAudioDevice(*id);
+		*id = SDL_OpenAudioDevice(NULL, 0, &desired, &obtained, 0);
+		if (*id == 0) {
+			fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+			return 1;
+		}
+	}
+	init_low_and_high_frames(&obtained);
+
 	SDL_PauseAudioDevice(*id, 0);
 
 	(*spec) = obtained;
@@ -122,22 +161,13 @@ void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings sett
 
 void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds, size_t *j_global)
 {
-	size_t notesize = seconds * spec.freq; /* Bytes of sound */
-	size_t wordsize;
+	size_t notesize = seconds * spec.freq; /* Samples of sound */
 	size_t i, j;
 
 	int osc;
 
-	Uint16 uon = U16_1, uoff = U16_0;
-	Sint16 son = S16_1, soff = S16_0;
-
 	/* Don't let the callback function access the playbuffer while we're editing it! */
 	SDL_LockAudio();
-
-	if(spec.format == AUDIO_U8 || spec.format == AUDIO_S8)
-		wordsize = 1;
-	else
-		wordsize = 2;
 
 	if(playbuffersize != 0 && playbufferloc != 0) {
 		/* Shift buffer back to zero */
@@ -149,23 +179,23 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds, size_t *j_global
 	}
 	if(playbuffersize == 0) {
 		/* Create buffer */
-		masterplaybuffer = malloc(notesize*wordsize);
-		playbuffersize   = notesize*wordsize;
+		masterplaybuffer = malloc(notesize*frame_size);
+		playbuffersize   = notesize*frame_size;
 	}
-	if((notesize*wordsize) > (playbuffersize-playbuffermax)) {
+	if((notesize*frame_size) > (playbuffersize-playbuffermax)) {
 		/* Make bigger buffer */
 		masterplaybuffer = realloc(masterplaybuffer,
-				playbuffersize+notesize*wordsize);
+				playbuffersize+notesize*frame_size);
 
-		playbuffersize += notesize*wordsize;
+		playbuffersize += notesize*frame_size;
 	}
 
 	if(freq == 0) {
 		/* Rest */
 		memset(&masterplaybuffer[playbuffermax],
 				spec.silence,
-				notesize*wordsize);
-		playbuffermax += notesize*wordsize;
+				notesize*frame_size);
+		playbuffermax += notesize*frame_size;
 	} else {
 		/* Tone */
 		float ffreq = (spec.freq/freq);
@@ -175,28 +205,13 @@ void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds, size_t *j_global
 				j -= ffreq;
 			}
 			osc = j >= hfreq;
-			if(spec.format == AUDIO_U8) {
-				if(osc)
-					masterplaybuffer[playbuffermax] = U8_1;
-				else
-					masterplaybuffer[playbuffermax] = U8_0;
-			} else if(spec.format == AUDIO_S8) {
-				if(osc)
-					masterplaybuffer[playbuffermax] = S8_1;
-				else
-					masterplaybuffer[playbuffermax] = S8_0;
-			} else if(spec.format == AUDIO_U16) {
-				if(osc)
-					memcpy(&masterplaybuffer[playbuffermax], &uon, 2);
-				else
-					memcpy(&masterplaybuffer[playbuffermax], &uoff, 2);
-			} else if(spec.format == AUDIO_S16) {
-				if(osc)
-					memcpy(&masterplaybuffer[playbuffermax], &son, 2);
-				else
-					memcpy(&masterplaybuffer[playbuffermax], &soff, 2);
+
+			if(osc) {
+				memcpy(&masterplaybuffer[playbuffermax], low_and_high_frames[1], frame_size);
+			} else {
+				memcpy(&masterplaybuffer[playbuffermax], low_and_high_frames[0], frame_size);
 			}
-			playbuffermax += wordsize;
+			playbuffermax += frame_size;
 		}
 		if (j_global != NULL)
 			*j_global = j;
@@ -225,5 +240,58 @@ void AudioCleanUp()
 		playbuffersize = 0;
 		playbufferloc = 0;
 		playbuffermax = 0;
+	}
+}
+
+void init_low_and_high_frames(SDL_AudioSpec *spec) {
+	size_t sample_size = SDL_AUDIO_BITSIZE(spec->format) / 8;
+	frame_size = sample_size * spec->channels;
+	memset(low_and_high_frames, spec->silence, sizeof(low_and_high_frames));
+
+	// Convert low and high amplitude to requested sample format
+	const float amplitude = 0.117191f;
+	Sample low, high;
+	switch(spec->format) {
+		case AUDIO_U8:
+			low.u8 = (uint8_t)(255/2. - amplitude*255/2);
+			high.u8 = (uint8_t)(255/2. + amplitude*255/2);
+			break;
+		case AUDIO_S8:
+			low.s8 = (int8_t)(-amplitude*255);
+			high.s8 = (int8_t)(amplitude*255);
+			break;
+		case AUDIO_U16SYS:
+			low.u16 = (uint16_t)(65535/2. - amplitude*65535/2);
+			high.u16 = (uint16_t)(65535/2. + amplitude*65535/2);
+			break;
+		case AUDIO_S16SYS:
+			low.s16 = (int16_t)(-amplitude*65535);
+			high.s16 = (int16_t)(amplitude*65535);
+			break;
+		case AUDIO_F32SYS:
+			low.f32 = -amplitude;
+			high.f32 = amplitude;
+			break;
+	}
+
+	// Channel indexes defined by SDL.
+	int channel1_idx, channel2_idx;
+	if(spec->channels == 1) {
+		channel1_idx = 0;
+		channel2_idx = -1;
+	} else if(spec->channels < 5) {
+		// For stereo, 2.1, and quadraphonic, use the front left/right channels
+		channel1_idx = 0;
+		channel2_idx = 1;
+	} else {
+		// For systems with a center channel, use that only
+		channel1_idx = 2;
+		channel2_idx = -1;
+	}
+	memcpy((uint8_t *)low_and_high_frames[0] + channel1_idx * sample_size, &low.u8, sample_size);
+	memcpy((uint8_t *)low_and_high_frames[1] + channel1_idx * sample_size, &high.u8, sample_size);
+	if(channel2_idx != -1) {
+		memcpy((uint8_t *)low_and_high_frames[0] + channel2_idx * sample_size, &low.u8, sample_size);
+		memcpy((uint8_t *)low_and_high_frames[1] + channel2_idx * sample_size, &high.u8, sample_size);
 	}
 }

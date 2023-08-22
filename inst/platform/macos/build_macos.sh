@@ -11,11 +11,14 @@ if [ -z "$SOURCE" ] || [ -z "$KEVEDIT_VERSION" ]; then
 fi
 export KEVEDIT_VERSION
 
-export MACOSX_DEPLOYMENT_TARGET=10.6
+export MACOSX_DEPLOYMENT_TARGET=10.7
 
 rm -rf /work/KevEdit.app
-mkdir -p /work/KevEdit.app/Contents/MacOS /work/KevEdit.app/Contents/Resources
-cp -a /platform/macos/Info.plist /platform/macos/PkgInfo /work/KevEdit.app/Contents
+mkdir -p \
+    /work/KevEdit.app/Contents/MacOS \
+    /work/KevEdit.app/Contents/Resources \
+    /work/KevEdit.app/Contents/Frameworks
+cp -a /platform/macos/PkgInfo /work/KevEdit.app/Contents/
 
 rm -rf /work/kevedit
 mkdir /work/kevedit
@@ -24,22 +27,35 @@ cd /work/kevedit
 unzip /vendor/$SOURCE
 
 ./bootstrap.sh
-./configure --host=x86_64-apple-darwin16 CC=o64-clang CFLAGS="-O3"
-make AR=llvm-ar
+# Build binaries for both x86_64 and arm64
+for arch in x86_64 arm64; do
+    test -f Makefile && make clean
+    ./configure \
+        --host=$arch-apple-darwin20.4 \
+        --target=$arch-apple-darwin20.4 \
+        --with-sdl-framework \
+        CFLAGS="-O3"
+    make AR=llvm-ar
+    mv src/kevedit/kevedit /work/kevedit.bin.$arch
+done
 
-# `make` builds a binary that's dynamically linked to libSDL.
-# That's no good to distribute, so rebuild it with static SDL.
-cd src/kevedit
-rm kevedit
-SDL_LIBS=$(/opt/osxcross/bin/sdl2-config --static-libs | sed -e 's/-lSDL2//')
-make kevedit LIBS="$SDL_LIBS /opt/osxcross/lib/libSDL2.a"
-cp -a kevedit /work/KevEdit.app/Contents/MacOS
-cp -a ../../docs/kevedit.zml \
-      ../../soundfx.zzm \
-      ../../dosbox/kevedos.cfg \
-      ../../dosbox/kevedos.iso \
+# Combine them into a universal binary
+lipo -create \
+    -output /work/KevEdit.app/Contents/MacOS/kevedit \
+    /work/kevedit.bin.*
+
+cp -a docs/kevedit.zml \
+      soundfx.zzm \
+      dosbox/kevedos.cfg \
+      dosbox/kevedos.iso \
       /platform/macos/kevedit.icns \
       /work/KevEdit.app/Contents/Resources/
+cp -a inst/platform/macos/Info.plist /work/KevEdit.app/Contents/
+
+`osxcross-conf`
+cp -a $OSXCROSS_SDK/Library/Frameworks/SDL2.framework /work/KevEdit.app/Contents/Frameworks
+rm /work/KevEdit.app/Contents/Frameworks/SDL2.framework/Headers
+rm -rf /work/KevEdit.app/Contents/Frameworks/SDL2.framework/Versions/Current/Headers
 
 rm -rf /work/dmg
 mkdir /work/dmg

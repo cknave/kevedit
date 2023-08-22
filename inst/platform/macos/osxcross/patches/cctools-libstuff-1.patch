@@ -1,9 +1,0 @@
---- libstuff/Makefile.in.orig
-+++ libstuff/Makefile.in
-@@ -103,5 +103,5 @@
- CONFIG_CLEAN_VPATH_FILES =
- LTLIBRARIES = $(noinst_LTLIBRARIES)
--libstuff_la_LIBADD =
-+libstuff_la_LIBADD = -lfts
- am_libstuff_la_OBJECTS = libstuff_la-allocate.lo \
-        libstuff_la-apple_version.lo libstuff_la-arch.lo \

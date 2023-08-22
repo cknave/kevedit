@@ -11,18 +11,14 @@ import sys
 
 # Versions of 3rd party software to fetch
 APPIMAGE_VERSION = '11'
-APPLE_LIBTAPI_VERSION = 'e56673694db395e25b31808b4fbb9a7005e6875f'
-CCTOOLS_PORT_VERSION = '1e3f614aff4eaae01b6cc4d29c3237c93f3322f8'
-BUILD_DJGPP_VERSION = '2.9'
-INNOEXTRACT_VERSION = '1.7'
-ISPACK_VERSION = '5.5.8'
-MACOS_SDK_VERSION = '10.12'
-MACOS_DARWIN_VERSION = '16'
-OSXCROSS_VERSION = '6525b2b7d33abc371ad889f205377dc5cf81f23e'
-PBZX_VERSION = '1.0.2'
-SDL_VERSION = '2.0.9'
-XAR_VERSION = '1.6.1'
-XCODE_VERSION = '8.3.3'
+BUILD_DJGPP_VERSION = '3.3'
+INNOEXTRACT_VERSION = '1.9'
+INNOSETUP_VERSION = '6.2.2'
+MACOS_SDK_VERSION = '11.3'
+MACOS_DARWIN_VERSION = '20'
+OSXCROSS_VERSION = '50e86ebca7d14372febd0af8cd098705049161b9'
+SDL_VERSION = '2.26.4'
+XCODE_VERSION = '12.5.1'
 
 
 # All build targets
@@ -62,7 +58,7 @@ def main():
         globals()['build_' + target](source, args)
 
 
-def build_appimage(source, args, image_version='1.2'):
+def build_appimage(source, args, image_version='1.4'):
     """Build Linux x86_64 AppImage to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -124,7 +120,7 @@ def build_appimage(source, args, image_version='1.2'):
           appimage_tool=appimage_tool, uid_gid=UID_GID, version=args.version)
 
 
-def build_macos(source, args, image_version='2.1', extractor_version='2.0'):
+def build_macos(source, args, image_version='2.3', extractor_version='2.1'):
     """Build macOS x86_64 .app in a .dmg archive to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -136,37 +132,26 @@ def build_macos(source, args, image_version='2.1', extractor_version='2.0'):
         log.debug('Pulling macOS docker image...')
         shell('docker pull kevedit/build_macos:{version}', version=image_version)
     else:
+        maybe_fetch_osxcross(OSXCROSS_VERSION)
         maybe_extract_macos_sdk(args, MACOS_SDK_VERSION, extractor_version)
         maybe_tag_latest('kevedit/macos_sdk_extractor', extractor_version, args)
-        maybe_fetch_sdl_source(SDL_VERSION)
-        maybe_fetch_xar(XAR_VERSION)
         maybe_fetch(
-            description='Apple libtapi {}'.format(APPLE_LIBTAPI_VERSION),
-            url='https://github.com/tpoechtrager/apple-libtapi/archive/{}.zip'.format(
-                APPLE_LIBTAPI_VERSION),
-            filename='apple-libtapi-{}.zip'.format(APPLE_LIBTAPI_VERSION))
-        maybe_fetch(
-            description='cctools-port {}'.format(CCTOOLS_PORT_VERSION),
-            url='https://github.com/tpoechtrager/cctools-port/archive/{}.zip'.format(
-                CCTOOLS_PORT_VERSION),
-            filename='cctools-port-{}.zip'.format(CCTOOLS_PORT_VERSION))
+            description='SDL2 {} macOS binaries'.format(SDL_VERSION),
+            url=('https://github.com/libsdl-org/SDL/releases/download/release-{sdl_version}/'
+                 'SDL2-{sdl_version}.dmg'.format(sdl_version=SDL_VERSION)))
         log.debug('Building macOS docker image...')
         shell("""
               docker build
               -f Dockerfile.macos -t kevedit/build_macos:{image_version}
-              --build-arg APPLE_LIBTAPI_VERSION={libtapi_version}
-              --build-arg CCTOOLS_PORT_VERSION={cctools_version}
               --build-arg DARWIN_VERSION={darwin_version}
               --build-arg MACOS_SDK_VERSION={sdk_version}
               --build-arg OSXCROSS_VERSION={osxcross_version}
               --build-arg SDL_VERSION={sdl_version}
-              --build-arg XAR_VERSION={xar_version}
               .
               """,
-              image_version=image_version, libtapi_version=APPLE_LIBTAPI_VERSION,
-              cctools_version=CCTOOLS_PORT_VERSION, darwin_version=MACOS_DARWIN_VERSION,
+              image_version=image_version, darwin_version=MACOS_DARWIN_VERSION,
               sdk_version=MACOS_SDK_VERSION, osxcross_version=OSXCROSS_VERSION,
-              sdl_version=SDL_VERSION, xar_version=XAR_VERSION)
+              sdl_version=SDL_VERSION)
         maybe_tag_latest('kevedit/build_macos', image_version, args)
 
     log.debug('Building macOS .dmg artifact...')
@@ -181,7 +166,7 @@ def build_macos(source, args, image_version='2.1', extractor_version='2.0'):
           image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
-def build_windows(source, args, image_version='1.2'):
+def build_windows(source, args, image_version='1.4'):
     """Build windows x64 .exe in a self-executing installer to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -196,25 +181,25 @@ def build_windows(source, args, image_version='1.2'):
         shell('docker pull kevedit/build_windows:{version}', version=image_version)
     else:
         maybe_fetch_sdl_source(SDL_VERSION)
-        maybe_fetch(
-            description='ispack {}'.format(ISPACK_VERSION),
-            url='http://files.jrsoftware.org/ispack/ispack-{}-unicode.exe'.format(ISPACK_VERSION))
         inex_url = ('https://github.com/dscharrer/innoextract/releases/download/{0}/'
                     'innoextract-{0}-linux.tar.xz'.format(INNOEXTRACT_VERSION))
         maybe_fetch(description='innoextract {}'.format(INNOEXTRACT_VERSION),
                     url=inex_url,
                     signature_url=inex_url+'.sig')
+        maybe_fetch(description='Inno Setup {}'.format(INNOSETUP_VERSION),
+                    url='https://files.jrsoftware.org/is/6/innosetup-{}.exe'.format(
+                        INNOSETUP_VERSION))
         log.debug('Building Windows docker image...')
         shell("""
               docker build
               -f Dockerfile.windows -t kevedit/build_windows:{image_version}
               --build-arg SDL_VERSION={sdl_version}
-              --build-arg ISPACK_VERSION={ispack_version}
               --build-arg INNOEXTRACT_VERSION={innoextract_version}
+              --build-arg INNOSETUP_VERSION={innosetup_version}
               .
               """,
-              image_version=image_version, sdl_version=SDL_VERSION, ispack_version=ISPACK_VERSION,
-              innoextract_version=INNOEXTRACT_VERSION)
+              image_version=image_version, sdl_version=SDL_VERSION,
+              innoextract_version=INNOEXTRACT_VERSION, innosetup_version=INNOSETUP_VERSION)
         maybe_tag_latest('kevedit/build_windows', image_version, args)
 
     log.debug('Bulding Windows setup.exe artifact...')
@@ -230,7 +215,7 @@ def build_windows(source, args, image_version='1.2'):
           sdl_version=SDL_VERSION)
 
 
-def build_dos(source, args, image_version='1.1'):
+def build_dos(source, args, image_version='1.2'):
     """Build DOS 32-bit .exe in a .zip file to DIST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -267,7 +252,7 @@ def build_dos(source, args, image_version='1.1'):
           image_version=image_version, source=source, uid_gid=UID_GID, version=args.version)
 
 
-def build_source(source, args, image_version='1.0'):
+def build_source(source, args, image_version='1.1'):
     """Build source tarball in DEST_DIR.
 
     :param str source: path to KevEdit source zip
@@ -416,15 +401,6 @@ def maybe_fetch_osxcross(version):
                 filename='osxcross-{}.zip'.format(version))
 
 
-def maybe_fetch_xar(version):
-    """Fetch the xar sources git snapshot if it doesn't already exist in VENDOR_DIR.
-
-    :param str version: xar git commit hash
-    """
-    maybe_fetch(description='xar {} sources'.format(version),
-                url='https://github.com/mackyle/xar/archive/xar-{}.tar.gz'.format(version))
-
-
 def maybe_extract_macos_sdk(args, sdk_version, docker_image_version):
     """If the macOS SDK doesn't exist, fetch Xcode, build an extractor in docker, and run it.
 
@@ -432,7 +408,7 @@ def maybe_extract_macos_sdk(args, sdk_version, docker_image_version):
     :param str sdk_version: macOS SDK version
     :param str docker_image_version: macos_sdk_extractor image version
     """
-    sdk_file = 'MacOSX{}.sdk.tar.xz'.format(sdk_version)
+    sdk_file = 'MacOSX{}.sdk.tar.bz2'.format(sdk_version)
     sdk_path = os.path.join(VENDOR_DIR, sdk_file)
     if os.path.exists(sdk_path):
         log.debug('MacOS SDK file %s already exists; will not extract', sdk_path)
@@ -441,31 +417,23 @@ def maybe_extract_macos_sdk(args, sdk_version, docker_image_version):
     maybe_make_dirs(os.path.join(VENDOR_DIR, 'xcode'))
     maybe_fetch(
         description='Xcode {}'.format(XCODE_VERSION),
-        url='https://download.developer.apple.com/Developer_Tools/Xcode_{0}/Xcode{0}.xip'.format(
+        url='https://download.developer.apple.com/Developer_Tools/Xcode_{0}/Xcode_{0}.xip'.format(
             XCODE_VERSION),
-        filename=os.path.join('xcode', 'Xcode{}.xip'.format(XCODE_VERSION)))
+        filename=os.path.join('xcode', 'Xcode_{}.xip'.format(XCODE_VERSION)))
 
     if args.docker_images == 'pull':
         log.debug('Pulling macOS SDK extractor image...')
         shell('docker pull kevedit/macos_sdk_extractor:{version}', version=docker_image_version)
     else:
         maybe_fetch_osxcross(OSXCROSS_VERSION)
-        maybe_fetch_xar(XAR_VERSION)
-        maybe_fetch(
-            description='pbzx {}'.format(PBZX_VERSION),
-            url='https://github.com/NiklasRosenstein/pbzx/archive/v{}.tar.gz'.format(PBZX_VERSION),
-            filename='pbzx-{}.tar.gz'.format(PBZX_VERSION))
         log.debug('Building macOS SDK extractor docker image...')
         shell("""
               docker build
               -f Dockerfile.macos_sdk_extractor -t kevedit/macos_sdk_extractor:{image_version}
               --build-arg OSXCROSS_VERSION={osxcross_version}
-              --build-arg PBZX_VERSION={pbzx_version}
-              --build-arg XAR_VERSION={xar_version}
               .
               """,
-              image_version=docker_image_version, osxcross_version=OSXCROSS_VERSION,
-              pbzx_version=PBZX_VERSION, xar_version=XAR_VERSION)
+              image_version=docker_image_version, osxcross_version=OSXCROSS_VERSION)
         maybe_tag_latest('kevedit/macos_sdk_extractor', docker_image_version, args)
 
     log.debug('Extracting macOS SDK...')
@@ -473,10 +441,10 @@ def maybe_extract_macos_sdk(args, sdk_version, docker_image_version):
           docker run --rm
           -v {vendor}:/vendor -u {uid_gid}          
           kevedit/macos_sdk_extractor:{image_version}
-          {xcode_version}
+          {xcode_version} {sdk_version}
           """,
           vendor=VENDOR_DIR, uid_gid=UID_GID, image_version=docker_image_version,
-          xcode_version=XCODE_VERSION)
+          xcode_version=XCODE_VERSION, sdk_version=sdk_version)
 
     if not os.path.exists(sdk_path):
         log.error('Extractor ran on Xcode %s but expected SDK file was not created: %s',

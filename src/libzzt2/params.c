@@ -31,7 +31,7 @@
 const ZZTprofile _zzt_param_profile_table[] = {
 	/* Type                  { properties, default cycle, data uses } */
 	/* ZZT_EMPTY          */ { 0, 0, { 0, 0, 0 } },
-	/* ZZT_EDGE           */ { 0, 0, { 0, 0, 0 } },   /* TODO: are edges paramless? */
+	/* ZZT_EDGE           */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_MESSAGETIMER   */ { 0, 0, { 0, 0, 0 } },
 	/* ZZT_MONITOR        */ { ZZT_PROPERTY_CYCLE, 1, { 0, 0, 0 } },
 	/* ZZT_PLAYER         */ { ZZT_PROPERTY_CYCLE, 1, { 0, 0, 0 } },
@@ -43,9 +43,9 @@ const ZZTprofile _zzt_param_profile_table[] = {
 	/* ZZT_SCROLL         */ { ZZT_PROPERTY_CYCLE | ZZT_PROPERTY_PROGRAM, 1, { 0, 0, 0 } },
 	/* ZZT_PASSAGE        */ { ZZT_PROPERTY_NONE, 0, { 0, 0, ZZT_DATAUSE_PASSAGEDEST } },
 	/* ZZT_DUPLICATOR     */ { ZZT_PROPERTY_STEP, 1, { 0, ZZT_DATAUSE_DUPRATE, 0 } },
-	/* ZZT_BOMB           */ { ZZT_PROPERTY_CYCLE, 6, { ZZT_DATAUSE_TIMELEFT, 0, 0 } },   /* TODO: there must be more to it than this */
+	/* ZZT_BOMB           */ { ZZT_PROPERTY_CYCLE, 6, { ZZT_DATAUSE_TIMELEFT, 0, 0 } },
 	/* ZZT_ENERGIZER      */ { 0, 0, { 0, 0, 0 } },
-	/* ZZT_STAR           */ { ZZT_PROPERTY_STEP | ZZT_PROPERTY_CYCLE, 1, { ZZT_DATAUSE_OWNER, 0, 0 } }, /* TODO: does owner matter? */
+	/* ZZT_STAR           */ { ZZT_PROPERTY_STEP | ZZT_PROPERTY_CYCLE, 1, { 0, 0, 0 } },
 	/* ZZT_CWCONV         */ { ZZT_PROPERTY_CYCLE, 3, { 0, 0, 0 } },
 	/* ZZT_CCWCONV        */ { ZZT_PROPERTY_CYCLE, 2, { 0, 0, 0 } },
 	/* ZZT_BULLET         */ { ZZT_PROPERTY_STEP | ZZT_PROPERTY_CYCLE, 1, { ZZT_DATAUSE_OWNER, 0, 0 } },
@@ -150,8 +150,8 @@ ZZTparam *zztParamCreateBlank(void)
 	param->ystep = 0;
 	param->cycle = 0;
 	memset(param->data, 0, sizeof(param->data));
-	param->leaderindex = 0xFFFF;
-	param->followerindex = 0xFFFF;
+	param->leaderindex = -1;
+	param->followerindex = -1;
 	param->utype = ZZT_EMPTY;
 	param->ucolor = 0x0F;
 	memset(param->magic, 0, sizeof(param->magic));

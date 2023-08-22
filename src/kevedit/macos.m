@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include "macos.h"
-#include "SDL_syswm.h"
+#include "SDL2/SDL_syswm.h"
 
 static NSString *const BarIdentifier = @"com.kvance.kevedit.bar";
 static NSString *const ItemIdentifier = @"com.kvance.kevedit.bar.item";

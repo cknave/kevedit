@@ -131,6 +131,8 @@ keveditor * createkeveditor(ZZTworld * myworld, displaymethod * mydisplay, char 
 
 	pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 
+        myeditor->char_set = NULL;
+        myeditor->palette = NULL;
 	return myeditor;
 }
 
@@ -156,6 +158,9 @@ void deletekeveditor(keveditor * myeditor)
 	deleteselection(&myeditor->copySelection);
 
 	/* Free everything! Free! Free! Free! Let freedom ring! */
+        if(myeditor->char_set != NULL) {
+                charset_free(myeditor->char_set);
+        }
 	free(myeditor);
 }
 
@@ -504,7 +509,42 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
 			break;
+		case DKEY_CTRL_PAGEDOWN:
+			/* Switch to next page of boards (bounds checking is automatic) */
+			zztBoardSelect(myeditor->myworld, zztBoardGetCurrent(myeditor->myworld) + 7);
 
+			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			break;
+		case DKEY_CTRL_PAGEUP:
+			/* Switch to previous page of boards (bounds checking is automatic) */
+			zztBoardSelect(myeditor->myworld, zztBoardGetCurrent(myeditor->myworld) - 7);
+
+			myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			break;
+		case DKEY_CTRL_UP:
+			if (zztBoardGetBoard_n(myeditor->myworld) > 0) {
+				zztBoardSelect(myeditor->myworld, zztBoardGetBoard_n(myeditor->myworld));
+	                        myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			}
+			break;
+		case DKEY_CTRL_DOWN:
+			if (zztBoardGetBoard_s(myeditor->myworld) > 0) {
+				zztBoardSelect(myeditor->myworld, zztBoardGetBoard_s(myeditor->myworld));
+				myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			}
+			break;
+		case DKEY_CTRL_LEFT:
+			if (zztBoardGetBoard_w(myeditor->myworld) > 0) {
+				zztBoardSelect(myeditor->myworld, zztBoardGetBoard_w(myeditor->myworld));
+				myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			}
+			break;
+		case DKEY_CTRL_RIGHT:
+			if (zztBoardGetBoard_e(myeditor->myworld) > 0) {
+				zztBoardSelect(myeditor->myworld, zztBoardGetBoard_e(myeditor->myworld));
+				myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT | UD_BOARDTITLE;
+			}
+			break;
 		case 'i':
 		case 'I':
 			/* Board Info */
@@ -514,7 +554,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case 'w':
 		case 'W':
 			/* World Info */
-			next_key = editworldinfo(myeditor->myworld, myeditor->mydisplay);
+			next_key = editworldinfo(myeditor);
 
 			myeditor->updateflags |= UD_ALL | UD_WORLDTITLE;
 			break;
@@ -583,6 +623,23 @@ void keveditHandleKeypress(keveditor * myeditor)
 			pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
 			myeditor->updateflags |= UD_COLOR;
 			break;
+                case 'r':
+                case 'R':
+                        /* Reverse Colors */
+                        myeditor->color.fg = myeditor->color.fg + myeditor->color.bg;
+                        myeditor->color.bg = myeditor->color.fg - myeditor->color.bg;
+                        myeditor->color.fg = myeditor->color.fg - myeditor->color.bg;
+                        if (myeditor->color.blink == 1) {
+                                myeditor->color.fg = myeditor->color.fg + 8;
+                        }
+                        myeditor->color.blink = 0;
+                        if (myeditor->color.bg > 7) {
+                                myeditor->color.blink = 1;
+                                myeditor->color.bg = myeditor->color.bg - 8;
+                        }
+                        pat_applycolordata(myeditor->buffers.standard_patterns, myeditor->color);
+                        myeditor->updateflags |= UD_COLOR;
+                        break;
 		case 'k':
 		case 'K':
 		case DKEY_CTRL_K:
@@ -616,8 +673,6 @@ void keveditHandleKeypress(keveditor * myeditor)
 
 			myeditor->updateflags |= UD_ALL;
 			break;
-		case 'r':
-		case 'R':
 		case DKEY_ALT_T:  /* Alt-t (by popular demand) */
 			/* run zzt */
 			/* Load current world into zzt */

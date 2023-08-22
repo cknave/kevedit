@@ -1,5 +1,5 @@
-/* macos.m         -- macOS specific functions
- * Copyright (C) 2019 Kev Vance <kvance@kvance.com>
+/* charset.h    -- Defines for custom color palette
+ * Copyright (C) 2023 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,25 @@
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
-#ifndef _MACOS_H
-#define _MACOS_H
+#ifndef PALETTE_H
+#define PALETTE_H 1
 
-#include "SDL2/SDL.h"
+#include <stdint.h>
 
-void installTouchBar(SDL_Window *window);
+/* Palette size, in bytes. */
+#define PALETTE_SIZE (48)
 
-void enableTouchBarWithTextMode(bool textMode);
-void disableTouchBar();
+typedef struct {
+    char *path;
+    uint8_t data[PALETTE_SIZE];
+} palette;
+
+extern const palette default_palette;
+
+/* Return a new palette from the file at this path, or NULL if it could not be loaded. */
+palette *palette_load(char *path);
+
+/* Free a palette returned from load_palette */
+void palette_free(palette *char_set);
 
 #endif

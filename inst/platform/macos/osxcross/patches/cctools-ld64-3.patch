@@ -1,8 +1,0 @@
---- ld64/src/ld/parsers/textstub_dylib_file.cpp.orig
-+++ ld64/src/ld/parsers/textstub_dylib_file.cpp
-@@ -26,4 +26,5 @@
- #include <sys/param.h>
- #include <sys/mman.h>
-+#include <sys/types.h>
-
- #include <vector>

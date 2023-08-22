@@ -1,5 +1,5 @@
-/* macos.m         -- macOS specific functions
- * Copyright (C) 2019 Kev Vance <kvance@kvance.com>
+/* charset.h    -- Defines for character set
+ * Copyright (C) 2023 Kev Vance <kvance@kvance.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,28 @@
  * Foundation, Inc., 59 Temple Place Suite 330; Boston, MA 02111-1307, USA.
  */
 
-#ifndef _MACOS_H
-#define _MACOS_H
+#ifndef CHARSET_H
+#define CHARSET_H 1
 
-#include "SDL2/SDL.h"
+#include <stdint.h>
 
-void installTouchBar(SDL_Window *window);
+/* Character set buffer size, in bytes. */
+#define CHARSET_SIZE (3584)
 
-void enableTouchBarWithTextMode(bool textMode);
-void disableTouchBar();
+/* Character height, in pixels. */
+#define CHARACTER_HEIGHT (14)
+
+typedef struct {
+    char *path;
+    uint8_t data[CHARSET_SIZE];
+} charset;
+
+extern const charset default_charset;
+
+/* Return a new charset from the file at this path, or NULL if it could not be loaded. */
+charset *charset_load(char *path);
+
+/* Free a charset returned from load_charset */
+void charset_free(charset *char_set);
 
 #endif

@@ -179,11 +179,19 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 int line_editnumber(int x, int y, int color, int * number, int maxval,
                     displaymethod* d)
 {
+	return line_editsnumber(x, y, color, number, 0, maxval, d);
+}
+
+int line_editsnumber(int x, int y, int color, int * number, int minval, int maxval,
+                    displaymethod* d)
+{
 	char* buffer;
 	int editwidth = 0;
 	int factor;
 
-	for (factor = 1; factor < maxval; factor *= 10)
+	for (factor = 1; factor < maxval && factor < -minval; factor *= 10)
+		editwidth++;
+	if (minval < 0)
 		editwidth++;
 
 	if (editwidth == 0)
@@ -193,10 +201,12 @@ int line_editnumber(int x, int y, int color, int * number, int maxval,
 
 	sprintf(buffer, "%d", *number);
 	int result = line_editor(x, y, color, buffer, editwidth,
-			LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES, d);
+			minval >= 0 ? LINED_NUMBER : LINED_SNUMBER, d);
 	if(result == LINED_OK) {
 		sscanf(buffer, "%d", number);
-		if (*number > maxval)
+		if (*number < minval)
+			*number = minval;
+		else if (*number > maxval)
 			*number = maxval;
 		free(buffer);
 		return LINED_OK;
@@ -682,8 +692,16 @@ void drawblockspot(displaymethod * d, ZZTblock * b, selection sel, int x, int y,
 }
 
 
-char * filedialog(char * dir, char * extension, char * title, int filetypes, displaymethod * mydisplay, bool *quit)
-{
+char *filedialog(char * dir, char *extension, char *title, int filetypes, displaymethod *mydisplay, bool *quit) {
+        stringvector extensions;
+        initstringvector(&extensions);
+        pushstring(&extensions, extension);
+        char *result = filedialog_multiext(dir, &extensions, title, filetypes, mydisplay, quit);
+        removestringvector(&extensions);
+        return result;
+}
+
+char *filedialog_multiext(char *dir, stringvector *extensions, char *title, int filetypes, displaymethod *mydisplay, bool *quit) {
 	int done = 0;
 	char* result = NULL;
 	stringvector files;
@@ -694,7 +712,7 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 	else if (filetypes | FTYPE_FILE)
 		drawsidepanel(mydisplay, PANEL_FILEDIALOG);
 
-	files = readdirectorytosvector(curdir, extension, filetypes);
+	files = readdirectorytosvector(curdir, extensions, filetypes);
 
     if (quit)
         *quit = false;
@@ -725,7 +743,7 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 
 					/* Update the files list */
 					deletestringvector(&files);
-					files = readdirectorytosvector(curdir, extension, filetypes);
+					files = readdirectorytosvector(curdir, extensions, filetypes);
 
 					free(subdir);
 				} else {
@@ -749,7 +767,7 @@ char * filedialog(char * dir, char * extension, char * title, int filetypes, dis
 
 					/* Update the files list */
 					deletestringvector(&files);
-					files = readdirectorytosvector(curdir, extension, filetypes);
+					files = readdirectorytosvector(curdir, extensions, filetypes);
 				}
 				break;
 

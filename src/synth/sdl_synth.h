@@ -20,21 +20,9 @@
 #ifndef _SYNTH_H
 #define _SYNTH_H 1
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "notes.h"
-
-/* On/off value for various states of signedness and bits */
-#define U8_0		112
-#define U8_1		142
-#define S8_0		-15
-#define S8_1		15
-#define U16_0		28927
-#define U16_1		36607
-#define S16_0		-3840
-#define S16_1		3840
-
-/* TODO: rename these functions */
 
 /* Open the synthesizer and store audio spec in "spec" (true on error) */
 int OpenSynth(SDL_AudioDeviceID *id, SDL_AudioSpec * spec);
@@ -48,8 +36,7 @@ int IsSynthBufferEmpty();
 /* Play a note on to the SDL synthesizer */
 void SynthPlayNote(SDL_AudioSpec audiospec, musicalNote note, musicSettings settings);
 
-/* Add a frequency and duration to the SDL audio
- * buffer */
+/* Add a frequency and duration to the SDL audio buffer */
 void AddToBuffer(SDL_AudioSpec spec, float freq, float seconds, size_t *counter);
 
 /* Internal audio callback function (don't call manually!) */
