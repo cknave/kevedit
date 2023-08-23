@@ -859,7 +859,8 @@ static int display_sdl_getkey()
 	}
 
 	/* Shift is down */
-	if(event.key.keysym.mod && KMOD_SHIFT) {
+	shift = event.key.keysym.mod & KMOD_SHIFT; /* set global variable */
+	if(shift) {
 		switch(event.key.keysym.sym) {
 			case SDLK_TAB:
 				event.key.keysym.sym = DKEY_SHIFT_TAB;
