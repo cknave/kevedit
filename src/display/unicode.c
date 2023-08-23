@@ -64,7 +64,8 @@ void init_unicode_conversion() {
 	bzero(unicode_to_CP437, 65536);
 
 	/* First reverse the cp437 to unicode codepoint table. */
-	for (int i = 0; i <= 255; ++i) {
+   int i;
+	for (i = 0; i <= 255; ++i) {
 		unicode_to_CP437[CP437_to_unicode[i]] = i;
 	}
 
