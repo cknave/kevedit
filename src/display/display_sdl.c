@@ -587,13 +587,12 @@ static int has_unicode_event_queued()
 	const int MAX_EVENTS = 10;
 	SDL_Event outevent[MAX_EVENTS];
 	int pending_events = SDL_PeepEvents(outevent,
-		MAX_EVENTS, SDL_PEEKEVENT, SDL_TEXTINPUT, SDL_TEXTINPUT);
+		MAX_EVENTS, SDL_PEEKEVENT, SDL_TEXTINPUT,
+		SDL_TEXTINPUT);
 
 	int i;
 	for (i = 0; i < pending_events; i++) {
-		if (outevent[i].type == SDL_TEXTINPUT &&
-			!is_ascii_key(outevent[i].text.text[0])) {
-
+		if (!is_ascii_key(outevent[i].text.text[0])) {
 			return true;
 		}
 	}
