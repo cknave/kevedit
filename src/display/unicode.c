@@ -64,7 +64,7 @@ void init_unicode_conversion() {
 	bzero(unicode_to_CP437, 65536);
 
 	/* First reverse the cp437 to unicode codepoint table. */
-   int i;
+	int i;
 	for (i = 0; i <= 255; ++i) {
 		unicode_to_CP437[CP437_to_unicode[i]] = i;
 	}
@@ -80,15 +80,12 @@ void init_unicode_conversion() {
 }
 
 char get_CP437_from_UTF8(char * utf8_str) {
-
-	mbstate_t state = {0};
 	wchar_t codepoint;
 
-	/* Alternatively do if (!unicode_conversion_inited) init_unicode_conversion();*/
 	assert(unicode_table_inited);
 
-	size_t bytes_converted = mbrtowc(&codepoint, utf8_str,
-		min(2, strlen(utf8_str)), &state);
+	size_t bytes_converted = mbtowc(&codepoint, utf8_str,
+		min(2, strlen(utf8_str)));
 
 	/* Check if something went wrong. If so, abort. */
 	if (bytes_converted == (size_t)-1 || bytes_converted == (size_t)-2) {

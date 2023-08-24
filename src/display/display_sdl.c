@@ -578,6 +578,28 @@ static void display_sdl_fullscreen()
 		SDL_ShowCursor(SDL_ENABLE);
 }
 
+/* Check if there is a Unicode TextInput event further down
+   the SDL queue. This is the only way we can distinguish AltGr
+   from plain right Alt, it appears; by the text the former
+   produces. */
+static int has_unicode_event_queued()
+{
+	const int MAX_EVENTS = 10;
+	SDL_Event outevent[MAX_EVENTS];
+	int pending_events = SDL_PeepEvents(outevent,
+		MAX_EVENTS, SDL_PEEKEVENT, SDL_TEXTINPUT,
+		SDL_TEXTINPUT);
+
+	int i;
+	for (i = 0; i < pending_events; i++) {
+		if (!is_ascii_key(outevent[i].text.text[0])) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static int display_sdl_getkey()
 {
 	SDL_Event event;
@@ -599,7 +621,7 @@ static int display_sdl_getkey()
 
 	/* Preemptive stuff */
 	if(event.type == SDL_TEXTINPUT) {
-		if (event.text.text[0] >= 32 && event.text.text[0] < 127) {
+		if (is_ascii_key(event.text.text[0])) {
 			return event.text.text[0];
 		} else {
 			/* Try to convert Unicode to CP437 */
@@ -789,10 +811,12 @@ static int display_sdl_getkey()
 
 	/* Alt is down */
 	else if(event.key.keysym.mod & KMOD_ALT) {
-		/* Check for AltGr on international keyboards. AltGr
-		   combos should not be considered as hotkeys; instead
-		   they should give modified characters. */
-		if (SDL_GetModState() && KMOD_MODE) {
+		/* It turns out that SDL2 can't directly distinguish AltGr
+		   from ordinary right Alt. As AltGr will produce a Unicode
+		   text event downstream, though, we can check for that.
+		   If there's such a text event, skip the hotkey check
+		   below. */
+		if (has_unicode_event_queued()) {
 			return DKEY_NONE;
 		}
 
@@ -840,7 +864,8 @@ static int display_sdl_getkey()
 	}
 
 	/* Shift is down */
-	if(event.key.keysym.mod && KMOD_SHIFT) {
+	shift = event.key.keysym.mod & KMOD_SHIFT; /* set global variable */
+	if(shift) {
 		switch(event.key.keysym.sym) {
 			case SDLK_TAB:
 				event.key.keysym.sym = DKEY_SHIFT_TAB;
