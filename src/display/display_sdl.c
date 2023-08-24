@@ -584,15 +584,21 @@ static void display_sdl_fullscreen()
    produces. */
 static int has_unicode_event_queued()
 {
-	SDL_Event outevent;
-	int pending_events = SDL_PeepEvents(&outevent,
-		1, SDL_PEEKEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT);
+	const int MAX_EVENTS = 10;
+	SDL_Event outevent[MAX_EVENTS];
+	int pending_events = SDL_PeepEvents(outevent,
+		MAX_EVENTS, SDL_PEEKEVENT, SDL_TEXTINPUT, SDL_TEXTINPUT);
 
-	if (pending_events < 1)
-		return 0;
+	int i;
+	for (i = 0; i < pending_events; i++) {
+		if (outevent[i].type == SDL_TEXTINPUT &&
+			!is_ascii_key(outevent[i].text.text[0])) {
 
-	return outevent.type == SDL_TEXTINPUT &&
-		!is_ascii_key(outevent.text.text[0]);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 static int display_sdl_getkey()
