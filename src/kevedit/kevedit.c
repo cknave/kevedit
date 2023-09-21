@@ -245,7 +245,7 @@ void keveditHandleSelection(keveditor * myeditor)
 	/* Block selection is based on whether the shift key is down */
 	int selectblockflag = myeditor->mydisplay->shift();
 
-	/* Except for shift + ASCII key */
+	/* Except for shift + literal key */
 	if (is_literal_key(myeditor->key) || myeditor->key == DKEY_SHIFT_TAB)
 		selectblockflag = 0;
 

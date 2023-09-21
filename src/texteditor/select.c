@@ -126,7 +126,7 @@ void texteditHandleSelection(texteditor * editor)
 	/* Selection is based on whether the shift key is down */
 	editor->selectflag = editor->d->shift();
 
-	/* Except that shift + ASCII key does not start selection mode */
+	/* Except that shift + literal key does not start selection mode */
 	if (is_literal_key(editor->key))
 		editor->selectflag = 0;
 

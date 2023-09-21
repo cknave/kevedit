@@ -39,6 +39,7 @@
 
 #include "libzzt2/zztoop.h"
 
+#include "display/casing.h"
 #include "display/display.h"
 #include "display/colours.h"
 
@@ -412,9 +413,8 @@ int editbox(char *title, stringvector * sv, int editwidth, int flags, displaymet
 								continue;
 							if (loopstr->s[0] == '!' && strlen(loopstr->s) >= 2)
 								tmpstr = loopstr->s + 1;
-							// toupper doesn't know about CP437-specific keys.
-							if (is_ascii_key(key) &&
-								(toupper(tmpstr[0]) == toupper(key))) {
+							if (is_literal_key(key) &&
+								(tocupper(tmpstr[0]) == tocupper(key))) {
 								centerstr = loopstr;
 								if (pos > strlen(centerstr->s))
 									pos = strlen(centerstr->s);
