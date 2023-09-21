@@ -600,6 +600,27 @@ static int has_unicode_event_queued()
 	return false;
 }
 
+/* Determine if there is a SDL_TEXTINPUT event waiting in the
+   queue, and if so, delete it. This is used to keep the literal
+   part of a hotkey from being passed through when dealing with
+   hotkeys. (E.g. we don't want Alt+S to also return 's'.) */
+static void clear_textinput_event()
+{
+	const int MAX_EVENTS = 10;
+	SDL_Event outevent[MAX_EVENTS];
+	int pending_events = SDL_PeepEvents(outevent,
+		MAX_EVENTS, SDL_PEEKEVENT, SDL_TEXTINPUT,
+		SDL_TEXTINPUT);
+
+	if (pending_events == 0)
+		return;
+
+	SDL_PeepEvents(outevent, 1, SDL_GETEVENT,
+		SDL_TEXTINPUT, SDL_TEXTINPUT);
+
+	return;
+}
+
 static int display_sdl_getkey()
 {
 	SDL_Event event;
@@ -873,7 +894,18 @@ static int display_sdl_getkey()
 		}
 	}
 
-	return is_literal_key(event.key.keysym.sym) ? DKEY_NONE : event.key.keysym.sym;
+	/* If we're dealing with a literal key, then return DKEY_NONE because
+		it will be handled as part of a later SDL_TEXTINPUT event. But if it
+		is a hotkey (non-literal), then remove the SDL_TEXTINPUT event if
+		there is one, which will prevent spurious text output. */
+
+	if (is_literal_key(event.key.keysym.sym)) {
+		return DKEY_NONE;
+	} else {
+		clear_textinput_event();
+		return event.key.keysym.sym;
+	}
+
 }
 
 static int display_sdl_getch_with_context(enum displaycontext context) {
