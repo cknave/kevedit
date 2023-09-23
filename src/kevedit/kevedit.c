@@ -245,8 +245,16 @@ void keveditHandleSelection(keveditor * myeditor)
 	/* Block selection is based on whether the shift key is down */
 	int selectblockflag = myeditor->mydisplay->shift();
 
-	/* Except for shift + literal key */
-	if (is_literal_key(myeditor->key) || myeditor->key == DKEY_SHIFT_TAB)
+	/* Shift may be used for two purposes that are unrelated to
+	   block selection: hotkeys and capitals in text mode.
+	   A hotkey is either Shift+literal or Shift+TAB, so we
+	   shouldn't enable block selection in that case.
+	   Text mode is characterized by the key being DKEY_NONE,
+	   so don't enable text mode if the key is DKEY_NONE either.
+	   Note that this will disable selection mode even when the
+	   Shift+literal combo is not a hotkey. */
+	if (myeditor->key == DKEY_NONE || myeditor->key == DKEY_SHIFT_TAB
+		|| is_literal_key(myeditor->key))
 		selectblockflag = 0;
 
 	if (selectblockflag && myeditor->selectmode != SELECT_BLOCK) {
