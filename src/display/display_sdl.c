@@ -600,23 +600,25 @@ static int has_unicode_event_queued()
 	return false;
 }
 
-/* Determine if there is a SDL_TEXTINPUT event waiting in the
-   queue, and if so, delete it. This is used to keep the literal
+/* Determine if there is an event waiting in the queue, and if so,
+   delete it. This is used (with SDL_TEXTINPUT) to keep the literal
    part of a hotkey from being passed through when dealing with
-   hotkeys. (E.g. we don't want Alt+S to also return 's'.) */
-static void clear_textinput_event()
+   hotkeys. (E.g. we don't want Alt+S to also return 's'.)
+   It's also used with SDL_KEYDOWN to remove stray TAB presses due
+   to ALT+TAB not being properly handled on some Linux wms. */
+static void clear_event(SDL_EventType event_type)
 {
 	const int MAX_EVENTS = 10;
 	SDL_Event outevent[MAX_EVENTS];
 	int pending_events = SDL_PeepEvents(outevent,
-		MAX_EVENTS, SDL_PEEKEVENT, SDL_TEXTINPUT,
-		SDL_TEXTINPUT);
+		MAX_EVENTS, SDL_PEEKEVENT, event_type,
+		event_type);
 
 	if (pending_events == 0)
 		return;
 
 	SDL_PeepEvents(outevent, 1, SDL_GETEVENT,
-		SDL_TEXTINPUT, SDL_TEXTINPUT);
+		event_type, event_type);
 
 	return;
 }
@@ -709,6 +711,12 @@ static int display_sdl_getkey()
 	/* Focus change? */
 	} else if(event.type == SDL_WINDOWEVENT) {
 		if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+			/* Clear stray TAB events from ALT+TAB. This will also
+			   delete other keydown events that happen at the same
+			   same time as KevEdit regaining focus, but the user's
+			   timing would have to be perfect to produce any such
+			   events, so that shouldn't be a problem. */
+			clear_event(SDL_KEYDOWN);
 			display_redraw(&info);
 			/* Make cursor normal */
 			start_cursor_timer();
@@ -902,7 +910,7 @@ static int display_sdl_getkey()
 	if (is_literal_key(event.key.keysym.sym)) {
 		return DKEY_NONE;
 	} else {
-		clear_textinput_event();
+		clear_event(SDL_TEXTINPUT);
 		return event.key.keysym.sym;
 	}
 
