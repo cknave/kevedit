@@ -608,19 +608,9 @@ static int has_unicode_event_queued()
    to ALT+TAB not being properly handled on some Linux wms. */
 static void clear_event(SDL_EventType event_type)
 {
-	const int MAX_EVENTS = 10;
-	SDL_Event outevent[MAX_EVENTS];
-	int pending_events = SDL_PeepEvents(outevent,
-		MAX_EVENTS, SDL_PEEKEVENT, event_type,
-		event_type);
-
-	if (pending_events == 0)
-		return;
-
-	SDL_PeepEvents(outevent, 1, SDL_GETEVENT,
+	SDL_Event outevent;
+	SDL_PeepEvents(&outevent, 1, SDL_GETEVENT,
 		event_type, event_type);
-
-	return;
 }
 
 static int display_sdl_getkey()
