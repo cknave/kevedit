@@ -600,6 +600,19 @@ static int has_unicode_event_queued()
 	return false;
 }
 
+/* Determine if there is an event waiting in the queue, and if so,
+   delete it. This is used (with SDL_TEXTINPUT) to keep the literal
+   part of a hotkey from being passed through when dealing with
+   hotkeys. (E.g. we don't want Alt+S to also return 's'.)
+   It's also used with SDL_KEYDOWN to remove stray TAB presses due
+   to ALT+TAB not being properly handled on some Linux wms. */
+static void clear_event(SDL_EventType event_type)
+{
+	SDL_Event outevent;
+	SDL_PeepEvents(&outevent, 1, SDL_GETEVENT,
+		event_type, event_type);
+}
+
 static int display_sdl_getkey()
 {
 	SDL_Event event;
@@ -688,6 +701,12 @@ static int display_sdl_getkey()
 	/* Focus change? */
 	} else if(event.type == SDL_WINDOWEVENT) {
 		if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+			/* Clear stray TAB events from ALT+TAB. This will also
+			   delete other keydown events that happen at the same
+			   same time as KevEdit regaining focus, but the user's
+			   timing would have to be perfect to produce any such
+			   events, so that shouldn't be a problem. */
+			clear_event(SDL_KEYDOWN);
 			display_redraw(&info);
 			/* Make cursor normal */
 			start_cursor_timer();
@@ -873,7 +892,18 @@ static int display_sdl_getkey()
 		}
 	}
 
-	return is_literal_key(event.key.keysym.sym) ? DKEY_NONE : event.key.keysym.sym;
+	/* If we're dealing with a literal key, then return DKEY_NONE because
+		it will be handled as part of a later SDL_TEXTINPUT event. But if it
+		is a hotkey (non-literal), then remove the SDL_TEXTINPUT event if
+		there is one, which will prevent spurious text output. */
+
+	if (is_literal_key(event.key.keysym.sym)) {
+		return DKEY_NONE;
+	} else {
+		clear_event(SDL_TEXTINPUT);
+		return event.key.keysym.sym;
+	}
+
 }
 
 static int display_sdl_getch_with_context(enum displaycontext context) {

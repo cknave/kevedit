@@ -81,7 +81,7 @@ int line_editsnumber(int x, int y, int color, int * number, int minval, int maxv
 /* line_editor_raw() - even more powerful line editor, requires careful
  *                     handling
  * 	position: position in the string of the cursor
- * 	return:   whenever a control or non-ascii keypress occurs, it's value is
+ * 	return:   whenever a control or non-literal keypress occurs, it's value is
  * 	          returned */
 int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 										int* position, int flags, displaymethod* d);

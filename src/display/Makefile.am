@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = 1.6.3
 
 noinst_LIBRARIES = libdisplay.a
 
-libdisplay_a_SOURCES = charset.c charset.h display.c display.h \
+libdisplay_a_SOURCES = casing.c casing.h charset.c charset.h display.c display.h \
 	display_stdio.c display_stdio.h textblock.c textblock.h keys.h colours.h \
 	palette.c palette.h
 
