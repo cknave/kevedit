@@ -231,11 +231,11 @@ void display_dos_putblock(textBlock * src, int srcx, int srcy,
 		for (xoffs = 0; xoffs < width; ++xoffs) {
 			textDatum ch = textBlockChar(src,
 				srcx+xoffs, srcy+yoffs);
-			textDatum co = textBlockColor(src,
+			textDatum co = textBlockColour(src,
 				srcx+xoffs, srcy+yoffs);
 
 			display_dos_putch(destx + xoffs,
-				ch, co);
+				desty + yoffs, ch, co);
 		}
 	}
 }

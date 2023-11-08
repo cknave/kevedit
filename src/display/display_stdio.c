@@ -86,6 +86,31 @@ void display_stdio_putch(int x, int y, int ch, int co)
 					 x, y, co, ch, show_char);
 }
 
+void display_stdio_getblock(textBlock * dest, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	textBlockBlit(textbuffer, dest, srcx, srcy, width, height,
+		destx, desty);
+}
+
+void display_stdio_putblock(textBlock * src, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	int xoffs, yoffs;
+
+	for (yoffs = 0; yoffs < height; ++yoffs) {
+		for (xoffs = 0; xoffs < width; ++xoffs) {
+			textDatum ch = textBlockChar(src,
+				srcx+xoffs, srcy+yoffs);
+			textDatum co = textBlockColour(src,
+				srcx+xoffs, srcy+yoffs);
+
+			display_stdio_putch(destx + xoffs,
+				desty + yoffs, ch, co);
+		}
+	}
+}
+
 int display_stdio_getch(void)
 {
 	/* Keycode */
@@ -264,6 +289,8 @@ displaymethod display_stdio = {
 	"1.0",
 	display_stdio_init,
 	display_stdio_end,
+	display_stdio_getblock,
+	display_stdio_putblock,
 	display_stdio_putch,
 	display_stdio_getch,
 	display_stdio_getch_with_context,
