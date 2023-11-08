@@ -61,7 +61,7 @@ unsigned char CHAR_BOX[] =
 /* Buffer for restoring what's underneath when displaying
    a character selection box. */
 
-textDatum charBoxBuffer[CHAR_BOX_WIDTH*CHAR_BOX_DEPTH*2];
+textDatum charBoxBuffer[textBlockDataSize(CHAR_BOX_WIDTH, CHAR_BOX_DEPTH)];
 
 textBlock charBoxBackup = {
 	CHAR_BOX_WIDTH,

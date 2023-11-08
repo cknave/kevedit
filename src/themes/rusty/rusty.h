@@ -25,10 +25,10 @@
 extern unsigned char CHAR_BOX[];
 
 /* Buffer for restoring what's underneath when displaying
-   a character selection box. TODO: Expose dataSize calc in
-   textblock.c so we don't have two sources of truth. */
+   a character selection box. */
 
-extern textDatum charBoxBuffer[CHAR_BOX_WIDTH*CHAR_BOX_DEPTH*2];
+extern textDatum charBoxBuffer[
+   textBlockDataSize(CHAR_BOX_WIDTH, CHAR_BOX_DEPTH)];
 extern textBlock charBoxBackup;
 
 /* The scroll box */

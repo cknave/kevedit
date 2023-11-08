@@ -35,6 +35,7 @@ typedef struct textBlock {
 
 #define textBlockChar(block, x, y)   (block->data[((y) * block->width + (x)) * 2])
 #define textBlockColour(block, x, y) (block->data[((y) * block->width + (x)) * 2 + 1])
+#define textBlockDataSize(width, height) ((width) * (height) * 2)
 
 /* Create an empty textBlock */
 textBlock * createTextBlock(int width, int height);

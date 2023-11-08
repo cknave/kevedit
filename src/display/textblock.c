@@ -31,7 +31,7 @@ textBlock *
 createTextBlock(int width, int height)
 {
 	textBlock * block = (textBlock *) malloc(sizeof(textBlock));
-	int dataSize = width * height * 2;
+	int dataSize = textBlockDataSize(width, height);
 
 	block->width = width;
 	block->height = height;
