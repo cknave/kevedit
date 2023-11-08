@@ -95,6 +95,15 @@ int modify_key_by_flags(int key, int flags)
 		return -1;
 	}
 
+	if ((flags & LINED_SNUMBER) && (key < '0' || key > '9') &&
+			(key != '-')) {
+		return -1;
+	}
+
+	if ((flags & LINED_NUMBER) && (key < '0' || key > '9')) {
+		return -1;
+	}
+
 	if ((flags & LINED_NODIGITS) && (key >= 0x30 && key <= 0x39)) {
 		return -1;
 	}
