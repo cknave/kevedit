@@ -1256,7 +1256,7 @@ int dothepanel_f3(keveditor * e)
 
 int charselect_flags(displaymethod * d, int initial_char, int flags)
 {
-	int key, ch;
+	int key, ch, is_valid;
 	int z, e, i = 0;
 	static int x, y;
 
@@ -1296,6 +1296,7 @@ int charselect_flags(displaymethod * d, int initial_char, int flags)
 
 	while (1) {
 		ch = (x + y * 32);
+		is_valid = (modify_key_by_flags(ch, flags) == ch);
 
 		d->cursorgo(14 + x, 9 + y);
 
@@ -1317,11 +1318,14 @@ int charselect_flags(displaymethod * d, int initial_char, int flags)
 			case DKEY_DOWN:  if (y < 7) y++;  else y = 0;  break;
 			case DKEY_LEFT:  if (x > 0) x--;  else x = 31; break;
 			case DKEY_RIGHT: if (x < 31) x++; else x = 0;  break;
-			case DKEY_ENTER: return x + y * 32;
-			case DKEY_ESC:   return -1;
-				/* Return the char we recieved without doing anything,
-				 * unless it was -1 */
-				return (initial_char != -1)? initial_char : (x + y * 32);
+			case DKEY_ENTER:
+				/* Return the value if allowed, otherwise do nothing. */
+				if (is_valid) {
+					return ch;
+				}
+				break;
+			case DKEY_ESC:
+				return -1;
 			case DKEY_QUIT:
 				return DKEY_QUIT;
 		}
