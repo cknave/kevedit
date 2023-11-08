@@ -201,6 +201,45 @@ void display_dos_putch(int x, int y, int ch, int co)
 	_farpokeb(videomem, (y * 80 + x) * 2 + 1, co);
 }
 
+void display_dos_getblock(textBlock * dest, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	int xoffs, yoffs, xin, yin;
+
+	for (yoffs = 0; yoffs < height; ++yoffs) {
+		for (xoffs = 0; xoffs < width; ++xoffs) {
+			xin = srcx + xoffs;
+			yin = srcy + yoffs;
+
+			textDatum ch = _farpeekb(videomem,
+				(yin * 80 + xin) * 2);
+			textDatum co = _farpeekb(videomem,
+				(yin * 80 + xin) * 2 + 1);
+
+			textBlockPutch(dest, destx + xoffs,
+				desty + yoffs, ch, co);
+		}
+	}
+}
+
+void display_dos_putblock(textBlock * src, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	int xoffs, yoffs;
+
+	for (yoffs = 0; yoffs < height; ++yoffs) {
+		for (xoffs = 0; xoffs < width; ++xoffs) {
+			textDatum ch = textBlockChar(src,
+				srcx+xoffs, srcy+yoffs);
+			textDatum co = textBlockColor(src,
+				srcx+xoffs, srcy+yoffs);
+
+			display_dos_putch(destx + xoffs,
+				ch, co);
+		}
+	}
+}
+
 int display_dos_getch()
 {
 	int key;
@@ -388,6 +427,8 @@ displaymethod display_dos =
 	"2.0",
 	display_dos_init,
 	display_dos_end,
+	display_dos_getblock,
+	display_dos_putblock,
 	display_dos_putch,
 	display_dos_getch,
 	display_dos_getch_with_context,

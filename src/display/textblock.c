@@ -68,4 +68,16 @@ textBlockPutch(textBlock * block, int x, int y,
 	textBlockColour(block, x, y) = co;
 }
 
+void textBlockBlit(textBlock * src, textBlock * dest, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	int x, y;
 
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < width; ++x) {
+			textBlockPutch(dest, x+destx, y+desty,
+				textBlockChar(src, x+srcx, y+srcy),
+				textBlockColour(src, x+srcx, y+srcy));
+		}
+	}
+}

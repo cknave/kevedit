@@ -24,6 +24,13 @@
 #define CHAR_BOX_LENGTH 680
 extern unsigned char CHAR_BOX[];
 
+/* Buffer for restoring what's underneath when displaying
+   a character selection box. TODO: Expose dataSize calc in
+   textblock.c so we don't have two sources of truth. */
+
+extern textDatum charBoxBuffer[CHAR_BOX_WIDTH*CHAR_BOX_DEPTH*2];
+extern textBlock charBoxBackup;
+
 /* The scroll box */
 #define SCROLL_BOX_WIDTH 51
 #define SCROLL_BOX_DEPTH 19

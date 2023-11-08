@@ -33,9 +33,8 @@ typedef struct textBlock {
 	textDatum *data;
 } textBlock;
 
-
-#define textBlockChar(block, x, y)   (block->data[(y * block->width + x) * 2])
-#define textBlockColour(block, x, y) (block->data[(y * block->width + x) * 2 + 1])
+#define textBlockChar(block, x, y)   (block->data[((y) * block->width + (x)) * 2])
+#define textBlockColour(block, x, y) (block->data[((y) * block->width + (x)) * 2 + 1])
 
 /* Create an empty textBlock */
 textBlock * createTextBlock(int width, int height);
@@ -48,9 +47,10 @@ void textBlockPutch(textBlock * block, int x, int y,
                     textDatum ch, textDatum co);
 
 /* Copy one text block onto another */
-/* TODO:
-void textBlockBlit(textBlock * dest, textBlock * src, int x, int y);
-*/
+/* Copies from src at (srcx, srcy)-(srcx+width, srcy+height) to
+   (destx,desty)-(destx+width, desty+height). No error checking. */
+void textBlockBlit(textBlock * src, textBlock * dest, int srcx, int srcy,
+	int width, int height, int destx, int desty);
 
 
 #endif

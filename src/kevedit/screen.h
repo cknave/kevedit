@@ -125,7 +125,7 @@ int dothepanel_f2(keveditor * e);
 int dothepanel_f3(keveditor * e);
 
 /* Prompts the user to select a char */
-int charselect(displaymethod * d, int c);
+int charselect(displaymethod * d, int initial_char);
 
 /* Prompts the user to select a color */
 int colorselector(displaymethod * d, textcolor * color);

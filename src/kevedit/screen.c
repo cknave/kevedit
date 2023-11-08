@@ -43,6 +43,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Forward declare for line_editor.
+int charselect_buffered(displaymethod * d, int initial_char);
+
 /* The following define tells updatepanel to draw the standard patterns
  * in the current colour, rather than plain ol' white */
 /* #define STDPATFOLLOWCOLOR */
@@ -95,6 +98,18 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 		/* Get the key */
 		key = d->getch();
 
+		/* First handle any hotkeys that might alter the key itself. */
+		switch (key) {
+			case DKEY_CTRL_A:
+				if (strlen(str) < editwidth) {
+					key = charselect_buffered(d, -1);
+				}
+				break;
+			default:
+				break;
+		}
+
+		/* Then handle other hotkeys and process literal input. */
 		switch (key) {
 			case DKEY_LEFT:  if (pos > 0)           pos--; break;
 			case DKEY_RIGHT: if (pos < strlen(str)) pos++; break;
@@ -135,7 +150,7 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 				break;
 
 			default:
-				/* Keys outside the standard ASCII range are returned for
+				/* Keys outside the standard literal range are returned for
 				 * consideration by the calling function */
 				if (!is_literal_key(key)) {
 					*position = pos;
@@ -1190,18 +1205,18 @@ int dothepanel_f3(keveditor * e)
 	}
 }
 
-int charselect(displaymethod * d, int c)
+int charselect(displaymethod * d, int initial_char)
 {
 	int key;
 	int z, e, i = 0;
 	static int x, y;
 
-	if (c > 255)
-		c = 0;
+	if (initial_char > 255)
+		initial_char = 0;
 
-	if(c != -1) {
-		y = c / (CHAR_BOX_WIDTH-2);
-		x = c % (CHAR_BOX_WIDTH-2);
+	if(initial_char != -1) {
+		y = initial_char / (CHAR_BOX_WIDTH-2);
+		x = initial_char % (CHAR_BOX_WIDTH-2);
 	}
 
 	for (e = 0; e < CHAR_BOX_DEPTH; e++) {
@@ -1232,11 +1247,24 @@ int charselect(displaymethod * d, int c)
 			case DKEY_ESC:   return -1;
 				/* Return the char we recieved without doing anything,
 				 * unless it was -1 */
-				return (c != -1)? c : (x + y * 32);
+				return (initial_char != -1)? initial_char : (x + y * 32);
 			case DKEY_QUIT:
 				return DKEY_QUIT;
 		}
 	}
+}
+
+int charselect_buffered(displaymethod * d, int initial_char)
+{
+	d->getblock(&charBoxBackup, 13, 8,
+		CHAR_BOX_WIDTH, CHAR_BOX_DEPTH,	0, 0);
+
+	int selected = charselect(d, initial_char);
+
+	d->putblock(&charBoxBackup, 0, 0,
+		CHAR_BOX_WIDTH, CHAR_BOX_DEPTH,	13, 8);
+
+	return selected;
 }
 
 void colorselectdrawat(displaymethod* d, int x, int y, char ch)
