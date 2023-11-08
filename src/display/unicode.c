@@ -8,6 +8,7 @@
 #include <wchar.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 /* The all-powerful min/max macros */
 #define min(a, b) ((a) < (b) ? (a) : (b))
