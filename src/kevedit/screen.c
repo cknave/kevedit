@@ -135,6 +135,7 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 	int key;                 /* Key being acted on */
 	int i;                   /* General counter */
 	int pos = *position;     /* Current position */
+	int lastchar = -1;       /* Last character typed */
 
 	while (1) {
 		/* Display the line */
@@ -205,7 +206,7 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 				/* Get a char from the character select dialog if one
 					was requested. */
 				if (key == DKEY_CTRL_A) {
-					key = charselect_buffered(d, -1, flags);
+					key = charselect_buffered(d, lastchar, flags);
 				}
 
 				/* Act on flags */
@@ -218,6 +219,9 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 				for (i = strlen(str) + 1; i > pos; i--)
 					str[i] = str[i-1];
 				str[pos++] = key;
+
+				/* Set last char for later char select */
+				lastchar = key;
 				break;
 		}
 	}
