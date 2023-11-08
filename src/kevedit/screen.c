@@ -44,7 +44,7 @@
 #include <unistd.h>
 
 // Forward declare for line_editor.
-int charselect_buffered(displaymethod * d, int initial_char);
+int charselect_buffered(displaymethod * d, int initial_char, int flags);
 
 /* The following define tells updatepanel to draw the standard patterns
  * in the current colour, rather than plain ol' white */
@@ -78,6 +78,57 @@ int line_editor(int x, int y, int color, char* str, int editwidth, int flags, di
 	}
 }
 
+
+/* Modify an input key according to the given line editor flags. If the
+   key simply isn't allowed, return -1. */
+int modify_key_by_flags(int key, int flags)
+{
+
+	/* NUL is always forbidden. */
+	if (key == 0) {
+		return -1;
+	}
+
+	/* Act on flags */
+	if ((flags & LINED_NOLOWER) && (flags & LINED_NOUPPER) &&
+			((key >= 0x41 && key <= 0x5A) || (key >= 0x61 && key <= 0x7A))) {
+		return -1;
+	}
+
+	if ((flags & LINED_NODIGITS) && (key >= 0x30 && key <= 0x39)) {
+		return -1;
+	}
+
+	if ((flags & LINED_NOPUNCT) && ((key >= 0x21 && key <= 0x2F) ||
+		(key >= 0x3A && key <= 0x40) ||
+		(key >= 0x5A && key <= 0x60) ||
+		(key >= 0x7B && key <= 0x7E))) {
+		return -1;
+	}
+
+	if ((flags & LINED_NOSPACES) && (key == ' ')) {
+		return -1;
+	}
+
+	if ((flags & LINED_NOPERIOD) && (key == '.')) {
+		return -1;
+	}
+
+	if ((flags & LINED_FILENAME) && (key == '\"' || key == '?' || key == '*' ||
+		key == '<'  || key == '>' || key == '|')) {
+		return -1;
+	}
+
+	if ((flags & LINED_NOPATH)   && (key == '\\' || key == '/' || key == ':')) {
+		return -1;
+	}
+
+	if (flags & LINED_NOUPPER) return toclower(key);
+	if (flags & LINED_NOLOWER) return tocupper(key);
+
+	return key;
+}
+
 int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 										int* position, int flags, displaymethod* d)
 {
@@ -97,17 +148,6 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 
 		/* Get the key */
 		key = d->getch();
-
-		/* First handle any hotkeys that might alter the key itself. */
-		switch (key) {
-			case DKEY_CTRL_A:
-				if (strlen(str) < editwidth) {
-					key = charselect_buffered(d, -1);
-				}
-				break;
-			default:
-				break;
-		}
 
 		/* Then handle other hotkeys and process literal input. */
 		switch (key) {
@@ -151,8 +191,9 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 
 			default:
 				/* Keys outside the standard literal range are returned for
-				 * consideration by the calling function */
-				if (!is_literal_key(key)) {
+				 * consideration by the calling function. But permit CTRL+A
+				   because we'll process it later. */
+				if (!is_literal_key(key) && key != DKEY_CTRL_A) {
 					*position = pos;
 					return key;
 				}
@@ -161,22 +202,17 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 				if (strlen(str) >= editwidth)
 					break;
 
-				/* Act on flags */
-				if ((flags & LINED_NOLOWER) && (flags & LINED_NOUPPER) &&
-						((key >= 0x41 && key <= 0x5A) || (key >= 0x61 && key <= 0x7A))) break;
-				if ((flags & LINED_NODIGITS) && (key >= 0x30 && key <= 0x39)) break;
-				if ((flags & LINED_NOPUNCT) && ((key >= 0x21 && key <= 0x2F) ||
-																				(key >= 0x3A && key <= 0x40) ||
-																				(key >= 0x5A && key <= 0x60) ||
-																				(key >= 0x7B && key <= 0x7E))) break;
-				if ((flags & LINED_NOSPACES) && (key == ' ')) break;
-				if ((flags & LINED_NOPERIOD) && (key == '.')) break;
-				if ((flags & LINED_FILENAME) && (key == '\"' || key == '?' || key == '*' ||
-																				 key == '<'  || key == '>' || key == '|')) break;
-				if ((flags & LINED_NOPATH)   && (key == '\\' || key == '/' || key == ':')) break;
+				/* Get a char from the character select dialog if one
+					was requested. */
+				if (key == DKEY_CTRL_A) {
+					key = charselect_buffered(d, -1, flags);
+				}
 
-				if (flags & LINED_NOUPPER) key = toclower(key);
-				if (flags & LINED_NOLOWER) key = tocupper(key);
+				/* Act on flags */
+				key = modify_key_by_flags(key, flags);
+				if (key == -1) {
+					break;
+				}
 
 				/* Insert character */
 				for (i = strlen(str) + 1; i > pos; i--)
@@ -1205,9 +1241,9 @@ int dothepanel_f3(keveditor * e)
 	}
 }
 
-int charselect(displaymethod * d, int initial_char)
+int charselect_flags(displaymethod * d, int initial_char, int flags)
 {
-	int key;
+	int key, ch;
 	int z, e, i = 0;
 	static int x, y;
 
@@ -1225,18 +1261,43 @@ int charselect(displaymethod * d, int initial_char)
 			i += 2;
 		}
 	}
+
+	/* Modify colors of text according to flags: characters that
+		aren't allowed or map to another character are colored
+		grey. */
+
+	for (e = 0; e < CHAR_BOX_DEPTH-2; ++e) {
+		for (z = 0; z < CHAR_BOX_WIDTH-2; ++z) {
+			ch = (z + e * 32);
+
+			if (modify_key_by_flags(ch, flags) == ch) {
+				d->putch(14 + z, 9 + e, ch, 0x0a);
+			} else {
+				d->putch(14 + z, 9 + e, ch, 0x07);
+			}
+		}
+	}
+
+
 	d->update(13, 8, CHAR_BOX_WIDTH, CHAR_BOX_DEPTH);
 
 	while (1) {
+		ch = (x + y * 32);
+
 		d->cursorgo(14 + x, 9 + y);
 
 		/* Cursor color tile */
-		d->putch(14 + x, 9 + y, (x + y * 32), 0x0f);
+		d->putch(14 + x, 9 + y, ch, 0x0f);
 
 		key = d->getch();
 
 		/* Regular-color tile */
-		d->putch(14 + x, 9 + y, (x + y * 32), 0x0a);
+		/* Color inaccessible tiles grey */
+		if (modify_key_by_flags(ch, flags) == ch) {
+			d->putch(14 + x, 9 + y, ch, 0x0a);
+		} else {
+			d->putch(14 + x, 9 + y, ch, 0x07);
+		}
 
 		switch (key) {
 			case DKEY_UP:    if (y > 0) y--;  else y = 7;  break;
@@ -1254,12 +1315,17 @@ int charselect(displaymethod * d, int initial_char)
 	}
 }
 
-int charselect_buffered(displaymethod * d, int initial_char)
+int charselect(displaymethod * d, int initial_char)
+{
+	return charselect_flags(d, initial_char, 0);
+}
+
+int charselect_buffered(displaymethod * d, int initial_char, int flags)
 {
 	d->getblock(&charBoxBackup, 13, 8,
 		CHAR_BOX_WIDTH, CHAR_BOX_DEPTH,	0, 0);
 
-	int selected = charselect(d, initial_char);
+	int selected = charselect_flags(d, initial_char, flags);
 
 	d->putblock(&charBoxBackup, 0, 0,
 		CHAR_BOX_WIDTH, CHAR_BOX_DEPTH,	13, 8);
