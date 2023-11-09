@@ -1329,6 +1329,13 @@ int charselect_flags(displaymethod * d, int initial_char, int flags)
 				return -1;
 			case DKEY_QUIT:
 				return DKEY_QUIT;
+			default:
+				if (!is_literal_key(key)) {
+					continue;
+				}
+				y = key / (CHAR_BOX_WIDTH-2);
+				x = key % (CHAR_BOX_WIDTH-2);
+				break;
 		}
 	}
 }
