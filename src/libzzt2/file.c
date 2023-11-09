@@ -21,6 +21,7 @@
 #include <config.h>
 #endif
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -240,6 +241,121 @@ void _zzt_boardread_freestuff(ZZTboard *board, uint8_t *packed)
 	free(board);
 }
 
+/* Fix potentially corrupted #BIND object references. KevEdit
+ * itself can produce corrupted references due to other bugs;
+ * this will work as a last measure while fixing those bugs, and
+ * keep any unfixed bugs from causing weird behavior inside ZZT.
+ *
+ * An object being bound to another bound object is not allowed.
+ * We'll try to resolve such so that all these objects are bound
+ * to the object at the end of the chain. Cyclical references get
+ * set to zero (unbound). */
+
+/* We use a depth first search to resolve cycles and chains. */
+
+/* BIND_UNVISITED: We haven't investigated this stat yet.
+   BIND_VISITED: This stat has been visited in the current
+   		recursion; if we see it again, we have a cycle.
+   BIND_PROCESSED: This stat has been visited in a prior loop and
+   		need not be descended into again.
+*/
+
+/* It would be nice to somehow report any such fixups when
+ * loading/saving. But that would probably require a more thorough
+ * modification with the read and write functions returning either
+ * OK, warning, or error. */
+
+const int BIND_UNVISITED = 0, BIND_VISITED = 1, BIND_PROCESSED = 2;
+
+/* This function is called with a stat's bind index and returns
+ * its proper bind index once loops and chains have been dealt
+ * with. */
+
+int normalizeBindChainsDFS(ZZTboard * board,
+	int stat_num, int num_stats, int * stat_status) {
+
+	/* If the stat num is out of bounds, return 0. */
+	if (stat_num >= num_stats) {
+		return 0;
+	}
+
+	ZZTparam * param = &board->params[stat_num];
+
+	/* If we're not bound, then just return our value and
+	 * set PROCESSED. */
+	if (param->bindindex == 0) {
+		stat_status[stat_num] = BIND_PROCESSED;
+		return stat_num;
+	}
+
+	/* If we get a VISITED, we've been here before, i.e.
+	 * we're part of a cycle. Cancel out this part of the
+	 * cycle and return 0. */
+	if (stat_status[stat_num] == BIND_VISITED) {
+		param->bindindex = 0;
+		stat_status[stat_num] == BIND_PROCESSED;
+		return 0;
+	}
+
+	/* If we get a PROCESSED, it's bound with one step
+	 * (otherwise the first if check would have fired.)
+	 * Return what it's bound to. */
+
+	if (stat_status[stat_num] == BIND_PROCESSED) {
+		return param->bindindex;
+	}
+
+	/* Set the current node as visited and recurse down
+	 * what we bind to. */
+	stat_status[stat_num] = BIND_VISITED;
+	int end_of_bind = normalizeBindChainsDFS(board,
+		param->bindindex, num_stats, stat_status);
+	stat_status[stat_num] = BIND_PROCESSED;
+	param->bindindex = end_of_bind;
+
+	/* If this stat has code, it's most likely the source
+	 * for some upstream bound objects. So if its current
+	 * bind index is zero but it has code, then return its
+	 * ID instead. This is a compromise way to resolve cycles
+	 * that should work without having to drag in heavy hitters
+	 * like Kosaraju. */
+	if (param->bindindex == 0 && param->length > 0) {
+		return stat_num;
+	}
+
+	return end_of_bind;
+}
+
+void normalizeBindChains(ZZTboard * board) {
+	int * stat_status = malloc(
+		sizeof(int) * board->info.paramcount);
+	memset(stat_status, BIND_UNVISITED,
+		sizeof(int) * board->info.paramcount);
+
+	int stat_num;
+
+	for (stat_num = 0; stat_num < board->info.paramcount;
+		++stat_num) {
+		ZZTparam * param = &board->params[stat_num];
+
+		/* Getting a BIND_VISITED is a bug as we should
+		 * always clean up after ourselves. */
+		assert(stat_status[stat_num] != BIND_VISITED);
+
+		if (param->bindindex != 0 
+			&& stat_status[stat_num] != BIND_PROCESSED) {
+			param->bindindex = normalizeBindChainsDFS(
+				board, param->bindindex,
+				board->info.paramcount,
+				stat_status);
+		}
+
+		stat_status[stat_num] = BIND_PROCESSED;
+	}
+
+	free(stat_status);
+}
+
 ZZTboard *zztBoardRead(FILE *fp)
 {
 	ZZTboard *board = malloc(sizeof(ZZTboard));
@@ -354,6 +470,9 @@ ZZTboard *zztBoardRead(FILE *fp)
 		}
 	}
 
+	/* Clean up any pre-bound #BIND reference corruption */
+	normalizeBindChains(board);
+
 	/* Read the player x and y positions */
 	board->plx = board->params[0].x;
 	board->ply = board->params[0].y;
@@ -401,6 +520,9 @@ int zztBoardWrite(ZZTboard *board, FILE *fp)
 	if (size > 65535) {
 		return 0;
 	}
+
+	/* Clean up any invalid pre-bound #BIND references. */
+	normalizeBindChains(board);
 
 	/* Write board header */
 	w = size;
