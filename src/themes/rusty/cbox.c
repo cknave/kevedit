@@ -1,7 +1,7 @@
 /* Image Saved In ACiDDRAW v1.1 */
 /* $Id: cbox.c,v 1.1 2003/11/01 23:45:57 bitman Exp $ */
 
-#include "src/display/textblock.h"
+#include "display/textblock.h"
 
 #define CHAR_BOX_WIDTH 34
 #define CHAR_BOX_DEPTH 10
