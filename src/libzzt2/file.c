@@ -255,9 +255,11 @@ void _zzt_boardread_freestuff(ZZTboard *board, uint8_t *packed)
 
 /* BIND_UNVISITED: We haven't investigated this stat yet.
    BIND_VISITED: This stat has been visited in the current
-   		recursion; if we see it again, we have a cycle.
-   BIND_PROCESSED: This stat has been visited in a prior loop and
-   		need not be descended into again.
+	recursion; if we see it again, we have a cycle.
+   BIND_PROCESSED_UNALTERED: This stat has been visited in a prior
+	loop and need not be descended into again.
+   BIND_PROCESSED_ALTERED: Same, but its bind index has been changed
+	by the function.
 */
 
 /* It would be nice to somehow report any such fixups when
@@ -265,7 +267,9 @@ void _zzt_boardread_freestuff(ZZTboard *board, uint8_t *packed)
  * modification with the read and write functions returning either
  * OK, warning, or error. */
 
-const int BIND_UNVISITED = 0, BIND_VISITED = 1, BIND_PROCESSED = 2;
+const int BIND_UNVISITED = 0, BIND_VISITED = 1,
+	BIND_PROCESSED_UNALTERED = 2,
+	BIND_PROCESSED_ALTERED = 3;
 
 /* This function is called with a stat's bind index and returns
  * its proper bind index once loops and chains have been dealt
@@ -284,7 +288,7 @@ int normalizeBindChainsDFS(ZZTboard * board,
 	/* If we're not bound, then just return our value and
 	 * set PROCESSED. */
 	if (param->bindindex == 0) {
-		stat_status[stat_num] = BIND_PROCESSED;
+		stat_status[stat_num] = BIND_PROCESSED_UNALTERED;
 		return stat_num;
 	}
 
@@ -293,7 +297,7 @@ int normalizeBindChainsDFS(ZZTboard * board,
 	 * cycle and return 0. */
 	if (stat_status[stat_num] == BIND_VISITED) {
 		param->bindindex = 0;
-		stat_status[stat_num] == BIND_PROCESSED;
+		stat_status[stat_num] == BIND_PROCESSED_ALTERED;
 		return 0;
 	}
 
@@ -301,7 +305,8 @@ int normalizeBindChainsDFS(ZZTboard * board,
 	 * (otherwise the first if check would have fired.)
 	 * Return what it's bound to. */
 
-	if (stat_status[stat_num] == BIND_PROCESSED) {
+	if (stat_status[stat_num] == BIND_PROCESSED_UNALTERED ||
+	    stat_status[stat_num] == BIND_PROCESSED_ALTERED) {
 		return param->bindindex;
 	}
 
@@ -310,8 +315,11 @@ int normalizeBindChainsDFS(ZZTboard * board,
 	stat_status[stat_num] = BIND_VISITED;
 	int end_of_bind = normalizeBindChainsDFS(board,
 		param->bindindex, num_stats, stat_status);
-	stat_status[stat_num] = BIND_PROCESSED;
-	param->bindindex = end_of_bind;
+	stat_status[stat_num] = BIND_PROCESSED_UNALTERED;
+	if (param->bindindex != end_of_bind) {
+		param->bindindex = end_of_bind;
+		stat_status[stat_num] = BIND_PROCESSED_ALTERED;
+	}
 
 	/* If this stat has code, it's most likely the source
 	 * for some upstream bound objects. So if its current
@@ -326,7 +334,10 @@ int normalizeBindChainsDFS(ZZTboard * board,
 	return end_of_bind;
 }
 
-void normalizeBindChains(ZZTboard * board) {
+/* This function fixes corrupted bind indices. It also returns the
+ * number of modified bind indices, which should be useful for later
+ * debugging and tracking down bugs that invalidate bind indices. */
+int normalizeBindChains(ZZTboard * board) {
 	int * stat_status = malloc(
 		sizeof(int) * board->info.paramcount);
 	memset(stat_status, BIND_UNVISITED,
@@ -342,18 +353,44 @@ void normalizeBindChains(ZZTboard * board) {
 		 * always clean up after ourselves. */
 		assert(stat_status[stat_num] != BIND_VISITED);
 
-		if (param->bindindex != 0 
-			&& stat_status[stat_num] != BIND_PROCESSED) {
-			param->bindindex = normalizeBindChainsDFS(
-				board, param->bindindex,
-				board->info.paramcount,
-				stat_status);
+		/* No need to do anything with a stat that isn't bound
+		   to anything. */
+		if (param->bindindex == 0) {
+			continue;
 		}
 
-		stat_status[stat_num] = BIND_PROCESSED;
+		/* ... or one we've already processed. */
+		if (stat_status[stat_num] == BIND_PROCESSED_UNALTERED
+			|| stat_status[stat_num] == BIND_PROCESSED_ALTERED) {
+			continue;
+		}
+
+		int end_of_bind = normalizeBindChainsDFS(
+			board, param->bindindex,
+			board->info.paramcount,
+			stat_status);
+
+		if (end_of_bind == param->bindindex) {
+			stat_status[stat_num] = BIND_PROCESSED_UNALTERED;
+		} else {
+			param->bindindex = end_of_bind;
+			stat_status[stat_num] = BIND_PROCESSED_ALTERED;
+		}
+	}
+
+	/* Count the number of altered bind indices */
+	int altered_indices = 0;
+
+	for (stat_num = 0; stat_num < board->info.paramcount;
+		++stat_num) {
+		if (stat_status[stat_num] == BIND_PROCESSED_ALTERED) {
+			++altered_indices;
+		}
 	}
 
 	free(stat_status);
+
+	return altered_indices;
 }
 
 ZZTboard *zztBoardRead(FILE *fp)
