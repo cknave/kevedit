@@ -186,6 +186,28 @@ int paste(keveditor * myeditor)
 	return key;
 }
 
+/* TODO: For copying pre-bound stuff, the following logic needs to be
+ * implemented:
+ *	- If our selection only contains bound objects, and the destination
+ *		board contains the source, link the bound objects to the source.
+ *	- If our selection only contains bound objects, and the destination
+ *		doesn't contain the source, unlink the bound objects before
+ *		pasting.
+ *	- If our selection contains some bound objects and their source,
+ *		relink the bound objects to the source before pasting.
+ *	- If we're pasting over the source to some bound objects, and that
+ *		source exists in our selection, link the bound objects to the
+ *		new source.
+ *	- If we're pasting over the source to some bound objects, and that
+ *		source doesn't exist in our selection, make one of the bound
+ *		objects the new source.
+ *
+ * Some of this logic might be applicable to leader and follower as well,
+ * but that's not my main priority. This is going to require some new
+ * data structures, mainly for what objects link to what, and also a
+ * way to determine if the source of a bound object exists when we don't
+ * know its index. */ 
+
 /* TODO: make a new type "alphablock" containing a block and a selection */
 int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcsel, int x, int y)
 {
