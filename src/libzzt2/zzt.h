@@ -126,6 +126,10 @@ typedef struct ZZTparam {
 	uint8_t *program;	/* Program (if any) */
 
 	uint16_t bindindex;	/* Index of object bound to (zero if none) */
+
+	/* Program hash, used for resolving ambiguities in pasting bound
+	   stats. */
+	uint32_t program_hash;
 } ZZTparam;
 
 /* ZZT tile info -- the basic building-block of a decompressed board */
@@ -146,6 +150,7 @@ typedef struct ZZTblock {
 
 	/* Maximum number of params (usually ZZT_BOARD_MAX_PARAMS) */
 	int maxparams;
+
 } ZZTblock;
 
 /* ZZT board -- fill a ZZT world with these */
@@ -417,7 +422,17 @@ ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2);
  */
 int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y);
 
-/***** PARAMETER MANIPULATORS *****/
+/***** PARAMETER MANIPULATORS AND CHECKS *****/
+/* zztParamRehash()
+ * update ZZTparam program hash. */
+void zztParamRehash(ZZTparam * param);
+
+/* zztParamEqualProgram(param, param)
+ * returns 1 if the params have the same code,
+ * 0 otherwise.
+ */
+int zztParamEqualProgram(const ZZTparam * p1, const ZZTparam * p2);
+
 /* zztParamCreateBlank()
  * Create a blank, typeless param. Use only in advanced situations!
  */

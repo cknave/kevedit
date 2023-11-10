@@ -135,6 +135,39 @@ uint16_t _zzt_datause_location_table[] = {
 	/* ZZT_DATAUSE_OWNER        */ 0,
 };
 
+/* Set the program hash of a ZZT param using the FNV-1a hash. */
+void zztParamRehash(ZZTparam * param)
+{
+	const uint32_t FNV_32_PRIME = 0x01000193; /* 16777619 */
+
+	uint32_t h = 0x811c9dc5; /* 2166136261 */
+
+	for (size_t i = 0; i < param->length; ++i) {
+		/* xor the bottom with the current octet */
+		h ^= param->program[i];
+		/* multiply by the 32 bit FNV magic prime mod 2^32 */
+		h *= FNV_32_PRIME;
+	}
+
+	param->program_hash = h;
+}
+
+int zztParamEqualProgram(const ZZTparam * p1, const ZZTparam * p2)
+{
+	if (p1->length != p2->length) {
+		return 0;
+	}
+
+	if (p1->program_hash != p2->program_hash) {
+		return 0;
+	}
+
+	if (memcmp(p1->program, p2->program, p1->length) == 0) {
+		return 1;
+	}
+	return 0;
+}
+
 ZZTparam *zztParamCreateBlank(void)
 {
 	ZZTparam *param;
@@ -159,6 +192,8 @@ ZZTparam *zztParamCreateBlank(void)
 	param->length = 0;
 	param->program = NULL;
 	param->bindindex = 0;
+
+	zztParamRehash(param);
 
 	return param;
 }
@@ -215,6 +250,7 @@ int zztParamCopyPtr(ZZTparam *dest, ZZTparam *src)
 		if (dest->program == NULL)
 			return 0;
 		memcpy(dest->program, src->program, src->length);
+		dest->program_hash = src->program_hash;
 	}
 	return 1;
 }
