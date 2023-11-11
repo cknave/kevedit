@@ -600,20 +600,14 @@ static int has_unicode_event_queued()
 	return false;
 }
 
-/* Determine if there is an event waiting in the queue, and if so,
-   delete it. This is used (with SDL_TEXTINPUT) to keep the literal
+/* Clear every event of a particular type from the SDL queue.
+	This is used (with SDL_TEXTINPUT) to keep the literal
    part of a hotkey from being passed through when dealing with
-   hotkeys. (E.g. we don't want Alt+S to also return 's'.) */
-static void clear_event(SDL_EventType event_type)
-{
-	SDL_Event outevent;
-	SDL_PeepEvents(&outevent, 1, SDL_GETEVENT,
-		event_type, event_type);
-}
-
-/* Clear every event of a particular type from the SDL queue. This
-   solves a bug where some Linux window managers insert multiple
-   KEYDOWN events in certain circumstances when KevEdit regains focus. */
+   hotkeys. (E.g. we don't want Alt+S to also return 's'.)
+   It's also used with SDL_KEYDOWN to solve a bug where some Linux
+   window managers don't properly hide their own hotkey events
+   from running programs, leading them to insert multiple KEYDOWN
+   events in certain circumstances when KevEdit regains focus. */
 static void clear_events(SDL_EventType event_type)
 {
 	SDL_Event outevent;
@@ -914,7 +908,7 @@ static int display_sdl_getkey()
 	if (is_literal_key(event.key.keysym.sym)) {
 		return DKEY_NONE;
 	} else {
-		clear_event(SDL_TEXTINPUT);
+		clear_events(SDL_TEXTINPUT);
 		return event.key.keysym.sym;
 	}
 
