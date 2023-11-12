@@ -61,8 +61,11 @@ int line_editor(int x, int y, int color, char* str, int editwidth, int flags, di
 	int key;                 /* Key being acted on */
 
 	while (1) {
-		/* Call the raw line editor */
-		key = line_editor_raw(x, y, color, str, editwidth, &pos, flags, d);
+		/* Call the raw line editor. We're always calling with a
+		 * string output (str), so let the line editor know that
+		 * NUL is disallowed. */
+		key = line_editor_raw(x, y, color, str, editwidth, &pos,
+			flags | LINED_STRING, d);
 
 		/* Look for return-inducing keys */
 		switch (key) {
@@ -84,8 +87,7 @@ int line_editor(int x, int y, int color, char* str, int editwidth, int flags, di
 int modify_key_by_flags(int key, int flags)
 {
 
-	/* NUL is always forbidden. */
-	if (key == 0) {
+	if ((flags & LINED_STRING) && key == 0) {
 		return -1;
 	}
 
