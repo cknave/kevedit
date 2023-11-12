@@ -532,6 +532,10 @@ const char * zztTileGetName(ZZTtile tile);
  */
 const char * zztTileGetKind(ZZTtile tile);
 
+/* zztTileIsText: returns true if the tile is text, false otherwise
+ * WARNING: Does not consider unsupported blinking text to be text! */
+int zztTileIsText(ZZTtile tile);
+
 /* Make the tile type name and kind tables visible (don't modify!) */
 extern const char * _zzt_type_name_table[];
 extern const char * _zzt_type_kind_table[];
@@ -594,7 +598,7 @@ extern const char * _zzt_type_kind_table[];
 
 #define ZZT_MAX_TYPE      0x35
 
-/* Kev probably made these up */
+/* Blinking text, usage may lead to undefined behavior in ZZT. */
 #define ZZT_BBLUETEXT     0x37
 #define ZZT_BGREENTEXT    0x38
 #define ZZT_BCYANTEXT     0x39
