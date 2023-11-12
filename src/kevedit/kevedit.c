@@ -353,16 +353,11 @@ void keveditHandleTextEntry(keveditor * myeditor)
 		/* Insert the current keystroke as text */
 		ZZTtile textTile = { ZZT_BLUETEXT, 0x00, NULL };
 
-		/* Determine the text code based on the FG colour */
-		if (myeditor->color.fg == 0 || myeditor->color.fg == 8 || myeditor->color.fg == 15)
-			textTile.type += 6;
-		else if (myeditor->color.fg > 8)
-			textTile.type += myeditor->color.fg - 9;
-		else
-			textTile.type += myeditor->color.fg - 1;
-
-		/* Determine color based on keypress */
+		/* Determine appearance (encoded as color) based on keypress */
 		textTile.color = key;
+
+		/* Set color */
+		encodetilecolor(&textTile, myeditor->color);
 
 		/* ASCII selection dialog */
 		if (key == DKEY_CTRL_A) {
