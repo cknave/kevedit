@@ -1,7 +1,9 @@
 #include "hash.h"
 
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 hash_table hashInit(int max_items)
 {

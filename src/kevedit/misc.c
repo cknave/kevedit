@@ -186,6 +186,8 @@ int paste(keveditor * myeditor)
 	return key;
 }
 
+/* --------------------------- COMPLEX PASTING -------------------- */
+
 /* TODO: For copying pre-bound stuff, the following logic needs to be
  * implemented:
  *	- If our selection only contains bound objects, and the destination
@@ -208,13 +210,203 @@ int paste(keveditor * myeditor)
  * way to determine if the source of a bound object exists when we don't
  * know its index. */ 
 
+
+
+/* The following functions involve pasting a section into a board
+	so that the relative order of params is preserved, and updating
+	bind indices so no dangling indices occur.
+
+Define:
+	- object: any tile with a param.
+	- destination board: The board we're pasting into.
+	- source board: The board we're pasting from.
+	- source object: the object a bound object is bound to.
+	- destination area: The area of the destination board we're
+		pasting over.
+	- source area: The area of the source board we're copying from.
+	- dangling index: A bind index with no destination.
+*/
+
+/* The source selection gives the shape of the selection. This is
+ * offset by xofs and yofs, so to test if something will be pasted
+ * over destination coordinates (destx, desty), we have to subtract
+ * the offset. I'm doing it like this so I don't get my signs mixed
+ * up. */
+
+int isselected_dest(selection src_sel, int destx, int desty,
+	int xofs, int yofs) {
+
+	return isselected(src_sel, destx - xofs, desty - yofs);
+}
+
+/* This function moves every object inside the selection that's
+	the source of bound objects outside, outside. This ensures that
+	when we copy something over a region, existing bind indices
+	in the destination board do not become dangling indices. */
+
+void move_bind_sources(ZZTblock * board, selection srcsel, int x, int y)
+{
+
+	/*	Set up a bind map array: an array of length equal to the number
+	of params on the board, filled with zero.
+
+	For every destination board bound object X outside the destination
+	area:
+		- If its source is also outside, everything is OK.
+			Skip to the next.
+
+		- If its source's bind map array value is not zero,
+			point the object to the value in it instead, and
+			continue.
+
+		- If its source is inside the destination area, move its
+			program to X. Set its bind map array value to the index
+			of X.
+
+	Once this is done, every source object inside the destination area
+	will have been moved outside and the bind indices updated to reflect
+	the change. */
+
+	int * bind_map = malloc(board->paramcount * sizeof(int));
+	memset(bind_map, 0, board->paramcount * sizeof(int));
+
+	int i;
+
+	for (i = 1; i < board->paramcount; ++i) {
+		ZZTparam * param = board->params[i];
+
+		/* Is the object inside the selection? If so, skip */
+		if (isselected_dest(srcsel, param->x, param->y, x, y)) {
+			continue;
+		}
+
+		/* Not bound? Skip. */
+		if (param->bindindex == 0 
+			|| param->bindindex > board->paramcount) {
+			continue;
+		}
+
+		ZZTparam * source_obj = board->params[param->bindindex];
+
+		/* Is the source outside? If so, skip. */
+		if (!isselected_dest(srcsel, source_obj->x, source_obj->y, x, y)) {
+			continue;
+		}
+
+		/* Does it already have a new bind index? If so, set it
+		 * and skip. */
+		if (bind_map[param->bindindex] != 0) {
+			param->bindindex = bind_map[param->bindindex];
+			continue;
+		}
+
+		/* Make the bound object into the source object and set
+		 * the bind map to point to it instead. */
+
+		ZZTparam source_backup;
+		memcpy(&source_backup, source_obj, sizeof(ZZTparam));
+
+		bind_map[param->bindindex] = i;
+
+		source_obj->instruction = param->instruction;
+		source_obj->length = param->length;
+		source_obj->program = NULL;
+		source_obj->bindindex = i;
+
+		param->instruction = source_backup.instruction;
+		param->length = source_backup.length;
+		param->program = source_backup.program;
+		param->bindindex = 0;
+	}
+
+	free(bind_map);
+}
+
+void merge_paste(ZZTblock *dest, ZZTblock *src,
+	selection destsel, selection srcsel, int x, int y) {
+
+	/*	Move objects out of the way first. */
+	move_bind_sources(dest, srcsel, x, y);
+
+	/*	Clear everything in the destination area. Remove params as needed,
+		and update bind indices to reflect this. */
+
+	/*	Remove from the source selection every object that, if we included
+		them, would exceed the destination's stat limit. */
+
+	/*	Record the hashes of every object on the source board and every
+		board on the destination board outside the destination area. */
+
+	/*	Reinitalize the bind map array to be of length equal to the number
+		of objects remaining at the destination plus the number of objects
+		being copied over. In addition, create a coordinate array of the
+		same length. This will contain the coordinates of the source objects
+		in the source area, indexed by the parameter index of the bound object
+		on the destination board. Initialize the coordinates to (-1, -1).
+
+		For every source board object inside the source area:
+			- If it's not bound to anything, copy it to the destination
+				area, add it to a second hash table, and skip to the next.
+				(Everything below is for bound objects.)
+
+			- If its source is also inside, set its source object's
+				coordinates and copy it over. We'll update the
+				bind indices later.
+
+			- If its source is outside and the bind index's bind map
+				value is nonzero, copy the object to the destination
+				and update its bind index to what's in the bind map,
+				then skip to the next.
+
+			If we get to this point, the source is outside and we don't
+			know if it has been added to the destination yet. We need to
+			find an object to bind this one to or copy it over if needed.
+
+			- If there's an object in the source with the same code as
+				this one, set this object's bind index's bind map value
+				to that object. Then copy this object over and set its
+				bind index to that bind map value. Use the hash table to
+				determine if there are any such objects.
+
+			- If not, then copy this object over and copy its source's
+				code to it. Set the bind map value for its bind index to
+				its new index (on the destination board), and then clear
+				its bind index (as it's no longer bound). */
+
+	/*	Now we just need to update the coordinate references. 
+		For each object with a non (-1, -1) coordinate in the coordinate
+		array:
+			- Use the (unaltered) bind index, which is a source board
+				index, to get its source object.
+			- Find an object on the destination board with the same
+				program and with the same coordinates relative to the
+				corner of the destination area as the noted coordinates
+				relative to the corner of the source. Use the second hash
+				table to speed this up.
+
+			- Set its bind index to this object. Barring any bugs, there
+				will always be one. */
+
+	/* The point of this somewhat laborious way of doing it is that every
+		object will be in the same relative order, and if we're copying
+		multiple objects with the same code, every bound object will be
+		bound to the "right" source. */
+
+	/* But damn, is this algorithm complex or what? */
+
+}
+
 /* TODO: make a new type "alphablock" containing a block and a selection */
-int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcsel, int x, int y)
+int pasteblock(ZZTblock *dest, ZZTblock *src,
+	selection destsel, selection srcsel, int x, int y)
 {
 	int srcpos;     /* Current index in source */
 	int row, col;   /* Current row and col in dest */
 
 	/* Paste */
+
+	/* Move params bound by others out of the way. */
+	move_bind_sources(dest, srcsel, x, y);
 
 	srcpos = 0;     /* Start at beginning of source object */
 	for (row = y; row < src->height + y && row < dest->height; row++) {
