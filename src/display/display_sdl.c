@@ -600,18 +600,24 @@ static int has_unicode_event_queued()
 	return false;
 }
 
-/* Determine if there is an event waiting in the queue, and if so,
-   delete it. This is used (with SDL_TEXTINPUT) to keep the literal
+/* Clear every event of a particular type from the SDL queue.
+	This is used (with SDL_TEXTINPUT) to keep the literal
    part of a hotkey from being passed through when dealing with
    hotkeys. (E.g. we don't want Alt+S to also return 's'.)
-   It's also used with SDL_KEYDOWN to remove stray TAB presses due
-   to ALT+TAB not being properly handled on some Linux wms. */
-static void clear_event(SDL_EventType event_type)
+   It's also used with SDL_KEYDOWN to solve a bug where some Linux
+   window managers don't properly hide their own hotkey events
+   from running programs, leading them to insert multiple KEYDOWN
+   events in certain circumstances when KevEdit regains focus. */
+static void clear_events(SDL_EventType event_type)
 {
 	SDL_Event outevent;
-	SDL_PeepEvents(&outevent, 1, SDL_GETEVENT,
-		event_type, event_type);
+	int stored_events;
+	do {
+		stored_events = SDL_PeepEvents(&outevent, 1,
+			SDL_GETEVENT, event_type, event_type);
+	} while (stored_events > 0);
 }
+
 
 static int display_sdl_getkey()
 {
@@ -701,12 +707,14 @@ static int display_sdl_getkey()
 	/* Focus change? */
 	} else if(event.type == SDL_WINDOWEVENT) {
 		if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-			/* Clear stray TAB events from ALT+TAB. This will also
-			   delete other keydown events that happen at the same
-			   same time as KevEdit regaining focus, but the user's
-			   timing would have to be perfect to produce any such
-			   events, so that shouldn't be a problem. */
-			clear_event(SDL_KEYDOWN);
+			/* Clear stray keydown events produced by the window
+			   manager, e.g. TAB events from ALT+TAB, and CTRL+arrow
+			   from CTRL+ALT+arrow. This will also delete other keydown
+			   events that happen at the same same time as KevEdit
+			   regaining focus, but the user's timing would have to
+			   be perfect to produce any such events, so that shouldn't
+			   be a problem. */
+			clear_events(SDL_KEYDOWN);
 			display_redraw(&info);
 			/* Make cursor normal */
 			start_cursor_timer();
@@ -900,7 +908,7 @@ static int display_sdl_getkey()
 	if (is_literal_key(event.key.keysym.sym)) {
 		return DKEY_NONE;
 	} else {
-		clear_event(SDL_TEXTINPUT);
+		clear_events(SDL_TEXTINPUT);
 		return event.key.keysym.sym;
 	}
 
