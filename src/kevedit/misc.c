@@ -234,7 +234,8 @@ Define:
  * up. */
 
 int isselected_dest(selection src_sel, int destx, int desty,
-	int xofs, int yofs) {
+	int xofs, int yofs)
+{
 
 	return isselected(src_sel, destx - xofs, desty - yofs);
 }
@@ -322,17 +323,42 @@ void move_bind_sources(ZZTblock * board, selection srcsel, int x, int y)
 	free(bind_map);
 }
 
+void remove_selection_params(ZZTblock * board, selection srcsel,
+	int x, int y)
+{
+	/* Erase every tile with params in the destination area,
+	 * so that what we paste will come after every existing
+	 * object. */
+
+	/* This is a simple O(n^2) algorithm; it's possible to do
+	 * this in linear time, but the approach would be more
+	 * complex. Only do it if optimization requires it. */
+
+	int i = 1;
+
+	while (i < board->paramcount) {
+		ZZTparam * param = board->params[i];
+
+		if (!isselected_dest(srcsel, param->x, param->y, x, y)) {
+			++i;
+			continue;
+		}
+
+		/* Delete this tile. This will shift every param one step
+		 * up, so don't increment i.*/
+		zztTileErase(board, param->x, param->y);
+	}
+}
+
 void merge_paste(ZZTblock *dest, ZZTblock *src,
-	selection destsel, selection srcsel, int x, int y) {
+	selection srcsel, int x, int y) {
 
 	/*	Move objects out of the way first. */
 	move_bind_sources(dest, srcsel, x, y);
 
-	/*	Clear everything in the destination area. Remove params as needed,
-		and update bind indices to reflect this. */
-
-	/*	Remove from the source selection every object that, if we included
-		them, would exceed the destination's stat limit. */
+	/*	Clear every param in the destination area, and update bind
+		indices to reflect this. */
+	remove_selection_params(dest, srcsel, x, y);
 
 	/*	Record the hashes of every object on the source board and every
 		board on the destination board outside the destination area. */
@@ -405,8 +431,8 @@ int pasteblock(ZZTblock *dest, ZZTblock *src,
 
 	/* Paste */
 
-	/* Move params bound by others out of the way. */
-	move_bind_sources(dest, srcsel, x, y);
+	/* Merge source params into the destination. */
+	merge_paste(dest, src, srcsel, x, y);
 
 	srcpos = 0;     /* Start at beginning of source object */
 	for (row = y; row < src->height + y && row < dest->height; row++) {
