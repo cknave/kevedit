@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 hash_table hashInit(int max_items)
 {
 	/* Initialize an array of size twice the number of items as a
@@ -12,8 +11,10 @@ hash_table hashInit(int max_items)
 	hash_table out;
 
 	out.size = 2 * max_items;
-	out.table = malloc(sizeof(llnode *) * max_items);
-	memset(out.table, 0, sizeof(llnode *) * max_items);
+	out.table = malloc(sizeof(llnode *) * out.size);
+	memset(out.table, 0, sizeof(llnode *) * out.size);
+
+	return out;
 }
 
 /* Adds the node to the end. */
@@ -34,6 +35,7 @@ void addNode(hash_table * htab, ZZTparam * param, int param_index)
 	if (htab->table[table_idx] == NULL) {
 		new_node->previous = new_node;
 		new_node->next = NULL;
+		htab->table[table_idx] = new_node;
 	} else {
 		llnode * last_node = htab->table[table_idx]->previous;
 
@@ -41,6 +43,22 @@ void addNode(hash_table * htab, ZZTparam * param, int param_index)
 		last_node->next = new_node;
 		new_node->previous = last_node;
 		new_node->next = NULL;
+
+		 /* update last node reference */
+		htab->table[table_idx]->previous = new_node;
+	}
+}
+
+void addNodes(hash_table * htab, ZZTblock * block)
+{
+	int i;
+
+	for (i = 1; i < block->paramcount; ++i) {
+		ZZTparam * param = block->params[i];
+
+		if (param->length > 0) {
+			addNode(htab, param, i);
+		}
 	}
 }
 
@@ -54,6 +72,7 @@ void removeNode(hash_table * htab, llnode * node)
 	/* If we're the only node in the chain, just set the table
 	 * entry to null and free it. */
 	if (node->previous == node) {
+		assert(htab->table[table_idx] == node);
 		htab->table[table_idx] = NULL;
 		free(node);
 		return;
@@ -67,6 +86,19 @@ void removeNode(hash_table * htab, llnode * node)
 	if (htab->table[table_idx] == node) {
 		node->next->previous = node->previous;
 		htab->table[table_idx] = node->next;
+		free(node);
+		return;
+	}
+
+	/* If we're the last node in the chain, update the previous's
+	 * next and set the last node reference on the first node in
+	 * the chain. */
+
+	if (htab->table[table_idx]->previous == node) {
+		assert(node->next == NULL);
+		assert(node->previous != NULL);
+		node->previous->next = NULL;
+		htab->table[table_idx]->previous = node->previous;
 		free(node);
 		return;
 	}

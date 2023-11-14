@@ -46,6 +46,7 @@ typedef struct hash_table {
 
 hash_table hashInit(int max_items);
 void addNode(hash_table * htab, ZZTparam * param, int param_index);
+void addNodes(hash_table * htab, ZZTblock * block);
 void removeNode(hash_table * htab, llnode * node);
 
 /* Returns the head of the list that contains every entry with this

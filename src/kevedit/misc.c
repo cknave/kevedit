@@ -28,6 +28,8 @@
 #include "texteditor/texteditor.h"
 #include "screen.h"
 
+#include "hash.h"
+
 #include "structures/svector.h"
 #include "structures/selection.h"
 #include "structures/gradient.h"
@@ -363,6 +365,15 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 	/*	Record the hashes of every object on the source board and every
 		board on the destination board outside the destination area. */
 
+	hash_table src_board_ht = hashInit(src->paramcount),
+		dest_board_ht = hashInit(dest->paramcount);
+
+	addNodes(&src_board_ht, src);
+
+	/*	We can do this because every object remaining after removal is
+		by definition outside the destination area. */
+	addNodes(&dest_board_ht, dest);
+
 	/*	Reinitalize the bind map array to be of length equal to the number
 		of objects remaining at the destination plus the number of objects
 		being copied over. In addition, create a coordinate array of the
@@ -419,6 +430,9 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		bound to the "right" source. */
 
 	/* But damn, is this algorithm complex or what? */
+
+	freeTable(&src_board_ht);
+	freeTable(&dest_board_ht);
 
 }
 
