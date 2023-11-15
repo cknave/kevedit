@@ -442,6 +442,9 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 	dest->paramcount = num_objects_after;
 
 	/* Copy unbound objects. */
+	/* object_idx is the index of the source object if we only count
+	 * objects inside the selection area. It's only used to calculate
+	 * the destination index and shouldn't be touched directly. */
 	int object_idx = 0;
 	for (i = 0; i < src->paramcount && object_idx < objects_to_add; ++i) {
 		ZZTparam * param = src->params[i];
@@ -450,6 +453,9 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 			continue;
 		}
 
+		int dest_idx = first_new_idx + object_idx;
+		++object_idx;
+
 		/* Count objects bound to themselves or containing 
 		 * code as unbound. */
 		if (param->bindindex == i || param->program != NULL) {
@@ -457,11 +463,8 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		}
 
 		if (param->bindindex != 0) {
-			++object_idx;
 			continue;
 		}
-		
-		int dest_idx = first_new_idx + object_idx;
 
 		ZZTparam * dest_param = zztParamDuplicate(param);
 		dest_param->index = dest_idx;
@@ -473,10 +476,7 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 
 		bind_map[i] = dest_idx;
 		addNode(&dest_board_ht, dest_param);
-		++object_idx;
 	}
-
-	printf("dest param last: %d out of %d\n", object_idx + first_new_idx, num_objects_after);
 
 	/* Copy bound objects. */
 	object_idx = 0;
@@ -487,13 +487,14 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 			continue;
 		}
 
+		int dest_idx = first_new_idx + object_idx;
+		++object_idx;
+
 		if (param->bindindex == 0) {
-			++object_idx;
 			continue;
 		}
 
 		/* Do the actual copy here. */
-		int dest_idx = first_new_idx + object_idx;
 		ZZTparam * dest_param = zztParamDuplicate(param);
 		dest_param->index = dest_idx;
 		dest_param->x += x;
@@ -511,7 +512,6 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		/* If it's bound to something we copied earlier, just resolve. */
 		if (bind_map[dest_param->bindindex] != 0) {
 			dest_param->bindindex = bind_map[dest_param->bindindex];
-			++object_idx;
 			continue;
 		}
 
@@ -541,12 +541,13 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		zztParamRehash(dest_param);
 
 		/* And update bind map and index. */
-		bind_map[dest_param->bindindex] = object_idx;
+		bind_map[dest_param->bindindex] = dest_param->index;
 		dest_param->bindindex = 0;
 	}
 
 	/* TODO: Scrub the tiles that are associated with objects at the
-	 * source but were not copied to dest */
+	 * source but were not copied to dest. Just loop over the objects
+	 * that didn't make it. */
 
 	/* Cleanup. */
 	freeTable(&dest_board_ht);
