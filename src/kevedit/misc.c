@@ -464,6 +464,7 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		int dest_idx = first_new_idx + object_idx;
 
 		ZZTparam * dest_param = zztParamDuplicate(param);
+		dest_param->index = dest_idx;
 		dest_param->x += x;
 		dest_param->y += y;
 
@@ -471,7 +472,7 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		zztTileAt(dest, dest_param->x, dest_param->y).param = dest_param;
 
 		bind_map[i] = dest_idx;
-		addNode(&dest_board_ht, dest_param, first_new_idx + object_idx);
+		addNode(&dest_board_ht, dest_param);
 		++object_idx;
 	}
 
@@ -494,6 +495,7 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		/* Do the actual copy here. */
 		int dest_idx = first_new_idx + object_idx;
 		ZZTparam * dest_param = zztParamDuplicate(param);
+		dest_param->index = dest_idx;
 		dest_param->x += x;
 		dest_param->y += y;
 
@@ -521,8 +523,8 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 			bound_to_param);
 
 		if (first_equal != NULL) {
-			bind_map[dest_param->bindindex] = first_equal->param_index;
-			dest_param->bindindex = first_equal->param_index;
+			bind_map[dest_param->bindindex] = first_equal->param->index;
+			dest_param->bindindex = first_equal->param->index;
 			continue;
 		}
 

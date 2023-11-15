@@ -18,12 +18,11 @@ hash_table hashInit(int max_items)
 }
 
 /* Adds the node to the end. */
-void addNode(hash_table * htab, ZZTparam * param, int param_index)
+void addNode(hash_table * htab, ZZTparam * param)
 {
 	llnode * new_node = malloc(sizeof(llnode));
 	memset(new_node, 0, sizeof(llnode));
 
-	new_node->param_index = param_index;
 	new_node->param = param;
 
 	int table_idx = param->program_hash % htab->size;
@@ -57,7 +56,7 @@ void addNodes(hash_table * htab, ZZTblock * block)
 		ZZTparam * param = block->params[i];
 
 		if (param->length > 0) {
-			addNode(htab, param, i);
+			addNode(htab, param);
 		}
 	}
 }

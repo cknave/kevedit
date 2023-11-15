@@ -33,7 +33,6 @@
 /* The first node's previous pointer points to the last node. */
 
 typedef struct llnode {
-	int param_index; /* nth object on the board */
 	ZZTparam * param;
 	struct llnode * previous;
 	struct llnode * next;
@@ -45,7 +44,7 @@ typedef struct hash_table {
 } hash_table;
 
 hash_table hashInit(int max_items);
-void addNode(hash_table * htab, ZZTparam * param, int param_index);
+void addNode(hash_table * htab, ZZTparam * param);
 void addNodes(hash_table * htab, ZZTblock * block);
 void removeNode(hash_table * htab, llnode * node);
 
