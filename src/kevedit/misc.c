@@ -319,7 +319,10 @@ void move_bind_sources(ZZTblock * board, selection srcsel, int x, int y)
 		param->instruction = source_backup.instruction;
 		param->length = source_backup.length;
 		param->program = source_backup.program;
+		param->program_hash = source_backup.program_hash;
 		param->bindindex = 0;
+
+		zztParamRehash(source_obj);
 	}
 
 	free(bind_map);
