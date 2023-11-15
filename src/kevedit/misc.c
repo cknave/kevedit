@@ -362,81 +362,134 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		indices to reflect this. */
 	remove_selection_params(dest, srcsel, x, y);
 
-	/*	Record the hashes of every object on the source board and every
-		board on the destination board outside the destination area. */
+	/*	Record the hashes of every board on the destination board outside
+	 *  the destination area. Since we removed every object inside the
+	 *  destination area, that's just every board on the destination.*/
 
-	hash_table src_board_ht = hashInit(src->paramcount),
-		dest_board_ht = hashInit(dest->paramcount);
-
-	addNodes(&src_board_ht, src);
-
-	/*	We can do this because every object remaining after removal is
-		by definition outside the destination area. */
+	hash_table dest_board_ht = hashInit(dest->paramcount);
 	addNodes(&dest_board_ht, dest);
 
-	/*	Reinitalize the bind map array to be of length equal to the number
-		of objects remaining at the destination plus the number of objects
-		being copied over. In addition, create a coordinate array of the
-		same length. This will contain the coordinates of the source objects
-		in the source area, indexed by the parameter index of the bound object
-		on the destination board. Initialize the coordinates to (-1, -1).
+	return; /* Remove this once copying is in place. */
 
-		For every source board object inside the source area:
-			- If it's not bound to anything, copy it to the destination
-				area, add it to a second hash table, and skip to the next.
-				(Everything below is for bound objects.)
+	/* The remaining algorithm consists of two steps. First we add the
+	 * unbound objects from the source to the destination in a way that
+	 * preserves the relative order, noting their new indices in the bind
+	 * map. Then we add the bound objects. Those who bind to objects whose
+	 * indices are in the bound map can just be remapped; otherwise we
+	 * need to look for some object with the same code in the destination
+	 * and bind to that - or failing that, copy the code from the source
+	 * board's object to the first bound object. */
 
-			- If its source is also inside, set its source object's
-				coordinates and copy it over. We'll update the
-				bind indices later.
 
-			- If its source is outside and the bind index's bind map
-				value is nonzero, copy the object to the destination
-				and update its bind index to what's in the bind map,
-				then skip to the next.
 
-			If we get to this point, the source is outside and we don't
-			know if it has been added to the destination yet. We need to
-			find an object to bind this one to or copy it over if needed.
+	/* Count the number of objects in the selection area. */
 
-			- If there's an object in the source with the same code as
-				this one, set this object's bind index's bind map value
-				to that object. Then copy this object over and set its
-				bind index to that bind map value. Use the hash table to
-				determine if there are any such objects.
+	int i, objects_in_area = 0;
 
-			- If not, then copy this object over and copy its source's
-				code to it. Set the bind map value for its bind index to
-				its new index (on the destination board), and then clear
-				its bind index (as it's no longer bound). */
+	for (i = 0; i < src->paramcount; ++i) {
+		ZZTparam * param = src->params[i];
+		if (isselected(srcsel, param->x, param->y)) {
+			++objects_in_area;
+		}
+	}
 
-	/*	Now we just need to update the coordinate references. 
-		For each object with a non (-1, -1) coordinate in the coordinate
-		array:
-			- Use the (unaltered) bind index, which is a source board
-				index, to get its source object.
-			- Find an object on the destination board with the same
-				program and with the same coordinates relative to the
-				corner of the destination area as the noted coordinates
-				relative to the corner of the source. Use the second hash
-				table to speed this up.
+	/* Determine how many objects we can add. */
+	int objects_to_add = min(dest->maxparams - dest->paramcount,
+		objects_in_area);
 
-			- Set its bind index to this object. Barring any bugs, there
-				will always be one. */
+	int num_objects_after = src->paramcount + objects_in_area,
+		first_new_idx = dest->paramcount;
+	int * bind_map = malloc(num_objects_after * sizeof(int));
+	memset(bind_map, 0, num_objects_after * sizeof(int));
 
-	/* The point of this somewhat laborious way of doing it is that every
-		object will be in the same relative order, and if we're copying
-		multiple objects with the same code, every bound object will be
-		bound to the "right" source. */
+	/* Copy unbound objects. */
+	int object_idx = 0;
+	for (i = 0; i < src->paramcount && object_idx < objects_to_add; ++i) {
+		ZZTparam * param = src->params[i];
 
-	/* But damn, is this algorithm complex or what? */
+		if (!isselected(srcsel, param->x, param->y)) {
+			continue;
+		}
 
-	freeTable(&src_board_ht);
+		/* Count objects bound to themselves as unbound. */
+		if (param->bindindex == i) {
+			param->bindindex = 0;
+		}
+
+		if (param->bindindex != 0) {
+			++object_idx;
+			continue;
+		}
+
+		/* Actually copy the tile, object and all, here. I need to find
+		 * the invocation that does so. TODO. */
+
+		ZZTparam * destparam = param;
+
+		bind_map[i] = first_new_idx + object_idx;
+		addNode(&dest_board_ht, destparam, first_new_idx + object_idx);
+		++object_idx;
+	}
+
+	/* Copy bound objects. */
+	object_idx = 0;
+	for (i = 0; i < src->paramcount && object_idx < objects_to_add; ++i) {
+		ZZTparam * param = src->params[i];
+
+		if (!isselected(srcsel, param->x, param->y)) {
+			continue;
+		}
+
+		if (param->bindindex == 0) {
+			++object_idx;
+			continue;
+		}
+
+		/* Do the actual copy here. Again I don't know how to yet. */
+		ZZTparam * destparam = param; // pretend
+
+		/* Now there are three possibilities. Either the object is bound to
+		 * something we copied earlier and thus have a bind index for;
+		 * or it's bound to something that's in the destination board but
+		 * not part of what we copied;
+		 * or it's bound to something that isn't in the destination board. */
+
+		/* If it's bound to something we copied earlier, just resolve. */
+		if (bind_map[destparam->bindindex] != 0) {
+			destparam->bindindex = bind_map[destparam->bindindex];
+			++object_idx;
+			continue;
+		}
+
+		/* Search the destination board for an object with code matching
+		 * the bound object we're lokking for, using the hash table. */
+		ZZTparam * bound_to_param = src->params[param->bindindex];
+
+		const llnode * first_equal = getFirstEqual(&dest_board_ht,
+			bound_to_param);
+
+		if (first_equal != NULL) {
+			bind_map[destparam->bindindex] = first_equal->param_index;
+			destparam->bindindex = first_equal->param_index;
+			continue;
+		}
+
+		/* It's not currently on the destination board. Copy the source
+		 * to our object and set it as source for everything with the
+		 * same bind index. */
+
+		/* TODO: Copy the program to destparam. Include hash. */
+		bind_map[destparam->bindindex] = object_idx;
+		destparam->bindindex = 0;
+	}
+
+	/* Cleanup. */
 	freeTable(&dest_board_ht);
-
+	free(bind_map);
 }
 
 /* TODO: make a new type "alphablock" containing a block and a selection */
+/* TODO: src should be const. */
 int pasteblock(ZZTblock *dest, ZZTblock *src,
 	selection destsel, selection srcsel, int x, int y)
 {
