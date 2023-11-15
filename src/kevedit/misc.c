@@ -352,15 +352,46 @@ void remove_selection_params(ZZTblock * board, selection srcsel,
 	}
 }
 
-void merge_paste(ZZTblock *dest, ZZTblock *src,
+/* Copy the tiles themselves, but no associated params since we'll
+ * deal with those later. */
+void copy_tiles(ZZTblock * dest, ZZTblock * src, selection destsel,
 	selection srcsel, int x, int y) {
 
-	/*	Move objects out of the way first. */
+	int src_y, src_x;
+
+	for (src_y = 0; src_y < src->height && src_y + y < dest->height; ++src_y) {
+		for (src_x = 0; src_x < src->width && src_x + x < dest->width; ++src_x) {
+
+			if (src_x + x < 0 || src_y + y < 0) {
+				continue;
+			}
+
+			/* Only copy selected tiles */
+			if (!isselected(destsel, src_x + x, src_y + y)
+				|| !isselected(srcsel, src_x, src_y)) {
+				continue;
+			}
+
+			ZZTtile src_tile = zztTileAt(src, src_x, src_y);
+
+			zztTileAt(dest, src_x + x, src_y + y) = src_tile;
+			zztTileAt(dest, src_x + x, src_y + y).param = NULL;
+		}
+	}
+}
+
+void merge_paste(ZZTblock *dest, ZZTblock *src,
+	selection destsel, selection srcsel, int x, int y) {
+
+	/* Move objects out of the way first. */
 	move_bind_sources(dest, srcsel, x, y);
 
-	/*	Clear every param in the destination area, and update bind
-		indices to reflect this. */
+	/* Clear every param in the destination area, and update bind
+	 * indices to reflect this. */
 	remove_selection_params(dest, srcsel, x, y);
+
+	/* Copy the tiles themselves. */
+	copy_tiles(dest, src, destsel, srcsel, x, y);
 
 	/*	Record the hashes of every board on the destination board outside
 	 *  the destination area. Since we removed every object inside the
@@ -368,8 +399,6 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 
 	hash_table dest_board_ht = hashInit(dest->paramcount);
 	addNodes(&dest_board_ht, dest);
-
-	return; /* Remove this once copying is in place. */
 
 	/* The remaining algorithm consists of two steps. First we add the
 	 * unbound objects from the source to the destination in a way that
@@ -397,10 +426,20 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 	int objects_to_add = min(dest->maxparams - dest->paramcount,
 		objects_in_area);
 
-	int num_objects_after = src->paramcount + objects_in_area,
+	int num_objects_after = dest->paramcount + objects_in_area,
 		first_new_idx = dest->paramcount;
-	int * bind_map = malloc(num_objects_after * sizeof(int));
-	memset(bind_map, 0, num_objects_after * sizeof(int));
+
+	if (objects_in_area == 0) {
+		return;
+	}
+	
+	int * bind_map = malloc(src->paramcount * sizeof(int));
+	memset(bind_map, 0, src->paramcount * sizeof(int));
+
+	/* Reallocate the destination param array accordingly. */
+	dest->params = (ZZTparam **) realloc(dest->params,
+		sizeof(ZZTparam*) * num_objects_after);
+	dest->paramcount = num_objects_after;
 
 	/* Copy unbound objects. */
 	int object_idx = 0;
@@ -411,8 +450,9 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 			continue;
 		}
 
-		/* Count objects bound to themselves as unbound. */
-		if (param->bindindex == i) {
+		/* Count objects bound to themselves or containing 
+		 * code as unbound. */
+		if (param->bindindex == i || param->program != NULL) {
 			param->bindindex = 0;
 		}
 
@@ -420,16 +460,22 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 			++object_idx;
 			continue;
 		}
+		
+		int dest_idx = first_new_idx + object_idx;
 
-		/* Actually copy the tile, object and all, here. I need to find
-		 * the invocation that does so. TODO. */
+		ZZTparam * dest_param = zztParamDuplicate(param);
+		dest_param->x += x;
+		dest_param->y += y;
 
-		ZZTparam * destparam = param;
+		dest->params[dest_idx] = dest_param;
+		zztTileAt(dest, dest_param->x, dest_param->y).param = dest_param;
 
-		bind_map[i] = first_new_idx + object_idx;
-		addNode(&dest_board_ht, destparam, first_new_idx + object_idx);
+		bind_map[i] = dest_idx;
+		addNode(&dest_board_ht, dest_param, first_new_idx + object_idx);
 		++object_idx;
 	}
+
+	printf("dest param last: %d out of %d\n", object_idx + first_new_idx, num_objects_after);
 
 	/* Copy bound objects. */
 	object_idx = 0;
@@ -445,32 +491,38 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 			continue;
 		}
 
-		/* Do the actual copy here. Again I don't know how to yet. */
-		ZZTparam * destparam = param; // pretend
+		/* Do the actual copy here. */
+		int dest_idx = first_new_idx + object_idx;
+		ZZTparam * dest_param = zztParamDuplicate(param);
+		dest_param->x += x;
+		dest_param->y += y;
+
+		dest->params[dest_idx] = dest_param;
+		zztTileAt(dest, dest_param->x, dest_param->y).param = dest_param;
 
 		/* Now there are three possibilities. Either the object is bound to
 		 * something we copied earlier and thus have a bind index for;
-		 * or it's bound to something that's in the destination board but
-		 * not part of what we copied;
-		 * or it's bound to something that isn't in the destination board. */
+		 * or it's bound to something that can be found on the destination
+		 * board but isn't part of what we copied;
+		 * or it's bound to something that isn't on the destination board. */
 
 		/* If it's bound to something we copied earlier, just resolve. */
-		if (bind_map[destparam->bindindex] != 0) {
-			destparam->bindindex = bind_map[destparam->bindindex];
+		if (bind_map[dest_param->bindindex] != 0) {
+			dest_param->bindindex = bind_map[dest_param->bindindex];
 			++object_idx;
 			continue;
 		}
 
 		/* Search the destination board for an object with code matching
-		 * the bound object we're lokking for, using the hash table. */
+		 * the bound object we're looking for, using the hash table. */
 		ZZTparam * bound_to_param = src->params[param->bindindex];
 
 		const llnode * first_equal = getFirstEqual(&dest_board_ht,
 			bound_to_param);
 
 		if (first_equal != NULL) {
-			bind_map[destparam->bindindex] = first_equal->param_index;
-			destparam->bindindex = first_equal->param_index;
+			bind_map[dest_param->bindindex] = first_equal->param_index;
+			dest_param->bindindex = first_equal->param_index;
 			continue;
 		}
 
@@ -478,10 +530,21 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		 * to our object and set it as source for everything with the
 		 * same bind index. */
 
-		/* TODO: Copy the program to destparam. Include hash. */
-		bind_map[destparam->bindindex] = object_idx;
-		destparam->bindindex = 0;
+		/* Copy the program to dest_param. Include hash. */
+		dest_param->length = bound_to_param->length;
+		dest_param->program = (uint8_t *) malloc(
+			dest_param->length);
+		memcpy(dest_param->program, bound_to_param->program,
+			dest_param->length);
+		zztParamRehash(dest_param);
+
+		/* And update bind map and index. */
+		bind_map[dest_param->bindindex] = object_idx;
+		dest_param->bindindex = 0;
 	}
+
+	/* TODO: Scrub the tiles that are associated with objects at the
+	 * source but were not copied to dest */
 
 	/* Cleanup. */
 	freeTable(&dest_board_ht);
@@ -499,7 +562,8 @@ int pasteblock(ZZTblock *dest, ZZTblock *src,
 	/* Paste */
 
 	/* Merge source params into the destination. */
-	merge_paste(dest, src, srcsel, x, y);
+	merge_paste(dest, src, destsel, srcsel, x, y);
+	return 1;
 
 	srcpos = 0;     /* Start at beginning of source object */
 	for (row = y; row < src->height + y && row < dest->height; row++) {

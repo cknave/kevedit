@@ -54,6 +54,13 @@ void removeNode(hash_table * htab, llnode * node);
  * collisions. */
 const llnode * getFirstByHash(hash_table * htab, ZZTparam * param);
 
+int isProgramEqual(ZZTparam * a, ZZTparam * b);
+
+/* Returns the first node containing a param with the same code as
+ * param. NULL if none. */
+const llnode * getFirstEqual(hash_table * htab, ZZTparam * param);
+const llnode * getNextEqual(const llnode * last, ZZTparam * param);
+
 void freeTable(hash_table * htab);
 
 #endif

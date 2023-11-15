@@ -109,11 +109,49 @@ void removeNode(hash_table * htab, llnode * node)
 	free(node);
 }
 
-const llnode * getChainByHash(hash_table * htab, ZZTparam * param)
+const llnode * getFirstByHash(hash_table * htab, ZZTparam * param)
 {
 	int table_idx = param->program_hash % htab->size;
 
 	return htab->table[table_idx];
+}
+
+int isProgramEqual(ZZTparam * a, ZZTparam * b) {
+	return (a->length == b->length)
+		&& (memcmp(a->program, b->program, a->length) == 0);
+}
+
+const llnode * getFirstEqual(hash_table * htab, ZZTparam * param)
+{
+	int table_idx = param->program_hash % htab->size;
+	llnode * candidate = htab->table[table_idx];
+
+	/* Keep advancing as long as the candidate isn't NULL and
+	 * either the program length or contents differ. */
+
+	while (candidate != NULL
+		&& !isProgramEqual(param, candidate->param)) {
+
+		candidate = candidate->next;
+	}
+
+	return candidate;
+}
+
+const llnode * getNextEqual(const llnode * last, ZZTparam * param)
+{
+	if (last == NULL) {
+		return NULL;
+	}
+
+	const llnode * next_node = last;
+
+	do {
+		next_node = next_node -> next;
+	} while (next_node != NULL
+		&& !isProgramEqual(param, next_node->param));
+
+	return next_node;
 }
 
 void freeTable(hash_table * htab) {
