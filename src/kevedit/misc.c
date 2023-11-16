@@ -190,8 +190,10 @@ int paste(keveditor * myeditor)
 
 /* --------------------------- COMPLEX PASTING -------------------- */
 
-/* TODO: For copying pre-bound stuff, the following logic needs to be
- * implemented:
+/* The following functions involve pasting a section into a board
+ * so that the relative order of params is preserved, and updating
+ * bind indices so no dangling indices occur.
+ *
  *	- If our selection only contains bound objects, and the destination
  *		board contains the source, link the bound objects to the source.
  *	- If our selection only contains bound objects, and the destination
@@ -206,27 +208,15 @@ int paste(keveditor * myeditor)
  *		source doesn't exist in our selection, make one of the bound
  *		objects the new source.
  *
- * Some of this logic might be applicable to leader and follower as well,
- * but that's not my main priority. This is going to require some new
- * data structures, mainly for what objects link to what, and also a
- * way to determine if the source of a bound object exists when we don't
- * know its index. */ 
-
-
-
-/* The following functions involve pasting a section into a board
-	so that the relative order of params is preserved, and updating
-	bind indices so no dangling indices occur.
-
-Define:
-	- object: any tile with a param.
-	- destination board: The board we're pasting into.
-	- source board: The board we're pasting from.
-	- source object: the object a bound object is bound to.
-	- destination area: The area of the destination board we're
-		pasting over.
-	- source area: The area of the source board we're copying from.
-	- dangling index: A bind index with no destination.
+ * Define:
+ *	- object: any tile with a param.
+ *	- destination board: The board we're pasting into.
+ *	- source board: The board we're pasting from.
+ *  - source object: the object a bound object is bound to.
+ *  - destination area: The area of the destination board we're
+ *		pasting over.
+ *	- source area: The area of the source board we're copying from.
+ *  - dangling index: A bind index with no destination.
 */
 
 /* The source selection gives the shape of the selection. This is
@@ -508,6 +498,11 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 	int * bind_map = malloc(src->paramcount * sizeof(int));
 	memset(bind_map, 0, src->paramcount * sizeof(int));
 
+	/* For leader/follower. object_map[i] is the destination
+	 * index of the object with source index i. 0 if not copied. */
+	int * object_map = malloc(src->paramcount * sizeof(int));
+	memset(object_map, 0, src->paramcount * sizeof(int));
+
 	/* Reallocate the destination param array accordingly. */
 	dest->params = (ZZTparam **) realloc(dest->params,
 		sizeof(ZZTparam*) * num_objects_after);
@@ -547,6 +542,7 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		zztTileAt(dest, dest_param->x, dest_param->y).param = dest_param;
 
 		bind_map[i] = dest_idx;
+		object_map[i] = dest_idx;
 		addNode(&dest_board_ht, dest_param);
 	}
 
@@ -574,6 +570,8 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 
 		dest->params[dest_idx] = dest_param;
 		zztTileAt(dest, dest_param->x, dest_param->y).param = dest_param;
+
+		object_map[i] = dest_idx;
 
 		/* Now there are three possibilities. Either the object is bound to
 		 * something we copied earlier and thus have a bind index for;
@@ -615,6 +613,29 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		/* And update bind map and index. */
 		bind_map[dest_param->bindindex] = dest_param->index;
 		dest_param->bindindex = 0;
+	}
+
+	/* Deal with leaders and followers. */
+	for (i = first_new_idx; i < num_objects_after; ++i) {
+		ZZTparam * param = dest->params[i];
+
+		if (param->followerindex == -1
+			|| param->followerindex >= src->paramcount
+			|| object_map[param->followerindex] == 0) {
+				param->followerindex = -1;
+		} else {
+			param->followerindex =
+				object_map[param->followerindex];
+		}
+
+		if (param->leaderindex == -1
+			|| param->leaderindex >= src->paramcount
+			|| object_map[param->leaderindex] == 0) {
+				param->leaderindex = -1;
+		} else {
+			param->leaderindex =
+				object_map[param->leaderindex];
+		}
 	}
 
 	/* Cleanup. */
