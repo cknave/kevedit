@@ -348,7 +348,7 @@ void remove_selection_params(ZZTblock * board, selection srcsel,
 /* Remove or restore uncopyable tiles from the destination selection.
  * If restore is true, then we add the positions, otherwise we remove
  * them. Restoring is used for cleanup. */
-void remove_uncopyable_tiles(ZZTblock * dest, ZZTblock * src,
+void remove_uncopyable_tiles(ZZTblock * dest, const ZZTblock * src,
 	selection destsel, selection srcsel, int x, int y,
 	int objects_to_add)
 {
@@ -372,7 +372,7 @@ void remove_uncopyable_tiles(ZZTblock * dest, ZZTblock * src,
 	}
 }
 
-void restore_uncopyable_tiles(ZZTblock * dest, ZZTblock * src,
+void restore_uncopyable_tiles(ZZTblock * dest, const ZZTblock * src,
 	selection destsel, selection srcsel, int x, int y,
 	int objects_to_add)
 {
@@ -403,8 +403,8 @@ void restore_uncopyable_tiles(ZZTblock * dest, ZZTblock * src,
 
 /* Copy the tiles themselves, but no associated params since we'll
  * deal with those later. */
-void copy_tiles(ZZTblock * dest, ZZTblock * src, selection destsel,
-	selection srcsel, int x, int y)
+void copy_tiles(ZZTblock * dest, const ZZTblock * src,
+	selection destsel, selection srcsel, int x, int y)
 {
 	int src_y, src_x;
 
@@ -429,7 +429,7 @@ void copy_tiles(ZZTblock * dest, ZZTblock * src, selection destsel,
 	}
 }
 
-void merge_paste(ZZTblock *dest, ZZTblock *src,
+void merge_paste(ZZTblock *dest, const ZZTblock *src,
 	selection destsel, selection srcsel, int x, int y) {
 
 	/* Move objects out of the way first. */
@@ -648,8 +648,7 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 }
 
 /* TODO: make a new type "alphablock" containing a block and a selection */
-/* TODO: src should be const. */
-int pasteblock(ZZTblock *dest, ZZTblock *src,
+int pasteblock(ZZTblock *dest, const ZZTblock *src,
 	selection destsel, selection srcsel, int x, int y)
 {
 	int srcpos;     /* Current index in source */
