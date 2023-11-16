@@ -355,11 +355,67 @@ void remove_selection_params(ZZTblock * board, selection srcsel,
 	}
 }
 
+/* Remove or restore uncopyable tiles from the destination selection.
+ * If restore is true, then we add the positions, otherwise we remove
+ * them. Restoring is used for cleanup. */
+void remove_uncopyable_tiles(ZZTblock * dest, ZZTblock * src,
+	selection destsel, selection srcsel, int x, int y,
+	int objects_to_add)
+{
+	int i, objects_counted = 0;
+
+	for (i = 0; i < src->paramcount; ++i) {
+		ZZTparam * param = src->params[i];
+
+		/* If not inside the area, skip. */
+		if (!isselected(srcsel, param->x, param->y)
+			|| !isselected(destsel, param->x + x, param->y + y)) {
+			continue;
+		}
+
+		/* If above the capacity threshold, toggle. */
+		if (objects_counted >= objects_to_add) {
+			unselectpos(destsel, param->x + x, param->y + y);
+		}
+
+		++objects_counted;
+	}
+}
+
+void restore_uncopyable_tiles(ZZTblock * dest, ZZTblock * src,
+	selection destsel, selection srcsel, int x, int y,
+	int objects_to_add)
+{
+	int i, objects_counted = 0;
+
+	for (i = 0; i < src->paramcount; ++i) {
+		ZZTparam * param = src->params[i];
+
+		/* If not excluded, skip. */
+		if (!isselected(srcsel, param->x, param->y)
+			|| isselected(destsel, param->x + x, param->y + y)) {
+			continue;
+		}
+
+		if (objects_counted >= objects_to_add) {
+			/* Never add the destination player back in. */
+			ZZTparam * player = dest->params[0];
+			if (param->x + x != player->x
+				&& param->y + y != player->y) {
+				selectpos(destsel, param->x + x, param->y + y);
+			}
+		}
+
+		++objects_counted;
+	}
+}
+
+
 /* Copy the tiles themselves, but no associated params since we'll
  * deal with those later. */
 void copy_tiles(ZZTblock * dest, ZZTblock * src, selection destsel,
-	selection srcsel, int x, int y) {
-
+	selection srcsel, int x, int y)
+{
 	int src_y, src_x;
 
 	for (src_y = 0; src_y < src->height && src_y + y < dest->height; ++src_y) {
@@ -393,9 +449,6 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 	 * indices to reflect this. */
 	remove_selection_params(dest, srcsel, x, y);
 
-	/* Copy the tiles themselves. */
-	copy_tiles(dest, src, destsel, srcsel, x, y);
-
 	/*	Record the hashes of every board on the destination board outside
 	 *  the destination area. Since we removed every object inside the
 	 *  destination area, that's just every board on the destination.*/
@@ -403,19 +456,7 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 	hash_table dest_board_ht = hashInit(dest->paramcount);
 	addNodes(&dest_board_ht, dest);
 
-	/* The remaining algorithm consists of two steps. First we add the
-	 * unbound objects from the source to the destination in a way that
-	 * preserves the relative order, noting their new indices in the bind
-	 * map. Then we add the bound objects. Those who bind to objects whose
-	 * indices are in the bound map can just be remapped; otherwise we
-	 * need to look for some object with the same code in the destination
-	 * and bind to that - or failing that, copy the code from the source
-	 * board's object to the first bound object. */
-
-
-
 	/* Count the number of objects in the selection area. */
-
 	int i, objects_in_area = 0;
 
 	for (i = 0; i < src->paramcount; ++i) {
@@ -429,12 +470,40 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 	int objects_to_add = min(dest->maxparams - dest->paramcount,
 		objects_in_area);
 
-	int num_objects_after = dest->paramcount + objects_in_area,
-		first_new_idx = dest->paramcount;
+	/* If we can't add every object to the destination, we have to
+	 * change the destination selection to exclude the objects
+	 * that we aren't going to copy, because we don't want their
+	 * tiles copied. */
 
+	if (objects_in_area > dest->maxparams - dest->paramcount) {
+		remove_uncopyable_tiles(dest, src,
+			destsel, srcsel, x, y, objects_to_add);
+	}
+
+	/* Copy the tiles themselves. */
+	copy_tiles(dest, src, destsel, srcsel, x, y);
+
+	/* The remaining algorithm consists of two steps. First we add the
+	 * unbound objects from the source to the destination in a way that
+	 * preserves the relative order, noting their new indices in the bind
+	 * map. Then we add the bound objects. Those who bind to objects whose
+	 * indices are in the bound map can just be remapped; otherwise we
+	 * need to look for some object with the same code in the destination
+	 * and bind to that - or failing that, copy the code from the source
+	 * board's object to the first bound object. */
+
+
+	/* If there are no objects to add, there's no reason to bother
+	 * with any of this. */
 	if (objects_in_area == 0) {
+		/* Cleanup. */
+		restore_uncopyable_tiles(dest, src,
+			destsel, srcsel, x, y, objects_to_add);
 		return;
 	}
+
+	int num_objects_after = dest->paramcount + objects_to_add,
+		first_new_idx = dest->paramcount;
 	
 	int * bind_map = malloc(src->paramcount * sizeof(int));
 	memset(bind_map, 0, src->paramcount * sizeof(int));
@@ -548,11 +617,11 @@ void merge_paste(ZZTblock *dest, ZZTblock *src,
 		dest_param->bindindex = 0;
 	}
 
-	/* TODO: Scrub the tiles that are associated with objects at the
-	 * source but were not copied to dest. Just loop over the objects
-	 * that didn't make it. */
-
 	/* Cleanup. */
+
+	restore_uncopyable_tiles(dest, src,
+		destsel, srcsel, x, y, objects_to_add);
+
 	freeTable(&dest_board_ht);
 	free(bind_map);
 }
