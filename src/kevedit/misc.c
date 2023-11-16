@@ -429,7 +429,7 @@ void copy_tiles(ZZTblock * dest, const ZZTblock * src,
 	}
 }
 
-void merge_paste(ZZTblock *dest, const ZZTblock *src,
+bool pasteblock(ZZTblock *dest, const ZZTblock *src,
 	selection destsel, selection srcsel, int x, int y) {
 
 	/* Move objects out of the way first. */
@@ -489,7 +489,7 @@ void merge_paste(ZZTblock *dest, const ZZTblock *src,
 		/* Cleanup. */
 		restore_uncopyable_tiles(dest, src,
 			destsel, srcsel, x, y, objects_to_add);
-		return;
+		return true;
 	}
 
 	int num_objects_after = dest->paramcount + objects_to_add,
@@ -645,44 +645,7 @@ void merge_paste(ZZTblock *dest, const ZZTblock *src,
 
 	freeTable(&dest_board_ht);
 	free(bind_map);
-}
-
-/* TODO: make a new type "alphablock" containing a block and a selection */
-int pasteblock(ZZTblock *dest, const ZZTblock *src,
-	selection destsel, selection srcsel, int x, int y)
-{
-	int srcpos;     /* Current index in source */
-	int row, col;   /* Current row and col in dest */
-
-	/* Paste */
-
-	/* Merge source params into the destination. */
-	merge_paste(dest, src, destsel, srcsel, x, y);
-	return 1;
-
-	srcpos = 0;     /* Start at beginning of source object */
-	for (row = y; row < src->height + y && row < dest->height; row++) {
-		for (col = x; col < src->width + x && col < dest->width; col++, srcpos++) {
-			/* Paste the currently indexed tile from source to (row, col) in dest */
-
-			if (row < 0 || col < 0)
-				continue;
-
-			/* Only copy selected tiles */
-			if (!isselected(destsel, col, row) || !isselected(srcsel, col - x, row - y))
-				continue;
-
-			/* Can't use plot because we want to maintain terrain under creatures
-			 * from the source block, not the destination block */
-			zztTileSet(dest, col, row, src->tiles[srcpos]);
-		}
-		/* If the loop stopped short of using every column in src, advance
-		 * the srcpos index to ignore these columns */
-		srcpos += (src->width + x) - col;
-	}
-
-	/* Success! */
-	return 1;
+	return true; /* Success! */
 }
 
 void plot(keveditor * myeditor)

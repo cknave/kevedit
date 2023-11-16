@@ -38,7 +38,8 @@ void copy(keveditor * myeditor);
 int paste(keveditor * myeditor);
 int countparams(ZZTblock *block);
 
-int pasteblock(ZZTblock *dest, const ZZTblock *src, selection destsel, selection srcsel, int x, int y);
+bool pasteblock(ZZTblock *dest, const ZZTblock *src,
+	selection destsel, selection srcsel, int x, int y);
 
 /* Plot from the backbuffer to the cursor */
 void plot(keveditor * myeditor);
