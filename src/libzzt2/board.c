@@ -709,7 +709,18 @@ int zztBoardSelect(ZZTworld *world, int number)
 	/* Set new current board */
 	world->cur_board = number;
 	/* Uncompress to bigboard */
-	zztBoardDecompress(&world->boards[number]);
+	ZZTboard * board = &world->boards[number];
+	zztBoardDecompress(board);
+
+	ZZTblock * decompressed = board->bigboard;
+
+	/* Fix #BIND chains and loops. */
+	zztParamsNormalizeBindChains(decompressed->params,
+		decompressed->paramcount);
+
+	/* Fix #BIND references to later params */
+	zztParamsFixBindOrder(decompressed->params,
+		decompressed->paramcount);
 
 	return 1;
 }
@@ -718,6 +729,17 @@ void zztBoardCommit(ZZTworld *world)
 {
 	int curboard = zztBoardGetCurrent(world);
 
+	ZZTboard * board = &world->boards[curboard];
+	ZZTblock * current = board->bigboard;
+
+	/* Fix #BIND chains and loops. */
+	zztParamsNormalizeBindChains(current->params,
+		current->paramcount);
+
+	/* Fix #BIND references to later params */
+	zztParamsFixBindOrder(current->params,
+		current->paramcount);
+	
 	/* Compress the current board */
 	zztBoardCompress(&(world->boards[curboard]));
 }

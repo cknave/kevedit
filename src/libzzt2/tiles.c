@@ -453,6 +453,11 @@ int zztBlockPaste(ZZTblock *dest, ZZTblock *src,
 	return 1;
 }
 
+void zztBlockFixBindOrder(ZZTblock * block)
+{
+	zztParamsFixBindOrder(block->params, block->paramcount);
+}
+
 int zztTileSet(ZZTblock * block, int x, int y, ZZTtile tile)
 {
 	/* Param for the tile being overwritten */

@@ -21,10 +21,16 @@
 #include <config.h>
 #endif
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "zzt.h"
+
+/* The all-powerful min/max/swap macros */
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define swap(a, b, type) { type c = (a); (a) = (b); (b) = c; }
 
 /* Param profile look-up table */
 /* THIS IS ZZT IN A NUT-SHELL! */
@@ -301,3 +307,197 @@ int zztParamGetProperty(ZZTparam * param, int property)
 	return param->data[zztParamDatauseLocate(property)];
 }
 
+/* Fix potentially corrupted #BIND object references. KevEdit
+ * itself can produce corrupted references due to other bugs;
+ * this will work as a last measure while fixing those bugs, and
+ * keep any unfixed bugs from causing weird behavior inside ZZT.
+ *
+ * An object being bound to another bound object is not allowed.
+ * We'll try to resolve such so that all these objects are bound
+ * to the object at the end of the chain. Cyclical references get
+ * set to zero (unbound). */
+
+/* We use a depth first search to resolve cycles and chains. */
+
+/* BIND_UNVISITED: We haven't investigated this stat yet.
+   BIND_VISITED: This stat has been visited in the current
+	recursion; if we see it again, we have a cycle.
+   BIND_PROCESSED_UNALTERED: This stat has been visited in a prior
+	loop and need not be descended into again.
+   BIND_PROCESSED_ALTERED: Same, but its bind index has been changed
+	by the function.
+*/
+
+/* It would be nice to somehow report any such fixups when
+ * loading/saving. But that would probably require a more thorough
+ * modification with the read and write functions returning either
+ * OK, warning, or error. */
+
+const int BIND_UNVISITED = 0, BIND_VISITED = 1,
+	BIND_PROCESSED_UNALTERED = 2,
+	BIND_PROCESSED_ALTERED = 3;
+
+/* This function is called with a stat's bind index and returns
+ * its proper bind index once loops and chains have been dealt
+ * with. */
+
+int normalizeBindChainsDFS(ZZTparam ** params,
+	int stat_num, int num_stats, int * stat_status) {
+
+	/* If the stat num is out of bounds, return 0. */
+	if (stat_num >= num_stats) {
+		return 0;
+	}
+
+	ZZTparam * param = params[stat_num];
+
+	/* If we're not bound, then just return our value and
+	 * set PROCESSED. */
+	if (param->bindindex == 0) {
+		stat_status[stat_num] = BIND_PROCESSED_UNALTERED;
+		return stat_num;
+	}
+
+	/* If we get a VISITED, we've been here before, i.e.
+	 * we're part of a cycle. Cancel out this part of the
+	 * cycle and return 0. */
+	if (stat_status[stat_num] == BIND_VISITED) {
+		param->bindindex = 0;
+		stat_status[stat_num] == BIND_PROCESSED_ALTERED;
+		return 0;
+	}
+
+	/* If we get a PROCESSED, it's bound with one step
+	 * (otherwise the first if check would have fired.)
+	 * Return what it's bound to. */
+
+	if (stat_status[stat_num] == BIND_PROCESSED_UNALTERED ||
+	    stat_status[stat_num] == BIND_PROCESSED_ALTERED) {
+		return param->bindindex;
+	}
+
+	/* Set the current node as visited and recurse down
+	 * what we bind to. */
+	stat_status[stat_num] = BIND_VISITED;
+	int end_of_bind = normalizeBindChainsDFS(params,
+		param->bindindex, num_stats, stat_status);
+	stat_status[stat_num] = BIND_PROCESSED_UNALTERED;
+	if (param->bindindex != end_of_bind) {
+		param->bindindex = end_of_bind;
+		stat_status[stat_num] = BIND_PROCESSED_ALTERED;
+	}
+
+	/* If this stat has code, it's most likely the source
+	 * for some upstream bound objects. So if its current
+	 * bind index is zero but it has code, then return its
+	 * ID instead. This is a compromise way to resolve cycles
+	 * that should work without having to drag in heavy hitters
+	 * like Kosaraju. */
+	if (param->bindindex == 0 && param->length > 0) {
+		return stat_num;
+	}
+
+	return end_of_bind;
+}
+
+/* This function fixes corrupted bind indices. It also returns the
+ * number of modified bind indices, which should be useful for later
+ * debugging and tracking down bugs that invalidate bind indices. */
+int zztParamsNormalizeBindChains(ZZTparam ** params, uint16_t paramcount) {
+	int * stat_status = malloc(sizeof(int) * paramcount);
+	memset(stat_status, BIND_UNVISITED, sizeof(int) * paramcount);
+
+	int stat_num;
+
+	for (stat_num = 0; stat_num < paramcount;
+		++stat_num) {
+		ZZTparam * param = params[stat_num];
+
+		/* Getting a BIND_VISITED is a bug as we should
+		 * always clean up after ourselves. */
+		assert(stat_status[stat_num] != BIND_VISITED);
+
+		/* No need to do anything with a stat that isn't bound
+		   to anything. */
+		if (param->bindindex == 0) {
+			continue;
+		}
+
+		/* ... or one we've already processed. */
+		if (stat_status[stat_num] == BIND_PROCESSED_UNALTERED
+			|| stat_status[stat_num] == BIND_PROCESSED_ALTERED) {
+			continue;
+		}
+
+		int end_of_bind = normalizeBindChainsDFS(
+			params, param->bindindex,
+			paramcount, stat_status);
+
+		if (end_of_bind == param->bindindex) {
+			stat_status[stat_num] = BIND_PROCESSED_UNALTERED;
+		} else {
+			param->bindindex = end_of_bind;
+			stat_status[stat_num] = BIND_PROCESSED_ALTERED;
+		}
+	}
+
+	/* Count the number of altered bind indices */
+	int altered_indices = 0;
+
+	for (stat_num = 0; stat_num < paramcount; ++stat_num) {
+		if (stat_status[stat_num] == BIND_PROCESSED_ALTERED) {
+			++altered_indices;
+		}
+	}
+
+	free(stat_status);
+
+	return altered_indices;
+}
+
+void zztParamsFixBindOrder(ZZTparam ** params, uint16_t paramcount)
+{
+	/* Because ZZT automatically copies the data pointer of a source
+	 * param to the bound param when it encounters a bound object,
+	 * bound params should come after the params they're bound to.
+	 * This rearranges the stat order by swapping params that are
+	 * out of order, and using a bind map to update the indices. */
+
+	int * bind_map = malloc(paramcount * sizeof(int));
+	memset(bind_map, 0, paramcount * sizeof(int));
+
+	int i;
+
+	for (i = 0; i < paramcount; ++i) {
+		ZZTparam * param = params[i];
+
+		/* If it's bound to something that has changed place,
+		 * update it. */
+		if (bind_map[param->bindindex] != 0) {
+			param->bindindex = bind_map[param->bindindex];
+		}
+
+		/* If the player is bound, just set to zero as it can't
+		 * be moved. */
+		if (i == 0 && param->bindindex > i) {
+			param->bindindex = 0;
+			continue;
+		}
+
+		/* If it's bound to something that comes later, swap. */
+		if (param->bindindex > i) {
+			int source_idx = param->bindindex;
+
+			/* Update param - the bound param - to refer to the ith
+			 * place in the param order. */
+
+			bind_map[param->bindindex] = i;
+			param->bindindex = i;
+
+			/* Then swap so the source will be in ith place. */
+			swap(params[source_idx], params[i], ZZTparam*);
+		}
+	}
+
+	free(bind_map); /* cleanup */
+}

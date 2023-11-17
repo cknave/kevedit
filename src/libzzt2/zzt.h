@@ -419,13 +419,32 @@ ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2);
 /* zztBlockPaste(dest, src, x, y)
  * Paste the src block onto dest at (x, y)
  * Clipping occurs if src is too big
+ * Doesn't rebind prebound tiles with params. TODO?? See kevedit/paste.c
  */
 int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y);
+
+/* zztBlockFixBindOrder(block)
+ * Rearranges bind relations so that params being bound to
+ * come before those that bind to it. Preferable because ZZT
+ * reads pointers in linear order. */
+void zztBlockFixBindOrder(ZZTblock * block);
 
 /***** PARAMETER MANIPULATORS AND CHECKS *****/
 /* zztParamRehash()
  * update ZZTparam program hash. */
 void zztParamRehash(ZZTparam * param);
+
+/* zztParamsNormalizeBindChains(params, paramcount)
+ * This function fixes corrupted bind indices. It also returns the
+ * number of modified bind indices, which should be useful for later
+ * debugging and tracking down bugs that invalidate bind indices. */
+int zztParamsNormalizeBindChains(ZZTparam ** params, uint16_t paramcount);
+
+/* zztParamsFixBindOrder(params, paramcount)
+ * Rearranges bind relations so that params being bound to
+ * come before those that bind to it. Preferable because ZZT
+ * reads pointers in linear order. */
+void zztParamsFixBindOrder(ZZTparam ** params, uint16_t paramcount);
 
 /* zztParamEqualProgram(param, param)
  * returns 1 if the params have the same code,

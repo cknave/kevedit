@@ -488,6 +488,9 @@ bool pasteblock(ZZTblock *dest, const ZZTblock *src,
 		}
 	}
 
+	/* Fix objects binding to later ones. */
+	zztBlockFixBindOrder(dest);
+
 	/* Cleanup. */
 
 	restore_uncopyable_tiles(dest, src,
