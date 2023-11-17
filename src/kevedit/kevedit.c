@@ -850,9 +850,14 @@ void keveditHandleKeypress(keveditor * myeditor)
 			if (zztTileIsText(tile)) {
 				/* It's a text tile, open character selector to
 				 * change the character. */
-				tile.color = charselect(myeditor->mydisplay, tile.color);
-				/* And plot. */
-				zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, tile);
+                                int result = charselect(myeditor->mydisplay, tile.color);
+                                if(result == -1) {
+                                        myeditor->updateflags |= UD_ALL;
+                                        break;
+                                }
+                                tile.color = result;
+                                /* And plot. */
+                                zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, tile);
 			}
 
 			/* When all is said and done, push the tile */
