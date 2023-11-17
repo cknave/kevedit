@@ -141,8 +141,9 @@ void zztParamRehash(ZZTparam * param)
 	const uint32_t FNV_32_PRIME = 0x01000193; /* 16777619 */
 
 	uint32_t h = 0x811c9dc5; /* 2166136261 */
+	size_t i;
 
-	for (size_t i = 0; i < param->length; ++i) {
+	for (i = 0; i < param->length; ++i) {
 		/* xor the bottom with the current octet */
 		h ^= param->program[i];
 		/* multiply by the 32 bit FNV magic prime mod 2^32 */
