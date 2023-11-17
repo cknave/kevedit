@@ -354,21 +354,25 @@ void keveditHandleTextEntry(keveditor * myeditor)
 		/* Insert the current keystroke as text */
 		ZZTtile textTile = { ZZT_BLUETEXT, 0x00, NULL };
 
-		/* Determine the text code based on the FG colour */
-		if (myeditor->color.fg == 0 || myeditor->color.fg == 8 || myeditor->color.fg == 15)
-			textTile.type += 6;
-		else if (myeditor->color.fg > 8)
-			textTile.type += myeditor->color.fg - 9;
-		else
-			textTile.type += myeditor->color.fg - 1;
-
-		/* Determine color based on keypress */
+		/* Determine appearance (encoded as color) based on keypress */
 		textTile.color = key;
+
+		/* Set color */
+		encodetilecolor(&textTile, myeditor->color);
 
 		/* ASCII selection dialog */
 		if (key == DKEY_CTRL_A) {
-			textTile.color = charselect(myeditor->mydisplay, -1);
-			myeditor->updateflags |= UD_BOARD;
+                        int result = charselect(myeditor->mydisplay, -1);
+                        myeditor->updateflags |= UD_BOARD;
+                        if(result == -1) {
+                                // Pressed ESC, pretend nothing happened
+                                return;
+                        } else if(result == DKEY_QUIT) {
+                                // Send the quit key to the editor
+                                myeditor->key = DKEY_QUIT;
+                                return;
+                        }
+			textTile.color = result;
 		}
 
 		/* Plot the text character */
@@ -847,17 +851,35 @@ void keveditHandleKeypress(keveditor * myeditor)
 			myeditor->updateflags |= UD_TEXTMODE;
 			break;
 
-		case DKEY_ENTER:
+		case DKEY_ENTER: {
 			/* Modify / Grab */
 			next_key = modifyparam(myeditor->mydisplay, myeditor->myworld, myeditor->cursorx, myeditor->cursory);
 
-			/* TODO: if the current tile is text, edit the char */
+			/* If the current tile is text, edit the char */
+			ZZTtile tile = zztTileGet(myeditor->myworld, myeditor->cursorx, myeditor->cursory);
+			if (zztTileIsText(tile)) {
+				/* It's a text tile, open character selector to
+				 * change the character. */
+                                int result = charselect(myeditor->mydisplay, tile.color);
+                                if(result == -1) {
+                                        myeditor->updateflags |= UD_ALL;
+                                        break;
+                                } else if(result == DKEY_QUIT) {
+                                        myeditor->updateflags |= UD_ALL;
+                                        next_key = DKEY_QUIT;
+                                        break;
+                                }
+                                tile.color = result;
+                                /* And plot. */
+                                zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, tile);
+			}
 
 			/* When all is said and done, push the tile */
-			push(myeditor->buffers.backbuffer, zztTileGet(myeditor->myworld, myeditor->cursorx, myeditor->cursory));
+			push(myeditor->buffers.backbuffer, tile);
 
 			myeditor->updateflags |= UD_ALL;
 			break;
+		}
 
 		case DKEY_INSERT:
 			/* Insert */

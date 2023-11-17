@@ -828,3 +828,7 @@ const char * zztTileGetKind(ZZTtile tile)
 	return _zzt_type_kind_table[ZZT_WHITETEXT + 1];
 }
 
+int zztTileIsText(ZZTtile tile)
+{
+	return tile.type >= ZZT_BLUETEXT && tile.type <= ZZT_WHITETEXT;
+}

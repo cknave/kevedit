@@ -37,6 +37,9 @@
 void copy(keveditor * myeditor);
 int countparams(ZZTblock *block);
 
+/* Change a tile's color, taking text into account */
+void encodetilecolor(ZZTtile * tile, textcolor color);
+
 /* Plot from the backbuffer to the cursor */
 void plot(keveditor * myeditor);
 

@@ -38,9 +38,9 @@
 #define LINED_NOPATH   0x80  /**< Input must contain no path characters (e.g. /) */
 
 /** Input is restricted to integers. */
-#define LINED_NUMBER   LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES
+#define LINED_NUMBER   0x100
 /** Input is restricted to signed integers. */
-#define LINED_SNUMBER  LINED_NOALPHA | LINED_NOSPACES | LINED_NOPERIOD
+#define LINED_SNUMBER  0x200
 
 /* Return values. */
 #define LINED_QUIT   2  /**< User cancelled and requested quit. */

@@ -1,6 +1,20 @@
 @New Features
 $New Features
 
+$New in version 1.2.1
+*  Support 16-bit xstep/ystep/cycle
+*  Accept extended character input on
+   linux/mac/windows
+*  Ctrl-A will show the character
+   selector in line editors
+*  Pressing enter on a text tile will
+   show the character selector
+*  Pressing a key will jump to it in the
+   character selector
+
+$Bugs fixed in version 1.2.1
+*  Fixes for stuck keys on some Linux WMs
+
 $New in version 1.2.0
 *  Support loading custom character sets
    and palettes in World Info

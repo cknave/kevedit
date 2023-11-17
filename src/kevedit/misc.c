@@ -28,8 +28,6 @@
 #include "texteditor/texteditor.h"
 #include "screen.h"
 
-#include "hash.h"
-
 #include "structures/svector.h"
 #include "structures/selection.h"
 #include "structures/gradient.h"
@@ -125,6 +123,31 @@ void copy(keveditor * myeditor)
 	}
 }
 
+/* Input is a text tile. Its color will be set to the foreground
+ * color of the variable "color" as closely as possible.*/
+void encodetextcolor(ZZTtile * text, textcolor color)
+{
+	text->type = ZZT_BLUETEXT;
+
+	/* Determine the text code based on the FG colour */
+	if (color.fg == 0 || color.fg == 8 || color.fg == 15) {
+		text->type += 6;
+	} else if (color.fg > 8) {
+		text->type += color.fg - 9;
+	} else {
+		text->type += color.fg - 1;
+	}
+}
+
+void encodetilecolor(ZZTtile * tile, textcolor color)
+{
+	if(zztTileIsText(*tile)) {
+		encodetextcolor(tile, color);
+	} else {
+		tile->color = encodecolor(color);
+	}
+}
+
 void plot(keveditor * myeditor)
 {
 	patbuffer* pbuf = myeditor->buffers.pbuf;
@@ -132,7 +155,7 @@ void plot(keveditor * myeditor)
 
 	/* Change the color to reflect state of default color mode */
 	if (myeditor->defcmode == 0) {
-		pattern.color = encodecolor(myeditor->color);
+		encodetilecolor(&pattern, myeditor->color);
 	}
 
 	zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, pattern);

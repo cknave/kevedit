@@ -1,6 +1,8 @@
 /* Image Saved In ACiDDRAW v1.1 */
 /* $Id: cbox.c,v 1.1 2003/11/01 23:45:57 bitman Exp $ */
 
+#include "display/textblock.h"
+
 #define CHAR_BOX_WIDTH 34
 #define CHAR_BOX_DEPTH 10
 #define CHAR_BOX_LENGTH 680
@@ -55,3 +57,14 @@ unsigned char CHAR_BOX[] =
 	'\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A,
 	'\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2A, '\xc4', 0x2F,
 	'\xc4', 0x2F, '\xc4', 0x2F, '\xc4', 0x2F, '\xd9', 0x2F};
+
+/* Buffer for restoring what's underneath when displaying
+   a character selection box. */
+
+textDatum charBoxBuffer[textBlockDataSize(CHAR_BOX_WIDTH, CHAR_BOX_DEPTH)];
+
+textBlock charBoxBackup = {
+	CHAR_BOX_WIDTH,
+	CHAR_BOX_DEPTH,
+	charBoxBuffer
+};

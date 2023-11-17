@@ -44,8 +44,9 @@
 #define LINED_FILENAME 0x40
 #define LINED_NOPATH   0x80
 
-#define LINED_NUMBER   LINED_NOALPHA | LINED_NOPUNCT | LINED_NOSPACES
-#define LINED_SNUMBER  LINED_NOALPHA | LINED_NOSPACES | LINED_NOPERIOD
+#define LINED_NUMBER   0x100 /* Only numbers are allowed */
+#define LINED_SNUMBER  0x200 /* Signed number: only numbers and - */
+#define LINED_STRING   0x400 /* Output to C string, NUL is not allowed */
 
 /* line_editor responses */
 #define LINED_QUIT   2
@@ -125,7 +126,10 @@ int dothepanel_f2(keveditor * e);
 int dothepanel_f3(keveditor * e);
 
 /* Prompts the user to select a char */
-int charselect(displaymethod * d, int c);
+int charselect(displaymethod * d, int initial_char);
+
+/* Prompts the user to select a char, with some disallowed by LINED flags. */
+int charselect_flags(displaymethod * d, int initial_char, int flags);
 
 /* Prompts the user to select a color */
 int colorselector(displaymethod * d, textcolor * color);

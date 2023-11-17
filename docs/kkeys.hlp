@@ -42,6 +42,9 @@ CTRL-T
   Tile Info
 CTRL-S
   Stats Info
+CTRL-A
+  Show character selector (when editing
+  text)
 
 :move;Movement
 

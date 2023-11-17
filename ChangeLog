@@ -1,6 +1,15 @@
 Next Release
 ------------
 
+1.2.1
+-----
+Support 16-bit xstep/ystep/cycle
+Accept extended character input on linux/mac/windows
+Fixes for stuck keys on some Linux WMs
+Ctrl-A will show the character selector in line editors
+Pressing enter on a text tile will show the character selector
+Pressing a key will jump to it in the character selector
+
 1.2.0
 -----
 Support loading custom character sets and palettes
@@ -10,7 +19,6 @@ Windows installer supports non-administrative installs
 Change R key to reverse colors instead of run the game
 Use ctrl-arrows to switch to linked boards
 Use ctrl-pgup/pgdn to switch to the board 1 page up or down
-
 
 1.1.3
 -----

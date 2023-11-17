@@ -145,6 +145,22 @@ static void sdl_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
 	textBlockPutch(vdest->buffer, x, y, ch, co);
 }
 
+static void sdl_getblock(video_info *vsrc, textBlock * dest,
+	int srcx, int srcy, int width, int height, int destx, int desty)
+{
+	textBlockBlit(vsrc->buffer, dest, srcx, srcy, width, height,
+		destx, desty);
+}
+
+static void sdl_putblock(video_info *vdest, textBlock * src,
+	int srcx, int srcy, int width, int height,
+	int destx, int desty)
+{
+	textBlockBlit(src, vdest->buffer, srcx, srcy, width, height,
+		destx, desty);
+}
+
+
 static void sdl_update_cursor(video_info *vdest) {
 	switch(cursor) {
 		case CURSOR_HIDDEN:
@@ -600,18 +616,24 @@ static int has_unicode_event_queued()
 	return false;
 }
 
-/* Determine if there is an event waiting in the queue, and if so,
-   delete it. This is used (with SDL_TEXTINPUT) to keep the literal
+/* Clear every event of a particular type from the SDL queue.
+	This is used (with SDL_TEXTINPUT) to keep the literal
    part of a hotkey from being passed through when dealing with
    hotkeys. (E.g. we don't want Alt+S to also return 's'.)
-   It's also used with SDL_KEYDOWN to remove stray TAB presses due
-   to ALT+TAB not being properly handled on some Linux wms. */
-static void clear_event(SDL_EventType event_type)
+   It's also used with SDL_KEYDOWN to solve a bug where some Linux
+   window managers don't properly hide their own hotkey events
+   from running programs, leading them to insert multiple KEYDOWN
+   events in certain circumstances when KevEdit regains focus. */
+static void clear_events(SDL_EventType event_type)
 {
 	SDL_Event outevent;
-	SDL_PeepEvents(&outevent, 1, SDL_GETEVENT,
-		event_type, event_type);
+	int stored_events;
+	do {
+		stored_events = SDL_PeepEvents(&outevent, 1,
+			SDL_GETEVENT, event_type, event_type);
+	} while (stored_events > 0);
 }
+
 
 static int display_sdl_getkey()
 {
@@ -701,12 +723,14 @@ static int display_sdl_getkey()
 	/* Focus change? */
 	} else if(event.type == SDL_WINDOWEVENT) {
 		if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-			/* Clear stray TAB events from ALT+TAB. This will also
-			   delete other keydown events that happen at the same
-			   same time as KevEdit regaining focus, but the user's
-			   timing would have to be perfect to produce any such
-			   events, so that shouldn't be a problem. */
-			clear_event(SDL_KEYDOWN);
+			/* Clear stray keydown events produced by the window
+			   manager, e.g. TAB events from ALT+TAB, and CTRL+arrow
+			   from CTRL+ALT+arrow. This will also delete other keydown
+			   events that happen at the same same time as KevEdit
+			   regaining focus, but the user's timing would have to
+			   be perfect to produce any such events, so that shouldn't
+			   be a problem. */
+			clear_events(SDL_KEYDOWN);
 			display_redraw(&info);
 			/* Make cursor normal */
 			start_cursor_timer();
@@ -900,7 +924,7 @@ static int display_sdl_getkey()
 	if (is_literal_key(event.key.keysym.sym)) {
 		return DKEY_NONE;
 	} else {
-		clear_event(SDL_TEXTINPUT);
+		clear_events(SDL_TEXTINPUT);
 		return event.key.keysym.sym;
 	}
 
@@ -945,6 +969,20 @@ static int display_sdl_getch()
 {
 	return display_sdl_getch_with_context(undefined);
 }
+
+static void display_sdl_getblock(textBlock * dest, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	sdl_getblock(&info, dest, srcx, srcy, width, height, destx, desty);
+}
+
+static void display_sdl_putblock(textBlock * src, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	sdl_putblock(&info, src, srcx, srcy, width, height, destx, desty);
+	sdl_update(&info, destx, desty, width, height);
+}
+
 
 static void display_sdl_gotoxy(int x, int y)
 {
@@ -1005,6 +1043,8 @@ displaymethod display_sdl =
 	"2.0",
 	display_sdl_init,
 	display_sdl_end,
+	display_sdl_getblock,
+	display_sdl_putblock,
 	display_sdl_putch,
 	display_sdl_getch,
 	display_sdl_getch_with_context,
