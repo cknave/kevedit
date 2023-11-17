@@ -128,7 +128,7 @@
    These macros aren't perfect: they cover some characters that
    can be produced on international keyboards. For instance,
    AltGr + Y is ← on a Nordic keyboard. */
-#define is_literal_key(key) (key >= 32 && key < 256)
-#define is_ascii_key(key) (key >= 32 && key < 127)
+#define is_literal_key(key) ((key) >= 32 && (key) < 256)
+#define is_ascii_key(key) ((key) >= 32 && (key) < 127)
 
 #endif

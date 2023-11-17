@@ -826,7 +826,6 @@ void dofloodfill(keveditor * myeditor, int randomflag)
 
 
 /*********** Gradient fill and paste code *****************/
-/* TODO, move into keyboard??? */
 void movebykeystroke(int key, int* x, int* y, int minx, int miny,
 	int maxx, int maxy)
 {

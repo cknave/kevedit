@@ -64,31 +64,24 @@
  *  - dangling index: A bind index with no destination.
 */
 
-/* The source selection gives the shape of the selection. This is
- * offset by xofs and yofs, so to test if something will be pasted
- * over destination coordinates (destx, desty), we have to subtract
- * the offset. I'm doing it like this so I don't get my signs mixed
- * up. */
-
-int isselected_dest(selection srcsel, int destx, int desty,
-	int xofs, int yofs)
+/* Determine if a coordinate is selected based on both destination
+ * and source selections. The coordinates are source-based and the
+ * offsets are */
+bool isselected_both(selection destsel, selection srcsel,
+	int srcx, int srcy, int xoffset, int yoffset)
 {
-
-	return isselected(srcsel, destx - xofs, desty - yofs);
+	return isselected(srcsel, srcx, srcy)
+		&& isselected(destsel, srcx + xoffset, srcy + yoffset);
 }
-
-/* TODO: Use this in the main paste function... but I need to decide
- * if the coordinates are source-based or destination-based... */
-//bool isselected_both(selection destsel, selection srcsel)
 
 /* This function moves every object inside the selection that's
 	the source of bound objects outside, outside. This ensures that
 	when we copy something over a region, existing bind indices
 	in the destination board do not become dangling indices. */
 
-void move_bind_sources(ZZTblock * board, selection srcsel, int x, int y)
+void move_bind_sources(ZZTblock * dest, selection destsel,
+	selection srcsel, int x, int y)
 {
-
 	/*	Set up a bind map array: an array of length equal to the number
 	of params on the board, filled with zero.
 
@@ -109,29 +102,31 @@ void move_bind_sources(ZZTblock * board, selection srcsel, int x, int y)
 	will have been moved outside and the bind indices updated to reflect
 	the change. */
 
-	int * bind_map = malloc(board->paramcount * sizeof(int));
-	memset(bind_map, 0, board->paramcount * sizeof(int));
+	int * bind_map = malloc(dest->paramcount * sizeof(int));
+	memset(bind_map, 0, dest->paramcount * sizeof(int));
 
 	int i;
 
-	for (i = 1; i < board->paramcount; ++i) {
-		ZZTparam * param = board->params[i];
+	for (i = 1; i < dest->paramcount; ++i) {
+		ZZTparam * param = dest->params[i];
 
 		/* Is the object inside the selection? If so, skip */
-		if (isselected_dest(srcsel, param->x, param->y, x, y)) {
+		if (isselected_both(destsel, srcsel,
+			param->x - x, param->y - y, x, y)) {
 			continue;
 		}
 
 		/* Not bound? Skip. */
 		if (param->bindindex == 0 
-			|| param->bindindex > board->paramcount) {
+			|| param->bindindex > dest->paramcount) {
 			continue;
 		}
 
-		ZZTparam * source_obj = board->params[param->bindindex];
+		ZZTparam * source_obj = dest->params[param->bindindex];
 
 		/* Is the source outside? If so, skip. */
-		if (!isselected_dest(srcsel, source_obj->x, source_obj->y, x, y)) {
+		if (!isselected_both(destsel, srcsel,
+			source_obj->x - x, source_obj->y - y, x, y)) {
 			continue;
 		}
 
@@ -167,8 +162,8 @@ void move_bind_sources(ZZTblock * board, selection srcsel, int x, int y)
 	free(bind_map);
 }
 
-void remove_selection_params(ZZTblock * board, selection srcsel,
-	int x, int y)
+void remove_selection_params(ZZTblock * dest,
+	selection destsel, selection srcsel, int x, int y)
 {
 	/* Erase every tile with params in the destination area,
 	 * so that what we paste will come after every existing
@@ -180,23 +175,22 @@ void remove_selection_params(ZZTblock * board, selection srcsel,
 
 	int i = 1;
 
-	while (i < board->paramcount) {
-		ZZTparam * param = board->params[i];
+	while (i < dest->paramcount) {
+		ZZTparam * param = dest->params[i];
 
-		if (!isselected_dest(srcsel, param->x, param->y, x, y)) {
+		if (!isselected_both(destsel, srcsel,
+			param->x - x, param->y - y, x, y)) {
 			++i;
 			continue;
 		}
 
 		/* Delete this tile. This will shift every param one step
 		 * up, so don't increment i.*/
-		zztTileErase(board, param->x, param->y);
+		zztTileErase(dest, param->x, param->y);
 	}
 }
 
-/* Remove or restore uncopyable tiles from the destination selection.
- * If restore is true, then we add the positions, otherwise we remove
- * them. Restoring is used for cleanup. */
+/* Remove uncopyable tiles from the destination selection. */
 void remove_uncopyable_tiles(ZZTblock * dest, const ZZTblock * src,
 	selection destsel, selection srcsel, int x, int y,
 	int objects_to_add)
@@ -207,12 +201,12 @@ void remove_uncopyable_tiles(ZZTblock * dest, const ZZTblock * src,
 		ZZTparam * param = src->params[i];
 
 		/* If not inside the area, skip. */
-		if (!isselected(srcsel, param->x, param->y)
-			|| !isselected(destsel, param->x + x, param->y + y)) {
+		if (!isselected_both(destsel, srcsel,
+			param->x, param->y, x, y)) {
 			continue;
 		}
 
-		/* If above the capacity threshold, toggle. */
+		/* If above the capacity threshold, remove. */
 		if (objects_counted >= objects_to_add) {
 			unselectpos(destsel, param->x + x, param->y + y);
 		}
@@ -221,6 +215,8 @@ void remove_uncopyable_tiles(ZZTblock * dest, const ZZTblock * src,
 	}
 }
 
+/* Restore uncopyable tiles to the destination seleftion.
+ * Used for cleanup. */
 void restore_uncopyable_tiles(ZZTblock * dest, const ZZTblock * src,
 	selection destsel, selection srcsel, int x, int y,
 	int objects_to_add)
@@ -230,7 +226,9 @@ void restore_uncopyable_tiles(ZZTblock * dest, const ZZTblock * src,
 	for (i = 0; i < src->paramcount; ++i) {
 		ZZTparam * param = src->params[i];
 
-		/* If not excluded, skip. */
+		/* To have been excluded earlier, it must be in the
+		 * source selection but not in the current destination
+		 * selection. Skip every object that isn't true for. */
 		if (!isselected(srcsel, param->x, param->y)
 			|| isselected(destsel, param->x + x, param->y + y)) {
 			continue;
@@ -265,8 +263,8 @@ void copy_tiles(ZZTblock * dest, const ZZTblock * src,
 			}
 
 			/* Only copy selected tiles */
-			if (!isselected(destsel, src_x + x, src_y + y)
-				|| !isselected(srcsel, src_x, src_y)) {
+			if (!isselected_both(destsel, srcsel,
+				src_x, src_y, x, y)) {
 				continue;
 			}
 
@@ -282,11 +280,11 @@ bool pasteblock(ZZTblock *dest, const ZZTblock *src,
 	selection destsel, selection srcsel, int x, int y) {
 
 	/* Move objects out of the way first. */
-	move_bind_sources(dest, srcsel, x, y);
+	move_bind_sources(dest, destsel, srcsel, x, y);
 
 	/* Clear every param in the destination area, and update bind
 	 * indices to reflect this. */
-	remove_selection_params(dest, srcsel, x, y);
+	remove_selection_params(dest, destsel, srcsel, x, y);
 
 	/*	Record the hashes of every board on the destination board outside
 	 *  the destination area. Since we removed every object inside the
@@ -300,7 +298,8 @@ bool pasteblock(ZZTblock *dest, const ZZTblock *src,
 
 	for (i = 0; i < src->paramcount; ++i) {
 		ZZTparam * param = src->params[i];
-		if (isselected(srcsel, param->x, param->y)) {
+		if (isselected_both(destsel, srcsel,
+			param->x, param->y, x, y)) {
 			++objects_in_area;
 		}
 	}
@@ -365,7 +364,8 @@ bool pasteblock(ZZTblock *dest, const ZZTblock *src,
 	for (i = 0; i < src->paramcount && object_idx < objects_to_add; ++i) {
 		ZZTparam * param = src->params[i];
 
-		if (!isselected(srcsel, param->x, param->y)) {
+		if (!isselected_both(destsel, srcsel,
+			param->x, param->y, x, y)) {
 			continue;
 		}
 
@@ -400,7 +400,8 @@ bool pasteblock(ZZTblock *dest, const ZZTblock *src,
 	for (i = 0; i < src->paramcount && object_idx < objects_to_add; ++i) {
 		ZZTparam * param = src->params[i];
 
-		if (!isselected(srcsel, param->x, param->y)) {
+		if (!isselected_both(destsel, srcsel,
+			param->x, param->y, x, y)) {
 			continue;
 		}
 
