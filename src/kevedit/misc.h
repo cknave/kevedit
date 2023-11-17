@@ -35,11 +35,7 @@
 
 /* Copy and paste */
 void copy(keveditor * myeditor);
-int paste(keveditor * myeditor);
 int countparams(ZZTblock *block);
-
-bool pasteblock(ZZTblock *dest, const ZZTblock *src,
-	selection destsel, selection srcsel, int x, int y);
 
 /* Plot from the backbuffer to the cursor */
 void plot(keveditor * myeditor);
@@ -82,7 +78,7 @@ void fillbyselection(keveditor *myeditor, ZZTworld* world, selection fillsel, pa
 void dofloodfill(keveditor * myeditor, int randomflag);
 
 /* Gradient fill helpers */
-void movebykeystroke(int key, int* x, int* y, int minx, int miny, int maxx, int maxy, displaymethod * mydisplay);
+void movebykeystroke(int key, int* x, int* y, int minx, int miny, int maxx, int maxy);
 int promptforselection(selection sel, gradline * grad, keveditor* myeditor);
 int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, patbuffer pbuf, gradline * grad, int randomseed, displaymethod* mydisplay);
 

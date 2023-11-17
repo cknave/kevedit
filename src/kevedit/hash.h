@@ -1,5 +1,5 @@
 /* hash.h       -- Rudimentary hash table for bind index merging
- * $Id: misc.h,v 1.3 2023/11/12 18:09:18 kristomu Exp $
+ * $Id: hash.h,v 1.3 2023/11/12 18:09:18 kristomu Exp $
  * Copyright (C) 2023 Kristofer Munsterhjelm <kristofer@munsterhjelm.no>
  *
  * This program is free software; you can redistribute it and/or modify
