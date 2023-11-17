@@ -243,6 +243,7 @@ void lineeditorHandleKey(lineeditor * editor, int key)
  **/
 void lineeditorinsertcharacter(lineeditor * editor, char ch)
 {
+	unsigned char uch = ch;
 	int flags = editor->validinputflags;
 	int i;
 
@@ -253,6 +254,16 @@ void lineeditorinsertcharacter(lineeditor * editor, char ch)
 	/* Act on flags */
 	if ((flags & LINED_NOLOWER) && (flags & LINED_NOUPPER) &&
 			((ch >= 0x41 && ch <= 0x5A) || (ch >= 0x61 && ch <= 0x7A))) return;
+
+	if ((flags & LINED_SNUMBER) && (uch < '0' || uch > '9') &&
+			(uch != '-')) {
+		return;
+	}
+
+	if ((flags & LINED_NUMBER) && (uch < '0' || uch > '9')) {
+		return;
+	}
+
 	if ((flags & LINED_NODIGITS) && (ch >= 0x30 && ch <= 0x39)) return;
 	if ((flags & LINED_NOPUNCT) && ((ch >= 0x21 && ch <= 0x2F) ||
 																	(ch >= 0x3A && ch <= 0x40) ||

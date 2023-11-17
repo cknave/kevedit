@@ -25,7 +25,7 @@
 #include "charset.h"
 #include "keys.h"
 #include "palette.h"
-
+#include "textblock.h"
 
 enum displaycontext {
     undefined = 0,
@@ -48,6 +48,15 @@ typedef struct displaymethod {
 
 	/* Close the display. The display may be initialized again later. */
 	void (*end) (void);
+
+	/* Copy what's on the screen to the given text block */
+	void (*getblock) (textBlock * dest, int srcx, int srcy, int width, int height,
+		int destx, int desty);
+
+	/* Copy the text block's contents to the screen.
+	   This one could probably be refactored to use putch. Later, TODO. */
+	void (*putblock) (textBlock * src, int srcx, int srcy, int width, int height,
+		int destx, int desty);
 
 	/* Put ch[ar] of co[lour] at x,y */
 	void (*putch) (int x, int y, int ch, int co);

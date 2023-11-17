@@ -24,6 +24,13 @@
 #define CHAR_BOX_LENGTH 680
 extern unsigned char CHAR_BOX[];
 
+/* Buffer for restoring what's underneath when displaying
+   a character selection box. */
+
+extern textDatum charBoxBuffer[
+   textBlockDataSize(CHAR_BOX_WIDTH, CHAR_BOX_DEPTH)];
+extern textBlock charBoxBackup;
+
 /* The scroll box */
 #define SCROLL_BOX_WIDTH 51
 #define SCROLL_BOX_DEPTH 19

@@ -145,6 +145,22 @@ static void sdl_putch(video_info *vdest, Uint32 x, Uint32 y, Uint8 ch, Uint8 co)
 	textBlockPutch(vdest->buffer, x, y, ch, co);
 }
 
+static void sdl_getblock(video_info *vsrc, textBlock * dest,
+	int srcx, int srcy, int width, int height, int destx, int desty)
+{
+	textBlockBlit(vsrc->buffer, dest, srcx, srcy, width, height,
+		destx, desty);
+}
+
+static void sdl_putblock(video_info *vdest, textBlock * src,
+	int srcx, int srcy, int width, int height,
+	int destx, int desty)
+{
+	textBlockBlit(src, vdest->buffer, srcx, srcy, width, height,
+		destx, desty);
+}
+
+
 static void sdl_update_cursor(video_info *vdest) {
 	switch(cursor) {
 		case CURSOR_HIDDEN:
@@ -954,6 +970,20 @@ static int display_sdl_getch()
 	return display_sdl_getch_with_context(undefined);
 }
 
+static void display_sdl_getblock(textBlock * dest, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	sdl_getblock(&info, dest, srcx, srcy, width, height, destx, desty);
+}
+
+static void display_sdl_putblock(textBlock * src, int srcx, int srcy,
+	int width, int height, int destx, int desty)
+{
+	sdl_putblock(&info, src, srcx, srcy, width, height, destx, desty);
+	sdl_update(&info, destx, desty, width, height);
+}
+
+
 static void display_sdl_gotoxy(int x, int y)
 {
 	sdl_gotoxy(&info, x, y);
@@ -1013,6 +1043,8 @@ displaymethod display_sdl =
 	"2.0",
 	display_sdl_init,
 	display_sdl_end,
+	display_sdl_getblock,
+	display_sdl_putblock,
 	display_sdl_putch,
 	display_sdl_getch,
 	display_sdl_getch_with_context,

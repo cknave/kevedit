@@ -1156,9 +1156,9 @@ int texteditInsertASCII(texteditor * editor)
 		texteditValidatePosition(editor);
 		editor->updateflags |= TUD_EDITAREA;
 	} else {
-		/* insert ascii char */
+		/* insert ascii char. NUL isn't allowed */
 
-		choice = charselect(editor->d, selChar);
+		choice = charselect_flags(editor->d, selChar, LINED_STRING);
 		if (choice == DKEY_QUIT)
 			return DKEY_QUIT;
 		if (choice == -1)
