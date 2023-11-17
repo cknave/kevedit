@@ -221,6 +221,9 @@ int line_editor_raw(int x, int y, int color, char* str, int editwidth,
 				if (key == DKEY_CTRL_A) {
 					key = charselect_buffered(d, selected_char,
 						flags);
+                                        if(key == DKEY_QUIT) {
+                                                return DKEY_QUIT;
+                                        }
 					selected_char = key;
 				}
 

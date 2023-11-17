@@ -361,8 +361,17 @@ void keveditHandleTextEntry(keveditor * myeditor)
 
 		/* ASCII selection dialog */
 		if (key == DKEY_CTRL_A) {
-			textTile.color = charselect(myeditor->mydisplay, -1);
-			myeditor->updateflags |= UD_BOARD;
+                        int result = charselect(myeditor->mydisplay, -1);
+                        myeditor->updateflags |= UD_BOARD;
+                        if(result == -1) {
+                                // Pressed ESC, pretend nothing happened
+                                return;
+                        } else if(result == DKEY_QUIT) {
+                                // Send the quit key to the editor
+                                myeditor->key = DKEY_QUIT;
+                                return;
+                        }
+			textTile.color = result;
 		}
 
 		/* Plot the text character */
@@ -853,6 +862,10 @@ void keveditHandleKeypress(keveditor * myeditor)
                                 int result = charselect(myeditor->mydisplay, tile.color);
                                 if(result == -1) {
                                         myeditor->updateflags |= UD_ALL;
+                                        break;
+                                } else if(result == DKEY_QUIT) {
+                                        myeditor->updateflags |= UD_ALL;
+                                        next_key = DKEY_QUIT;
                                         break;
                                 }
                                 tile.color = result;
