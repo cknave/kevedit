@@ -486,16 +486,21 @@ void zztParamsFixBindOrder(ZZTparam ** params, uint16_t paramcount)
 
 		/* If it's bound to something that comes later, swap. */
 		if (param->bindindex > i) {
-			int source_idx = param->bindindex;
+			ZZTparam * source = params[param->bindindex];
 
 			/* Update param - the bound param - to refer to the ith
 			 * place in the param order. */
 
 			bind_map[param->bindindex] = i;
-			param->bindindex = i;
+			source->bindindex = i;
+			param->bindindex = 0;
 
-			/* Then swap so the source will be in ith place. */
-			swap(params[source_idx], params[i], ZZTparam*);
+			/* Then swap programs so the source will be in
+			 * ith place. */
+			swap(param->program, source->program, uint8_t*);
+			swap(param->length, source->length, uint16_t);
+			swap(param->program_hash,
+				source->program_hash, uint32_t);
 		}
 	}
 
