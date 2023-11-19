@@ -853,29 +853,7 @@ void keveditHandleKeypress(keveditor * myeditor)
 		case DKEY_ENTER: {
 			/* Modify / Grab */
 			next_key = modifyparam(myeditor->mydisplay, myeditor->myworld, myeditor->cursorx, myeditor->cursory);
-
-			/* If the current tile is text, edit the char */
-			ZZTtile tile = zztTileGet(myeditor->myworld, myeditor->cursorx, myeditor->cursory);
-			if (zztTileIsText(tile)) {
-				/* It's a text tile, open character selector to
-				 * change the character. */
-                                int result = charselect(myeditor->mydisplay, tile.color);
-                                if(result == -1) {
-                                        myeditor->updateflags |= UD_ALL;
-                                        break;
-                                } else if(result == DKEY_QUIT) {
-                                        myeditor->updateflags |= UD_ALL;
-                                        next_key = DKEY_QUIT;
-                                        break;
-                                }
-                                tile.color = result;
-                                /* And plot. */
-                                zztPlot(myeditor->myworld, myeditor->cursorx, myeditor->cursory, tile);
-			}
-
-			/* When all is said and done, push the tile */
-			push(myeditor->buffers.backbuffer, tile);
-
+			push(myeditor->buffers.backbuffer, zztTileGet(myeditor->myworld, myeditor->cursorx, myeditor->cursory));
 			myeditor->updateflags |= UD_ALL;
 			break;
 		}
