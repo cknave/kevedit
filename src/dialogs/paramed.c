@@ -878,8 +878,12 @@ int tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 		}
 		if (rebuild) {
 			/* Rebuild dialog */
+			int curoption = dia.curoption;
 			dialogFree(&dia);
 			dia = buildtileinfodialog(w, x, y);
+			if(curoption < dia.optioncount) {
+				dia.curoption = curoption;
+			}
 		}
 	} while (key != DKEY_ESC && key != DKEY_QUIT);
 
