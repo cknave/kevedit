@@ -718,6 +718,11 @@ void zztBoardCommit(ZZTworld *world)
 {
 	int curboard = zztBoardGetCurrent(world);
 
+	/* Don't commit the last board if it was deleted. */
+	if (curboard >= world->header->boardcount) {
+		return;
+	}
+
 	/* Compress the current board */
 	zztBoardCompress(&(world->boards[curboard]));
 }
