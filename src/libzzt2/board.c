@@ -729,6 +729,11 @@ void zztBoardCommit(ZZTworld *world)
 {
 	int curboard = zztBoardGetCurrent(world);
 
+	/* Don't commit the last board if it was deleted. */
+	if (curboard >= world->header->boardcount) {
+		return;
+	}
+
 	ZZTboard * board = &world->boards[curboard];
 	ZZTblock * current = board->bigboard;
 
