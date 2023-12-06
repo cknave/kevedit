@@ -882,8 +882,12 @@ int tileinfo(displaymethod * d, ZZTworld * w, int x, int y)
 		}
 		if (rebuild) {
 			/* Rebuild dialog */
+			int curoption = dia.curoption;
 			dialogFree(&dia);
 			dia = buildtileinfodialog(w, x, y);
+			if(curoption < dia.optioncount) {
+				dia.curoption = curoption;
+			}
 		}
 	} while (key != DKEY_ESC && key != DKEY_QUIT);
 
@@ -994,7 +998,7 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 	/* Common information to all types */
 	_addlabel("ZZT-OOP Kind");
 	_addlabel("Id Number");
-	_addlabel("Color");
+	_addlabel(zztTileIsText(tile) ? "Character" : "Color");
 	_addlabel("Coordinate");
 
 	_addoption((char *) zztTileGetKind(tile), ID_KIND);
@@ -1002,7 +1006,12 @@ dialog buildtileinfodialog(ZZTworld * w, int x, int y)
 	sprintf(buf, "%d, %02Xh", tile.type, tile.type);
 	_addoption(buf, ID_TILEID);
 
-	_addoption(colorname(buf, tile.color), ID_COLOR);
+	if(zztTileIsText(tile)) {
+		sprintf(buf, "%02X: '%c'", tile.color, tile.color);
+		_addoption(buf, ID_COLOR);
+	} else {
+		_addoption(colorname(buf, tile.color), ID_COLOR);
+	}
 
 	sprintf(buf, "(%d, %d)", x + 1, y + 1);
 	_addvalue(buf);
@@ -1111,7 +1120,12 @@ int tileinfoeditoption(displaymethod * d, ZZTworld * w, int x, int y, dialogComp
 			return 1;
 
 		case ID_COLOR:
-			i = selectcolor(d, t.color);
+			if(zztTileIsText(t)) {
+				// Character is stored in the color field
+				i = charselect(d, t.color);
+			} else {
+				i = selectcolor(d, t.color);
+			}
 			if (i == DKEY_QUIT)
 				return DKEY_QUIT;
 			if (i == -1)

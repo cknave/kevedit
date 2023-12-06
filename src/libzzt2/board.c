@@ -733,7 +733,7 @@ void zztBoardCommit(ZZTworld *world)
 	if (curboard >= world->header->boardcount) {
 		return;
 	}
-
+  
 	ZZTboard * board = &world->boards[curboard];
 	ZZTblock * current = board->bigboard;
 
