@@ -233,6 +233,8 @@ ZZTparam svectortoprogram(stringvector sv)
 		p.program[pos++] = 0x0d;
 	}
 
+	zztParamRehash(&p);
+
 	return p;
 }
 
@@ -262,6 +264,8 @@ int editprogram(displaymethod * d, ZZTparam * p)
 
 	p->length = newparam.length;
 	p->program = newparam.program;
+	p->program_hash = newparam.program_hash;
+
 	return result;
 }
 
@@ -1247,6 +1251,20 @@ char * buildparamdescription(ZZTblock * block, int index)
 
 	free(tileName);
 	return description;
+}
+
+/* Returns the index of the stat the given stat is bound to, or 0
+   for none. */
+int bound_to(ZZTblock * block, int index) {
+	ZZTparam * param = NULL;
+
+	if (index < 0 || index >= block->paramcount) {
+		return 0;
+	}
+
+	param = block->params[index];
+
+	return param->bindindex;
 }
 
 stringvector buildparamlist(ZZTblock * block)

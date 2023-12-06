@@ -133,6 +133,7 @@ ZZTtile zzlpullobject(stringvector zzlv, int x, int y, int undert, int underc)
 
 	result.param->length  = objcodeparam.length;
 	result.param->program = objcodeparam.program;
+	zztParamRehash(result.param);
 
 	result.param->data[0] = ch;
 	result.param->xstep = xstep;

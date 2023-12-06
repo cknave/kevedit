@@ -123,102 +123,6 @@ void copy(keveditor * myeditor)
 	}
 }
 
-int paste(keveditor * myeditor)
-{
-	ZZTworld * myworld = myeditor->myworld;
-	int done = 0;
-	int x = 0, y = 0;
-	selection pasteselection;
-
-	if (myeditor->copyBlock == NULL)
-		return 0;
-
-	/* Initialize valid pasting region selection */
-	initselection(&pasteselection, ZZT_BOARD_X_SIZE, ZZT_BOARD_Y_SIZE);
-
-	if (myeditor->selectmode) {
-		/* Only paste within the selected region */
-		copyselection(pasteselection, myeditor->selCurrent);
-	} else {
-		/* Paste everywhere */
-		setselection(pasteselection);
-	}
-
-	/* Don't paste over the player */
-	unselectpos(pasteselection, myworld->boards[zztBoardGetCurrent(myworld)].plx,
-							myworld->boards[zztBoardGetCurrent(myworld)].ply);
-
-	int key;
-	while (!done) {
-		ZZTblock * previewBlock;
-
-		/* Merge the current board and copyBlock onto the previewBlock */
-		previewBlock = zztBlockDuplicate(zztBoardGetBlock(myeditor->myworld));
-		pasteblock(previewBlock, myeditor->copyBlock, pasteselection, myeditor->copySelection, x, y);
-
-		/* Draw the preview */
-		drawblock(myeditor->mydisplay, previewBlock, 0, 0);
-
-		key = myeditor->mydisplay->getch();
-
-		movebykeystroke(key, &x, &y,
-		                -myeditor->copyBlock->width, -myeditor->copyBlock->height,
-		                 myeditor->copyBlock->width,  myeditor->copyBlock->height,
-		                myeditor->mydisplay);
-
-		if (key == ' ' || key == DKEY_ENTER) {
-			pasteblock(zztBoardGetBlock(myeditor->myworld),
-								 myeditor->copyBlock, pasteselection, myeditor->copySelection, x, y);
-			/* Set the paramcount for the board */
-			zztBoardSetParamcount(myeditor->myworld, zztBoardGetBlock(myeditor->myworld)->paramcount);
-			done = 1;
-		}
-
-		if (key == DKEY_ESC || key == DKEY_QUIT)
-			done = 1;
-
-		zztBlockFree(previewBlock);
-	}
-
-	deleteselection(&pasteselection);
-	myeditor->clearselectflag = 1;
-	myeditor->updateflags |= UD_BOARD | UD_OBJCOUNT;
-	return key;
-}
-
-/* TODO: make a new type "alphablock" containing a block and a selection */
-int pasteblock(ZZTblock *dest, ZZTblock *src, selection destsel, selection srcsel, int x, int y)
-{
-	int srcpos;     /* Current index in source */
-	int row, col;   /* Current row and col in dest */
-
-	/* Paste */
-
-	srcpos = 0;     /* Start at beginning of source object */
-	for (row = y; row < src->height + y && row < dest->height; row++) {
-		for (col = x; col < src->width + x && col < dest->width; col++, srcpos++) {
-			/* Paste the currently indexed tile from source to (row, col) in dest */
-
-			if (row < 0 || col < 0)
-				continue;
-
-			/* Only copy selected tiles */
-			if (!isselected(destsel, col, row) || !isselected(srcsel, col - x, row - y))
-				continue;
-
-			/* Can't use plot because we want to maintain terrain under creatures
-			 * from the source block, not the destination block */
-			zztTileSet(dest, col, row, src->tiles[srcpos]);
-		}
-		/* If the loop stopped short of using every column in src, advance
-		 * the srcpos index to ignore these columns */
-		srcpos += (src->width + x) - col;
-	}
-
-	/* Success! */
-	return 1;
-}
-
 /* Input is a text tile. Its color will be set to the foreground
  * color of the variable "color" as closely as possible.*/
 void encodetextcolor(ZZTtile * text, textcolor color)
@@ -944,9 +848,9 @@ void dofloodfill(keveditor * myeditor, int randomflag)
 }
 
 
-/*********** Gradient fill code *****************/
+/*********** Gradient fill and paste code *****************/
 void movebykeystroke(int key, int* x, int* y, int minx, int miny,
-										 int maxx, int maxy, displaymethod * mydisplay)
+	int maxx, int maxy)
 {
 	switch (key) {
 		case DKEY_LEFT:      if (*x > minx) (*x)--; break;
@@ -975,7 +879,7 @@ int promptforselection(selection sel, gradline * grad, keveditor* myeditor)
 
 		cursorspace(myeditor);
 		movebykeystroke(key, &(myeditor->cursorx), &(myeditor->cursory),
-				0, 0, 59, 24, mydisplay);
+				0, 0, 59, 24);
 
 		if (key == DKEY_ESC) return 1;
 		if (key == DKEY_QUIT) return DKEY_QUIT;
@@ -998,7 +902,7 @@ int promptforselection(selection sel, gradline * grad, keveditor* myeditor)
 
 		cursorspace(myeditor);
 		movebykeystroke(key, &(myeditor->cursorx), &(myeditor->cursory),
-				0, 0, 59, 24, mydisplay);
+				0, 0, 59, 24);
 		mydisplay->putch(grad->x1, grad->y1, '+', 0x0F);
 
 		if (key == DKEY_ESC) return 1;
@@ -1038,7 +942,7 @@ int pickgradientpoint(ZZTworld * myworld, int* x, int* y, selection fillsel, pat
 
 		drawblocktile(mydisplay, zztBoardGetCurPtr(myworld)->bigboard, *x, *y, 0, 0, 0);
 
-		movebykeystroke(key, x, y, 0, 0, 59, 24, mydisplay);
+		movebykeystroke(key, x, y, 0, 0, 59, 24);
 
 		/* Check for change of gradient type */
 		switch (key) {

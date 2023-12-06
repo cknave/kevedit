@@ -31,6 +31,7 @@
 #include "menu.h"
 #include "texteditor/editbox.h"
 #include "screen.h"
+#include "paste.h"
 
 #include "libzzt2/zzt.h"
 

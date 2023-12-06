@@ -453,6 +453,11 @@ int zztBlockPaste(ZZTblock *dest, ZZTblock *src,
 	return 1;
 }
 
+void zztBlockFixBindOrder(ZZTblock * block)
+{
+	zztParamsFixBindOrder(block->params, block->paramcount);
+}
+
 int zztTileSet(ZZTblock * block, int x, int y, ZZTtile tile)
 {
 	/* Param for the tile being overwritten */
@@ -563,8 +568,14 @@ int zztPlotPlayer(ZZTworld * world, int x, int y)
 	if (!zztBoardDecompress(brd))
 		return 0;
 
-	if (x != brd->plx || y != brd->ply)
+	/* If the player coordinates do not point at a player, don't
+	   remove what's there. And don't move anything if plotplayer's
+	   coords is where the player currently is. */
+	if ((x != brd->plx || y != brd->ply) &&
+		zztTileAt(brd->bigboard, brd->plx, brd->ply).type == ZZT_PLAYER) {
+
 		zztTileMove(brd->bigboard, brd->plx, brd->ply, x, y);
+	}
 
 	/* Record the change */
 	brd->plx = x; brd->ply = y;

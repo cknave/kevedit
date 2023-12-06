@@ -126,6 +126,10 @@ typedef struct ZZTparam {
 	uint8_t *program;	/* Program (if any) */
 
 	uint16_t bindindex;	/* Index of object bound to (zero if none) */
+
+	/* Program hash, used for resolving ambiguities in pasting bound
+	   stats. */
+	uint32_t program_hash;
 } ZZTparam;
 
 /* ZZT tile info -- the basic building-block of a decompressed board */
@@ -146,6 +150,7 @@ typedef struct ZZTblock {
 
 	/* Maximum number of params (usually ZZT_BOARD_MAX_PARAMS) */
 	int maxparams;
+
 } ZZTblock;
 
 /* ZZT board -- fill a ZZT world with these */
@@ -414,10 +419,39 @@ ZZTblock *zztBlockCopyArea(ZZTblock *src, int x1, int y1, int x2, int y2);
 /* zztBlockPaste(dest, src, x, y)
  * Paste the src block onto dest at (x, y)
  * Clipping occurs if src is too big
+ * Doesn't rebind prebound tiles with params. TODO?? See kevedit/paste.c
  */
 int zztBlockPaste(ZZTblock *dest, ZZTblock *src, int x, int y);
 
-/***** PARAMETER MANIPULATORS *****/
+/* zztBlockFixBindOrder(block)
+ * Rearranges bind relations so that params being bound to
+ * come before those that bind to it. Preferable because ZZT
+ * reads pointers in linear order. */
+void zztBlockFixBindOrder(ZZTblock * block);
+
+/***** PARAMETER MANIPULATORS AND CHECKS *****/
+/* zztParamRehash()
+ * update ZZTparam program hash. */
+void zztParamRehash(ZZTparam * param);
+
+/* zztParamsNormalizeBindChains(params, paramcount)
+ * This function fixes corrupted bind indices. It also returns the
+ * number of modified bind indices, which should be useful for later
+ * debugging and tracking down bugs that invalidate bind indices. */
+int zztParamsNormalizeBindChains(ZZTparam ** params, uint16_t paramcount);
+
+/* zztParamsFixBindOrder(params, paramcount)
+ * Rearranges bind relations so that params being bound to
+ * come before those that bind to it. Preferable because ZZT
+ * reads pointers in linear order. */
+void zztParamsFixBindOrder(ZZTparam ** params, uint16_t paramcount);
+
+/* zztParamEqualProgram(param, param)
+ * returns 1 if the params have the same code,
+ * 0 otherwise.
+ */
+int zztParamEqualProgram(const ZZTparam * p1, const ZZTparam * p2);
+
 /* zztParamCreateBlank()
  * Create a blank, typeless param. Use only in advanced situations!
  */

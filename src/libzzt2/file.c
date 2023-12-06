@@ -21,6 +21,7 @@
 #include <config.h>
 #endif
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -351,6 +352,7 @@ ZZTboard *zztBoardRead(FILE *fp)
 			board->params[i].program = malloc(w+1);
 			_zzt_ins_or((char *)board->params[i].program, w, fp) goto boardReadDone;
 			board->params[i].program[w] = '\0';
+			zztParamRehash(&board->params[i]);
 		}
 	}
 
